@@ -16,11 +16,16 @@
     <img src="https://img.shields.io/badge/latest-v2.0.0-blue?style=flat-square" alt="Latest Version">
     <img src="https://img.shields.io/badge/license-Apache_2.0-red?style=flat-square" alt="License">
     <img src="https://img.shields.io/badge/tools-350%2B-green?style=flat-square" alt="Tools">
+  </p>
+  
+  <p>
     <img src="https://img.shields.io/badge/python-3.10%2B-yellow?style=flat-square" alt="Python">
     <img src="https://img.shields.io/badge/platform-Windows-lightgrey?style=flat-square" alt="Platform">
     <img src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square" alt="PRs Welcome">
     <img src="https://img.shields.io/badge/security-verified-brightgreen?style=flat-square" alt="Security">
   </p>
+
+  <br>
 
   <p>
     <b>Built With:</b><br>
