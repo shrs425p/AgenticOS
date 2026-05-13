@@ -1,6 +1,8 @@
 # AgenticOS — High-Performance Autonomous Framework [SECURE][LAUNCH]
 
 <div align="center">
+  <img src="assets/banner.png" alt="AgenticOS Banner" width="100%">
+  
   <br>
 
   <h3>AgenticOS is your Personal AI super intelligence. Private, Simple and extremely powerful.</h3>
