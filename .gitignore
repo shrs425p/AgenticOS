@@ -9,17 +9,8 @@ data/cache/
 data/memory.sqlite3
 
 # Workspace generated files
-workspace/downloads/
-workspace/screenshots/
-workspace/news/
-workspace/reports/
-workspace/Desktop/
-workspace/charts/
-workspace/*.png
-workspace/*.csv
-workspace/*.json
-workspace/*.md
-!workspace/README.md
+workspace/
+!workspace/.gitkeep
 
 # System files
 .DS_Store
