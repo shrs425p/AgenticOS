@@ -11,11 +11,22 @@ if (-not (Test-Path $ProjectRoot)) {
     exit 1
 }
 
-# 2. Set AGENTICOS_HOME (User Level)
+# 2. Create required directories
+Write-Host "[INFO] Initializing project structure..." -ForegroundColor White
+$Dirs = @("workspace", "data", "data\logs", "bin")
+foreach ($Dir in $Dirs) {
+    $Path = Join-Path $ProjectRoot $Dir
+    if (-not (Test-Path $Path)) {
+        New-Item -ItemType Directory -Path $Path | Out-Null
+        Write-Host "[INFO] Created directory: $Dir" -ForegroundColor Gray
+    }
+}
+
+# 3. Set AGENTICOS_HOME (User Level)
 Write-Host "[INFO] Setting AGENTICOS_HOME to $ProjectRoot..." -ForegroundColor White
 [Environment]::SetEnvironmentVariable("AGENTICOS_HOME", $ProjectRoot, "User")
 
-# 3. Add to PATH (User Level)
+# 4. Add to PATH (User Level)
 $BinPath = Join-Path $ProjectRoot "bin"
 $CurrentPath = [Environment]::GetEnvironmentVariable("Path", "User")
 if ($CurrentPath -notlike "*$BinPath*") {
