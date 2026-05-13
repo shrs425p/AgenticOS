@@ -1,6 +1,27 @@
 # AgenticOS — High-Performance Autonomous Framework [SECURE][LAUNCH]
 
-![AgenticOS Banner](assets/banner.png)
+<div align="center">
+  <img src="assets/banner.png" alt="AgenticOS Banner" width="100%">
+  
+  <br>
+  
+  <img src="assets/trending_badge.png" alt="GitHub Trending" width="200">
+
+  <h3>AgenticOS is your Personal AI super intelligence. Private, Simple and extremely powerful.</h3>
+
+  <p>
+    <a href="https://github.com/shrs425p/AgenticOS/discussions">Discussions</a> • 
+    <a href="https://github.com/shrs425p/AgenticOS/wiki">Docs</a> • 
+    <a href="https://github.com/shrs425p/AgenticOS">Follow @shrs425p (Creator)</a>
+  </p>
+
+  <p>
+    <img src="https://img.shields.io/badge/status-early_beta-orange?style=flat-square" alt="Status">
+    <img src="https://img.shields.io/badge/latest-v2.0.0-blue?style=flat-square" alt="Latest Version">
+  </p>
+</div>
+
+---
 
 **AgenticOS** is a secure autonomous operating system designed for extreme performance, deep system orchestration, and resilient multi-modal research. It integrates high-scale cloud models (NVIDIA NIM, Google Gemini) and local LLMs (Ollama) with a modular ecosystem of over **350+ specialized tools** to provide a proactive, self-healing operational experience.
 
