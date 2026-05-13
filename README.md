@@ -18,6 +18,10 @@
   <p>
     <img src="https://img.shields.io/badge/status-early_beta-orange?style=flat-square" alt="Status">
     <img src="https://img.shields.io/badge/latest-v2.0.0-blue?style=flat-square" alt="Latest Version">
+    <img src="https://img.shields.io/badge/tools-350%2B-green?style=flat-square" alt="Tools">
+    <img src="https://img.shields.io/badge/python-3.10%2B-yellow?style=flat-square" alt="Python">
+    <img src="https://img.shields.io/badge/platform-Windows-lightgrey?style=flat-square" alt="Platform">
+    <img src="https://img.shields.io/badge/security-verified-brightgreen?style=flat-square" alt="Security">
   </p>
 </div>
 
