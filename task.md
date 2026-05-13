@@ -36,7 +36,7 @@ Navigate to https://stackoverflow.com/questions/tagged/python?tab=Unanswered, ex
 Navigate to https://news.google.com, scrape all visible headlines grouped by section, write google_news_snapshot.md with timestamp
 Navigate to https://www.timeanddate.com/worldclock/, extract the current time for 10 major cities, write worldclock.md
 Navigate to https://planetscale.com/pricing, extract the full pricing table (all tiers, features, prices), write a pricing_analysis.md comparing tiers
-Navigate to https://github.com/{your_repo or any public repo}/pulse, extract contribution stats (commits, PRs, issues opened/closed this week)
+Navigate to https://github.com/shrs425p/AgenticOS/pulse, extract contribution stats (commits, PRs, issues opened/closed this week)
 Navigate to https://caniuse.com/?search=webgpu, extract browser support percentages for WebGPU across all major browsers, write a webgpu_compat.md
 Navigate to https://bundlephobia.com/package/axios, extract bundle size (minified + gzipped), dependency count, write a js_bundle_report.md — repeat for lodash and moment
 Navigate to https://www.wappalyzer.com/ (or similar), identify the tech stack of https://anthropic.com by visiting it via browser and analyzing network requests/DOM, write a tech_stack_fingerprint.md

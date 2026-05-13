@@ -23,7 +23,7 @@ For maximum stability and performance, we strongly recommend cloning the project
 Clone the repository and move into the project directory:
 
 ```powershell
-git clone https://github.com/your-repo/AgenticOs.git C:\AgenticOs
+git clone https://github.com/shrs425p/AgenticOS.git C:\AgenticOs
 cd C:\AgenticOs
 ```
 
