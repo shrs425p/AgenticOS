@@ -1,7 +1,7 @@
 # AgenticOS — High-Performance Autonomous Framework [SECURE][LAUNCH]
 
 <div align="center">
-  <img src="assets/banner.png" alt="AgenticOS Banner" width="100%">
+  <img src="assets/AgenticOS.png" alt="AgenticOS Banner" width="100%">
   
   <br>
 
