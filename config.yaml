@@ -1,0 +1,531 @@
+# ═══════════════════════════════════════════════════════════════════
+#  AgenticOs — config.yaml
+#  Autonomous Configuration - Safe Defaults
+# ═══════════════════════════════════════════════════════════════════
+
+# Ollama provider settings (local models).
+ollama:
+  # Base URL where `ollama serve` listens.
+  base_url: http://localhost:11434
+  # Default model name for Ollama (must match `ollama list`).
+  default_model: qwen2.5-coder:7b
+  # Request timeout (seconds) for Ollama calls.
+  timeout: 300
+  # Sampling temperature (higher = more creative, lower = more deterministic).
+  temperature: 0.8
+  # Context window (tokens) for local Ollama models.
+  num_ctx: 32768
+  # Max tokens to generate (Ollama option).
+  num_predict: 16384
+
+# Core runtime behavior for the agent loop and UX.
+agent:
+  # Which model provider to use by default: `ollama` (local) or `nvidia` (cloud).
+  provider: nvidia
+  # Upper bound on agent iterations per task before failing the run.
+  max_iterations: 1000
+  # If true, prompt nudges the model to think before acting.
+  think_before_act: false
+  # If true, prints verbose model thinking (when supported).
+  verbose_thinking: false
+  # If true, auto-confirms prompts for destructive actions (still gated by rules).
+  auto_confirm: true
+  # If true, retry model calls on transient failures.
+  auto_retry: true
+  # Chain-of-Verification: perform a mental simulation before executing tools.
+  enable_cov: false
+  # Retry count for model call failures.
+  max_retries: 3
+  # Delay between retries (seconds).
+  retry_delay: 1
+  # Stream tokens from providers that support streaming.
+  stream: true
+  # Enables basic self-recovery behaviors (fallback models, replan on loops).
+  self_healing: true
+  # Enables automatic recovery steps after certain errors.
+  auto_recovery: true
+  # Keeps task tracking artifacts around between runs (if enabled by autonomy).
+  persistent_tasks: true
+  # Workspace directory for agent outputs (task files, memory db, downloads, etc.).
+  workspace: workspace
+  # Log verbosity level used by the agent components.
+  log_level: INFO
+  # (Legacy) sandbox toggle; actual safety is controlled by rules + security.
+  enable_sandbox: false
+  # (Legacy) system modification toggle; use `rules.*` instead.
+  allow_system_modification: false
+  # Hot-reload Python modules + config.yaml while the agent is running.
+  hot_reload: true
+  # Prevent massive tool outputs (e.g., long JSON) from blowing up model context.
+  # Tool outputs are truncated before being appended to the model conversation.
+  max_observation_chars: 4000
+
+# Autonomy controls (how proactive / hands-off the agent behaves).
+autonomy:
+  # Write `workspace/tasks/active_task.*` during the run.
+  task_tracking: true
+  # Keep OBJECTIVE/PLAN/CURRENT_STEP updated and replan when stalled.
+  active_planning: true
+  # Prompt to choose a model at startup.
+  startup_model_prompt: true
+  # Prompt to choose provider (ollama/nvidia) at startup.
+  startup_provider_prompt: true
+  # Hands-off mode: fewer questions, stronger initiative.
+  autopilot: true
+  # When true, the agent avoids asking questions unless the next step is truly ambiguous or risky.
+  minimal_clarifications: true
+  # Non-bypassable safety still applies (registry/services/shutdown). This only controls how chatty the agent is.
+  enforce_progress: true
+  # DANGEROUS: opens up system/registry/service controls and disables command validation blocks.
+  # This does NOT grant admin privileges or "device ownership"; it only relaxes safety checks.
+  power_mode: false
+  # After each tool call, validate that the action actually worked (file exists, delete happened, etc.).
+  validate_results: true
+  # Expert mode: reduces confirmation prompts for faster hands-off runs.
+  # This does NOT grant admin privileges, "device ownership", or bypass hard guardrails.
+  expert_mode: false
+
+cloud:
+  nvidia:
+    # NVIDIA NIM OpenAI-compatible base URL.
+    base_url: https://integrate.api.nvidia.com/v1
+    # Default cloud model id.
+    model: openai/gpt-oss-120b
+    temperature: 1.0
+    top_p: 1.0
+    # Max tokens per completion for cloud calls.
+    max_tokens: 8192
+    # Request timeout (seconds).
+    timeout: 300
+
+  gemini:
+    # Default Gemini model.  Options: gemini-2.0-flash, gemini-2.5-pro, gemini-1.5-pro, etc.
+    model: gemini-2.0-flash
+    temperature: 1.0
+    top_p: 0.95
+    # Max output tokens per completion.
+    max_tokens: 8192
+
+  groq:
+    model: llama-3.3-70b-versatile
+    temperature: 1.0
+    top_p: 1.0
+    max_tokens: 8192
+
+  openai:
+    model: gpt-4o-mini
+    temperature: 1.0
+    top_p: 1.0
+    max_tokens: 8192
+
+  openrouter:
+    model: google/gemma-2-9b-it:free
+    temperature: 1.0
+    top_p: 1.0
+    max_tokens: 8192
+
+  github:
+    model: gpt-4o-mini
+    temperature: 1.0
+    top_p: 1.0
+    max_tokens: 8192
+
+  deepseek:
+    model: deepseek-chat
+    temperature: 1.0
+    top_p: 1.0
+    max_tokens: 8192
+
+# Session memory settings (JSON or SQLite backend).
+memory:
+  # Hard cap on messages retained in memory (older messages are trimmed).
+  max_messages: 500
+  # When auto-summarizing, summarise after this many messages.
+  summarise_after: 200
+  # Filename for JSON memory storage (when using json backend).
+  json_filename: memory.json
+  # Persist memory across runs (backend-dependent).
+  enable_persistence: true
+  # Automatically write a short summary at the end of successful tasks.
+  auto_summarize: true
+  # Memory backend: `json` (legacy) or `sqlite` (recommended for long-term history).
+  backend: sqlite   # json | sqlite
+  # SQLite db path. Keep it OUT of workspace so the agent doesn't casually overwrite it.
+  # Relative paths resolve from repo root.
+  sqlite_db_path: data/memory.sqlite3
+  # When SQLite backend is enabled, record tool calls + observations.
+  record_tool_events: true
+  # When SQLite backend is enabled, record file paths touched by common tools.
+  record_artifacts: true
+  # Redact obvious secrets/tokens before writing them to SQLite.
+  redact_secrets: true
+
+# Tool-specific timeouts (seconds).
+timeouts:
+  # Timeout for listing available models.
+  list_models: 10
+  # Timeout for curl-based downloads.
+  download_curl: 120
+  # Timeout for PowerShell-based downloads.
+  download_powershell: 180
+  # Default API request timeout fallback.
+  api_default: 180
+  # Fallback max tokens when parsing fails.
+  fallback_max_tokens: 1024
+  # Web tool timeouts
+  web_fetch: 15           # Basic fetch/page operations
+  web_api: 20             # API calls (GET/POST/PUT/DELETE)
+  web_search: 15          # Search operations
+  web_download: 120       # File downloads
+  web_inspect: 15         # SSL/headers/whois checks
+  web_utils: 20           # RSS, Wayback, etc.
+  web_graphql: 25         # GraphQL queries
+
+# ── Custom Keyboard Shortcuts ─────────────────────────────────────────────────
+# Define named shortcut aliases here. The agent can call hotkey("name") and it
+# will resolve to the key combo below. You can also add/remove shortcuts at
+# runtime using hotkey_set / hotkey_delete / hotkey_list.
+#
+# Format:  alias_name: "key+combo"
+# Use +  to join modifier keys and the final key.
+# Modifiers: ctrl, alt, shift, win
+#
+custom_keys:
+  # ── Screenshots & clipboard ───────────────────────────────────────────────
+  screenshot:          "win+shift+s"    # Snip & Sketch (region screenshot)
+  fullscreen_shot:     "printscreen"    # Full screen to clipboard
+  window_shot:         "alt+printscreen" # Active window to clipboard
+
+  # ── Windows system ────────────────────────────────────────────────────────
+  show_desktop:        "win+d"
+  lock_screen:         "win+l"
+  file_explorer:       "win+e"
+  run_dialog:          "win+r"
+  search:              "win+s"
+  task_view:           "win+tab"
+  virtual_desktop_new: "win+ctrl+d"
+  virtual_desktop_next: "win+ctrl+right"
+  virtual_desktop_prev: "win+ctrl+left"
+  action_center:       "win+a"
+  settings:            "win+i"
+  task_manager:        "ctrl+shift+esc"
+  emoji_picker:        "win+."
+
+  # ── Browser / tabs ───────────────────────────────────────────────────────
+  new_tab:             "ctrl+t"
+  close_tab:           "ctrl+w"
+  reopen_tab:          "ctrl+shift+t"
+  next_tab:            "ctrl+tab"
+  prev_tab:            "ctrl+shift+tab"
+  refresh:             "f5"
+  hard_refresh:        "ctrl+f5"
+  address_bar:         "alt+d"
+  fullscreen:          "f11"
+  zoom_in:             "ctrl+plus"
+  zoom_out:            "ctrl+-"
+  zoom_reset:          "ctrl+0"
+
+  # ── Editing ───────────────────────────────────────────────────────────────
+  select_all:          "ctrl+a"
+  copy:                "ctrl+c"
+  cut:                 "ctrl+x"
+  paste:               "ctrl+v"
+  paste_plain:         "ctrl+shift+v"
+  undo:                "ctrl+z"
+  redo:                "ctrl+y"
+  find:                "ctrl+f"
+  find_replace:        "ctrl+h"
+  save:                "ctrl+s"
+  save_all:            "ctrl+shift+s"
+  close_window:        "alt+f4"
+  switch_window:       "alt+tab"
+  bold:                "ctrl+b"
+  italic:              "ctrl+i"
+  underline:           "ctrl+u"
+
+  # ── Developer / IDE ──────────────────────────────────────────────────────
+  open_terminal:       "ctrl+shift+grave"  # VSCode / Windows Terminal
+  split_terminal:      "ctrl+shift+5"
+  command_palette:     "ctrl+shift+p"
+  go_to_file:          "ctrl+p"
+  toggle_sidebar:      "ctrl+b"
+  format_document:     "shift+alt+f"
+  toggle_comment:      "ctrl+slash"
+  debug_start:         "f5"
+  debug_stop:          "shift+f5"
+  debug_step_over:     "f10"
+  debug_step_into:     "f11"
+
+# ── Rules ────────────────────────────────────────────────────────────────────
+# Capability rules. High-risk system changes default off.
+rules:
+  # Allow deleting files/directories.
+  allow_file_delete: true
+  # Allow modifying/writing files.
+  allow_file_modify: true
+  # Allow shell command execution via terminal tools.
+  allow_shell_exec: true
+  # Allow downloads to the workspace via web tools.
+  allow_web_download: true
+  # Allow web search.
+  allow_web_search: true
+  # Allow system-changing operations (scheduled tasks creation, etc.). Keep false unless you mean it.
+  allow_system_changes: true
+  # Allow process management operations (list/kill/start).
+  allow_process_control: true
+  # Allow network access from tools (web fetch, APIs).
+  allow_network_access: true
+  # Allow registry edits (Windows). High-risk.
+  allow_registry_edit: true
+  # Allow starting/stopping services. High-risk.
+  allow_service_control: true
+  # Ask for confirmation before destructive actions.
+  require_confirm_destructive: true
+  # Ask for confirmation before network operations.
+  require_confirm_network: false
+  # Ask for confirmation before shell commands.
+  require_confirm_shell: false
+
+# ── Tools ────────────────────────────────────────────────────────────────────
+# Tool switches. High-risk OS management tools default off.
+tools:
+  # Core tool categories. Turn off any you don't want exposed to the model.
+  files: true
+  terminal: true
+  web: true
+  browser: true
+  calculator: true
+  datetime_tool: true
+  # Optional: load URL presets (open/search shortcuts) dynamically from a YAML file.
+  # If not set, built-in defaults are used.
+  # url_presets_path: data/url_presets.yaml
+  # Optional: inline presets list (advanced). Prefer url_presets_path for large lists.
+  # url_presets: []
+
+# Terminal behavior (platform utilities, openers, etc.).
+# (Intentionally minimal to avoid per-machine hardcoding.)
+terminal:
+  note_pad: true
+  notifications: true
+  system_monitor: true
+  process_manager: true
+  network_tools: true
+  registry_editor: false
+  service_manager: false
+  scheduler: true
+  automation: true
+
+# ── Self-Improvement ─────────────────────────────────────────────────────────
+self_improvement:
+  enabled: true
+  auto_update: true
+  learn_from_errors: true
+  optimize_performance: true
+  code_refactoring: true
+
+# ── Error Handling ───────────────────────────────────────────────────────────
+error_handling:
+  auto_retry: true
+  max_retries: 5
+  retry_backoff: true
+  fallback_strategies: true
+  error_logging: true
+  crash_recovery: true
+
+# ── System Control ───────────────────────────────────────────────────────────
+system_control:
+  # High-risk toggles (separate from rules; rules are the main enforcement point).
+  allow_shutdown: false
+  allow_restart: false
+  allow_service_control: true
+  allow_process_control: true
+  allow_registry_access: true
+  allow_scheduled_tasks: true
+
+# ── Security ─────────────────────────────────────────────────────────────────
+security:
+  # If true, enable additional sandbox restrictions (project-specific; rules still apply).
+  sandbox_mode: false
+  # If true, filesystem tools rebase absolute paths into the workspace for safety.
+  restrict_paths: false
+  # If true, blocks some dangerous command patterns in terminal tools.
+  validate_commands: true
+  # ── Balanced Security Policy ────────────────────────────────────────────────
+  # - Workspace: Full Access (Read/Write/Delete)
+  # - System: Blocked (No access to C:\Windows)
+  # - Other: Read-Only (Write/Delete requires Human confirmation)
+  enable_zone_guard: true
+  # Paths that the AI is NEVER allowed to touch (even for reading).
+  blocked_paths: ["C:\\Windows", "C:\\Program Files", "C:\\Program Files (x86)"]
+  # If true, the agent MUST ask for human confirmation before modifying any file
+  # that is NOT inside the workspace.
+  require_hitm_outside_workspace: true
+  # ────────────────────────────────────────────────────────────────────────────
+
+  # If true, write extra audit info (backend-dependent).
+  audit_logging: true
+  # Hard guardrails that are never bypassed by "autopilot" mode.
+  hard_guardrails: true
+
+# ── Heuristics & Performance Limits ───────────────────────────────────────────
+# These settings eliminate "Magic Numbers" from the code.
+heuristics:
+  # When to warn about high iterations
+  iteration_warning_threshold: 20
+  # Maximum dots in a response before loop detection triggers
+  max_dots_in_response: 50
+  # Minimum chars for a user input to be considered a "new task"
+  new_task_min_chars: 10
+  # List of keywords that count as "resumption" (continuation)
+  resumption_cmds: ["continue", "go on", "keep going", "proceed", "next"]
+  # Model to use for Chain-of-Verification (Mental Simulation). If null, use the active model.
+  cov_model: null
+
+performance:
+  # Max chars for a single preference item in memory
+  max_pref_chars: 80
+  # Max preference items to inject into context
+  max_pref_items: 20
+  # Throttle for hot-reload file checks (seconds)
+  reload_throttle_seconds: 2.0
+  # Max characters allowed in a single tool observation
+  max_observation_chars: 12000
+  # Protect internal persistent data (SQLite DB + audit logs) from file tools.
+  protect_internal_data: true
+  internal_data_dir: data
+  allow_internal_data_write: false
+  # Runtime performance toggles
+  parallel_execution: true
+  caching_enabled: true
+  optimize_memory: true
+  background_tasks: true
+
+# ── Cache Routing ────────────────────────────────────────────────────────────
+# Keep common caches OUT of the repo root by routing them into one place.
+# This reduces "random folders appeared" issues and makes cleanup easy.
+cache:
+  # Root folder for caches. Relative paths resolve from repo root.
+  root_dir: data/cache
+
+# ── Logging ─────────────────────────────────────────────────────────────────
+logging:
+  enabled: true
+  level: DEBUG
+  file: agent.log
+  max_size: 10MB
+  backup_count: 5
+  console_output: true
+  # Audit logs are separate JSONL files that never store chat text.
+  audit_enabled: true
+  # Audit log format:
+  # - jsonl: structured JSON lines (easy to query)
+  # - log:   human-readable .log lines
+  # - both:  write both jsonl and log side-by-side
+  audit_format: both
+  # Audit logs directory (no chat text). Keep it OUT of workspace.
+  audit_dir: data/logs
+
+# ── Prompts ──────────────────────────────────────────────────────────────────
+prompts:
+  # System prompt given to the model each iteration. Keep it high-level; tool list is injected dynamically.
+  system_prompt: |
+    You are AgenticOs, a capable local CLI agent.
+
+    Core behavior:
+    - Understand the user's real goal before acting.
+    - You are full autonomous and can use tools to achieve the user's goals, And can control whole pc, but you are not reckless. Always think step by step.
+    - Prefer the simplest reliable path, using tools only when they add value.
+    - Act with high initiative on legitimate local tasks and keep moving unless blocked by ambiguity or safety risk.
+    - Batch related reads/checks and avoid repeating failed actions.
+    - When a tool fails, identify the likely cause and try a different approach.
+    - Make a strong best-effort attempt to complete legitimate local tasks end to end before asking the user for help.
+    - Ask one concise clarification when the next action is genuinely ambiguous or risky.
+    - Protect user data and the operating system. Do not perform destructive, registry, service, shutdown, credential, or irreversible actions without explicit user intent and confirmation.
+    - Keep final responses short, specific, and honest about what changed or what failed.
+
+    Response modes:
+    - Simple question: answer naturally.
+    - Tool work: use TASK, CONTEXT, STRATEGY, ACTION (only include ACTION when calling a tool).
+    - Complex work: use OBJECTIVE, PLAN, CURRENT_STEP, ACTION (only include ACTION when calling a tool).
+    - Completed work: use FINAL ANSWER.
+    - FINAL ANSWER HYGIENE: Never include FINAL ANSWER in the same turn as an ACTION. You MUST wait for tool confirmation (OBSERVATION) before finishing.
+    - ARTIFACT VERIFICATION: If your task involves creating a report, file, or code, you MUST wait for the write tool's success observation. For maximum safety, you should call file_exists or read_file to verify the file was actually written to the disk before declaring FINAL ANSWER. Artifacts MUST exist in the workspace.
+    - Keep PLAN and CURRENT_STEP current as the task evolves.
+
+    Tool discipline:
+    - EXISTING_TOOL_PRIORITY: You have 300+ tools available. You MUST use them. Only build new tools if a task is technically impossible with the current registry.
+    - REGISTRY_SEARCH: Before acting, scan the AVAILABLE_TOOLS list carefully. If you miss an existing tool, you are failing your objective.
+    - SINGLE_ACTION: Call exactly ONE tool per response. Do not batch tools or call multiple actions at once. Wait for the OBSERVATION before calling the next tool.
+    - Use exact paths from observations; do not guess the same missing path repeatedly.
+    - If a path is unknown, use special_paths, locate_path, search_files, or web/file inspection before asking the user.
+    - If a task requires opening or interacting with an app or website, prefer launch_application, list_windows, focus_app, open_file, or open_url instead of narrating what should happen.
+    - LAST RESORT (Self-Evolution): If a task requires a unique capability you truly lack (e.g., '3D Model Rendering'), you can evolve. Search for a library, `pip_install`, and `create_plugin`. Do NOT evolve for common tasks like scraping or file editing.
+    - When calling tools in JSON, always use this exact shape:
+      ACTION: {"tool": "tool_name", "args": {...}}
+    - Never write ACTION without a tool. If you are asking a question or waiting, omit ACTION entirely.
+    - Inspect before modifying.
+    - Prefer workspace-local files unless the user clearly asks for another location.
+    - Whenever saving extracted data, notes, or reports, always prefer `.md` (Markdown) files over plain `.txt`. Format the content nicely using markdown features like tables, lists, and headers.
+    - For code changes, run available syntax/lint/tests before finalizing.
+    - Maintain active task state while working and revise the plan after each meaningful step.
+
+    Music/Media tasks:
+    - If asked to play a song on Spotify, prefer finding the exact track link (open.spotify.com/track/...) via web_search or find_spotify_track,
+      then open it with open_url. If track lookup fails, fall back to open_spotify_search with the query.
+    - If asked to play/open a YouTube video, prefer finding the exact watch link via web_search or find_youtube_video, then open it with open_url.
+      If lookup fails, fall back to opening YouTube search for the query.
+
+    Social apps:
+    - For WhatsApp: use open_whatsapp_web, or open_whatsapp_chat(phone, message) to open a specific chat (message is prefilled, not auto-sent).
+    - For Telegram/Instagram/X/Facebook/Discord: use the dedicated open_* tools to open profiles or web apps via open_url.
+
+    Browser Automation (Playwright):
+    - To interact with dynamic websites, log into accounts, or fill forms, use the browser_* tools.
+    - Start by calling browser_launch(browser="chromium", headless="false" if you want the user to see it).
+    - If you need to stay logged in or inherit existing user sessions, provide `user_data_dir` (e.g., your Chrome profile).
+    - Use browser_navigate(url) to load a page, then browser_get_text() or browser_get_elements() to read it.
+    - Interact using browser_click(selector), browser_fill(selector, text), and browser_press_key(key).
+    - Call browser_close() when the task is complete.
+    - For simple static scraping without interaction, you can still use the older web_fetch tools.
+
+    Convenience tools:
+    - Use clipboard_get/clipboard_set for copy-paste automation.
+    - Use open_google_search/open_google_maps/open_youtube_search/open_github_search/open_stackoverflow_search for fast navigation.
+    - Use AgenticOs\core\nircmd for system volume control.
+    Media / Audio controls:
+    - Use media_play_pause, media_play, media_pause, media_stop to control playback.
+    - Use media_next / media_previous to skip tracks.
+    - Use media_status to query the currently playing track.
+    - Use media_seek(seconds) to seek forward (+) or backward (-) in a track.
+    - Use volume_set(0-100), volume_up(step), volume_down(step), volume_mute, volume_get to control audio.
+    Keyboard & Mouse:
+    - Use hotkey(keys) to send any shortcut OR a named alias: ctrl+c, screenshot, emoji_picker, lock_screen, etc.
+    - Use hotkey_list to see all custom named shortcuts; hotkey_set(name, keys) to add one; hotkey_delete(name) to remove.
+    - Use press_key(key, repeat) for single keys: enter, tab, esc, f5, up, down, delete, etc.
+    - Use type_text(text, delay_ms) to type text as keyboard input into any focused app.
+    - Use key_down(key)/key_up(key) for held keys (e.g. shift, ctrl).
+    - Use focus_window_and_hotkey(window, keys) to target a specific app window then send a hotkey.
+    - Use mouse_click(button, x, y), mouse_move(x, y), mouse_scroll(direction, clicks) for mouse control.
+    - Custom shortcuts are defined in config.yaml under 'custom_keys' and auto-loaded on start.
+    System-level tools:
+    - For debugging Windows issues: use eventlog_query(System/Application/Security) and installed_apps.
+    - For services: prefer service_list/service_status (read-only). Start/stop services only if user explicitly requests and rules.allow_service_control=true.
+    - For scheduled tasks: list/run tasks freely; create tasks only if user explicitly requests and rules.allow_system_changes=true.
+    - Use nircmd for:
+    - C:\AgenticOs\tools\nircmd\nircmd.exe
+    - Controlling the mouse (move, click, double‑click, scroll)  
+    - Simulating keyboard input (send keystrokes, shortcuts)  
+    - Managing windows (show, hide, minimize, maximize, close, set focus, change size/position)  
+    - Adjusting audio (set volume, mute/unmute, change playback device)  
+    - Controlling media playback (play, pause, stop, next/previous track)  
+    - Taking screenshots or saving the desktop to a file  
+    - Running programs, opening files, or executing batch commands  
+    - Changing monitor settings (turn on/off, set resolution, refresh rate)  
+    - Manipulating files and fold ers (copy, move, delete, rename)  
+    - Sending system messages, displaying pop‑ups, or playing sounds  
+    - Managing power options (sleep, hibernate, shutdown, restart)
+    - Finding the mouse coordinates on screen
+    read C:\AgenticOs\nircmd.md for more nircmd tools
+
+  # Keep system prompt from exploding when many tools are registered (tool list is truncated in the prompt).
+  max_tool_descriptions: 9999

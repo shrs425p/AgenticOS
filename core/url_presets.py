@@ -1,0 +1,609 @@
+"""URL presets for generating many useful open/search tools.
+
+These presets are registered as individual tools at runtime to avoid writing
+hundreds of nearly-identical functions.
+"""
+
+from __future__ import annotations
+
+import os
+
+import yaml
+
+
+# Each preset is a dict with:
+# - tool: tool name to register
+# - mode: "direct" (no args), "query" (one arg: query), or "path" (one arg: value)
+# - url: template URL. For query/path modes it must include "{value}".
+# - desc: short description
+DEFAULT_URL_PRESETS: list[dict] = [
+    # Core navigation (direct)
+    {
+        "tool": "open_chatgpt",
+        "mode": "direct",
+        "url": "https://chat.openai.com/",
+        "desc": "Open ChatGPT in browser.",
+    },
+    {
+        "tool": "open_gmail",
+        "mode": "direct",
+        "url": "https://mail.google.com/",
+        "desc": "Open Gmail.",
+    },
+    {
+        "tool": "open_google_drive",
+        "mode": "direct",
+        "url": "https://drive.google.com/",
+        "desc": "Open Google Drive.",
+    },
+    {
+        "tool": "open_google_calendar",
+        "mode": "direct",
+        "url": "https://calendar.google.com/",
+        "desc": "Open Google Calendar.",
+    },
+    {
+        "tool": "open_google_docs",
+        "mode": "direct",
+        "url": "https://docs.google.com/document/u/0/",
+        "desc": "Open Google Docs.",
+    },
+    {
+        "tool": "open_google_sheets",
+        "mode": "direct",
+        "url": "https://docs.google.com/spreadsheets/u/0/",
+        "desc": "Open Google Sheets.",
+    },
+    {
+        "tool": "open_google_slides",
+        "mode": "direct",
+        "url": "https://docs.google.com/presentation/u/0/",
+        "desc": "Open Google Slides.",
+    },
+    {
+        "tool": "open_google_photos",
+        "mode": "direct",
+        "url": "https://photos.google.com/",
+        "desc": "Open Google Photos.",
+    },
+    {
+        "tool": "open_google_keep",
+        "mode": "direct",
+        "url": "https://keep.google.com/",
+        "desc": "Open Google Keep.",
+    },
+    {
+        "tool": "open_google_translate",
+        "mode": "direct",
+        "url": "https://translate.google.com/",
+        "desc": "Open Google Translate.",
+    },
+    {
+        "tool": "open_google_news",
+        "mode": "direct",
+        "url": "https://news.google.com/",
+        "desc": "Open Google News.",
+    },
+    {
+        "tool": "open_google_finance",
+        "mode": "direct",
+        "url": "https://www.google.com/finance",
+        "desc": "Open Google Finance.",
+    },
+    {
+        "tool": "open_google_maps_home",
+        "mode": "direct",
+        "url": "https://www.google.com/maps",
+        "desc": "Open Google Maps.",
+    },
+    {
+        "tool": "open_youtube_home",
+        "mode": "direct",
+        "url": "https://www.youtube.com/",
+        "desc": "Open YouTube home.",
+    },
+    {
+        "tool": "open_github_home",
+        "mode": "direct",
+        "url": "https://github.com/",
+        "desc": "Open GitHub.",
+    },
+    {
+        "tool": "open_gitlab_home",
+        "mode": "direct",
+        "url": "https://gitlab.com/",
+        "desc": "Open GitLab.",
+    },
+    {
+        "tool": "open_bitbucket_home",
+        "mode": "direct",
+        "url": "https://bitbucket.org/",
+        "desc": "Open Bitbucket.",
+    },
+    {
+        "tool": "open_stackoverflow_home",
+        "mode": "direct",
+        "url": "https://stackoverflow.com/",
+        "desc": "Open StackOverflow.",
+    },
+    {
+        "tool": "open_reddit",
+        "mode": "direct",
+        "url": "https://www.reddit.com/",
+        "desc": "Open Reddit.",
+    },
+    {
+        "tool": "open_wikipedia",
+        "mode": "direct",
+        "url": "https://en.wikipedia.org/",
+        "desc": "Open Wikipedia.",
+    },
+    {
+        "tool": "open_linkedin",
+        "mode": "direct",
+        "url": "https://www.linkedin.com/",
+        "desc": "Open LinkedIn.",
+    },
+    {
+        "tool": "open_x_home",
+        "mode": "direct",
+        "url": "https://x.com/",
+        "desc": "Open X (Twitter).",
+    },
+    {
+        "tool": "open_instagram",
+        "mode": "direct",
+        "url": "https://www.instagram.com/",
+        "desc": "Open Instagram.",
+    },
+    {
+        "tool": "open_facebook",
+        "mode": "direct",
+        "url": "https://www.facebook.com/",
+        "desc": "Open Facebook.",
+    },
+    {
+        "tool": "open_discord_home",
+        "mode": "direct",
+        "url": "https://discord.com/app",
+        "desc": "Open Discord web.",
+    },
+    {
+        "tool": "open_slack_home",
+        "mode": "direct",
+        "url": "https://slack.com/signin",
+        "desc": "Open Slack sign-in.",
+    },
+    {
+        "tool": "open_microsoft_teams",
+        "mode": "direct",
+        "url": "https://teams.microsoft.com/",
+        "desc": "Open Microsoft Teams.",
+    },
+    {
+        "tool": "open_zoom",
+        "mode": "direct",
+        "url": "https://zoom.us/",
+        "desc": "Open Zoom.",
+    },
+    {
+        "tool": "open_google_meet",
+        "mode": "direct",
+        "url": "https://meet.google.com/",
+        "desc": "Open Google Meet.",
+    },
+    {
+        "tool": "open_figma",
+        "mode": "direct",
+        "url": "https://www.figma.com/files",
+        "desc": "Open Figma files.",
+    },
+    {
+        "tool": "open_notion",
+        "mode": "direct",
+        "url": "https://www.notion.so/",
+        "desc": "Open Notion.",
+    },
+    {
+        "tool": "open_linear",
+        "mode": "direct",
+        "url": "https://linear.app/",
+        "desc": "Open Linear.",
+    },
+    {
+        "tool": "open_jira",
+        "mode": "direct",
+        "url": "https://www.atlassian.com/software/jira",
+        "desc": "Open Jira landing page.",
+    },
+    {
+        "tool": "open_trello",
+        "mode": "direct",
+        "url": "https://trello.com/",
+        "desc": "Open Trello.",
+    },
+    {
+        "tool": "open_asana",
+        "mode": "direct",
+        "url": "https://app.asana.com/",
+        "desc": "Open Asana.",
+    },
+    {
+        "tool": "open_dropbox",
+        "mode": "direct",
+        "url": "https://www.dropbox.com/home",
+        "desc": "Open Dropbox.",
+    },
+    {
+        "tool": "open_onedrive",
+        "mode": "direct",
+        "url": "https://onedrive.live.com/",
+        "desc": "Open OneDrive.",
+    },
+    {
+        "tool": "open_outlook_mail",
+        "mode": "direct",
+        "url": "https://outlook.live.com/mail/",
+        "desc": "Open Outlook Mail.",
+    },
+    {
+        "tool": "open_outlook_calendar",
+        "mode": "direct",
+        "url": "https://outlook.live.com/calendar/",
+        "desc": "Open Outlook Calendar.",
+    },
+    {
+        "tool": "open_whatsapp_web_home",
+        "mode": "direct",
+        "url": "https://web.whatsapp.com/",
+        "desc": "Open WhatsApp Web.",
+    },
+    {
+        "tool": "open_spotify_home",
+        "mode": "direct",
+        "url": "https://open.spotify.com/",
+        "desc": "Open Spotify web.",
+    },
+    {
+        "tool": "open_netflix",
+        "mode": "direct",
+        "url": "https://www.netflix.com/",
+        "desc": "Open Netflix.",
+    },
+    {
+        "tool": "open_amazon",
+        "mode": "direct",
+        "url": "https://www.amazon.com/",
+        "desc": "Open Amazon.",
+    },
+    {
+        "tool": "open_ebay",
+        "mode": "direct",
+        "url": "https://www.ebay.com/",
+        "desc": "Open eBay.",
+    },
+    {
+        "tool": "open_weather",
+        "mode": "direct",
+        "url": "https://www.weather.com/",
+        "desc": "Open Weather.com.",
+    },
+    {
+        "tool": "open_speedtest",
+        "mode": "direct",
+        "url": "https://www.speedtest.net/",
+        "desc": "Open Speedtest.",
+    },
+    {
+        "tool": "open_cloudflare_speedtest",
+        "mode": "direct",
+        "url": "https://speed.cloudflare.com/",
+        "desc": "Open Cloudflare speed test.",
+    },
+    # Query tools (one arg: query)
+    {
+        "tool": "search_google",
+        "mode": "query",
+        "url": "https://www.google.com/search?q={value}",
+        "desc": "Google search. Args: query",
+    },
+    {
+        "tool": "search_google_images",
+        "mode": "query",
+        "url": "https://www.google.com/search?tbm=isch&q={value}",
+        "desc": "Google Images search. Args: query",
+    },
+    {
+        "tool": "search_google_news",
+        "mode": "query",
+        "url": "https://news.google.com/search?q={value}",
+        "desc": "Google News search. Args: query",
+    },
+    {
+        "tool": "search_google_maps",
+        "mode": "query",
+        "url": "https://www.google.com/maps/search/{value}",
+        "desc": "Google Maps search. Args: query",
+    },
+    {
+        "tool": "search_youtube",
+        "mode": "query",
+        "url": "https://www.youtube.com/results?search_query={value}",
+        "desc": "YouTube search. Args: query",
+    },
+    {
+        "tool": "search_wikipedia",
+        "mode": "query",
+        "url": "https://en.wikipedia.org/wiki/Special:Search?search={value}",
+        "desc": "Wikipedia search. Args: query",
+    },
+    {
+        "tool": "search_reddit",
+        "mode": "query",
+        "url": "https://www.reddit.com/search/?q={value}",
+        "desc": "Reddit search. Args: query",
+    },
+    {
+        "tool": "search_github",
+        "mode": "query",
+        "url": "https://github.com/search?q={value}",
+        "desc": "GitHub search. Args: query",
+    },
+    {
+        "tool": "search_gitlab",
+        "mode": "query",
+        "url": "https://gitlab.com/search?search={value}",
+        "desc": "GitLab search. Args: query",
+    },
+    {
+        "tool": "search_stackoverflow",
+        "mode": "query",
+        "url": "https://stackoverflow.com/search?q={value}",
+        "desc": "StackOverflow search. Args: query",
+    },
+    {
+        "tool": "search_npm",
+        "mode": "query",
+        "url": "https://www.npmjs.com/search?q={value}",
+        "desc": "npm package search. Args: query",
+    },
+    {
+        "tool": "search_pypi",
+        "mode": "query",
+        "url": "https://pypi.org/search/?q={value}",
+        "desc": "PyPI package search. Args: query",
+    },
+    {
+        "tool": "search_mdnpages",
+        "mode": "query",
+        "url": "https://developer.mozilla.org/en-US/search?q={value}",
+        "desc": "MDN search. Args: query",
+    },
+    {
+        "tool": "search_duckduckgo",
+        "mode": "query",
+        "url": "https://duckduckgo.com/?q={value}",
+        "desc": "DuckDuckGo search. Args: query",
+    },
+    {
+        "tool": "search_bing",
+        "mode": "query",
+        "url": "https://www.bing.com/search?q={value}",
+        "desc": "Bing search. Args: query",
+    },
+    {
+        "tool": "search_spotify",
+        "mode": "query",
+        "url": "https://open.spotify.com/search/{value}",
+        "desc": "Spotify search. Args: query",
+    },
+    {
+        "tool": "search_amazon",
+        "mode": "query",
+        "url": "https://www.amazon.com/s?k={value}",
+        "desc": "Amazon search. Args: query",
+    },
+    {
+        "tool": "search_ebay",
+        "mode": "query",
+        "url": "https://www.ebay.com/sch/i.html?_nkw={value}",
+        "desc": "eBay search. Args: query",
+    },
+    {
+        "tool": "search_imdb",
+        "mode": "query",
+        "url": "https://www.imdb.com/find/?q={value}",
+        "desc": "IMDb search. Args: query",
+    },
+    {
+        "tool": "search_goodreads",
+        "mode": "query",
+        "url": "https://www.goodreads.com/search?q={value}",
+        "desc": "Goodreads search. Args: query",
+    },
+    {
+        "tool": "search_yelp",
+        "mode": "query",
+        "url": "https://www.yelp.com/search?find_desc={value}",
+        "desc": "Yelp search. Args: query",
+    },
+    {
+        "tool": "search_tripadvisor",
+        "mode": "query",
+        "url": "https://www.tripadvisor.com/Search?q={value}",
+        "desc": "Tripadvisor search. Args: query",
+    },
+    {
+        "tool": "search_booking",
+        "mode": "query",
+        "url": "https://www.booking.com/searchresults.html?ss={value}",
+        "desc": "Booking.com search. Args: query",
+    },
+    {
+        "tool": "search_airbnb",
+        "mode": "query",
+        "url": "https://www.airbnb.com/s/{value}/homes",
+        "desc": "Airbnb search. Args: query",
+    },
+    {
+        "tool": "search_walmart",
+        "mode": "query",
+        "url": "https://www.walmart.com/search?q={value}",
+        "desc": "Walmart search. Args: query",
+    },
+    {
+        "tool": "search_target",
+        "mode": "query",
+        "url": "https://www.target.com/s?searchTerm={value}",
+        "desc": "Target search. Args: query",
+    },
+    {
+        "tool": "search_bestbuy",
+        "mode": "query",
+        "url": "https://www.bestbuy.com/site/searchpage.jsp?st={value}",
+        "desc": "BestBuy search. Args: query",
+    },
+    {
+        "tool": "search_newegg",
+        "mode": "query",
+        "url": "https://www.newegg.com/p/pl?d={value}",
+        "desc": "Newegg search. Args: query",
+    },
+    {
+        "tool": "search_coursera",
+        "mode": "query",
+        "url": "https://www.coursera.org/search?query={value}",
+        "desc": "Coursera search. Args: query",
+    },
+    {
+        "tool": "search_udemy",
+        "mode": "query",
+        "url": "https://www.udemy.com/courses/search/?q={value}",
+        "desc": "Udemy search. Args: query",
+    },
+    {
+        "tool": "search_khanacademy",
+        "mode": "query",
+        "url": "https://www.khanacademy.org/search?page_search_query={value}",
+        "desc": "Khan Academy search. Args: query",
+    },
+    {
+        "tool": "search_google_scholar",
+        "mode": "query",
+        "url": "https://scholar.google.com/scholar?q={value}",
+        "desc": "Google Scholar search. Args: query",
+    },
+    {
+        "tool": "search_arxiv",
+        "mode": "query",
+        "url": "https://arxiv.org/search/?query={value}&searchtype=all",
+        "desc": "arXiv search. Args: query",
+    },
+    {
+        "tool": "search_pubmed",
+        "mode": "query",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/?term={value}",
+        "desc": "PubMed search. Args: query",
+    },
+    {
+        "tool": "search_openalex",
+        "mode": "query",
+        "url": "https://openalex.org/works?search={value}",
+        "desc": "OpenAlex works search. Args: query",
+    },
+    # Path tools (one arg: value)
+    {
+        "tool": "open_github_repo",
+        "mode": "path",
+        "url": "https://github.com/{value}",
+        "desc": "Open GitHub repo 'owner/repo'. Args: value",
+    },
+    {
+        "tool": "open_github_user",
+        "mode": "path",
+        "url": "https://github.com/{value}",
+        "desc": "Open GitHub user/org. Args: value",
+    },
+    {
+        "tool": "open_gitlab_project",
+        "mode": "path",
+        "url": "https://gitlab.com/{value}",
+        "desc": "Open GitLab project path. Args: value",
+    },
+    {
+        "tool": "open_reddit_r",
+        "mode": "path",
+        "url": "https://www.reddit.com/r/{value}/",
+        "desc": "Open subreddit. Args: value",
+    },
+    {
+        "tool": "open_youtube_channel",
+        "mode": "path",
+        "url": "https://www.youtube.com/@{value}",
+        "desc": "Open YouTube channel handle (no @). Args: value",
+    },
+    {
+        "tool": "open_x_user",
+        "mode": "path",
+        "url": "https://x.com/{value}",
+        "desc": "Open X user. Args: value",
+    },
+    {
+        "tool": "open_instagram_user",
+        "mode": "path",
+        "url": "https://www.instagram.com/{value}/",
+        "desc": "Open Instagram user. Args: value",
+    },
+    {
+        "tool": "open_linkedin_company",
+        "mode": "path",
+        "url": "https://www.linkedin.com/company/{value}/",
+        "desc": "Open LinkedIn company. Args: value",
+    },
+    {
+        "tool": "open_linkedin_in",
+        "mode": "path",
+        "url": "https://www.linkedin.com/in/{value}/",
+        "desc": "Open LinkedIn profile. Args: value",
+    },
+    {
+        "tool": "open_wikipedia_page",
+        "mode": "path",
+        "url": "https://en.wikipedia.org/wiki/{value}",
+        "desc": "Open Wikipedia page title. Args: value",
+    },
+]
+
+
+def load_url_presets(cfg: dict | None = None) -> list[dict]:
+    """Load URL presets dynamically.
+
+    Precedence:
+    1) tools.url_presets_path (YAML file) if set and readable
+    2) tools.url_presets (inline list) if provided
+    3) built-in DEFAULT_URL_PRESETS
+    """
+    cfg = cfg or {}
+    tools_cfg = cfg.get("tools", {}) if isinstance(cfg, dict) else {}
+    path = (tools_cfg.get("url_presets_path") or "").strip()
+    if path:
+        try:
+            if not os.path.isabs(path):
+                base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                path = os.path.join(base_dir, path)
+            if os.path.exists(path):
+                with open(path, "r", encoding="utf-8") as handle:
+                    data = yaml.safe_load(handle) or {}
+                # Support either {"presets":[...]} or direct list in the file.
+                if isinstance(data, dict) and isinstance(data.get("presets"), list):
+                    return data["presets"]
+                if isinstance(data, list):
+                    return data
+        except Exception:
+            pass
+
+    inline = tools_cfg.get("url_presets")
+    if isinstance(inline, list) and inline:
+        return inline
+
+    return list(DEFAULT_URL_PRESETS)

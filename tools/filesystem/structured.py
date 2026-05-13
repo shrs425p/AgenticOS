@@ -1,0 +1,54 @@
+from __future__ import annotations
+
+import csv
+import json
+
+
+class StructuredMixin:
+    def read_json(self, path: str) -> str:
+        p = self._resolve(path)
+        try:
+            data = json.loads(p.read_text(encoding="utf-8", errors="replace"))
+            return json.dumps(data, indent=2)
+        except Exception as e:
+            return f"Error: {e}"
+
+    def write_json(self, path: str, data: str) -> str:
+        p = self._resolve(path)
+        try:
+            obj = json.loads(data) if data else {}
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(json.dumps(obj, indent=2), encoding="utf-8")
+            return f"Wrote JSON to {path}"
+        except Exception as e:
+            return f"Error: {e}"
+
+    def read_csv(self, path: str, max_rows: str = "50") -> str:
+        p = self._resolve(path)
+        try:
+            limit = max(1, int(max_rows))
+            with open(p, "r", encoding="utf-8", errors="replace", newline="") as f:
+                rdr = csv.reader(f)
+                rows = []
+                for i, row in enumerate(rdr):
+                    rows.append(row)
+                    if i + 1 >= limit:
+                        break
+            return json.dumps(rows, indent=2)
+        except Exception as e:
+            return f"Error: {e}"
+
+    def write_csv(self, path: str, data: str) -> str:
+        p = self._resolve(path)
+        try:
+            rows = json.loads(data) if data else []
+            if not isinstance(rows, list):
+                return "Error: data must be a JSON array."
+            p.parent.mkdir(parents=True, exist_ok=True)
+            with open(p, "w", encoding="utf-8", newline="") as f:
+                w = csv.writer(f)
+                for row in rows:
+                    w.writerow(row if isinstance(row, list) else [row])
+            return f"Wrote CSV to {path}"
+        except Exception as e:
+            return f"Error: {e}"

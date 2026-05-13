@@ -1,0 +1,54 @@
+from __future__ import annotations
+
+import fnmatch
+
+
+class SearchMixin:
+    def search_files(self, path: str, pattern: str) -> str:
+        root = self._resolve(path)
+        try:
+            if not root.exists():
+                return "Path not found."
+            matches = []
+            for p in root.rglob("*"):
+                if p.is_file() and fnmatch.fnmatch(p.name, pattern):
+                    matches.append(str(p))
+            return "\n".join(matches[:500]) if matches else "No matches."
+        except Exception as e:
+            return f"Error: {e}"
+
+    def grep_file(self, path: str, query: str, case_sensitive: str = "true") -> str:
+        p = self._resolve(path)
+        try:
+            cs = str(case_sensitive).lower() == "true"
+            text = p.read_text(encoding="utf-8", errors="replace").splitlines()
+            out = []
+            for i, line in enumerate(text, 1):
+                hay = line if cs else line.lower()
+                needle = query if cs else query.lower()
+                if needle in hay:
+                    out.append(f"{i}: {line}")
+            return "\n".join(out[:300]) if out else "No matches."
+        except Exception as e:
+            return f"Error: {e}"
+
+    def grep_dir(self, path: str, query: str, pattern: str = "*") -> str:
+        root = self._resolve(path)
+        try:
+            # PERFORMANCE GUARDRAIL: Prevent full-drive content reading
+            if (str(root) == "C:\\" or str(root) == "C:") and pattern == "*":
+                return (
+                    "CRITICAL: Recursive content grep on C:\\ is forbidden. This would read your entire SSD and crash the system. "
+                    "If you are looking for a FILENAME, use 'search_files'. If you need a disk audit, use 'fast_disk_audit'."
+                )
+
+            matches = []
+            for p in root.rglob(pattern):
+                if not p.is_file():
+                    continue
+                hit = self.grep_file(str(p), query)
+                if hit and hit != "No matches." and not hit.startswith("Error:"):
+                    matches.append(f"\n== {p} ==\n{hit}")
+            return "\n".join(matches[:50]) if matches else "No matches."
+        except Exception as e:
+            return f"Error: {e}"

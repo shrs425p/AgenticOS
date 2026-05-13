@@ -1,0 +1,110 @@
+# AgenticOS: API & Tool Reference Guide
+
+AgenticOS features a massive registry of over 300+ specialized tools. This document provides a high-level overview of the primary tool categories and their intended use cases.
+
+---
+
+## 📁 Filesystem Tools (`Files` Category)
+
+The foundation of the agent's ability to manipulate data.
+
+| Tool | Arguments | Description |
+| :--- | :--- | :--- |
+| `read_file` | `path`, `start_line`, `num_lines` | Reads content with smart chunking support. |
+| `write_file` | `path`, `content` | Atomic write to a file. |
+| `edit_file` | `path`, `old_text`, `new_text` | Replaces specific substrings. |
+| `grep_dir` | `path`, `query`, `pattern` | **Security Gated**: Recursive search for content inside files. |
+| `search_files` | `path`, `pattern` | Finds files by name (e.g., `*.py`). |
+| `find_large_files`| `path`, `min_mb` | **Security Gated**: Identifies disk bloat. |
+| `file_info` | `path` | Returns size, mime-type, and modification time. |
+| `zip_files` | `output_path`, `sources` | Archives multiple files/folders. |
+
+---
+
+## [SHELL] Terminal & OS Tools (`Terminal` Category)
+
+Direct interaction with the Windows Operating System.
+
+| Tool | Arguments | Description |
+| :--- | :--- | :--- |
+| `run_powershell` | `command` | Executes native PowerShell scripts. |
+| `run_command` | `command` | Executes standard shell commands (CMD/Bash). |
+| `process_list` | `filter_str` | Lists all running processes with PID and RAM. |
+| `kill_process` | `pid` | Terminates a process (Subject to Guardrails). |
+| `system_health` | `none` | Real-time CPU/RAM/Disk diagnostic. |
+| `installed_apps` | `filter_str` | Lists software registered in the Windows Registry. |
+| `service_list` | `filter_str` | Lists Windows services and their status. |
+| `eventlog_query` | `log_name`, `n` | Queries the Windows Event Log (System/Application). |
+
+---
+
+## [WEB] Web & API Tools (`Web` Category)
+
+Connecting the agent to global intelligence.
+
+| Tool | Arguments | Description |
+| :--- | :--- | :--- |
+| `web_search` | `query`, `num_results`| High-speed search via Brave/Serper/Google. |
+| `fetch_url` | `url` | Downloads raw webpage content. |
+| `get_page_text` | `url` | Extracts readable text (removes HTML bloat). |
+| `get_json_api` | `url`, `headers` | Fetches data from REST APIs. |
+| `whois_lookup` | `domain` | Performs registration lookups. |
+| `rss_feed` | `url` | Parses news feeds into structured lists. |
+| `download_smart` | `url`, `dest_path` | Resilient, multi-method file downloader. |
+
+---
+
+## [BOT] Browser Automation (`Browser` Category)
+
+Playwright-driven interactive web navigation.
+
+| Tool | Arguments | Description |
+| :--- | :--- | :--- |
+| `browser_launch` | `browser`, `headless` | Starts a fresh browser instance. |
+| `browser_navigate`| `url` | Loads a specific website. |
+| `browser_click` | `selector` | Simulates a human click on an element. |
+| `browser_fill` | `selector`, `text` | Inputs text into forms/input fields. |
+| `browser_screenshot`| `path` | Takes a PNG of the current page. |
+| `browser_close` | `none` | Cleanly shuts down the browser process. |
+
+---
+
+## [MUSIC] Media & UI Control (`Media` Category)
+
+Controlling the user environment and peripherals.
+
+| Tool | Arguments | Description |
+| :--- | :--- | :--- |
+| `volume_set` | `level` (0-100) | Adjusts master system volume. |
+| `media_play_pause`| `none` | Toggles active media playback. |
+| `set_wallpaper` | `path` | Updates the desktop background. |
+| `hotkey` | `keys` | Sends global shortcuts (e.g., `win+d`). |
+| `type_text` | `text`, `delay_ms` | Injects keyboard input into any focused app. |
+
+---
+
+## [LAUNCH] Performance Plugins (`Custom`)
+
+Specialized tools added for the v2.0 Production hardening.
+
+| Tool | Arguments | Description |
+| :--- | :--- | :--- |
+| `fast_disk_audit` | `path`, `mode` | PowerShell-optimized full-drive auditing. |
+| `meta_evolution` | `code`, `goal` | Self-modification tool for writing new plugins. |
+| `sentiment_score` | `text` | Native NLP analysis of text strings. |
+
+---
+
+## [DOC] Using the Reference
+This is a condensed list. For a full, live inventory of every tool available to your specific instance, type the following command into your terminal:
+
+```powershell
+tools_list
+```
+
+This will output the documentation, argument schemas, and version numbers for all **300+ tools** currently registered in your system.
+
+---
+
+*Last Updated: 2026-05-13*
+*Status: API Reference Complete*
