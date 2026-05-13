@@ -25,6 +25,7 @@
     <img src="https://img.shields.io/badge/platform-Windows-lightgrey?style=flat-square" alt="Platform">
     <img src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square" alt="PRs Welcome">
     <img src="https://img.shields.io/badge/security-verified-brightgreen?style=flat-square" alt="Security">
+    <img src="https://github.com/shrs425p/AgenticOS/actions/workflows/ci.yml/badge.svg" alt="CI Build Status">
   </p>
 
   <br>
