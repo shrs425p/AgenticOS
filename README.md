@@ -30,7 +30,7 @@ Following a massive 96-item stress test, AgenticOS v2.0 has been hardened for re
 
 ---
 
-## 📚 Documentation Center
+##  Documentation Center
 
 Explore the full AgenticOS manual for deep technical insights:
 

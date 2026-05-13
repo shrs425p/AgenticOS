@@ -17,7 +17,7 @@ AgenticOS operates on a principle of least privilege. Even when running on a loc
 
 ---
 
-## 🗺️ Zone-Based Security (PathGuard)
+## ️ Zone-Based Security (PathGuard)
 
 The `PathGuard` system divides the host machine into three distinct security zones.
 

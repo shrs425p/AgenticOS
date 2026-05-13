@@ -17,7 +17,7 @@ AgenticOS is a complex system interacting with multiple APIs and the local opera
 -   **Fix**: Ensure your `Logger` class in `run_eval.py` has an `isatty()` method and an `encoding` property. (This was fixed in v2.0).
 
 ### 3. `UnicodeEncodeError: 'charmap' codec can't encode character...`
--   **Symptom**: The agent crashes when printing emojis (e.g., ⚠, 🛡, [LAUNCH]) to the Windows console.
+-   **Symptom**: The agent crashes when printing emojis (e.g., ⚠, , [LAUNCH]) to the Windows console.
 -   **Cause**: The Windows CMD/PowerShell encoding is not set to UTF-8.
 -   **Fix**: Run `sys.stdout.reconfigure(encoding='utf-8')` at the top of your script, or use the AgenticOS built-in `runtime_ui` which handles this automatically.
 

@@ -37,7 +37,7 @@ The level of autonomy is controlled by the `autonomy` section in `config.yaml`.
 
 ---
 
-## 📋 Persistent Task Tracking
+##  Persistent Task Tracking
 
 Unlike simple scripts, AgenticOS maintains its state across restarts. If the system crashes or is interrupted, it can pick up right where it left off.
 
@@ -56,7 +56,7 @@ For power users, `expert_mode` strips away the conversational "fluff."
 
 ---
 
-## 🔄 Self-Healing & Fallback Logic
+##  Self-Healing & Fallback Logic
 
 One of the most advanced autonomous features is the **Self-Healing Loop**.
 

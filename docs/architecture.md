@@ -110,7 +110,7 @@ The architecture enforces a "Zero Trust" model for the local system.
 
 ---
 
-## 🔄 Lifecycle of a Task
+##  Lifecycle of a Task
 
 1.  **Initialize**: `main.py` loads `config.yaml` and starts the `Runtime`.
 2.  **Objective**: User provides a prompt; Agent breaks it into a 5-10 step `PLAN`.

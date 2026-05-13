@@ -74,7 +74,7 @@ The harness will automatically pick up any new bullet points in the `task.md` fi
 
 ---
 
-## 📉 Benchmarking Results
+##  Benchmarking Results
 
 The harness produces a summary at the end of the run:
 -   **Success Rate**: Percentage of tasks that reached a `FINAL ANSWER`.

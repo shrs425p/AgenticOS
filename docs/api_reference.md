@@ -4,7 +4,7 @@ AgenticOS features a massive registry of over 300+ specialized tools. This docum
 
 ---
 
-## 📁 Filesystem Tools (`Files` Category)
+##  Filesystem Tools (`Files` Category)
 
 The foundation of the agent's ability to manipulate data.
 

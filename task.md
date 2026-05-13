@@ -26,7 +26,7 @@ Fetch https://huggingface.co/models?sort=trending, scrape the top 10 trending mo
 Build a web change detector: fetch a target page (e.g. https://ollama.com/library), hash its content, wait 60 seconds, fetch again, diff the two versions, report any changes
 
 
-🖥️ DEEP BROWSER AUTOMATION (31–50)
+️ DEEP BROWSER AUTOMATION (31–50)
 
 Launch browser, navigate to https://mail.google.com — if logged in, extract the subject lines of the last 10 unread emails and write them to workspace as inbox_summary.md
 Navigate to https://github.com/trending/python?since=weekly, extract all trending repos with stars-this-week count, navigate into each repo page and extract the repo description and top contributor, write trending_deep.md
@@ -50,7 +50,7 @@ Navigate to https://shodan.io (no login needed for banner search), search for "A
 Navigate to LinkedIn (if logged in), go to "Jobs" search for "AI Engineer" in India, extract first 10 job titles + companies + locations, write jobs_digest.md
 
 
-🔁 AUTONOMOUS PIPELINE CHAINS (51–70)
+ AUTONOMOUS PIPELINE CHAINS (51–70)
 
 Full competitive intelligence run: search for AgenticOS competitors (AutoGPT, CrewAI, LangGraph, Agno, OpenDevin), for each visit GitHub + official site, extract stars/last commit/core feature claim, write a competitor_matrix.md with a comparison table
 Self-healing test: attempt to read a file that doesn't exist, catch the error, create it with placeholder content, verify it exists, then summarize what recovery steps were taken

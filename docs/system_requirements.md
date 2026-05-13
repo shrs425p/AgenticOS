@@ -4,7 +4,7 @@ To ensure stable, high-performance autonomous operations, your host machine must
 
 ---
 
-## 💻 Hardware Requirements
+##  Hardware Requirements
 
 ### 1. Minimal Specifications (Cloud-Hybrid Mode)
 If you are offloading the "thinking" to cloud providers like Nvidia or Google, AgenticOS is relatively lightweight.
@@ -86,7 +86,7 @@ The agent will call `system_health` and compare your RAM, CPU, and VRAM against 
 
 ---
 
-## 🔄 Updating Dependencies
+##  Updating Dependencies
 
 To keep the system at peak performance, ensure your Python packages are up to date:
 ```powershell

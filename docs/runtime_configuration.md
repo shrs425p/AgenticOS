@@ -77,7 +77,7 @@ Removes "magic numbers" from the codebase.
 
 ---
 
-## 📁 Section 6: Logging & Auditing
+##  Section 6: Logging & Auditing
 
 ### `logging:`
 -   **`level`**: `DEBUG`, `INFO`, `WARNING`, `ERROR`.
@@ -86,7 +86,7 @@ Removes "magic numbers" from the codebase.
 
 ---
 
-## 📝 Example `config.yaml` (Secure & Verified)
+##  Example `config.yaml` (Secure & Verified)
 
 ```yaml
 agent:
@@ -113,7 +113,7 @@ performance:
 
 ---
 
-## 🔄 How to Apply Changes
+##  How to Apply Changes
 
 1.  **Edit**: Open `config.yaml` in your editor.
 2.  **Save**: As soon as you save, the "Hot-Reload" system will detect the change.

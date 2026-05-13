@@ -70,7 +70,7 @@ cloud:
 
 ---
 
-## 🔄 Dynamic Model Switching & Fallbacks
+##  Dynamic Model Switching & Fallbacks
 
 AgenticOS supports **Self-Healing Fallbacks**. If a primary model fails to generate valid JSON or hits a persistent error, the orchestrator can automatically switch to a fallback model to complete the turn.
 

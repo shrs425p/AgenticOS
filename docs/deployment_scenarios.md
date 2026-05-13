@@ -74,10 +74,10 @@ browser:
 
 | Feature | Isolated Researcher | Enterprise Automator | Data Analyst |
 | :--- | :--- | :--- | :--- |
-| **Privacy** | 🟢 Absolute | 🟡 API-Gated | 🟡 API-Gated |
-| **Reasoning** | 🟡 Standard (7B-14B) | 🟢 Extreme (400B+) | 🟢 Extreme (Gemini) |
-| **Speed** | 🟡 Hardware-Limited | 🟢 High (Cloud) | 🟢 High (Cloud) |
-| **Context Size**| 🟡 4K - 16K | 🟢 128K | 🟢 1M - 2M |
+| **Privacy** |  Absolute |  API-Gated |  API-Gated |
+| **Reasoning** |  Standard (7B-14B) |  Extreme (400B+) |  Extreme (Gemini) |
+| **Speed** |  Hardware-Limited |  High (Cloud) |  High (Cloud) |
+| **Context Size**|  4K - 16K |  128K |  1M - 2M |
 | **Ideal For** | Personal Code | System SRE Tasks | Market Research |
 
 ---

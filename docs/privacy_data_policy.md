@@ -32,7 +32,7 @@ AgenticOS allows you to switch between model providers. Your choice of provider 
 
 ---
 
-## 🔒 Data Minimization & Redaction
+##  Data Minimization & Redaction
 
 Even when using cloud providers, AgenticOS implements "Context Pruning" to minimize the amount of data transmitted.
 
@@ -56,7 +56,7 @@ The following paths are blocked by default to prevent accidental data leakage:
 
 ---
 
-## 📁 Persistent Memory Privacy
+##  Persistent Memory Privacy
 
 The SQLite database (`data/memory.sqlite3`) contains a record of your interactions. To ensure this data remains secure:
 1.  **Local Encryption**: We recommend running AgenticOS on an encrypted drive (e.g., BitLocker or FileVault).
