@@ -6,7 +6,7 @@ agent.log
 data/logs/
 scratch/
 data/cache/
-data/memory.sqlite3
+data/memory.sqlite3*
 
 # Workspace generated files
 workspace/
