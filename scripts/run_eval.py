@@ -10,6 +10,7 @@ if sys.stdout.encoding.lower() != 'utf-8':
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, base_dir)
 
+# ruff: noqa: E402
 from core.runtime import Agent
 from core.runtime_config import load_config
 from core.runtime_ui import print_success, print_error, print_info

@@ -32,7 +32,6 @@ from core.runtime_ui import (
     C,
     banner,
     has_final_answer,
-    parse_action,
     parse_actions,
     print_action,
     print_error,
@@ -661,8 +660,45 @@ class Agent:
                                 print_info("\nCancelled.")
                                 return
 
+                    import time as _time
+                    started = _time.time()
                     obs = self.tools.call(tool_name, args)
+                    ended = _time.time()
                     observations.append(str(obs or "Done."))
+
+                    # Audit log tool call (no chat content).
+                    try:
+                        import json as _json
+
+                        obs_text = str(obs or "")
+                        validation = ""
+                        for line in obs_text.splitlines():
+                            if line.strip().upper().startswith("VALIDATION:"):
+                                validation = line.strip()
+                                break
+                        ok = infer_success(obs_text)
+                        if validation and (
+                            "missing" in validation.lower()
+                            or "still exists" in validation.lower()
+                        ):
+                            ok = False
+                        self.audit.tool_call(
+                            session_id=self.session_id,
+                            tool_name=tool_name,
+                            tool_args=_json.dumps(args, ensure_ascii=False)
+                            if isinstance(args, (dict, list))
+                            else str(args),
+                            started_ts=started,
+                            ended_ts=ended,
+                            success=ok,
+                            validation=validation,
+                            observation_preview=obs_text,
+                        )
+                    except Exception as exc:
+                        try:
+                            self.audit.error(self.session_id, "audit.tool_call", str(exc))
+                        except Exception:
+                            pass
 
                 # Combine all observations
                 combined_obs = "\n---\n".join(observations)
@@ -690,40 +726,6 @@ class Agent:
                 self.memory.add("assistant", response)
                 self.memory.add("user", f"OBSERVATION: {combined_obs}")
                 continue
-
-                # Audit log tool call (no chat content).
-                try:
-                    import json as _json
-
-                    obs_text = str(obs or "")
-                    validation = ""
-                    for line in obs_text.splitlines():
-                        if line.strip().upper().startswith("VALIDATION:"):
-                            validation = line.strip()
-                            break
-                    ok = infer_success(obs_text)
-                    if validation and (
-                        "missing" in validation.lower()
-                        or "still exists" in validation.lower()
-                    ):
-                        ok = False
-                    self.audit.tool_call(
-                        session_id=self.session_id,
-                        tool_name=tool_name,
-                        tool_args=_json.dumps(args, ensure_ascii=False)
-                        if isinstance(args, (dict, list))
-                        else str(args),
-                        started_ts=started,
-                        ended_ts=ended,
-                        success=ok,
-                        validation=validation,
-                        observation_preview=obs_text,
-                    )
-                except Exception as exc:
-                    try:
-                        self.audit.error(self.session_id, "audit.tool_call", str(exc))
-                    except Exception:
-                        pass
 
                 # Persist tool events + artifacts for SQLite memory backend.
                 if hasattr(self.memory, "record_tool_event"):

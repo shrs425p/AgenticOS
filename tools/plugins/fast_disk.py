@@ -49,7 +49,7 @@ def fast_disk_audit(path: str = "C:\\", top_n: int = 20, min_mb: int = 100, mode
 
     if mode in ("all", "old"):
         results.append(f"\n{C.CYAN}--- FILES NOT ACCESSED IN 180+ DAYS ---{C.RESET}")
-        cutoff = (time.time() - (180 * 86400))
+        (time.time() - (180 * 86400))
         # We'll use a PS command for this too
         cmd = (
             f"Get-ChildItem -Path '{path}' -File -Recurse -ErrorAction SilentlyContinue | "

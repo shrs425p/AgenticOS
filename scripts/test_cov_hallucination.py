@@ -1,12 +1,10 @@
 import sys
 import os
-import json
 
 # Add project root to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from core.runtime import Agent
-from core.session_memory import SessionMemory
 
 def test_cov_hallucination_fix():
     print("Testing CoV Tool Existence Hallucination Fix...")

@@ -28,9 +28,6 @@ def test_multi_action():
 
 def test_mangled_json_with_pipes():
     # Scenario where JSON parsing fails but it shouldn't fall back to pipe splitting if it looks like JSON
-    text = """
-    ACTION: {"tool": "run_python", "args": {"code": "print('a | b'); print(\"quote error\")"}}
-    """
     # Note: the JSON above is technically valid, but let's test one that is SLIGHTLY broken
     text_broken = "ACTION: {\"tool\": \"run_python\", \"args\": {\"code\": \"print('a | b')\" " # missing closing brace
     actions = parse_actions(text_broken)

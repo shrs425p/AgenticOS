@@ -16,8 +16,7 @@ def test_completion_guard():
     
     print("\nTesting Completion Guardrail...")
     
-    system = agent.build_system()
-    messages = [{"role": "user", "content": user_input}]
+    agent.build_system()
     
     # We will simulate one turn of the agent loop manually to see if it triggers the guardrail in runtime.py
     # Actually, the logic is IN Agent.run, so we should run a mini-loop.
