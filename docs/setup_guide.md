@@ -117,9 +117,9 @@ The agent should:
 
 ---
 
-## [FILE] Step 8: Hardening & Safety
+## [FILE] Step 8: Safety Guide
 
-By default, AgenticOS is in **Hardened Mode**.
+By default, AgenticOS is in **Secure Mode**.
 -   **Security**: It will ask for permission before writing to any folder outside `workspace/`.
 -   **Autonomy**: If you want it to be more "hands-off," set `autonomy: autopilot: true` in `config.yaml`.
 
@@ -151,4 +151,4 @@ By default, AgenticOS is in **Hardened Mode**.
 ---
 
 *Last Updated: 2026-05-14*
-*Status: Production-Hardened*
+*Status: Secure & Verified*

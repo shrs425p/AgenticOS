@@ -7,7 +7,7 @@ AgenticOS is a high-performance autonomous orchestration framework. To achieve t
 ## [SECURE] The Collaborative Success Model
 
 Optimal results in AgenticOS are achieved through a partnership:
-1.  **The Framework**: Provides high-speed execution, non-bypassable guardrails (PathGuard), and real-time observability.
+1.  **The Project**: Provides high-speed execution, non-bypassable guardrails (PathGuard), and real-time observability.
 2.  **The Operator**: Provides the vision and specific instructions (prompts) to guide the agent toward the desired outcome.
 
 ---

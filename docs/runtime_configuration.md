@@ -86,7 +86,7 @@ Removes "magic numbers" from the codebase.
 
 ---
 
-## 📝 Example `config.yaml` (Production-Hardened)
+## 📝 Example `config.yaml` (Secure & Verified)
 
 ```yaml
 agent:

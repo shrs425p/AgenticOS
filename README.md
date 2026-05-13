@@ -1,6 +1,6 @@
-# AgenticOS — Enterprise-Grade Autonomous OS Framework [SECURE][LAUNCH]
+# AgenticOS — Simple & Modular Autonomous Assistant [SECURE][LAUNCH]
 
-**AgenticOS** is a production-hardened autonomous operating system designed for extreme performance, deep system orchestration, and resilient multi-modal research. It integrates high-scale cloud models (NVIDIA NIM, Google Gemini) and local LLMs (Ollama) with a modular ecosystem of over **350+ specialized tools** to provide a proactive, self-healing operational experience.
+**AgenticOS** is a secure autonomous operating system designed for extreme performance, deep system orchestration, and resilient multi-modal research. It integrates high-scale cloud models (NVIDIA NIM, Google Gemini) and local LLMs (Ollama) with a modular ecosystem of over **350+ specialized tools** to provide a proactive, self-healing operational experience.
 
 ---
 
@@ -17,7 +17,7 @@ AgenticOS recently completed a **96-task autonomous audit** of a live Windows sy
 AgenticOS is a high-performance autonomous tool. Its best results are achieved through clear, precise guidance from the user.
 -   **Sovereignty**: The user maintains ultimate control over the system, providing the vision for the agent to execute.
 -   **Collaboration**: Best practices involve starting with "Autopilot: False" to fine-tune your collaborative style with the agent.
--   **Guidance**: All operations are performed under the user's direction and oversight. See [Operator Guidance](docs/safety_advisory.md) for best practices.
+-   **Guidance**: All operations are performed under the user's direction and oversight. See [Operator Guidance](docs/safety_guide.md) for best practices.
 
 ---
 

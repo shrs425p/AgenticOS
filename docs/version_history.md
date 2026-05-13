@@ -1,6 +1,6 @@
 # AgenticOS: Version History & Evolution
 
-This document tracks the technical evolution of AgenticOS from its initial prototype to the current production-hardened framework. Each major version represents a significant leap in safety, performance, and autonomous reasoning.
+This document tracks the technical evolution of AgenticOS from its initial prototype to the current secure framework. Each major version represents a significant leap in safety, performance, and autonomous reasoning.
 
 ---
 
