@@ -1,5 +1,4 @@
 # AgenticOS — High-Performance Autonomous Framework [SECURE][LAUNCH]
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **AgenticOS** is a secure autonomous operating system designed for extreme performance, deep system orchestration, and resilient multi-modal research. It integrates high-scale cloud models (NVIDIA NIM, Google Gemini) and local LLMs (Ollama) with a modular ecosystem of over **350+ specialized tools** to provide a proactive, self-healing operational experience.
 
