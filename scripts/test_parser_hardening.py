@@ -21,9 +21,9 @@ def test_multi_action():
     ACTION: run_script(path="script.py")
     """
     actions = parse_actions(text)
-    assert len(actions) == 2
+    # Parser intentionally executes one tool per turn and preserves the first.
+    assert len(actions) == 1
     assert actions[0][0] == "write_file"
-    assert actions[1][0] == "run_script"
     print("test_multi_action: PASSED")
 
 def test_mangled_json_with_pipes():

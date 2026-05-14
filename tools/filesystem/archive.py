@@ -6,6 +6,7 @@ import zipfile
 class ArchiveMixin:
     def zip_files(self, output_path: str, *sources) -> str:
         out = self._resolve(output_path)
+        self._deny_file_modify()
         self._deny_internal_writes(out)
         try:
             out.parent.mkdir(parents=True, exist_ok=True)
@@ -29,6 +30,7 @@ class ArchiveMixin:
     def unzip_file(self, path: str, dest: str = ".") -> str:
         p = self._resolve(path)
         d = self._resolve(dest)
+        self._deny_file_modify()
         self._deny_internal_writes(d)
         try:
             d.mkdir(parents=True, exist_ok=True)

@@ -3,6 +3,8 @@
 import json
 import os
 import sys
+import time
+from collections import defaultdict, deque
 
 import requests
 
@@ -23,6 +25,70 @@ except ImportError:
                 if line and not line.startswith("#") and "=" in line:
                     key, value = line.split("=", 1)
                     os.environ.setdefault(key.strip(), value.strip())
+
+
+_RATE_LIMIT_HISTORY: dict[str, deque[float]] = defaultdict(deque)
+
+
+def _get_nested(cfg: dict, path: str, default=None):
+    current = cfg
+    for part in path.split("."):
+        if not isinstance(current, dict) or part not in current:
+            return default
+        current = current[part]
+    return current
+
+
+def _configured_rpm(cfg: dict, provider: str, model: str) -> float:
+    limits = cfg.get("rate_limits", {}) or {}
+    model_key = f"{provider}:{model}"
+    raw = (
+        _get_nested(limits, f"models.{model_key}.rpm")
+        or _get_nested(limits, f"providers.{provider}.rpm")
+        or limits.get("default_rpm")
+    )
+    try:
+        rpm = float(raw)
+    except (TypeError, ValueError):
+        return 0.0
+    safety = limits.get("safety_factor", 1.0)
+    try:
+        rpm *= float(safety)
+    except (TypeError, ValueError):
+        pass
+    return max(0.0, rpm)
+
+
+def _wait_for_rate_limit(cfg: dict, provider: str, model: str) -> None:
+    limits = cfg.get("rate_limits", {}) or {}
+    if not limits.get("enabled", False):
+        return
+    rpm = _configured_rpm(cfg, provider, model)
+    if rpm <= 0:
+        return
+
+    window = float(limits.get("window_seconds", 60))
+    max_requests = max(1, int(rpm * window / 60))
+    key = f"{provider}:{model}"
+    history = _RATE_LIMIT_HISTORY[key]
+
+    now = time.monotonic()
+    while history and now - history[0] >= window:
+        history.popleft()
+
+    if len(history) >= max_requests:
+        sleep_for = window - (now - history[0])
+        if sleep_for > 0:
+            print(
+                f"\n{C.YELLOW}Rate limit pacing {key}: sleeping {sleep_for:.1f}s "
+                f"({rpm:.1f} effective RPM).{C.RESET}"
+            )
+            time.sleep(sleep_for)
+        now = time.monotonic()
+        while history and now - history[0] >= window:
+            history.popleft()
+
+    history.append(time.monotonic())
 
 
 class OllamaClient:
@@ -48,6 +114,7 @@ class OllamaClient:
             return []
 
     def chat(self, messages: list, system: str = "") -> str:
+        _wait_for_rate_limit(self.cfg, self.provider, self.model)
         full_messages = [{"role": "system", "content": system}] if system else []
         full_messages.extend(messages)
         payload = {
@@ -144,6 +211,7 @@ class NvidiaClient:
     def chat(self, messages: list, system: str = None) -> str:
         if not self.api_key:
             return "FINAL ANSWER: NVIDIA_API_KEY is not set. Add it to .env or switch the provider to Ollama in config.yaml."
+        _wait_for_rate_limit(self.cfg, self.provider, self.model)
 
         full_messages = []
         is_stubborn = any(
@@ -367,6 +435,7 @@ class GeminiClient:
     def chat(self, messages: list, system: str = "") -> str:
         if not self._client:
             return "FINAL ANSWER: google-genai is not installed. Run: pip install google-genai"
+        _wait_for_rate_limit(self.cfg, self.provider, self.model)
 
         use_color = sys.stdout.isatty() and os.getenv("NO_COLOR") is None
 
@@ -486,6 +555,7 @@ class GroqClient:
     def chat(self, messages: list, system: str = "") -> str:
         if not self._client:
             return "FINAL ANSWER: groq is not installed. Run: pip install groq"
+        _wait_for_rate_limit(self.cfg, self.provider, self.model)
 
         # Convert to OpenAI-style messages list
         full_messages = []
@@ -580,6 +650,7 @@ class OpenAICompatibleClient:
     def chat(self, messages: list, system: str = "") -> str:
         if not self._client:
             return "FINAL ANSWER: openai is not installed. Run: pip install openai"
+        _wait_for_rate_limit(self.cfg, self.provider, self.model)
 
         full_messages = []
         if system:

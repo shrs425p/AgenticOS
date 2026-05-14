@@ -7,6 +7,9 @@ from tools.web.session import bs4_beautifulsoup, requests_module
 
 class UtilsMixin:
     def shorten_url(self, url: str) -> str:
+        err = self._network_error()
+        if err:
+            return err
         try:
             r = requests_module()
             timeout = self._get_timeout("web_utils", 15)
@@ -20,6 +23,9 @@ class UtilsMixin:
             return f"Shorten error: {e}"
 
     def expand_url(self, url: str) -> str:
+        err = self._network_error()
+        if err:
+            return err
         try:
             r = requests_module()
             timeout = self._get_timeout("web_utils", 15)
@@ -29,6 +35,9 @@ class UtilsMixin:
             return f"Expand error: {e}"
 
     def rss_feed(self, url: str, num_items: str = "5") -> str:
+        err = self._network_error()
+        if err:
+            return err
         try:
             n = min(int(num_items), 50)
             r = requests_module()
@@ -63,6 +72,9 @@ class UtilsMixin:
             return f"RSS error: {e}"
 
     def wayback_snapshot(self, url: str) -> str:
+        err = self._network_error()
+        if err:
+            return err
         try:
             r = requests_module()
             timeout = self._get_timeout("web_utils", 20)
@@ -73,6 +85,9 @@ class UtilsMixin:
             return f"Wayback error: {e}"
 
     def scrape_table(self, url: str, table_index: str = "0") -> str:
+        err = self._network_error()
+        if err:
+            return err
         try:
             idx = int(table_index)
             sess = self._get_session()

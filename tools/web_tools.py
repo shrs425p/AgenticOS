@@ -54,6 +54,15 @@ class WebTools(
             self._session = build_default_session()
         return self._session
 
+    def _network_error(self, capability: str = "network") -> str:
+        if not self.rules.get("allow_network_access", True):
+            return "Error: network access is disabled by config."
+        if capability == "search" and not self.rules.get("allow_web_search", True):
+            return "Error: web search is disabled by config."
+        if capability == "download" and not self.rules.get("allow_web_download", True):
+            return "Error: web download is disabled by config."
+        return ""
+
     def _resolve_path_in_base(self, path: str) -> Path:
         p = Path(path)
         if not p.is_absolute():

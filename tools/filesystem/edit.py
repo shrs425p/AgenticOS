@@ -4,6 +4,7 @@ from __future__ import annotations
 class EditMixin:
     def edit_file(self, path: str, old_text: str, new_text: str) -> str:
         p = self._resolve(path)
+        self._deny_file_modify()
         self._deny_internal_writes(p)
         try:
             text = p.read_text(encoding="utf-8", errors="replace")
@@ -17,6 +18,7 @@ class EditMixin:
 
     def edit_line(self, path: str, line_number: str, new_content: str) -> str:
         p = self._resolve(path)
+        self._deny_file_modify()
         self._deny_internal_writes(p)
         try:
             idx = int(line_number) - 1
@@ -31,6 +33,7 @@ class EditMixin:
 
     def insert_line(self, path: str, line_number: str, content: str) -> str:
         p = self._resolve(path)
+        self._deny_file_modify()
         self._deny_internal_writes(p)
         try:
             idx = int(line_number) - 1

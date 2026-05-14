@@ -9,6 +9,9 @@ from tools.web.session import parse_headers_json, requests_module
 
 class ApiMixin:
     def get_json_api(self, url: str, headers: str = "") -> str:
+        err = self._network_error()
+        if err:
+            return err
         try:
             r = requests_module()
             timeout = self._get_timeout("web_api", 20)
@@ -18,6 +21,9 @@ class ApiMixin:
             return f"API error: {e}"
 
     def post_json_api(self, url: str, body: str, headers: str = "") -> str:
+        err = self._network_error()
+        if err:
+            return err
         try:
             payload = json.loads(body) if body else {}
             r = requests_module()
@@ -33,6 +39,9 @@ class ApiMixin:
             return f"API error: {e}"
 
     def put_json_api(self, url: str, body: str, headers: str = "") -> str:
+        err = self._network_error()
+        if err:
+            return err
         try:
             payload = json.loads(body) if body else {}
             r = requests_module()
@@ -48,6 +57,9 @@ class ApiMixin:
             return f"API error: {e}"
 
     def delete_api(self, url: str, headers: str = "") -> str:
+        err = self._network_error()
+        if err:
+            return err
         try:
             r = requests_module()
             timeout = self._get_timeout("web_api", 20)
@@ -60,6 +72,9 @@ class ApiMixin:
             return f"API error: {e}"
 
     def graphql_query(self, url: str, query: str, variables: str = "") -> str:
+        err = self._network_error()
+        if err:
+            return err
         try:
             payload = {
                 "query": query,

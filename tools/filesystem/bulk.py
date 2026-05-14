@@ -7,16 +7,17 @@ class BulkMixin:
     def find_large_files(self, path: str, min_mb: str = "10") -> str:
         root = self._resolve(path)
         try:
-            # PERFORMANCE GUARDRAIL: Prevent full-drive Python crawlers
-            if str(root) == "C:\\" or str(root) == "C:":
+            if (
+                self._is_drive_root(root)
+                and not self.rules.get("allow_full_drive_python_scans", True)
+            ):
                 return (
-                    "CRITICAL: Full-drive scans on C:\\ using Python are forbidden to prevent system lockup. "
-                    "Please use the 'fast_disk_audit' tool instead, or specify a more narrow directory (e.g., C:\\Users)."
+                    "Full-drive Python scans are disabled by config "
+                    "(performance.allow_full_drive_python_scans=false)."
                 )
 
             threshold = int(min_mb) * 1024 * 1024
             hits = []
-            # Use a depth limit for root-near scans
             for p in root.rglob("*"):
                 if not p.is_file():
                     continue
@@ -36,6 +37,8 @@ class BulkMixin:
         self, path: str, pattern: str, old_text: str, new_text: str
     ) -> str:
         root = self._resolve(path)
+        self._deny_file_modify()
+        self._deny_internal_writes(root)
         try:
             changed = 0
             for p in root.rglob("*"):

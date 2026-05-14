@@ -35,11 +35,14 @@ class SearchMixin:
     def grep_dir(self, path: str, query: str, pattern: str = "*") -> str:
         root = self._resolve(path)
         try:
-            # PERFORMANCE GUARDRAIL: Prevent full-drive content reading
-            if (str(root) == "C:\\" or str(root) == "C:") and pattern == "*":
+            if (
+                self._is_drive_root(root)
+                and pattern == "*"
+                and not self.rules.get("allow_full_drive_grep", True)
+            ):
                 return (
-                    "CRITICAL: Recursive content grep on C:\\ is forbidden. This would read your entire SSD and crash the system. "
-                    "If you are looking for a FILENAME, use 'search_files'. If you need a disk audit, use 'fast_disk_audit'."
+                    "Full-drive recursive grep is disabled by config "
+                    "(performance.allow_full_drive_grep=false)."
                 )
 
             matches = []

@@ -12,6 +12,9 @@ class YouTubeMixin:
 
         Returns a single URL string on success, otherwise an error message.
         """
+        err = self._network_error("search")
+        if err:
+            return err
         q = (query or "").strip()
         c = (channel or "").strip()
         if not q:

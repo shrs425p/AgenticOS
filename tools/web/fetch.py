@@ -9,6 +9,9 @@ from tools.web.session import bs4_beautifulsoup, requests_module
 
 class FetchMixin:
     def fetch_url(self, url: str, timeout: str = "15") -> str:
+        err = self._network_error()
+        if err:
+            return err
         try:
             r = requests_module()
             resp = r.get(url, timeout=int(timeout))
@@ -17,6 +20,9 @@ class FetchMixin:
             return f"Fetch error: {e}"
 
     def get_page_text(self, url: str) -> str:
+        err = self._network_error()
+        if err:
+            return err
         try:
             sess = self._get_session()
             timeout = self._get_timeout("web_fetch", 15)
@@ -36,6 +42,9 @@ class FetchMixin:
             return f"Error: {e}"
 
     def get_page_links(self, url: str) -> str:
+        err = self._network_error()
+        if err:
+            return err
         try:
             sess = self._get_session()
             timeout = self._get_timeout("web_fetch", 15)
@@ -60,6 +69,9 @@ class FetchMixin:
             return f"Error: {e}"
 
     def get_page_images(self, url: str) -> str:
+        err = self._network_error()
+        if err:
+            return err
         try:
             sess = self._get_session()
             timeout = self._get_timeout("web_fetch", 15)
@@ -84,8 +96,9 @@ class FetchMixin:
             return f"Error: {e}"
 
     def download_file(self, url: str, dest_path: str, timeout: str = "") -> str:
-        if not self.rules.get("allow_web_download", True):
-            return "Error: Web download is disabled by rules."
+        err = self._network_error("download")
+        if err:
+            return err
         try:
             sess = self._get_session()
             download_timeout = (

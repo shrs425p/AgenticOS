@@ -15,6 +15,8 @@ class StructuredMixin:
 
     def write_json(self, path: str, data: str) -> str:
         p = self._resolve(path)
+        self._deny_file_modify()
+        self._deny_internal_writes(p)
         try:
             obj = json.loads(data) if data else {}
             p.parent.mkdir(parents=True, exist_ok=True)
@@ -40,6 +42,8 @@ class StructuredMixin:
 
     def write_csv(self, path: str, data: str) -> str:
         p = self._resolve(path)
+        self._deny_file_modify()
+        self._deny_internal_writes(p)
         try:
             rows = json.loads(data) if data else []
             if not isinstance(rows, list):

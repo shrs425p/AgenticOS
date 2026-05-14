@@ -11,6 +11,9 @@ from tools.web.session import requests_module
 
 class InspectMixin:
     def check_url(self, url: str) -> str:
+        err = self._network_error()
+        if err:
+            return err
         try:
             r = requests_module()
             timeout = self._get_timeout("web_inspect", 15)
@@ -20,6 +23,9 @@ class InspectMixin:
             return f"Error: {e}"
 
     def http_headers(self, url: str) -> str:
+        err = self._network_error()
+        if err:
+            return err
         try:
             r = requests_module()
             timeout = self._get_timeout("web_inspect", 15)
@@ -30,6 +36,9 @@ class InspectMixin:
             return f"Error: {e}"
 
     def get_ssl_info(self, hostname: str) -> str:
+        err = self._network_error()
+        if err:
+            return err
         try:
             ctx = ssl.create_default_context()
             with socket.create_connection((hostname, 443), timeout=10) as sock:
@@ -40,6 +49,9 @@ class InspectMixin:
             return f"SSL error: {e}"
 
     def whois_lookup(self, domain: str) -> str:
+        err = self._network_error()
+        if err:
+            return err
         try:
             import whois
 
@@ -49,6 +61,9 @@ class InspectMixin:
             return f"WHOIS error: {e}"
 
     def resolve_dns(self, hostname: str, record_type: str = "A") -> str:
+        err = self._network_error()
+        if err:
+            return err
         rt = (record_type or "A").upper().strip()
         try:
             if rt != "A":
@@ -58,6 +73,9 @@ class InspectMixin:
             return f"DNS error: {e}"
 
     def get_public_ip(self) -> str:
+        err = self._network_error()
+        if err:
+            return err
         try:
             r = requests_module()
             timeout = self._get_timeout("web_inspect", 10)
@@ -67,6 +85,9 @@ class InspectMixin:
             return f"IP error: {e}"
 
     def get_ip_info(self, ip: str = "") -> str:
+        err = self._network_error()
+        if err:
+            return err
         try:
             target = ip.strip()
             if not target:

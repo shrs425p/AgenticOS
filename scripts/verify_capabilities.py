@@ -53,15 +53,15 @@ def test_universal_guardrail():
     cfg = load_config()
     agent = Agent(cfg)
     
-    # Test a forbidden path via a core tool
-    print("Testing PathGuard interception of forbidden zone...")
+    # Test a config-blocked path via a core tool
+    print("Testing PathGuard interception of config-blocked zone...")
     obs = agent.tools.call("read_file", {"path": "C:/Windows/System32/drivers/etc/hosts"})
     print(f"Observation: {obs}")
     
     if "SECURITY ALERT" in obs or "REJECTED" in obs:
-        print("SUCCESS: PathGuard intercepted forbidden path.")
+        print("SUCCESS: PathGuard intercepted config-blocked path.")
     else:
-        print("FAILURE: PathGuard did NOT intercept forbidden path.")
+        print("FAILURE: PathGuard did NOT intercept config-blocked path.")
 
 if __name__ == "__main__":
     try:

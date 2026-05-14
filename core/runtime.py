@@ -396,6 +396,44 @@ class Agent:
         except Exception as e:
             return True, f"Verification skipped due to error: {e}"
 
+    def _is_direct_response(self, user_input: str, response: str) -> bool:
+        """Accept direct replies without forcing tool/action format.
+
+        This is intentionally structural, not phrase-based: the model can finish
+        if it produced answer-like text with no tool/control markers, or if it is
+        asking a clarification question.
+        """
+        text = (response or "").strip()
+        max_chars = int(self.heuristics.get("direct_response_max_chars", 6000))
+        max_words = int(self.heuristics.get("direct_response_max_words", 900))
+        if not text or len(text) > max_chars:
+            return False
+        upper = text.upper()
+        control_markers = (
+            "OBJECTIVE:",
+            "TASK:",
+            "PLAN:",
+            "CURRENT_STEP:",
+            "STRATEGY:",
+            "ACTION:",
+            "OBSERVATION:",
+        )
+        if any(marker in upper for marker in control_markers):
+            return False
+        if has_final_answer(text):
+            return True
+
+        response_words = text.split()
+        if len(response_words) > max_words:
+            return False
+
+        # Clarifying questions are legitimate terminal responses when no tool can
+        # be chosen yet.
+        if text.endswith("?"):
+            return True
+
+        return True
+
     def run(self, user_input: str):
         run_started_ts = time.time()
         original_user_input = user_input
@@ -570,40 +608,31 @@ class Agent:
                 continue
 
             r_upper = response.strip().upper()
+            direct_response = self._is_direct_response(original_user_input, response)
             # More flexible format checking - allow direct answers, task format, or objective format
             valid_formats = (
                 r_upper.startswith("OBJECTIVE:")
                 or r_upper.startswith("TASK:")
                 or "FINAL ANSWER:" in r_upper
                 or "ACTION" in r_upper
+                or direct_response
             )
             if not valid_formats:
-                # If no action found and not a final answer, could be a direct answer or a greeting
                 if "FINAL ANSWER:" not in r_upper:
-                    # Allow short conversational responses or common greetings/confirmations
-                    greetings = {"hey", "hello", "hi", "hey!", "hello!", "hi!", "howdy", "yo"}
-                    short_response = len(response.strip()) < 300
-                    is_greeting = response.strip().lower().rstrip("!.,") in greetings
-                    
-                    if short_response and (is_greeting or any(word in response.lower() for word in ["yes", "no", "ok", "sure", "thanks", "thank you"])):
-                        # Accept this as a valid conversational turn
-                        pass
-                    else:
-                        # Otherwise, remind to use proper format
-                        print_warning("Model output unclear. Reminding about format...")
-                        messages.append({"role": "assistant", "content": response})
-                        obs = (
-                            "Please respond with one of these: "
-                            "1) FINAL ANSWER: ... "
-                            "2) OBJECTIVE/PLAN/CURRENT_STEP/ACTION "
-                            "3) TASK/CONTEXT/STRATEGY/ACTION"
-                        )
-                        # In autopilot/minimal-clarifications mode, keep nudges short and action-oriented.
-                        nudge = obs if minimal_clarifications else f"Clarification: {obs}"
-                        messages.append({"role": "user", "content": nudge})
-                        self.memory.add("assistant", response)
-                        self.memory.add("user", nudge)
-                        continue
+                    print_warning("Model output unclear. Reminding about format...")
+                    messages.append({"role": "assistant", "content": response})
+                    obs = (
+                        "Please respond with one of these: "
+                        "1) FINAL ANSWER: ... "
+                        "2) OBJECTIVE/PLAN/CURRENT_STEP/ACTION "
+                        "3) TASK/CONTEXT/STRATEGY/ACTION"
+                    )
+                    # In autopilot/minimal-clarifications mode, keep nudges short and action-oriented.
+                    nudge = obs if minimal_clarifications else f"Clarification: {obs}"
+                    messages.append({"role": "user", "content": nudge})
+                    self.memory.add("assistant", response)
+                    self.memory.add("user", nudge)
+                    continue
 
             actions = parse_actions(response)
 
@@ -700,6 +729,35 @@ class Agent:
                         except Exception:
                             pass
 
+                    # Persist tool events + artifacts for SQLite memory backend.
+                    if hasattr(self.memory, "record_tool_event"):
+                        try:
+                            import json as _json
+
+                            self.memory.record_tool_event(
+                                tool_name=tool_name,
+                                tool_args=_json.dumps(args, ensure_ascii=False)
+                                if isinstance(args, (dict, list))
+                                else str(args),
+                                observation=str(obs),
+                            )
+                        except Exception:
+                            pass
+
+                    if hasattr(self.memory, "record_artifact"):
+                        try:
+                            self._record_artifacts_from_tool(tool_name, args)
+                        except Exception:
+                            pass
+
+                    if hasattr(self.memory, "update_task") and self.task_tracker.current:
+                        try:
+                            self.memory.update_task(self.task_tracker.current["task_id"])
+                        except Exception:
+                            pass
+                    if self.autonomy_cfg.get("task_tracking", True):
+                        self.task_tracker.record_observation(obs)
+
                 # Combine all observations
                 combined_obs = "\n---\n".join(observations)
                 
@@ -727,84 +785,10 @@ class Agent:
                 self.memory.add("user", f"OBSERVATION: {combined_obs}")
                 continue
 
-                # Persist tool events + artifacts for SQLite memory backend.
-                if hasattr(self.memory, "record_tool_event"):
-                    try:
-                        import json as _json
+            if direct_response and not has_final_answer(response):
+                response = f"FINAL ANSWER: {response}"
 
-                        self.memory.record_tool_event(
-                            tool_name=tool_name,
-                            tool_args=_json.dumps(args, ensure_ascii=False)
-                            if isinstance(args, (dict, list))
-                            else str(args),
-                            observation=str(obs),
-                        )
-                    except Exception:
-                        pass
-
-                if hasattr(self.memory, "record_artifact"):
-                    try:
-                        self._record_artifacts_from_tool(tool_name, args)
-                    except Exception:
-                        pass
-
-                if hasattr(self.memory, "update_task") and self.task_tracker.current:
-                    try:
-                        self.memory.update_task(self.task_tracker.current["task_id"])
-                    except Exception:
-                        pass
-                if self.autonomy_cfg.get("task_tracking", True):
-                    self.task_tracker.record_observation(obs)
-                messages.append({"role": "assistant", "content": response})
-                obs_msg = f"OBSERVATION: {obs}"
-                if self.autonomy_cfg.get(
-                    "active_planning", True
-                ) and self.autonomy_cfg.get("task_tracking", True):
-                    obs_msg = f"{obs_msg}\n\n{self.task_tracker.planner_hint()}"
-                messages.append({"role": "user", "content": obs_msg})
-                self.memory.add("assistant", response)
-                self.memory.add("user", obs_msg)
-
-                # Add targeted guidance after common recoverable failures.
-                obs_lower = obs.lower()
-                if tool_name in (
-                    "launch_application",
-                    "open_url",
-                    "open_spotify_search",
-                ) and ("not recognized" in obs_lower or "error:" in obs_lower):
-                    hint = "HINT: App launch failed. On Windows, prefer open_url for websites, or use locate_path to find the .exe and run_command to launch it."
-                    messages.append({"role": "user", "content": f"OBSERVATION: {hint}"})
-                    self.memory.add("user", f"OBSERVATION: {hint}")
-
-                # New Self-Healing / Debugging Hints
-                if "modulenotfounderror" in obs_lower or "no module named" in obs_lower:
-                    hint = (
-                        "HINT: A Python module is missing. Try `pip_install` with the missing package name, "
-                        "then re-run your script. If you're unsure of the package name, use `web_search`."
-                    )
-                    messages.append({"role": "user", "content": f"OBSERVATION: {hint}"})
-                    self.memory.add("user", f"OBSERVATION: {hint}")
-
-                if (
-                    "is not recognized as an internal or external command" in obs_lower
-                    or "command not found" in obs_lower
-                ):
-                    hint = (
-                        "HINT: The command failed because the executable is not in the PATH. "
-                        "Try using `which` or `find_app` to locate it, or use the full path."
-                    )
-                    messages.append({"role": "user", "content": f"OBSERVATION: {hint}"})
-                    self.memory.add("user", f"OBSERVATION: {hint}")
-
-                if "path not found" in obs_lower or "not found:" in obs_lower:
-                    hint = (
-                        "HINT: A path lookup failed. Try USERPROFILE/HOME, search for the path, "
-                        "or ask the user for the correct location. Avoid repeating the same path check."
-                    )
-                    messages.append({"role": "user", "content": f"OBSERVATION: {hint}"})
-                    self.memory.add("user", f"OBSERVATION: {hint}")
-
-            elif has_final_answer(response):
+            if has_final_answer(response):
                 # ── Artifact Persistence Guardrail ──────────────────────────────────
                 # If the agent mentions saving/writing/creating but hasn't called a tool to do so recently, nudge it.
                 resp_lower = response.lower()

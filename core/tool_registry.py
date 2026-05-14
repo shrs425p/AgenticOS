@@ -6,6 +6,7 @@ import time
 import ast
 import math
 import operator
+import requests
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Callable
@@ -57,8 +58,14 @@ class ToolRegistry:
         confirm_handler: Optional[Callable] = None,
     ):
         self.cfg = cfg
-        # Merge security + rules; security.hard_guardrails indicates some restrictions are never bypassed.
-        self.rules = {**cfg.get("security", {}), **cfg["rules"]}
+        # Merge config-controlled policy surfaces. Code should expose capability;
+        # config.yaml decides what is enabled, guarded, or restricted.
+        self.rules = {
+            **cfg.get("performance", {}),
+            **cfg.get("system_control", {}),
+            **cfg.get("security", {}),
+            **cfg["rules"],
+        }
         self.tools_cfg = cfg.get("tools", {})
         self._memory = memory_backend
 
@@ -1249,66 +1256,63 @@ class ToolRegistry:
         """Download with retries/fallbacks and post-checks.
 
         Strategy:
-        1) curl (fast, reliable on Windows 10+)
-        2) PowerShell Invoke-WebRequest
-        3) built-in web.download_file
+        1) requests streaming download (no shell interpolation)
+        2) built-in web.download_file fallback
         Always validates dest exists and size > 0.
         """
         import os
+        from pathlib import Path
 
         u = (url or "").strip()
         dst = (dest_path or "").strip()
         if not u or not dst:
             return "Error: url and dest_path required."
-        # Resolve relative paths into workspace.
-        if not os.path.isabs(dst):
+
+        parsed = urllib.parse.urlparse(u)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            return "Error: only absolute http(s) URLs are supported."
+
+        if os.path.isabs(dst):
+            dst_path = Path(dst).resolve()
+        else:
             ws = self.cfg.get("agent", {}).get("workspace", DEFAULT_WORKSPACE)
-            dst = os.path.join(ws, dst)
+            dst_path = (Path(ws) / dst).resolve()
         try:
-            os.makedirs(os.path.dirname(dst) or ".", exist_ok=True)
+            dst_path.parent.mkdir(parents=True, exist_ok=True)
         except Exception:
             pass
 
         attempts = []
 
-        # 1) curl
+        # 1) requests. Avoid shelling out with user-controlled URL/path values.
         try:
-            curl_timeout = self.cfg.get("timeouts", {}).get("download_curl", 120)
-            out = self.term.run_command(
-                f'curl -L -o "{dst}" "{u}"', timeout=curl_timeout
-            )
-            attempts.append("curl")
-            if os.path.exists(dst) and os.path.getsize(dst) > 0:
+            download_timeout = self.cfg.get("timeouts", {}).get("web_download", 120)
+            with requests.get(u, stream=True, timeout=download_timeout) as resp:
+                resp.raise_for_status()
+                size = 0
+                with dst_path.open("wb") as handle:
+                    for chunk in resp.iter_content(chunk_size=1024 * 64):
+                        if not chunk:
+                            continue
+                        handle.write(chunk)
+                        size += len(chunk)
+            attempts.append("requests")
+            if dst_path.exists() and dst_path.stat().st_size > 0:
                 return (
-                    out
-                    + f"\nVALIDATION: downloaded via curl (size={os.path.getsize(dst)})"
+                    f"Downloaded {size} bytes to {dst_path}"
+                    + f"\nVALIDATION: downloaded via requests (size={dst_path.stat().st_size})"
                 )
         except Exception:
             pass
 
-        # 2) PowerShell
+        # 2) WebTools fallback.
         try:
-            ps_timeout = self.cfg.get("timeouts", {}).get("download_powershell", 180)
-            out = self.term.run_powershell(
-                f"Invoke-WebRequest -Uri '{u}' -OutFile '{dst}'", timeout=ps_timeout
-            )
-            attempts.append("powershell")
-            if os.path.exists(dst) and os.path.getsize(dst) > 0:
-                return (
-                    out
-                    + f"\nVALIDATION: downloaded via powershell (size={os.path.getsize(dst)})"
-                )
-        except Exception:
-            pass
-
-        # 3) WebTools
-        try:
-            out = self.web.download_file(u, dst)
+            out = self.web.download_file(u, str(dst_path))
             attempts.append("web.download_file")
-            if os.path.exists(dst) and os.path.getsize(dst) > 0:
+            if dst_path.exists() and dst_path.stat().st_size > 0:
                 return (
                     out
-                    + f"\nVALIDATION: downloaded via web.download_file (size={os.path.getsize(dst)})"
+                    + f"\nVALIDATION: downloaded via web.download_file (size={dst_path.stat().st_size})"
                 )
             return out + "\nVALIDATION: download failed (file missing/empty)"
         except Exception as e:

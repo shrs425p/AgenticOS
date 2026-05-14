@@ -61,6 +61,29 @@ class FileManager(
         except Exception:
             return
 
+    def _deny_file_modify(self) -> None:
+        if not self.rules.get("allow_file_modify", True):
+            raise PermissionError("File modification is disabled by config.")
+
+    def _deny_file_delete(self) -> None:
+        if not self.rules.get("allow_file_delete", True):
+            raise PermissionError("File deletion is disabled by config.")
+
+    def _is_drive_root(self, path: Path) -> bool:
+        resolved = path.resolve()
+        return bool(resolved.anchor) and resolved == Path(resolved.anchor)
+
+    def _deny_reserved_path(self, path: Path) -> None:
+        if self.rules.get("allow_reserved_path_patterns", True):
+            return
+        patterns = self.rules.get("reserved_path_patterns", []) or []
+        path_text = str(path)
+        for pattern in patterns:
+            if pattern and pattern in path_text:
+                raise PermissionError(
+                    f"Path matches reserved pattern from config: {pattern}"
+                )
+
     def _resolve(self, path: str) -> Path:
         """Resolve a path with optional workspace restriction.
 
@@ -69,8 +92,7 @@ class FileManager(
         are respected.
         """
         p = Path(path)
-        if "AgentioOS.backup" in str(p):
-            raise PermissionError("Access to AgentioOS.backup is strictly forbidden.")
+        self._deny_reserved_path(p)
 
         if not p.is_absolute():
             if p.parts and p.parts[0] == self.base_dir.name:

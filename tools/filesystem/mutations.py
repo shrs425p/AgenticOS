@@ -6,6 +6,7 @@ class MutationsMixin:
         import os
 
         p = self._resolve(path)
+        self._deny_file_delete()
         self._deny_internal_writes(p)
         try:
             if not p.exists():
@@ -19,6 +20,7 @@ class MutationsMixin:
         import shutil
 
         p = self._resolve(path)
+        self._deny_file_delete()
         self._deny_internal_writes(p)
         try:
             if not p.exists():
@@ -33,6 +35,7 @@ class MutationsMixin:
 
         s = self._resolve(src)
         d = self._resolve(dst)
+        self._deny_file_modify()
         self._deny_internal_writes(d)
         try:
             d.parent.mkdir(parents=True, exist_ok=True)
@@ -46,6 +49,7 @@ class MutationsMixin:
 
         s = self._resolve(src)
         d = self._resolve(dst)
+        self._deny_file_modify()
         self._deny_internal_writes(d)
         try:
             d.parent.mkdir(parents=True, exist_ok=True)
@@ -56,6 +60,7 @@ class MutationsMixin:
 
     def create_dir(self, path: str) -> str:
         p = self._resolve(path)
+        self._deny_file_modify()
         self._deny_internal_writes(p)
         try:
             p.mkdir(parents=True, exist_ok=True)
@@ -65,6 +70,7 @@ class MutationsMixin:
 
     def touch(self, path: str) -> str:
         p = self._resolve(path)
+        self._deny_file_modify()
         self._deny_internal_writes(p)
         try:
             p.parent.mkdir(parents=True, exist_ok=True)

@@ -53,7 +53,7 @@ agent:
   # (Legacy) sandbox toggle; actual safety is controlled by rules + security.
   enable_sandbox: false
   # (Legacy) system modification toggle; use `rules.*` instead.
-  allow_system_modification: false
+  allow_system_modification: true
   # Hot-reload Python modules + config.yaml while the agent is running.
   hot_reload: true
   # Prevent massive tool outputs (e.g., long JSON) from blowing up model context.
@@ -76,9 +76,9 @@ autonomy:
   minimal_clarifications: true
   # Non-bypassable safety still applies (registry/services/shutdown). This only controls how chatty the agent is.
   enforce_progress: true
-  # DANGEROUS: opens up system/registry/service controls and disables command validation blocks.
-  # This does NOT grant admin privileges or "device ownership"; it only relaxes safety checks.
-  power_mode: false
+  # Power mode: opens system/registry/service controls and disables command validation blocks.
+  # This does not grant OS privileges; it makes config the policy boundary.
+  power_mode: true
   # After each tool call, validate that the action actually worked (file exists, delete happened, etc.).
   validate_results: true
   # Expert mode: reduces confirmation prompts for faster hands-off runs.
@@ -135,6 +135,34 @@ cloud:
     temperature: 1.0
     top_p: 1.0
     max_tokens: 8192
+
+# Provider/model request pacing. Set limits here when switching providers.
+# Effective RPM = configured rpm * safety_factor.
+rate_limits:
+  enabled: true
+  safety_factor: 0.85
+  window_seconds: 60
+  default_rpm: null
+  providers:
+    nvidia:
+      rpm: 40
+    openai:
+      rpm: null
+    openrouter:
+      rpm: null
+    github:
+      rpm: null
+    deepseek:
+      rpm: null
+    gemini:
+      rpm: null
+    groq:
+      rpm: null
+    ollama:
+      rpm: null
+  models:
+    nvidia:openai/gpt-oss-120b:
+      rpm: 40
 
 # Session memory settings (JSON or SQLite backend).
 memory:
@@ -280,7 +308,7 @@ rules:
   # Allow starting/stopping services. High-risk.
   allow_service_control: true
   # Ask for confirmation before destructive actions.
-  require_confirm_destructive: true
+  require_confirm_destructive: false
   # Ask for confirmation before network operations.
   require_confirm_network: false
   # Ask for confirmation before shell commands.
@@ -335,8 +363,8 @@ error_handling:
 # ── System Control ───────────────────────────────────────────────────────────
 system_control:
   # High-risk toggles (separate from rules; rules are the main enforcement point).
-  allow_shutdown: false
-  allow_restart: false
+  allow_shutdown: true
+  allow_restart: true
   allow_service_control: true
   allow_process_control: true
   allow_registry_access: true
@@ -348,24 +376,24 @@ security:
   sandbox_mode: false
   # If true, filesystem tools rebase absolute paths into the workspace for safety.
   restrict_paths: false
-  # If true, blocks some dangerous command patterns in terminal tools.
-  validate_commands: true
-  # ── Balanced Security Policy ────────────────────────────────────────────────
-  # - Workspace: Full Access (Read/Write/Delete)
-  # - System: Blocked (No access to C:\Windows)
-  # - Other: Read-Only (Write/Delete requires Human confirmation)
+  # If true, blocks command patterns according to rules/system_control.
+  validate_commands: false
+  # ── Config-Only Security Policy ─────────────────────────────────────────────
+  # - Empty blocked_paths + HITM=false means the agent can operate anywhere its
+  #   OS user account is allowed to operate.
+  # - Add blocked_paths or enable HITM here when you want boundaries.
   enable_zone_guard: true
   # Paths that the AI is NEVER allowed to touch (even for reading).
-  blocked_paths: ["C:\\Windows", "C:\\Program Files", "C:\\Program Files (x86)"]
+  blocked_paths: []
   # If true, the agent MUST ask for human confirmation before modifying any file
   # that is NOT inside the workspace.
-  require_hitm_outside_workspace: true
+  require_hitm_outside_workspace: false
   # ────────────────────────────────────────────────────────────────────────────
 
   # If true, write extra audit info (backend-dependent).
   audit_logging: true
   # Hard guardrails that are never bypassed by "autopilot" mode.
-  hard_guardrails: true
+  hard_guardrails: false
 
 # ── Heuristics & Performance Limits ───────────────────────────────────────────
 # These settings eliminate "Magic Numbers" from the code.
@@ -391,9 +419,16 @@ performance:
   # Max characters allowed in a single tool observation
   max_observation_chars: 12000
   # Protect internal persistent data (SQLite DB + audit logs) from file tools.
-  protect_internal_data: true
+  protect_internal_data: false
   internal_data_dir: data
-  allow_internal_data_write: false
+  allow_internal_data_write: true
+  # Full-drive Python crawls and content grep are powerful but expensive.
+  # Keep true for fully autonomous mode; set false to force narrower scans.
+  allow_full_drive_python_scans: true
+  allow_full_drive_grep: true
+  # Optional reserved path-name filter. Leave enabled/empty for no reserved names.
+  allow_reserved_path_patterns: true
+  reserved_path_patterns: []
   # Runtime performance toggles
   parallel_execution: true
   caching_enabled: true
@@ -448,6 +483,7 @@ prompts:
     - Tool work: use TASK, CONTEXT, STRATEGY, ACTION (only include ACTION when calling a tool).
     - Complex work: use OBJECTIVE, PLAN, CURRENT_STEP, ACTION (only include ACTION when calling a tool).
     - Completed work: use FINAL ANSWER.
+    - Capability descriptions: describe abilities in plain language and broad categories. Do not dump, quote, or fixate on exact internal tool names unless the user explicitly asks for tool names, runs /tools, or you are writing an ACTION JSON call.
     - FINAL ANSWER HYGIENE: Never include FINAL ANSWER in the same turn as an ACTION. You MUST wait for tool confirmation (OBSERVATION) before finishing.
     - ARTIFACT VERIFICATION: If your task involves creating a report, file, or code, you MUST wait for the write tool's success observation. For maximum safety, you should call file_exists or read_file to verify the file was actually written to the disk before declaring FINAL ANSWER. Artifacts MUST exist in the workspace.
     - Keep PLAN and CURRENT_STEP current as the task evolves.
@@ -455,6 +491,7 @@ prompts:
     Tool discipline:
     - EXISTING_TOOL_PRIORITY: You have 300+ tools available. You MUST use them. Only build new tools if a task is technically impossible with the current registry.
     - REGISTRY_SEARCH: Before acting, scan the AVAILABLE_TOOLS list carefully. If you miss an existing tool, you are failing your objective.
+    - INTERNAL_NAMES_PRIVATE_BY_DEFAULT: Use exact registry tool names only inside ACTION JSON or when the user explicitly asks for exact tool names. In normal explanations and FINAL ANSWER, describe what you can do, not the implementation tool names.
     - SINGLE_ACTION: Call exactly ONE tool per response. Do not batch tools or call multiple actions at once. Wait for the OBSERVATION before calling the next tool.
     - Use exact paths from observations; do not guess the same missing path repeatedly.
     - If a path is unknown, use special_paths, locate_path, search_files, or web/file inspection before asking the user.

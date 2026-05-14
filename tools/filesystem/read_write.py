@@ -19,6 +19,7 @@ class ReadWriteMixin:
         import os
 
         p = self._resolve(path)
+        self._deny_file_modify()
         self._deny_internal_writes(p)
         try:
             dirname = os.path.dirname(p)
@@ -32,6 +33,7 @@ class ReadWriteMixin:
 
     def append_file(self, path: str, content: str, encoding: str = "utf-8") -> str:
         p = self._resolve(path)
+        self._deny_file_modify()
         self._deny_internal_writes(p)
         try:
             p.parent.mkdir(parents=True, exist_ok=True)

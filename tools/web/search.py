@@ -11,6 +11,9 @@ from tools.web.session import bs4_beautifulsoup, requests_module
 class SearchMixin:
     def search(self, query: str, num_results: str = "5") -> str:
         """Search the web using DuckDuckGo (no API key needed)."""
+        err = self._network_error("search")
+        if err:
+            return err
         try:
             r = requests_module()
             n = min(int(num_results), 20)
@@ -56,6 +59,9 @@ class SearchMixin:
 
     def _ddg_html_search(self, query: str, n: int = 5) -> str:
         """Fallback HTML scrape of DuckDuckGo."""
+        err = self._network_error("search")
+        if err:
+            return err
         try:
             sess = self._get_session()
             q = urllib.parse.quote_plus(query)
@@ -115,6 +121,9 @@ class SearchMixin:
 
     def _bing_fallback_search(self, query: str, n: int = 5) -> str:
         """Fallback HTML scrape of Bing with curl-like headers."""
+        err = self._network_error("search")
+        if err:
+            return err
         try:
             headers = {
                 "User-Agent": "curl/8.16.0",
