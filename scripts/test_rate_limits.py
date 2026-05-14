@@ -21,6 +21,19 @@ def test_model_specific_rpm_overrides_provider_rpm():
     assert model_clients._configured_rpm(cfg, "nvidia", "other") == 40
 
 
+def test_missing_rpm_means_unlimited():
+    cfg = {"rate_limits": {"enabled": True, "providers": {}, "models": {}}}
+
+    assert model_clients._configured_rpm(cfg, "nvidia", "anything") == 0.0
+
+
+def test_unique_sorted_model_ids_deduplicates():
+    assert model_clients._unique_sorted_model_ids(["b", "a", "b", "", None]) == [
+        "a",
+        "b",
+    ]
+
+
 def test_rate_limiter_uses_effective_rpm_window(monkeypatch):
     cfg = {
         "rate_limits": {

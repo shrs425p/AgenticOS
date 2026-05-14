@@ -50,8 +50,10 @@ def fast_disk_audit(path: str = "C:\\", top_n: int = 20, min_mb: int = 100, mode
 
     if mode in ("all", "large"):
         results.append(f"\n{C.CYAN}--- TOP {top_n} LARGEST FILES ---{C.RESET}")
+        # Securely escape single quotes for PowerShell
+        safe_path = path.replace("'", "''")
         cmd = (
-            f"Get-ChildItem -LiteralPath {ps_literal(path)} -File -Recurse -ErrorAction SilentlyContinue | "
+            f"Get-ChildItem -Path '{safe_path}' -File -Recurse -ErrorAction SilentlyContinue | "
             f"Sort-Object Length -Descending | Select-Object -First {top_n} | "
             "Select-Object @{Name='Size(GB)';Expression={$_.Length / 1GB}}, FullName"
         )
@@ -61,8 +63,9 @@ def fast_disk_audit(path: str = "C:\\", top_n: int = 20, min_mb: int = 100, mode
         results.append(f"\n{C.CYAN}--- DUPLICATE FILENAMES IN COMMON DIRS ---{C.RESET}")
         # Focus on user dirs to avoid system junk duplicates
         scan_path = os.path.join(path, "Users") if path == "C:\\" else path
+        safe_scan_path = scan_path.replace("'", "''")
         cmd = (
-            f"Get-ChildItem -LiteralPath {ps_literal(scan_path)} -File -Recurse -ErrorAction SilentlyContinue | "
+            f"Get-ChildItem -Path '{safe_scan_path}' -File -Recurse -ErrorAction SilentlyContinue | "
             "Group-Object Name | Where-Object { $_.Count -gt 1 } | Select-Object -First 10 | "
             "Select-Object Name, Count, @{Name='Paths';Expression={($_.Group.FullName -join '; ')}}"
         )
@@ -70,8 +73,10 @@ def fast_disk_audit(path: str = "C:\\", top_n: int = 20, min_mb: int = 100, mode
 
     if mode in ("all", "old"):
         results.append(f"\n{C.CYAN}--- FILES NOT ACCESSED IN 180+ DAYS ---{C.RESET}")
+        # We'll use a PS command for this too
+        safe_path = path.replace("'", "''")
         cmd = (
-            f"Get-ChildItem -LiteralPath {ps_literal(path)} -File -Recurse -ErrorAction SilentlyContinue | "
+            f"Get-ChildItem -Path '{safe_path}' -File -Recurse -ErrorAction SilentlyContinue | "
             f"Where-Object {{ $_.LastAccessTime -lt (Get-Date).AddDays(-180) }} | "
             f"Select-Object -First 10 | Select-Object LastAccessTime, FullName"
         )

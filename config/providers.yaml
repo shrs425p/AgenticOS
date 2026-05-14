@@ -1,0 +1,55 @@
+# AgenticOs layered config: 10-providers.yaml
+# Edit this file for advanced settings in this area.
+
+ollama:
+  base_url: http://localhost:11434
+  default_model: qwen2.5-coder:7b
+  timeout: 300
+  temperature: 0.8
+  num_ctx: 32768
+  num_predict: 16384
+cloud:
+  nvidia:
+    base_url: https://integrate.api.nvidia.com/v1
+    model: openai/gpt-oss-120b
+    temperature: 1.0
+    top_p: 1.0
+    max_tokens: 8192
+    timeout: 300
+  gemini:
+    model: gemini-2.0-flash
+    temperature: 1.0
+    top_p: 0.95
+    max_tokens: 8192
+  groq:
+    model: llama-3.3-70b-versatile
+    temperature: 1.0
+    top_p: 1.0
+    max_tokens: 8192
+  openai:
+    model: gpt-4o-mini
+    temperature: 1.0
+    top_p: 1.0
+    max_tokens: 8192
+  openrouter:
+    model: google/gemma-2-9b-it:free
+    temperature: 1.0
+    top_p: 1.0
+    max_tokens: 8192
+  github:
+    model: gpt-4o-mini
+    temperature: 1.0
+    top_p: 1.0
+    max_tokens: 8192
+  deepseek:
+    model: deepseek-chat
+    temperature: 1.0
+    top_p: 1.0
+    max_tokens: 8192
+rate_limits:
+  enabled: true
+  safety_factor: 0.85
+  window_seconds: 60
+  default_rpm: null
+  providers: {}
+  models: {}

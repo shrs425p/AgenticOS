@@ -18,7 +18,8 @@ def test_tool_priority():
     assert "file_info:" in system
     assert "list_dir:" in system
     assert "read_file:" in system
-    assert system.find("file_info:") < system.find("create_plugin:")
+    assert "create_plugin:" not in system
+    assert "... (" in system
 
 
 if __name__ == "__main__":

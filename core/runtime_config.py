@@ -7,6 +7,15 @@ import yaml
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+CONFIG_LAYERS = [
+    "providers.yaml",
+    "runtime.yaml",
+    "policy.yaml",
+    "tools.yaml",
+    "storage.yaml",
+    "prompts.yaml",
+]
+
 
 def get_path(rel_path: str) -> str:
     return os.path.join(BASE_DIR, rel_path)
@@ -24,7 +33,8 @@ DEFAULT_WORKSPACE = resolve_local_path(
     os.environ.get("AGENTICOS_WORKSPACE", "workspace")
 )
 
-# Minimal structure defaults - all actual values come from config.yaml
+# Minimal structure defaults. Actual values come from config/*.yaml plus
+# root config.yaml overrides.
 default_structure = {
     "ollama": {},
     "agent": {"workspace": DEFAULT_WORKSPACE},
@@ -40,6 +50,39 @@ default_structure = {
 }
 
 
+def _deep_merge(base: dict, override: dict) -> dict:
+    """Recursively merge override into base and return base."""
+    for key, value in (override or {}).items():
+        if (
+            isinstance(value, dict)
+            and isinstance(base.get(key), dict)
+        ):
+            _deep_merge(base[key], value)
+        else:
+            base[key] = value
+    return base
+
+
+def _read_yaml_file(path: str) -> dict:
+    with open(path, encoding="utf-8") as handle:
+        data = yaml.safe_load(handle) or {}
+    if not isinstance(data, dict):
+        raise ValueError(f"Configuration file must contain a mapping: {path}")
+    return data
+
+
+def _load_layered_config(root_path: str) -> dict:
+    cfg: dict = {}
+    config_dir = os.path.join(os.path.dirname(root_path), "config")
+    if os.path.isdir(config_dir):
+        for name in CONFIG_LAYERS:
+            layer_path = os.path.join(config_dir, name)
+            if os.path.exists(layer_path):
+                _deep_merge(cfg, _read_yaml_file(layer_path))
+    _deep_merge(cfg, _read_yaml_file(root_path))
+    return cfg
+
+
 def load_config(path: str = None) -> dict:
     if path is None:
         path = get_path("config.yaml")
@@ -47,8 +90,7 @@ def load_config(path: str = None) -> dict:
     if not os.path.exists(path):
         raise FileNotFoundError(f"Configuration file not found: {path}")
 
-    with open(path, encoding="utf-8") as handle:
-        cfg = yaml.safe_load(handle)
+    cfg = _load_layered_config(path)
 
     if not cfg:
         raise ValueError(f"Configuration file is empty or invalid: {path}")

@@ -91,6 +91,10 @@ def _wait_for_rate_limit(cfg: dict, provider: str, model: str) -> None:
     history.append(time.monotonic())
 
 
+def _unique_sorted_model_ids(model_ids) -> list:
+    return sorted({model_id for model_id in model_ids if model_id})
+
+
 class OllamaClient:
     def __init__(self, cfg: dict):
         self.cfg = cfg
@@ -108,7 +112,9 @@ class OllamaClient:
             list_timeout = self.cfg.get("timeouts", {}).get("list_models", 10)
             response = requests.get(f"{self.base_url}/api/tags", timeout=list_timeout)
             response.raise_for_status()
-            return [model["name"] for model in response.json().get("models", [])]
+            return _unique_sorted_model_ids(
+                model.get("name", "") for model in response.json().get("models", [])
+            )
         except Exception as exc:
             self.last_list_error = f"{type(exc).__name__}: {exc}"
             return []
@@ -203,7 +209,7 @@ class NvidiaClient:
             return [self.model]
         try:
             models = self._client.models.list()
-            return sorted(model.id for model in models)
+            return _unique_sorted_model_ids(model.id for model in models)
         except Exception as exc:
             self.last_list_error = f"{type(exc).__name__}: {exc}"
             return [self.model]
@@ -422,7 +428,7 @@ class GeminiClient:
             return [self.model]
         try:
             models = self._client.models.list()
-            return sorted(
+            return _unique_sorted_model_ids(
                 m.name.replace("models/", "")
                 for m in models
                 if "generateContent" in getattr(m, "supported_actions", [])
@@ -547,7 +553,7 @@ class GroqClient:
             return [self.model]
         try:
             models = self._client.models.list()
-            return sorted(model.id for model in models.data)
+            return _unique_sorted_model_ids(model.id for model in models.data)
         except Exception as exc:
             self.last_list_error = f"{type(exc).__name__}: {exc}"
             return [self.model]
@@ -640,7 +646,7 @@ class OpenAICompatibleClient:
             return getattr(self, "_cached_models", [self.model])
         try:
             models = self._client.models.list()
-            res = sorted(model.id for model in models.data)
+            res = _unique_sorted_model_ids(model.id for model in models.data)
             self._cached_models = res
             return res
         except Exception as exc:

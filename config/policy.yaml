@@ -1,0 +1,49 @@
+# AgenticOs layered config: 30-policy.yaml
+# Edit this file for advanced settings in this area.
+
+rules:
+  allow_file_delete: true
+  allow_file_modify: true
+  allow_shell_exec: true
+  allow_web_download: true
+  allow_web_search: true
+  allow_system_changes: true
+  allow_process_control: true
+  allow_network_access: true
+  allow_registry_edit: true
+  allow_service_control: true
+  require_confirm_destructive: false
+  require_confirm_network: false
+  require_confirm_shell: false
+system_control:
+  allow_shutdown: true
+  allow_restart: true
+  allow_service_control: true
+  allow_process_control: true
+  allow_registry_access: true
+  allow_scheduled_tasks: true
+security:
+  sandbox_mode: false
+  restrict_paths: false
+  validate_commands: false
+  enable_zone_guard: true
+  blocked_paths: []
+  require_hitm_outside_workspace: false
+  audit_logging: true
+  hard_guardrails: false
+performance:
+  max_pref_chars: 80
+  max_pref_items: 20
+  reload_throttle_seconds: 2.0
+  max_observation_chars: 12000
+  protect_internal_data: false
+  internal_data_dir: data
+  allow_internal_data_write: true
+  allow_full_drive_python_scans: true
+  allow_full_drive_grep: true
+  allow_reserved_path_patterns: true
+  reserved_path_patterns: []
+  parallel_execution: true
+  caching_enabled: true
+  optimize_memory: true
+  background_tasks: true

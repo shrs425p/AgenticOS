@@ -1,0 +1,58 @@
+# AgenticOs layered config: 20-runtime.yaml
+# Edit this file for advanced settings in this area.
+
+agent:
+  provider: nvidia
+  max_iterations: 1000
+  think_before_act: false
+  verbose_thinking: false
+  auto_confirm: true
+  auto_retry: true
+  enable_cov: false
+  max_retries: 3
+  retry_delay: 1
+  stream: true
+  self_healing: true
+  auto_recovery: true
+  persistent_tasks: true
+  workspace: workspace
+  log_level: INFO
+  enable_sandbox: false
+  allow_system_modification: true
+  hot_reload: true
+  max_observation_chars: 4000
+autonomy:
+  task_tracking: true
+  active_planning: true
+  startup_model_prompt: false
+  startup_provider_prompt: false
+  autopilot: true
+  minimal_clarifications: true
+  enforce_progress: true
+  power_mode: true
+  validate_results: true
+  expert_mode: false
+heuristics:
+  iteration_warning_threshold: 20
+  max_dots_in_response: 50
+  new_task_min_chars: 10
+  resumption_cmds:
+  - continue
+  - go on
+  - keep going
+  - proceed
+  - next
+  cov_model: null
+self_improvement:
+  enabled: true
+  auto_update: true
+  learn_from_errors: true
+  optimize_performance: true
+  code_refactoring: true
+error_handling:
+  auto_retry: true
+  max_retries: 5
+  retry_backoff: true
+  fallback_strategies: true
+  error_logging: true
+  crash_recovery: true

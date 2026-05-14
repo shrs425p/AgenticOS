@@ -827,24 +827,21 @@ class Agent:
                     if final_ans.startswith("**"):
                         final_ans = final_ans[2:].strip()
 
-                # Prevent saving system prompt as final answer
+                # Prevent saving an obvious system-prompt dump as final answer.
                 if final_ans:
-                    system_indicators = [
-                        "You are AgenticOs",
-                        "Core behavior:",
-                        "Response modes:",
-                        "Tool discipline:",
-                        "Music/Media tasks:",
-                        "Social apps:",
-                        "Browser Automation",
-                        "Convenience tools:",
-                        "System-level tools:",
-                        "CORE OPERATING DIRECTIVE",
-                        "You are an AI assistant",
-                    ]
-                    # Also check for long stretches of technical-sounding instructions
-                    if any(indicator in final_ans for indicator in system_indicators) or \
-                       (len(final_ans) > 500 and ("available_tools" in final_ans.lower() or "action:" in final_ans.lower())):
+                    low_final = final_ans.lower()
+                    prompt_dump_score = sum(
+                        marker in low_final
+                        for marker in (
+                            "available_tools",
+                            "workspace_root",
+                            "thinking_canvas",
+                            "active_task_memory",
+                            "### ",
+                            "-------------------------------------------",
+                        )
+                    )
+                    if prompt_dump_score >= 2:
                         print_error(
                             "Model echoed system prompt instead of providing a final answer. Ignoring and continuing."
                         )

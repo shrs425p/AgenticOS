@@ -27,14 +27,12 @@ class PathGuard:
 
         try:
             # 1. Canonicalize the path. Relative paths are tool-facing paths and
-            # should be interpreted from the workspace, matching FileManager.
-            raw_target = Path(path_str)
-            if not raw_target.is_absolute():
-                if raw_target.parts and raw_target.parts[0] == self.workspace_root.name:
-                    raw_target = self.workspace_root / Path(*raw_target.parts[1:])
-                else:
-                    raw_target = self.workspace_root / raw_target
-            target = raw_target.resolve()
+            # 1. Handle relative paths by resolving them against workspace_root
+            p = Path(path_str)
+            if not p.is_absolute():
+                target = (self.workspace_root / p).resolve()
+            else:
+                target = p.resolve()
         except Exception as e:
             return False, f"Invalid path: {e}"
 
