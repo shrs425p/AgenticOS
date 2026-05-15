@@ -9,12 +9,8 @@ from __future__ import annotations
 from pathlib import Path
 
 
-import os
-
 def _normalize_path(value: str) -> str:
-    if not isinstance(value, str):
-        return str(value)
-    return os.path.normpath(value)
+    return (value or "").strip().strip('"').strip("'")
 
 
 def _resolve_path(path_str: str, workspace_root: Path) -> Path:
