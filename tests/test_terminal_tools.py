@@ -44,6 +44,26 @@ def test_openers_google(mock_browser):
     assert res == "Opened."
     mock_browser.assert_called_once_with("https://mock.google.com/search?q=hello%20world")
 
+@mock.patch("subprocess.Popen")
+def test_start_background_security(mock_popen):
+    from tools.terminal.processes import ProcessesMixin
+    class MockProcessTool(ProcessesMixin):
+        def __init__(self):
+            self.rules = {}
+            self.system = "Linux"
+
+        def _blocked_command_reason(self, command):
+            return ""
+
+    tool = MockProcessTool()
+    # Test that command string is correctly parsed and shell=True is avoided
+    res = tool.start_background("ls -la /tmp")
+    assert res == "Started."
+    mock_popen.assert_called_once_with(["ls", "-la", "/tmp"])
+    # By default, mock_popen should not have been called with shell=True
+    assert "shell" not in mock_popen.call_args.kwargs or not mock_popen.call_args.kwargs.get("shell")
+
+
 def test_system_admin_installed_apps():
     tool = MockTerminalTools()
     res = tool.installed_apps()

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import shlex
 import subprocess
 
 
@@ -116,7 +117,9 @@ class ProcessesMixin:
         if blocked_reason:
             return f"Error: {blocked_reason}"
         try:
-            subprocess.Popen(command, shell=True)
+            is_windows = getattr(self, "system", "") == "Windows"
+            args = shlex.split(command, posix=not is_windows)
+            subprocess.Popen(args)
             return "Started."
         except Exception as e:
             return f"Error: {e}"
