@@ -1,4 +1,4 @@
-# AgenticOS — High-Performance Autonomous Framework [SECURE][LAUNCH]
+# AgenticOS - High-Performance Autonomous Framework [SECURE][LAUNCH]
 
 <div align="center">
   <img src="assets/AgenticOS-Logo.png" alt="AgenticOS Banner" width="85%">
@@ -8,8 +8,8 @@
   <h3>AgenticOS is your Personal AI super intelligence. Private, Simple and extremely powerful.</h3>
 
   <p>
-    <a href="https://github.com/shrs425p/AgenticOS/discussions">Discussions</a> • 
-    <a href="https://github.com/shrs425p/AgenticOS/wiki">Docs</a> • 
+    <a href="https://github.com/shrs425p/AgenticOS/discussions">Discussions</a> | 
+    <a href="https://github.com/shrs425p/AgenticOS/wiki">Docs</a> | 
     <a href="https://github.com/shrs425p/AgenticOS">Follow @shrs425p (Creator)</a>
   </p>
 
@@ -75,7 +75,7 @@ Following a massive 96-item stress test, AgenticOS v2.0 has been hardened for re
 
 ---
 
-##  Documentation Center
+## Documentation Center
 
 Explore the full AgenticOS manual for deep technical insights:
 

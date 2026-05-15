@@ -54,7 +54,7 @@ During an evaluation, the system generates a high-fidelity mirror of the session
 ### What to look for in `evaluation_output.txt`:
 -   **`Iteration X/1000`**: Tracks how many turns the agent took to solve the task. (Lower is better).
 -   **`ACTION: { "tool": "..." }`**: Verify that the agent is choosing the correct tool for the job.
--   **`⚠ Rate limit hit (429)`**: This confirms that the **Resilience Shield** is working correctly.
+-   **`Rate limit hit (429)`**: This confirms that the **Resilience Shield** is working correctly.
 -   **`OBSERVATION`**: Check the raw output from the tool to ensure it wasn't truncated too early.
 
 ---

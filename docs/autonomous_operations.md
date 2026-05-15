@@ -22,7 +22,7 @@ For multi-stage tasks (e.g., "Audit my system and write a report"), the agent bu
 
 ---
 
-## ✈️ Autopilot vs. Manual Mode
+## Autopilot vs. Manual Mode
 
 The level of autonomy is controlled by the `autonomy` section in `config.yaml`.
 

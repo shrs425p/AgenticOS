@@ -84,7 +84,7 @@ browser:
 
 ## [PROVEN] Selecting Your Path
 
-You can switch between these scenarios instantly by modifying your `config.yaml`. AgenticOS is designed to be "Mode-Agnostic"—your tools, plugins, and workspace artifacts remain consistent regardless of which deployment path you choose.
+You can switch between these scenarios instantly by modifying your `config.yaml`. AgenticOS is designed to be "Mode-Agnostic"-your tools, plugins, and workspace artifacts remain consistent regardless of which deployment path you choose.
 
 ---
 

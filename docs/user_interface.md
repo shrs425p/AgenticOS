@@ -106,7 +106,7 @@ This will test:
 
 ## [END] Summary of UI Best Practices
 1.  **Keep it Focused**: If the terminal is too noisy, set `log_level: WARNING` in your config.
-2.  **Use `evaluation_output.txt`**: If you miss a message in the terminal, check this file—it's a 1:1 mirror of the session.
+2.  **Use `evaluation_output.txt`**: If you miss a message in the terminal, check this file-it's a 1:1 mirror of the session.
 3.  **Enable Notifications**: For long-running tasks (like a 30-minute web crawl), enable notifications so you can walk away from your desk.
 
 ---
