@@ -213,6 +213,24 @@ class SqliteSessionMemory:
             count = int(cur.fetchone()[0])
             if count > self.max_messages:
                 to_drop = count - self.max_messages
+
+                # OpenClaw-inspired pre-compaction flush: save dropped messages to disk
+                try:
+                    cur_drop = self._conn.execute(
+                        "SELECT role, content FROM messages WHERE session_id=? ORDER BY id ASC LIMIT ?",
+                        (self.session_id, to_drop)
+                    )
+                    dropped_msgs = cur_drop.fetchall()
+                    if dropped_msgs:
+                        overflow_dir = os.path.join(self.workspace, "memory")
+                        os.makedirs(overflow_dir, exist_ok=True)
+                        overflow_file = os.path.join(overflow_dir, f"overflow-{self.session_id}.md")
+                        with open(overflow_file, "a", encoding="utf-8") as f:
+                            for r, c in dropped_msgs:
+                                f.write(f"**{r.upper()}**: {c[:500]}...\n\n")
+                except Exception:
+                    pass
+
                 # Delete oldest rows by id.
                 self._conn.execute(
                     """

@@ -12,11 +12,11 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Callable
 
 from tools import desktop_notifications as notifications
-from tools import filesystem_tools as filesystem
+from tools import filesystem
 from tools import screen_tools as screen
-from tools import terminal_tools as terminal
-from tools import web_tools as web
-from tools.web_pick_best_link import web_pick_best_link
+from tools import terminal
+from tools import web
+from tools.web.web_pick_best_link import web_pick_best_link
 
 from core.runtime_config import DEFAULT_WORKSPACE
 from core.url_presets import load_url_presets

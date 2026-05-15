@@ -22,7 +22,7 @@ import requests
 import re
 from typing import Dict, Optional, Callable
 
-import core.session_memory as memory
+from core.memory_manager import initialize_memory_manager, log_task_completion, get_memory_manager
 from core.session_memory_sqlite import SqliteSessionMemory
 from core.audit_logger import AuditLogger, infer_success
 from core.model_clients import GeminiClient, NvidiaClient, OllamaClient, GroqClient, OpenAIClient, OpenRouterClient, GithubClient, DeepseekClient
@@ -72,44 +72,40 @@ class Agent:
         )
         memory_cfg = dict(cfg["memory"])
         memory_cfg.setdefault("workspace", self.workspace)
-        backend = (memory_cfg.get("backend") or "json").lower().strip()
-        if backend == "sqlite":
-            sqlite_cfg = dict(memory_cfg)
-            db_path = sqlite_cfg.pop("sqlite_db_path", "") or ""
-            if db_path:
-                sqlite_cfg["db_path"] = db_path
-            self.memory = SqliteSessionMemory(sqlite_cfg)
+        sqlite_cfg = dict(memory_cfg)
+        db_path = sqlite_cfg.pop("sqlite_db_path", "") or ""
+        if db_path:
+            sqlite_cfg["db_path"] = db_path
+        self.memory = SqliteSessionMemory(sqlite_cfg)
 
-            # One-time best-effort migration from legacy JSON memory.
-            try:
-                import json as _json
-                import os as _os
-                from datetime import datetime as _dt
+        # One-time best-effort migration from legacy JSON memory.
+        try:
+            import json as _json
+            import os as _os
+            from datetime import datetime as _dt
 
-                legacy_path = _os.path.join(
-                    self.cfg["agent"].get("workspace", DEFAULT_WORKSPACE), "memory.json"
-                )
-                if legacy_path and _os.path.exists(legacy_path):
-                    # Only migrate into a fresh session with no messages.
-                    if not self.memory.get_messages():
-                        with open(legacy_path, "r", encoding="utf-8") as handle:
-                            data = _json.load(handle) or {}
-                        msgs = data.get("messages", []) or []
-                        if msgs:
-                            self.memory.import_messages(msgs)
-                            bak = (
-                                legacy_path
-                                + ".bak_"
-                                + _dt.now().strftime("%Y%m%d_%H%M%S")
-                            )
-                            try:
-                                _os.replace(legacy_path, bak)
-                            except Exception:
-                                pass
-            except Exception:
-                pass
-        else:
-            self.memory = memory.SessionMemory(memory_cfg)
+            legacy_path = _os.path.join(
+                self.cfg["agent"].get("workspace", DEFAULT_WORKSPACE), "memory.json"
+            )
+            if legacy_path and _os.path.exists(legacy_path):
+                # Only migrate into a fresh session with no messages.
+                if not self.memory.get_messages():
+                    with open(legacy_path, "r", encoding="utf-8") as handle:
+                        data = _json.load(handle) or {}
+                    msgs = data.get("messages", []) or []
+                    if msgs:
+                        self.memory.import_messages(msgs)
+                        bak = (
+                            legacy_path
+                            + ".bak_"
+                            + _dt.now().strftime("%Y%m%d_%H%M%S")
+                        )
+                        try:
+                            _os.replace(legacy_path, bak)
+                        except Exception:
+                            pass
+        except Exception:
+            pass
 
         self.tools = ToolRegistry(
             cfg, memory_backend=self.memory, confirm_handler=confirm_handler
@@ -157,6 +153,23 @@ class Agent:
         self.performance = self.cfg.get("performance", {})
         self.enable_cov = self.cfg["agent"].get("enable_cov", True)
         self.cov_model = self.heuristics.get("cov_model")
+
+        # Initialize OpenClaw-inspired Memory Manager
+        initialize_memory_manager(self.workspace)
+
+        # Auto-create AGENTS.md and MEMORY.md if they don't exist
+        os.makedirs(self.workspace, exist_ok=True)
+        for init_file, init_content in [
+            ("AGENTS.md", "# Agent Identity\n\nDefine your agent persona and rules here.\n"),
+            ("MEMORY.md", "# AgenticOs Long-Term Memory\n\nCurated knowledge, insights, and learned patterns from agent experiences.\n")
+        ]:
+            init_path = os.path.join(self.workspace, init_file)
+            if not os.path.exists(init_path):
+                try:
+                    with open(init_path, "w", encoding="utf-8") as f:
+                        f.write(init_content)
+                except Exception:
+                    pass
 
         # Dynamic hot-reload tracking
         self.mtimes: Dict[str, float] = (
@@ -343,7 +356,32 @@ class Agent:
             "-------------------------------------------\n"
         )
 
-        return system + task_memory + canvas_block + shadow_block + workspace_block
+        # Inject Agent Identity Files (OpenClaw style)
+        identity_block = ""
+        for identity_file in ["AGENTS.md", "SOUL.md"]:
+            file_path = os.path.join(self.workspace, identity_file)
+            if os.path.exists(file_path):
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        identity_block += f"\n\n### AGENT_IDENTITY ({identity_file})\n"
+                        identity_block += f.read().strip() + "\n"
+                        identity_block += "-------------------------------------------\n"
+                except Exception:
+                    pass
+
+        # Inject Long-Term Memory (OpenClaw style)
+        memory_block = ""
+        memory_file = os.path.join(self.workspace, "MEMORY.md")
+        if os.path.exists(memory_file):
+            try:
+                with open(memory_file, "r", encoding="utf-8") as f:
+                    memory_block += f"\n\n### LONG_TERM_MEMORY (MEMORY.md)\n"
+                    memory_block += f.read().strip() + "\n"
+                    memory_block += "-------------------------------------------\n"
+            except Exception:
+                pass
+
+        return system + task_memory + canvas_block + shadow_block + workspace_block + identity_block + memory_block
 
     def verify_action(self, tool_name: str, args: Dict, context: str) -> (bool, str):
         """
@@ -947,6 +985,29 @@ class Agent:
                 self.memory.add("assistant", response)
                 if self.autonomy_cfg.get("task_tracking", True):
                     self.task_tracker.complete(final_ans or response)
+
+                # OpenClaw-inspired memory auto-compaction
+                try:
+                    goal = "Task"
+                    if self.task_tracker.current and self.task_tracker.current.get("goal"):
+                        goal = self.task_tracker.current.get("goal")
+                    
+                    # Extract tools used from tracking
+                    tools_used = []
+                    if self.task_tracker.current and self.task_tracker.current.get("actions_taken"):
+                        tools_used = [a.get("tool") for a in self.task_tracker.current.get("actions_taken", []) if a.get("tool")]
+                        
+                    duration_s = max(0.0, time.time() - run_started_ts)
+                    log_task_completion(
+                        goal=goal,
+                        final_answer=final_ans or response,
+                        tools_used=list(set(tools_used)),
+                        success=True,
+                        duration=duration_s
+                    )
+                except Exception as e:
+                    print_error(f"Failed to consolidate memory: {e}")
+
                 if hasattr(self.memory, "set_outcome"):
                     try:
                         next_steps = ""
