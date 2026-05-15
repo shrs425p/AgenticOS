@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 
+from core.tool_base import tool
 class SystemAdminMixin:
     # ---- Windows Event Logs ----
     def eventlog_query(
@@ -37,16 +38,18 @@ class SystemAdminMixin:
                 "Select-Object TimeCreated,Id,LevelDisplayName,ProviderName,Message | "
                 "Format-List | Out-String -Width 300"
             )
-        return self.run_powershell(ps, timeout=60)
+        return self.run_powershell(ps, timeout=self._get_timeout("system_admin", 60))
 
     # ---- Installed Apps (Windows) ----
+    @tool(name="installed_apps", desc="List installed apps (Windows). Args: filter_str(optional)", category="Terminal")
     def installed_apps(self, filter_str: str = "") -> str:
         if self.system != "Windows":
             return "Error: installed_apps is Windows-only."
         flt = (filter_str or "").strip().replace('"', "'")
+        reg1 = self.cfg.get("windows_paths", {}).get("uninstall_registry", "HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*")
+        reg2 = self.cfg.get("windows_paths", {}).get("wow6432_uninstall_registry", "HKLM:\\Software\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*")
         ps = (
-            "Get-ItemProperty HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* ,"
-            "HKLM:\\Software\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* "
+            f"Get-ItemProperty {reg1} , {reg2} "
             "| Select-Object DisplayName,DisplayVersion,Publisher,InstallDate "
             "| Where-Object { $_.DisplayName } "
             "| Sort-Object DisplayName "
@@ -54,35 +57,38 @@ class SystemAdminMixin:
         if flt:
             ps += f"| Where-Object {{ $_.DisplayName -like '*{flt}*' -or $_.Publisher -like '*{flt}*' }} "
         ps += "| Format-Table -AutoSize | Out-String -Width 240"
-        return self.run_powershell(ps, timeout=60)
+        return self.run_powershell(ps, timeout=self._get_timeout("system_admin", 60))
 
     # ---- Services (guarded) ----
+    @tool(name="service_list", desc="List services. Args: filter_str(optional)", category="Terminal")
     def service_list(self, filter_str: str = "") -> str:
         if self.system != "Windows":
             return self._run(
-                "systemctl list-units --type=service --no-pager", timeout=30
+                "systemctl list-units --type=service --no-pager", timeout=self._get_timeout("service_control", 30)
             )
         flt = (filter_str or "").strip().replace('"', "'")
         ps = "Get-Service | Sort-Object Status,Name"
         if flt:
             ps += f" | Where-Object {{ $_.Name -like '*{flt}*' -or $_.DisplayName -like '*{flt}*' }}"
         ps += " | Select-Object Status,Name,DisplayName | Format-Table -AutoSize | Out-String -Width 240"
-        return self.run_powershell(ps, timeout=60)
+        return self.run_powershell(ps, timeout=self._get_timeout("service_control", 60))
 
+    @tool(name="service_status", desc="Service status. Args: name", category="Terminal")
     def service_status(self, name: str) -> str:
         svc = (name or "").strip()
         if not svc:
             return "Error: name required."
         if self.system != "Windows":
             return self._run(
-                f"systemctl status {self._quote_arg(svc)} --no-pager", timeout=30
+                f"systemctl status {self._quote_arg(svc)} --no-pager", timeout=self._get_timeout("service_control", 30)
             )
         ps = (
             f'$s=Get-Service -Name "{svc}" -ErrorAction Stop; '
             "$s | Select-Object Status,Name,DisplayName,StartType | Format-List | Out-String -Width 240"
         )
-        return self.run_powershell(ps, timeout=30)
+        return self.run_powershell(ps, timeout=self._get_timeout("service_control", 30))
 
+    @tool(name="service_start", desc="Start service (guarded). Args: name", category="Terminal")
     def service_start(self, name: str) -> str:
         if not self.rules.get("allow_service_control", False):
             return "Error: service control is disabled by rules (rules.allow_service_control=false)."
@@ -90,11 +96,12 @@ class SystemAdminMixin:
         if not svc:
             return "Error: name required."
         if self.system != "Windows":
-            return self._run(f"systemctl start {self._quote_arg(svc)}", timeout=30)
+            return self._run(f"systemctl start {self._quote_arg(svc)}", timeout=self._get_timeout("service_control", 30))
         return self.run_powershell(
-            f"Start-Service -Name \"{svc}\" -ErrorAction Stop; 'OK'", timeout=30
+            f"Start-Service -Name \"{svc}\" -ErrorAction Stop; 'OK'", timeout=self._get_timeout("service_control", 30)
         )
 
+    @tool(name="service_stop", desc="Stop service (guarded). Args: name", category="Terminal")
     def service_stop(self, name: str) -> str:
         if not self.rules.get("allow_service_control", False):
             return "Error: service control is disabled by rules (rules.allow_service_control=false)."
@@ -102,12 +109,13 @@ class SystemAdminMixin:
         if not svc:
             return "Error: name required."
         if self.system != "Windows":
-            return self._run(f"systemctl stop {self._quote_arg(svc)}", timeout=30)
+            return self._run(f"systemctl stop {self._quote_arg(svc)}", timeout=self._get_timeout("service_control", 30))
         return self.run_powershell(
-            f"Stop-Service -Name \"{svc}\" -ErrorAction Stop; 'OK'", timeout=30
+            f"Stop-Service -Name \"{svc}\" -ErrorAction Stop; 'OK'", timeout=self._get_timeout("service_control", 30)
         )
 
     # ---- Scheduled Tasks (guarded for create) ----
+    @tool(name="scheduled_tasks_list", desc="List scheduled tasks (Windows). Args: filter_str(optional)", category="Terminal")
     def scheduled_tasks_list(self, filter_str: str = "") -> str:
         if self.system != "Windows":
             return "Error: scheduled_tasks_list is Windows-only."
@@ -117,8 +125,9 @@ class SystemAdminMixin:
             flt = flt.replace('"', "'")
             ps += f" | Where-Object {{ $_.TaskName -like '*{flt}*' -or $_.TaskPath -like '*{flt}*' }}"
         ps += " | Sort-Object TaskPath,TaskName | Format-Table -AutoSize | Out-String -Width 240"
-        return self.run_powershell(ps, timeout=60)
+        return self.run_powershell(ps, timeout=self._get_timeout("system_admin", 60))
 
+    @tool(name="scheduled_task_run", desc="Run scheduled task (Windows). Args: task_name", category="Terminal")
     def scheduled_task_run(self, task_name: str) -> str:
         if self.system != "Windows":
             return "Error: scheduled_task_run is Windows-only."
@@ -127,7 +136,7 @@ class SystemAdminMixin:
             return "Error: task_name required."
         return self.run_powershell(
             f"Start-ScheduledTask -TaskName \"{name}\" -ErrorAction Stop; 'OK'",
-            timeout=30,
+            timeout=self._get_timeout("system_admin", 30),
         )
 
     def scheduled_task_create_daily(
@@ -145,5 +154,5 @@ class SystemAdminMixin:
         # Create a basic daily task using schtasks (simpler + predictable).
         return self.run_command(
             f'schtasks /Create /F /SC DAILY /TN "{name}" /TR "{cmd}" /ST {t}',
-            timeout=30,
+            timeout=self._get_timeout("system_admin", 30),
         )

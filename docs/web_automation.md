@@ -39,7 +39,7 @@ The `browser_*` tools allow the agent to "drive" a web browser just like a human
 If you want the agent to interact with your existing accounts (e.g., GitHub, Gmail, or LinkedIn), you can provide a `user_data_dir`:
 ```yaml
 # Internal implementation detail for the agent
-args: { "user_data_dir": "C:\\Users\\shrs\\AppData\\Local\\Google\\Chrome\\User Data" }
+args: { "user_data_dir": "<USER_PROFILE>\\AppData\\Local\\Google\\Chrome\\User Data" }
 ```
 *Note: This allows the agent to act as "You" on the web. Use with caution.*
 

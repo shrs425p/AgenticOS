@@ -3,7 +3,9 @@ from __future__ import annotations
 import difflib
 
 
+from core.tool_base import tool
 class DiffStatsMixin:
+    @tool(name="diff_files", desc="Show diff between two files. Args: path1, path2", category="Files")
     def diff_files(self, path1: str, path2: str) -> str:
         p1 = self._resolve(path1)
         p2 = self._resolve(path2)
@@ -18,6 +20,7 @@ class DiffStatsMixin:
         except Exception as e:
             return f"Diff error: {e}"
 
+    @tool(name="count_lines", desc="Count lines in file. Args: path", category="Files")
     def count_lines(self, path: str) -> str:
         p = self._resolve(path)
         try:
@@ -27,6 +30,7 @@ class DiffStatsMixin:
         except Exception as e:
             return f"Error: {e}"
 
+    @tool(name="word_count", desc="Word/line/char count. Args: path", category="Files")
     def word_count(self, path: str) -> str:
         p = self._resolve(path)
         try:

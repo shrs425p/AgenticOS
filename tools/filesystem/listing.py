@@ -3,7 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 
 
+from core.tool_base import tool
 class ListingMixin:
+    @tool(name="list_dir", desc="List directory contents. Args: path (optional)", category="Files")
     def list_dir(self, path: str = ".") -> str:
         p = self._resolve(path)
         try:
@@ -21,6 +23,7 @@ class ListingMixin:
         except Exception as e:
             return f"Error listing dir: {e}"
 
+    @tool(name="tree", desc="Show directory tree. Args: path, max_depth (optional)", category="Files")
     def tree(self, path: str = ".", max_depth: str = "3") -> str:
         root = self._resolve(path)
         try:

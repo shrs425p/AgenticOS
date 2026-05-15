@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 
+from core.tool_base import tool
 class ClipboardMixin:
+    @tool(name="clipboard_get", desc="Get clipboard text.", category="Terminal")
     def clipboard_get(self) -> str:
         try:
             import pyperclip
@@ -21,6 +23,7 @@ class ClipboardMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
+    @tool(name="clipboard_set", desc="Set clipboard text. Args: text", category="Terminal")
     def clipboard_set(self, text: str) -> str:
         try:
             import pyperclip

@@ -1,125 +1,74 @@
-# AgenticOS: Runtime Configuration Guide (config.yaml)
+# AgenticOS: Layered Runtime Configuration Guide
 
-The `config.yaml` file is the central nervous system of AgenticOS. It controls everything from AI model selection and security guardrails to UI behavior and performance heuristics. This document provides an exhaustive breakdown of every configuration key.
-
----
-
-## [TOOL] Section 1: Model Providers
-
-### `ollama:`
-Configures the local inference engine.
--   **`base_url`**: Usually `http://localhost:11434`.
--   **`default_model`**: The model name (e.g., `qwen2.5-coder:7b`).
--   **`num_ctx`**: The context window size. Increase this for larger coding tasks (up to 32,768).
--   **`temperature`**: Creativity vs. Logic (0.0 to 1.0).
-
-### `cloud:`
-Configures external providers (Nvidia, Google, Groq, OpenAI).
--   **`nvidia:`**: Requires `NVIDIA_API_KEY` in `.env`.
--   **`gemini:`**: Requires `GOOGLE_API_KEY` in `.env`.
--   **`max_tokens`**: The generation limit per response.
+AgenticOS uses a high-performance, layered configuration system. Instead of a single monolithic file, configuration is split across specialized YAML files in the `config/` directory. These files are merged at runtime, allowing for clean separation between system logic, security policy, and environment-specific paths.
 
 ---
 
-## [SYNC] Section 2: Agent Behavior
+## [ARCH] The `config/` Directory Structure
 
-### `agent:`
--   **`provider`**: `ollama` or `nvidia`.
--   **`auto_confirm`**: When `true`, the agent skips asking for permission on standard actions.
--   **`self_healing`**: Enables the agent to recover from tool errors or model hallucination loops.
--   **`hot_reload`**: If `true`, you can edit `config.yaml` or plugins without restarting the agent.
--   **`think_before_act`**: Forces the agent to output a "Thoughts" block before calling a tool.
+The system loads and merges these files in the following order:
 
-### `autonomy:`
--   **`autopilot`**: Hands-off mode. Minimal questions.
--   **`expert_mode`**: Reduces verbosity and confirmation prompts.
--   **`validate_results`**: After a file operation, the agent performs a check (e.g., `file_exists`) to ensure success.
-
----
-
-## [SECURE] Section 3: Security & Rules
-
-### `rules:`
-These are the hard capability switches.
--   **`allow_file_delete`**: Enables `delete_file` and `delete_dir`.
--   **`allow_shell_exec`**: Enables `run_command` and `run_powershell`.
--   **`allow_system_changes`**: Allows creating scheduled tasks or editing system settings.
--   **`allow_registry_edit`**: Enables Windows Registry modifications.
-
-### `security:`
--   **`enable_zone_guard`**: Activates the PathGuard (Workspace vs. System).
--   **`blocked_paths`**: A list of paths the agent is NEVER allowed to touch (e.g., `C:\Windows`).
--   **`require_hitm_outside_workspace`**: If `true`, writing to any path outside `workspace/` triggers a manual `y/N` prompt.
+| File | Purpose | Key Responsibilities |
+| :--- | :--- | :--- |
+| **`runtime.yaml`** | Environment Setup | Base paths, magic numbers, iteration limits. |
+| **`policy.yaml`** | Security & Compliance | Secret redaction, destructive tool lists, PathGuard regex. |
+| **`endpoints.yaml`**| External Services | API URLs, search endpoints, service presets. |
+| **`providers.yaml`**| AI Model Config | Ollama, Nvidia, Gemini, and OpenAI settings. |
+| **`prompts.yaml`**  | Intelligence | System prompts, CoV templates, and agent "nudges." |
+| **`storage.yaml`**  | Persistence | SQLite paths, memory summarization thresholds. |
+| **`tools.yaml`**    | Capability Toggles | Enabling/disabling specific tool categories. |
 
 ---
 
-## [STATS] Section 4: Heuristics & Performance
+## [SYNC] Core Configuration Files
 
-### `heuristics:`
-Removes "magic numbers" from the codebase.
--   **`iteration_warning_threshold`**: Warns the user if a single task takes more than N iterations.
--   **`max_dots_in_response`**: Detects "Typing Loops" and breaks them.
--   **`cov_model`**: Dedicated model for Chain-of-Verification (Mental Simulation).
+### 1. `runtime.yaml` (The "Nervous System")
+Controls the basic heuristics of the agent execution loop.
+- **`workspace`**: The primary root for agent operations (defaults to `./workspace`).
+- **`iteration_warning_threshold`**: Number of steps before warning the user.
+- **`max_observation_chars`**: Truncates massive tool outputs (default: 12,000) to save context.
 
-### `performance:`
--   **`max_observation_chars`**: Caps tool output length to prevent context bloat (default: 4,000).
--   **`parallel_execution`**: Allows the orchestrator to run multiple non-conflicting tools (Experimental).
+### 2. `policy.yaml` (The "Shield")
+Defines the security posture of the OS.
+- **`redaction_patterns`**: Regex list for masking keys and tokens in all logs.
+- **`destructive_tools`**: List of tools that *always* require user confirmation (e.g., `delete_dir`).
+- **`path_keys`**: List of argument names that `PathGuard` should treat as file paths.
 
----
-
-## [LOGIC] Section 5: Memory & Persistence
-
-### `memory:`
--   **`backend`**: `json` (simple) or `sqlite` (advanced).
--   **`sqlite_db_path`**: Path to the database file (e.g., `data/memory.sqlite3`).
--   **`summarise_after`**: Number of messages before the agent compresses its history.
--   **`record_artifacts`**: If `true`, the agent logs every file it creates for later auditing.
+### 3. `endpoints.yaml` (The "Connector")
+Centralizes all hardcoded URLs to ensure portability.
+- **`search_providers`**: URLs for DuckDuckGo, Bing, and Google.
+- **`system_services`**: Endpoints for IP check (`ipify`), Spotify, and WhatsApp Web.
 
 ---
 
-##  Section 6: Logging & Auditing
+## [SECURE] Zero-Hardcoding Policy
 
-### `logging:`
--   **`level`**: `DEBUG`, `INFO`, `WARNING`, `ERROR`.
--   **`console_output`**: Toggle real-time terminal printing.
--   **`audit_dir`**: Folder where structured JSONL audit logs are saved.
+Developers must **never** hardcode absolute paths (e.g., `C:\`) or URLs in the Python source code. All environment-specific values must be fetched via the config system:
 
----
+```python
+# GOOD: Configuration-driven
+url = self.cfg.get("endpoints", {}).get("google_search")
 
-##  Example `config.yaml` (Secure & Verified)
-
-```yaml
-agent:
-  provider: nvidia
-  auto_confirm: true
-  hot_reload: true
-  self_healing: true
-
-security:
-  enable_zone_guard: true
-  blocked_paths: ["C:\\Windows", "C:\\Program Files"]
-  require_hitm_outside_workspace: true
-  hard_guardrails: true
-
-memory:
-  backend: sqlite
-  record_tool_events: true
-  record_artifacts: true
-
-performance:
-  max_observation_chars: 12000
-  background_tasks: true
+# BAD: Hardcoded (Blocked by CI)
+url = "https://www.google.com/search?q="
 ```
 
 ---
 
-##  How to Apply Changes
+## [STATS] Hot-Reloading
 
-1.  **Edit**: Open `config.yaml` in your editor.
-2.  **Save**: As soon as you save, the "Hot-Reload" system will detect the change.
-3.  **Verify**: Look for `INFO: Config hot-reloaded` in the agent's terminal output.
+AgenticOS supports **Hot-Reloading**. If you modify any YAML file in the `config/` directory while the agent is running, the changes are detected and applied instantly to the next iteration without requiring a restart.
 
 ---
 
-*Last Updated: 2026-05-13*
-*Status: Complete Reference*
+## [LOGIC] Configuration Merging Logic
+
+When a key is requested (e.g., `self.cfg.get("security")`), the `ConfigLoader`:
+1. Checks the merged global dictionary.
+2. If multiple files define the same top-level key (rare), the last loaded file (alphabetical) wins.
+3. For nested dictionaries (like `rules`), the system performs a deep merge.
+
+---
+
+*Last Updated: 2026-05-15*
+*Status: Architecture Hardened*

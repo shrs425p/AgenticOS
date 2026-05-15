@@ -68,23 +68,22 @@ OPENAI_API_KEY=your_openai_key
 
 ---
 
-## [CONFIG] Step 5: Runtime Configuration (config.yaml)
+## [CONFIG] Step 5: Runtime Configuration (`config/`)
 
-Open `config.yaml` to define your agent's behavior.
+AgenticOS uses a layered configuration system located in the `config/` directory.
 
-### 1. Choose Your Provider
-Set the default model provider (local or cloud):
+### 1. Choose Your Provider (`providers.yaml`)
+Open `config/providers.yaml` to define your AI models:
 ```yaml
 agent:
   provider: nvidia # Options: ollama, nvidia, gemini, groq
 ```
 
-### 2. Configure Local AI (Optional)
-If you want to use **Ollama**, download it from [ollama.com](https://ollama.com/) and pull a model:
-```powershell
-ollama pull qwen2.5-coder:7b
-```
-Then verify the `ollama:` section in `config.yaml` matches your model name.
+### 2. Set Up Your Environment (`runtime.yaml`)
+Open `config/runtime.yaml` to set your workspace path and system heuristics.
+
+### 3. Verify Security Policy (`policy.yaml`)
+Review `config/policy.yaml` to ensure the **Secret Redaction Engine** and **PathGuard** are configured correctly.
 
 ---
 
@@ -128,7 +127,8 @@ By default, AgenticOS is in **Secure Mode**.
 ## [FILE] Project Structure
 - `core/`: The Runtime Engine, Tool Registry, Memory, and Security Guardrails.
 - `tools/`: Modular library of core tools and dynamic `plugins/`.
-- `docs/`: Comprehensive technical documentation (19 detailed guides).
+- `config/`: Layered YAML configuration system.
+- `tests/`: Automated test suite.
 - `bin/`: CLI commands (e.g., `agent.bat`). This folder is added to your PATH.
 - `workspace/`: Designated environment for task artifacts and reports.
 - `data/`: Persistent session memory (SQLite) and audit logs.
@@ -143,9 +143,24 @@ By default, AgenticOS is in **Secure Mode**.
 
 ---
 
+---
+
+## [TEST] Step 9: Running the Test Suite (Optional)
+
+To verify your installation is 100% stable:
+
+```powershell
+pytest tests/
+```
+
+This will run the automated suite to ensure core components, filesystem tools, and security guardrails are functioning correctly.
+
+---
+
 ## [END] Next Steps
 -   Read the [Architecture Deep-Dive](architecture.md).
 -   Learn how to write [Custom Plugins](tool_development.md).
+-   Explore the [Testing Guide](testing_guide.md).
 -   Explore the [API Reference](api_reference.md) for a list of all 300+ tools.
 
 ---

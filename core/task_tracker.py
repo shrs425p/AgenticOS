@@ -7,10 +7,10 @@ from datetime import datetime
 
 
 class TaskTracker:
-    def __init__(self, workspace: str, session_id: str = None):
+    def __init__(self, workspace: str, session_id: str = None, cfg: dict = None):
         self.workspace = workspace
+        self.cfg = cfg or {}
         self.tasks_dir = os.path.join(workspace, "tasks")
-        self.history_dir = os.path.join(self.tasks_dir, "history")
         self.session_id = session_id or "default"
         # Use session_id for active task files (one per session, not per task)
         self.active_json = os.path.join(
@@ -21,8 +21,6 @@ class TaskTracker:
         )
         self.current = None
         self.tasks = []  # All tasks in this session
-
-        os.makedirs(self.history_dir, exist_ok=True)
         self.load_active_session()
 
     def load_active_session(self):
@@ -121,10 +119,10 @@ class TaskTracker:
     def planner_hint(self) -> str:
         if not self.current:
             return ""
-        return (
+        return self.cfg.get("prompts", {}).get("planner_hints", {}).get("standard", (
             "Planner reminder: keep OBJECTIVE, PLAN (3-6 steps), and CURRENT_STEP updated based on the latest OBSERVATION. "
             "If you are blocked or looping, revise the PLAN and pick a different approach/tool."
-        )
+        ))
 
     def complete(self, final_answer: str):
         if not self.current:
@@ -132,7 +130,7 @@ class TaskTracker:
         self.current["status"] = "completed"
         self.current["final_answer"] = final_answer.strip()
         self.current["updated_at"] = datetime.now().isoformat()
-        self._persist(write_history=True)
+        self._persist()
 
     def fail(self, message: str):
         if not self.current:
@@ -140,7 +138,7 @@ class TaskTracker:
         self.current["status"] = "failed"
         self.current["last_observation"] = message.strip()
         self.current["updated_at"] = datetime.now().isoformat()
-        self._persist(write_history=True)
+        self._persist()
 
     def _extract_sections(self, response: str) -> dict:
         lines = [line.rstrip() for line in response.splitlines()]
@@ -171,7 +169,7 @@ class TaskTracker:
 
         return extracted
 
-    def _persist(self, write_history: bool = False):
+    def _persist(self):
         if not self.current:
             return
 
@@ -180,31 +178,6 @@ class TaskTracker:
             json.dump(self.tasks, handle, indent=2)
         with open(self.active_md, "w", encoding="utf-8") as handle:
             handle.write(self._session_markdown())
-
-        if write_history:
-            # Append to a single session history file (all tasks in one session)
-            history_json = os.path.join(
-                self.history_dir, f"session_{self.session_id}.json"
-            )
-            history_md = os.path.join(self.history_dir, f"session_{self.session_id}.md")
-
-            # JSON: append task to a list
-            tasks = []
-            if os.path.exists(history_json):
-                try:
-                    with open(history_json, "r", encoding="utf-8") as handle:
-                        tasks = json.load(handle)
-                        if not isinstance(tasks, list):
-                            tasks = [tasks]
-                except Exception:
-                    tasks = []
-            tasks.append(self.current)
-            with open(history_json, "w", encoding="utf-8") as handle:
-                json.dump(tasks, handle, indent=2)
-
-            # MD: write full session report (overwrites with all tasks)
-            with open(history_md, "w", encoding="utf-8") as handle:
-                handle.write(self._session_markdown())
 
     def _status_badge(self, status: str) -> str:
         badges = {
@@ -218,6 +191,7 @@ class TaskTracker:
         self, c: dict, task_num: int = 1, is_current: bool = False
     ) -> str:
         """Render a single task as markdown."""
+        prompts = self.cfg.get("prompts", {}).get("task_tracking", {})
         status = self._status_badge(c.get("status", "unknown"))
         current_marker = " **<-- CURRENT**" if is_current else ""
 
@@ -241,10 +215,12 @@ class TaskTracker:
         created = c.get("created_at", "")
         updated = c.get("updated_at", "")
 
+        task_hdr_tmpl = prompts.get("task_header", "### Task {num}: {goal}{marker}")
+        
         sections = [
-            f"### Task {task_num}: {c.get('goal', 'Untitled').strip()}{current_marker}",
+            task_hdr_tmpl.format(num=task_num, goal=c.get('goal', 'Untitled').strip(), marker=current_marker),
             "",
-            "#### Metadata",
+            prompts.get("metadata_header", "#### Metadata"),
             "",
             "| Field | Value |",
             "|-------|-------|",
@@ -258,23 +234,23 @@ class TaskTracker:
             f"| **Created** | {created} |",
             f"| **Updated** | {updated} |",
             "",
-            "#### Objective",
+            prompts.get("objective_header", "#### Objective"),
             "",
             c.get("objective", "_Not yet defined._").strip() or "_Not yet defined._",
             "",
-            "#### Plan & Progress",
+            prompts.get("plan_header", "#### Plan & Progress"),
             "",
             plan_text,
             "",
-            "#### Current Step",
+            prompts.get("current_step_header", "#### Current Step"),
             "",
             c.get("current_step", "_Not yet started._").strip() or "_Not yet started._",
             "",
-            "#### Last Action",
+            prompts.get("last_action_header", "#### Last Action"),
             "",
             f"```\n{c.get('last_action', 'None yet.').strip() or 'None yet.'}\n```",
             "",
-            "#### Last Observation",
+            prompts.get("last_observation_header", "#### Last Observation"),
             "",
             f"```\n{c.get('last_observation', 'None yet.').strip() or 'None yet.'}\n```",
             "",
@@ -284,7 +260,7 @@ class TaskTracker:
         if c.get("final_answer"):
             sections.extend(
                 [
-                    "#### Final Answer",
+                    prompts.get("final_answer_header", "#### Final Answer"),
                     "",
                     c.get("final_answer", "").strip(),
                     "",
@@ -293,7 +269,7 @@ class TaskTracker:
         elif c.get("status", "").lower() == "running":
             sections.extend(
                 [
-                    "#### Final Answer (Pending)",
+                    prompts.get("pending_answer_header", "#### Final Answer (Pending)"),
                     "",
                     "_Task is still in progress..._",
                     "",
@@ -304,6 +280,7 @@ class TaskTracker:
 
     def _session_markdown(self) -> str:
         """Render the full session with all tasks."""
+        prompts = self.cfg.get("prompts", {}).get("task_tracking", {})
         now = datetime.now().isoformat()
         total = len(self.tasks)
         completed = sum(1 for t in self.tasks if t.get("status") == "completed")
@@ -311,9 +288,9 @@ class TaskTracker:
         running = sum(1 for t in self.tasks if t.get("status") == "running")
 
         lines = [
-            "# Session Task Report",
+            prompts.get("session_report_title", "# Session Task Report"),
             "",
-            "## Session Metadata",
+            prompts.get("session_metadata_header", "## Session Metadata"),
             "",
             "| Field | Value |",
             "|-------|-------|",
@@ -334,11 +311,12 @@ class TaskTracker:
             if i < total:
                 lines.extend(["", "---", ""])
 
+        footer_tmpl = prompts.get("footer", "*Generated by AgenticOs | Session `{session_id}`*")
         lines.extend(
             [
                 "",
                 "---",
-                f"*Generated by AgenticOs | Session `{self.session_id}`*",
+                footer_tmpl.format(session_id=self.session_id),
             ]
         )
 

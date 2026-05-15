@@ -4,12 +4,16 @@ import sys
 import time
 import threading
 import itertools
-from typing import Optional
+from typing import Optional, Dict, Any
 
 
 class Spinner:
-    def __init__(self, message="Thinking", delay=0.1):
-        self.message = message
+    def __init__(self, message=None, delay=0.1, cfg: dict = None):
+        self.cfg = cfg or {}
+        prompts = self.cfg.get("prompts", {})
+        ui_labels = prompts.get("ui_labels", {})
+        
+        self.message = message or ui_labels.get("spinner_message", "Thinking")
         self.delay = delay
         self.spinner = itertools.cycle(["|", "/", "-", "\\"])
         self.running = False
@@ -74,7 +78,9 @@ class C:
         return re.sub(r"\033\[[0-9;]*m", "", text)
 
 
-def banner():
+def banner(cfg: dict = None):
+    cfg = cfg or {}
+    subtitle = cfg.get("prompts", {}).get("ui_labels", {}).get("banner_subtitle", "Autonomous CLI Agent  •  Ollama / Nvidia NIM  •  Session Memory")
     print(
         f"""
 {C.CYAN}{C.BOLD}
@@ -84,7 +90,7 @@ def banner():
  ██╔══██║██║   ██║██╔══╝  ██║╚██╗██║   ██║   ██║██║      ██║   ██║╚════██║
  ██║  ██║╚██████╔╝███████╗██║ ╚████║   ██║   ██║╚██████╗ ╚██████╔╝███████║
  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝   ╚═╝   ╚═╝ ╚═════╝  ╚═════╝ ╚══════╝
-{C.RESET}{C.GRAY}  Autonomous CLI Agent  •  Ollama / Nvidia NIM  •  Session Memory
+{C.RESET}{C.GRAY}  {subtitle}
 {C.RESET}"""
     )
 
@@ -106,7 +112,14 @@ def parse_actions(text: str) -> list[tuple]:
 
     # Find all "ACTION:" headers
     # We use a non-greedy match for the content until the next keyword or end of string.
-    keywords = [
+    try:
+        from core.runtime_config import load_config
+        cfg = load_config()
+    except Exception:
+        cfg = {}
+
+    heuristics = cfg.get("heuristics", {})
+    keywords = cfg.get("parser", {}).get("keywords", [
         "OBJECTIVE:",
         "STATE:",
         "REASONING:",
@@ -115,7 +128,7 @@ def parse_actions(text: str) -> list[tuple]:
         "ACTION:",
         "FINAL ANSWER:",
         "OBSERVATION:",
-    ]
+    ])
     pattern = r"(?:\*\*|__)?ACTION(?:\*\*|__)?[:\s]+(.*?)(?=" + "|".join(keywords) + r"|$)"
     matches = re.findall(pattern, text, re.IGNORECASE | re.DOTALL)
 
@@ -172,13 +185,9 @@ def parse_actions(text: str) -> list[tuple]:
         if not content or content.lower() in ("none", "null", "(none)", "no action"):
             continue
 
-        # Guard: if the content has no JSON brace and no function-call parens,
-        # and is more than 120 chars of plain prose, it's reasoning text, not a tool call.
-        looks_like_tool = (
-            "{" in content
-            or re.match(r"^\s*[A-Za-z_]\w*\s*\(", content)
-        )
-        if not looks_like_tool and len(content) > 120:
+        looks_like_tool = ("{" in content or re.match(r"^\s*[A-Za-z_]\w*\s*\(", content))
+        prose_threshold = int(heuristics.get("prose_vs_tool_threshold", 120))
+        if not looks_like_tool and len(content) > prose_threshold:
             continue
 
         parsed = False
@@ -313,11 +322,11 @@ def has_final_answer(text: str) -> bool:
     return "FINAL ANSWER:" in text.upper()
 
 
-def print_section(label: str, content: str, color: str = C.CYAN):
+def print_section(label: str, content: str, color: str = C.CYAN, max_len: int = 1000):
     print(f"\n{color}{C.BOLD}-- {label} {'-' * (50 - len(label))}{C.RESET}")
     if content:
         typewriter_print(
-            content[:1000] if len(content) > 1000 else content, color=C.DIM
+            content[:max_len] if len(content) > max_len else content, color=C.DIM
         )
 
 
@@ -331,11 +340,11 @@ def print_action(tool: str, args, symbol: str = "[*]"):
     )
 
 
-def print_observation(result: str):
+def print_observation(result: str, max_len: int = 600):
     preview = (
         result
-        if len(result) < 600
-        else result[:600] + f"\n{C.GRAY}... (truncated){C.RESET}"
+        if len(result) < max_len
+        else result[:max_len] + f"\n{C.GRAY}... (truncated){C.RESET}"
     )
     print(f"{C.MAGENTA}{C.BOLD}OBSERVATION:{C.RESET}")
     typewriter_print(preview, color=C.GRAY, delay=0.001)

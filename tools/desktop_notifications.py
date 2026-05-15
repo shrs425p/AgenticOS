@@ -10,11 +10,13 @@ import subprocess
 import ctypes
 
 
+from core.tool_base import tool
 class NotificationCenter:
     def __init__(self, rules: dict = None):
         self.rules = rules or {}
         self.system = platform.system()  # 'Windows', 'Darwin', 'Linux'
 
+    @tool(name="set_wallpaper", desc="Set desktop wallpaper. Args: image_path", category="General")
     def set_wallpaper(self, image_path: str) -> str:
         """Set the desktop wallpaper using a local image file."""
         try:
@@ -77,6 +79,7 @@ class NotificationCenter:
             return f"Error: {e}"
 
     # ── Notifications ─────────────────────────────────────────────────────────
+    @tool(name="send_notification", desc="Send desktop alert. Args: title, message", category="General")
     def send_notification(self, title: str, message: str) -> str:
         """Send a desktop notification (cross-platform)."""
         title = title.replace('"', '\\"').replace("'", "\\'")
@@ -115,6 +118,7 @@ $n.Dispose();
                 return "Notification printed to console (notify-send not available)."
 
     # ── Popups ────────────────────────────────────────────────────────────────
+    @tool(name="show_popup", desc="Show popup message box. Args: title, message", category="General")
     def show_popup(self, title: str, message: str) -> str:
         """Show a modal popup message box (cross-platform)."""
         title = title.replace('"', '\\"').replace("'", "\\'")
@@ -145,6 +149,7 @@ Add-Type -AssemblyName System.Windows.Forms;
                 return "Popup printed to console (zenity not available)."
 
     # ── Text-to-speech ────────────────────────────────────────────────────────
+    @tool(name="speak", desc="Text-to-speech. Args: text", category="General")
     def speak(self, text: str) -> str:
         """Speak text using the system's TTS engine (cross-platform)."""
         safe = text.replace('"', '\\"').replace("'", "\\'")
@@ -181,6 +186,7 @@ $synth.Speak("{safe}");
                 return "TTS printed to console (espeak not available)."
 
     # ── Combined alert ────────────────────────────────────────────────────────
+    @tool(name="alert", desc="Notify and speak. Args: message", category="General")
     def alert(self, message: str) -> str:
         """Send a desktop notification AND speak the message."""
         n_result = self.send_notification("AgenticOs Alert", message)

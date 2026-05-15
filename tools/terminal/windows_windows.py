@@ -6,6 +6,7 @@ import subprocess
 import time
 
 
+from core.tool_base import tool
 class WindowsWindowsMixin:
     """Windows window management via PowerShell.
 
@@ -51,6 +52,7 @@ class WindowsWindowsMixin:
     # Window management
     # ------------------------------------------------------------------
 
+    @tool(name="window_list", desc="List windows with titles (Windows). Args: filter_str(optional)", category="Terminal")
     def window_list(self, filter_str: str = "") -> str:
         if platform.system() != "Windows":
             return "Error: window_list is only supported on Windows."
@@ -63,6 +65,7 @@ class WindowsWindowsMixin:
         )
         return self._ps_encoded(script, timeout=30)
 
+    @tool(name="window_focus", desc="Focus a window by title substring (Windows). Args: title", category="Terminal")
     def window_focus(self, title: str) -> str:
         """Focus the first window whose title contains the given substring.
 
@@ -95,6 +98,7 @@ if (!$p) {{ 'Not found: ' + $t; exit 0 }}
 """
         return self._ps_encoded(script, timeout=30)
 
+    @tool(name="window_close", desc="Close a window by title substring (Windows). Args: title", category="Terminal")
     def window_close(self, title: str) -> str:
         """Close the first window whose title contains the given substring.
 
@@ -121,6 +125,7 @@ if (Get-Process -Id $p.Id -ErrorAction SilentlyContinue) {{ 'Close requested, pr
     # Browser content reading
     # ------------------------------------------------------------------
 
+    @tool(name="get_browser_url", desc="Get the current URL shown in the active browser tab. Args: browser(optional, e.g. 'brave')", category="Terminal")
     def get_browser_url(self, browser: str = "") -> str:
         """Read the URL currently shown in the active browser tab.
 
@@ -154,6 +159,7 @@ if (Get-Process -Id $p.Id -ErrorAction SilentlyContinue) {{ 'Close requested, pr
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
+    @tool(name="browser_read_page_text", desc="Read all visible text from the active browser tab (Ctrl+A+C). Args: browser(optional)", category="Terminal")
     def browser_read_page_text(self, browser: str = "") -> str:
         """Read all visible text from the currently active browser tab.
 
@@ -182,6 +188,7 @@ if (Get-Process -Id $p.Id -ErrorAction SilentlyContinue) {{ 'Close requested, pr
             return "Error: clipboard empty — no text was copied. Is a browser/document window focused?"
         return text
 
+    @tool(name="browser_read_selection", desc="Read the currently selected/highlighted text in the browser. Args: browser(optional)", category="Terminal")
     def browser_read_selection(self, browser: str = "") -> str:
         """Read the text currently selected/highlighted in the active browser tab.
 

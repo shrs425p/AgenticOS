@@ -127,7 +127,8 @@ class BrowserMixin:
             from datetime import datetime
 
             ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-            path = f"browser_screenshot_{ts}.png"
+            fmt = self.cfg.get("prompts", {}).get("file_templates", {}).get("browser_screenshot", "browser_screenshot_{ts}.png")
+            path = fmt.format(ts=ts)
         p = Path(path)
         if not p.is_absolute():
             base = getattr(self, "base_dir", Path("workspace"))
@@ -164,27 +165,29 @@ class BrowserMixin:
             udd = (user_data_dir or "").strip()
 
             if udd and os.path.isdir(udd):
+                browser_cfg = self.cfg.get("browser", {})
                 mgr.context = await launcher.launch_persistent_context(
                     udd,
                     headless=headless_bool,
                     args=chromium_args if b_type == "chromium" else [],
-                    viewport={"width": 1280, "height": 900},
+                    viewport=browser_cfg.get("viewport", {"width": 1280, "height": 900}),
                 )
                 mgr.browser = None
                 pages = mgr.context.pages
                 mgr.page = pages[0] if pages else await mgr.context.new_page()
             else:
+                browser_cfg = self.cfg.get("browser", {})
                 mgr.browser = await launcher.launch(
                     headless=headless_bool,
                     args=chromium_args if b_type == "chromium" else [],
                 )
                 mgr.context = await mgr.browser.new_context(
-                    user_agent=(
+                    user_agent=browser_cfg.get("user_agent", (
                         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                         "AppleWebKit/537.36 (KHTML, like Gecko) "
                         "Chrome/124.0.0.0 Safari/537.36"
-                    ),
-                    viewport={"width": 1280, "height": 900},
+                    )),
+                    viewport=browser_cfg.get("viewport", {"width": 1280, "height": 900}),
                 )
                 mgr.page = await mgr.context.new_page()
 
@@ -224,7 +227,8 @@ class BrowserMixin:
         if wu not in {"load", "domcontentloaded", "networkidle", "commit"}:
             wu = "domcontentloaded"
         try:
-            resp = await mgr.page.goto(url, wait_until=wu, timeout=30000)
+            t = self._get_timeout("browser_nav", 30000)
+            resp = await mgr.page.goto(url, wait_until=wu, timeout=t)
             status = resp.status if resp else "?"
             return f"Navigated to: {mgr.page.url}\nTitle: {await mgr.page.title()}\nHTTP status: {status}"
         except Exception as e:
@@ -236,7 +240,8 @@ class BrowserMixin:
         if err:
             return err
         try:
-            await mgr.page.go_back(wait_until="domcontentloaded", timeout=15000)
+            t = self._get_timeout("browser_action", 15000)
+            await mgr.page.go_back(wait_until="domcontentloaded", timeout=t)
             return f"Back → {mgr.page.url}"
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
@@ -247,7 +252,8 @@ class BrowserMixin:
         if err:
             return err
         try:
-            await mgr.page.go_forward(wait_until="domcontentloaded", timeout=15000)
+            t = self._get_timeout("browser_action", 15000)
+            await mgr.page.go_forward(wait_until="domcontentloaded", timeout=t)
             return f"Forward → {mgr.page.url}"
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
@@ -258,7 +264,8 @@ class BrowserMixin:
         if err:
             return err
         try:
-            await mgr.page.reload(wait_until="domcontentloaded", timeout=15000)
+            t = self._get_timeout("browser_action", 15000)
+            await mgr.page.reload(wait_until="domcontentloaded", timeout=t)
             return f"Reloaded: {mgr.page.url}"
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
@@ -272,7 +279,8 @@ class BrowserMixin:
             page = await mgr.context.new_page()
             mgr.page = page
             if url:
-                await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+                t = self._get_timeout("browser_nav", 30000)
+                await page.goto(url, wait_until="domcontentloaded", timeout=t)
                 return f"New tab opened: {page.url}"
             return "New tab opened (blank)."
         except Exception as e:
@@ -302,7 +310,8 @@ class BrowserMixin:
             if not text:
                 return "(page appears empty or has no visible text)"
             result = "\n".join([ln for ln in text.splitlines() if ln.strip()])
-            return result[:20000] + ("\n... [truncated]" if len(result) > 20000 else "")
+            limit = int(self.cfg.get("browser", {}).get("text_truncation_limit", 20000))
+            return result[:limit] + ("\n... [truncated]" if len(result) > limit else "")
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
@@ -313,7 +322,8 @@ class BrowserMixin:
             return err
         try:
             html = await mgr.page.content()
-            return html[:50000] + ("\n... [truncated]" if len(html) > 50000 else "")
+            limit = int(self.cfg.get("browser", {}).get("html_truncation_limit", 50000))
+            return html[:limit] + ("\n... [truncated]" if len(html) > limit else "")
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
@@ -323,7 +333,8 @@ class BrowserMixin:
         if err:
             return err
         try:
-            await mgr.page.wait_for_selector(selector, timeout=5000)
+            t = self._get_timeout("browser_action", 5000)
+            await mgr.page.wait_for_selector(selector, timeout=t)
             text = await mgr.page.inner_text(selector)
             return text or "(element empty)"
         except Exception as e:
@@ -384,7 +395,8 @@ class BrowserMixin:
         if err:
             return err
         try:
-            await mgr.page.click(selector, timeout=10000)
+            t = self._get_timeout("browser_action", 10000)
+            await mgr.page.click(selector, timeout=t)
             return f"Clicked: {selector}"
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
@@ -395,7 +407,8 @@ class BrowserMixin:
         if err:
             return err
         try:
-            await mgr.page.fill(selector, value, timeout=10000)
+            t = self._get_timeout("browser_action", 10000)
+            await mgr.page.fill(selector, value, timeout=t)
             return f"Filled {selector}"
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
@@ -409,7 +422,8 @@ class BrowserMixin:
             return err
         try:
             d = int(delay_ms) if str(delay_ms).isdigit() else 50
-            await mgr.page.type(selector, text, delay=d, timeout=10000)
+            t = self._get_timeout("browser_action", 10000)
+            await mgr.page.type(selector, text, delay=d, timeout=t)
             return f"Typed into {selector}"
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
@@ -456,7 +470,7 @@ class BrowserMixin:
         if err:
             return err
         try:
-            t = int(timeout_ms) if str(timeout_ms).isdigit() else 10000
+            t = int(timeout_ms) if str(timeout_ms).isdigit() else self._get_timeout("browser_action", 10000)
             await mgr.page.wait_for_selector(selector, timeout=t)
             return f"Appeared: {selector}"
         except Exception:
@@ -496,8 +510,9 @@ class BrowserMixin:
         if err:
             return err
         try:
+            t = self._get_timeout("browser_action", 10000)
             selected = await mgr.page.select_option(
-                selector, value=value, timeout=10000
+                selector, value=value, timeout=t
             )
             return f"Selected {selected} in {selector}"
         except Exception as e:
@@ -554,11 +569,12 @@ class BrowserMixin:
         if err:
             return err
         try:
+            t = self._get_timeout("browser_action", 10000)
             if str(checked).lower() not in ("false", "0", "no"):
-                await mgr.page.check(selector, timeout=10000)
+                await mgr.page.check(selector, timeout=t)
                 return f"Checked: {selector}"
             else:
-                await mgr.page.uncheck(selector, timeout=10000)
+                await mgr.page.uncheck(selector, timeout=t)
                 return f"Unchecked: {selector}"
         except Exception as e:
             return f"Error: {e}"

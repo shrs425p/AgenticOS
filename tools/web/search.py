@@ -8,7 +8,9 @@ import urllib.parse
 from tools.web.session import bs4_beautifulsoup, requests_module
 
 
+from core.tool_base import tool
 class SearchMixin:
+    @tool(name="web_search", desc="Search the web. Args: query, num_results (optional)", category="Web")
     def search(self, query: str, num_results: str = "5") -> str:
         """Search the web using DuckDuckGo (no API key needed)."""
         err = self._network_error("search")
@@ -18,9 +20,8 @@ class SearchMixin:
             r = requests_module()
             n = min(int(num_results), 20)
             q = urllib.parse.quote_plus(query)
-            url = (
-                f"https://api.duckduckgo.com/?q={q}&format=json&no_redirect=1&no_html=1"
-            )
+            api_base = self.cfg.get("endpoints", {}).get("duckduckgo_api", "https://api.duckduckgo.com")
+            url = f"{api_base}/?q={q}&format=json&no_redirect=1&no_html=1"
             timeout = self._get_timeout("web_search", 15)
             resp = r.get(url, timeout=timeout)
             data = resp.json()
@@ -65,7 +66,10 @@ class SearchMixin:
         try:
             sess = self._get_session()
             q = urllib.parse.quote_plus(query)
-            url = f"https://html.duckduckgo.com/html/?q={q}"
+            base_url = self._get_endpoint(
+                "duckduckgo_html", "https://html.duckduckgo.com/html/?q={q}"
+            )
+            url = base_url.format(q=q)
             max_retries = 3
             for attempt in range(max_retries):
                 timeout = self._get_timeout("web_search", 15)
@@ -131,7 +135,10 @@ class SearchMixin:
                 "Accept-Language": "en-US,en;q=0.9",
             }
             q = urllib.parse.quote_plus(query)
-            url = f"https://www.bing.com/search?q={q}"
+            base_url = self._get_endpoint(
+                "bing_search", "https://www.bing.com/search?q={q}"
+            )
+            url = base_url.format(q=q)
             r = requests_module()
             timeout = self._get_timeout("web_search", 15)
             resp = r.get(url, headers=headers, timeout=timeout)
@@ -162,13 +169,17 @@ class SearchMixin:
         except Exception as e:
             return f"Bing fallback search error: {e}"
 
+    @tool(name="search_news", desc="Search news. Args: query, num_results (optional)", category="Web")
     def search_news(self, query: str, num_results: str = "5") -> str:
         """Search news by scraping DuckDuckGo's news results (best effort)."""
         try:
             n = min(int(num_results), 20)
             sess = self._get_session()
             q = urllib.parse.quote_plus(query)
-            url = f"https://duckduckgo.com/?q={q}&iar=news&ia=news"
+            base_url = self._get_endpoint(
+                "duckduckgo_news", "https://duckduckgo.com/?q={q}&iar=news&ia=news"
+            )
+            url = base_url.format(q=q)
             timeout = self._get_timeout("web_search", 15)
             resp = sess.get(url, timeout=timeout)
 

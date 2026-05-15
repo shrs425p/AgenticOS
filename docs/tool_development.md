@@ -74,9 +74,17 @@ When writing a tool that might touch the whole drive, use `subprocess` to call P
 Your tools can interact with the core `FileManager`, `Terminal`, and `Web` classes through the `ToolRegistry`.
 
 ### Useful Internal Helpers:
+-   `self.cfg`: Access the [Layered Configuration System](runtime_configuration.md).
 -   `self._resolve(path)`: Ensures paths are safe and rebased into the workspace.
 -   `self._size_human(bytes)`: Formats file sizes for readability.
 -   `self.term.run_command(cmd)`: Runs a command through the validated terminal executor.
+
+### Environment Portability
+Never hardcode URLs or absolute paths. Use `self.cfg`:
+```python
+# Fetches an endpoint from config/endpoints.yaml
+api_url = self.cfg.get("endpoints", {}).get("github_api")
+```
 
 ---
 
@@ -132,11 +140,14 @@ from core.tool_registry import tool
     desc="Uses PowerShell to find the largest files on a drive instantly.",
     category="Files"
 )
-def quick_disk_audit(path: str = "C:\\"):
+def quick_disk_audit(self, path: str = None):
     """
     Native implementation for disk analysis. Bypasses Python's slow file crawler.
     """
-    cmd = f"powershell -Command \"Get-ChildItem -Path '{path}' -File -Recurse | Sort-Object Length -Descending | Select-Object -First 10\""
+    # Use config-driven default if no path provided
+    target = path or self.cfg.get("runtime", {}).get("default_audit_root", "C:\\")
+    
+    cmd = f"powershell -Command \"Get-ChildItem -Path '{target}' -File -Recurse | Sort-Object Length -Descending | Select-Object -First 10\""
     try:
         res = subprocess.check_output(cmd, shell=True, text=True)
         return res

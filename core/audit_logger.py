@@ -26,19 +26,30 @@ def _safe_mkdir(path: str):
         pass
 
 
-def _redact(text: str) -> str:
+def _redact(text: str, patterns: list = None, cfg: dict = None) -> str:
     if not text:
         return ""
     s = str(text)
-    patterns = [
-        (r"(?i)(NVIDIA_API_KEY\s*=\s*)([^\s]+)", r"\1[REDACTED]"),
-        (r"(?i)(OPENAI_API_KEY\s*=\s*)([^\s]+)", r"\1[REDACTED]"),
-        (r"(?i)(Authorization:\s*Bearer\s+)([A-Za-z0-9._-]+)", r"\1[REDACTED]"),
-        (r"(?i)(Bearer\s+)([A-Za-z0-9._-]{12,})", r"\1[REDACTED]"),
-        (r"(?i)(nvapi-[A-Za-z0-9_-]{8,})", "[REDACTED]"),
-    ]
-    for pat, repl in patterns:
+    if patterns is None:
+        if cfg:
+            patterns = cfg.get("policy", {}).get("redaction_patterns")
+        
+        if not patterns:
+            # Absolute fallback if config is missing
+            patterns = [
+                (r"(?i)(NVIDIA_API_KEY\s*=\s*)([^\s]+)", r"\1[REDACTED]"),
+                (r"(?i)(OPENAI_API_KEY\s*=\s*)([^\s]+)", r"\1[REDACTED]"),
+                (r"(?i)(Authorization:\s*Bearer\s+)([A-Za-z0-9._-]+)", r"\1[REDACTED]"),
+                (r"(?i)(Bearer\s+)([A-Za-z0-9._-]{12,})", r"\1[REDACTED]"),
+                (r"(?i)(nvapi-[A-Za-z0-9_-]{8,})", "[REDACTED]"),
+            ]
+    
+    for pat_item in patterns:
         try:
+            if isinstance(pat_item, (list, tuple)) and len(pat_item) == 2:
+                pat, repl = pat_item
+            else:
+                continue
             s = re.sub(pat, repl, s)
         except Exception:
             continue
@@ -56,17 +67,27 @@ class AuditLogger:
     log_dir: str
     enabled: bool = True
     fmt: str = "jsonl"  # jsonl | log | both
+    cfg: dict = None
 
     def __post_init__(self):
+        self.cfg = self.cfg or {}
+        self.log_cfg = self.cfg.get("logging", {})
+        names = self.log_cfg.get("filenames", {})
         _safe_mkdir(self.log_dir)
-        self.session_log = os.path.join(self.log_dir, "session.jsonl")
-        self.tools_log = os.path.join(self.log_dir, "tools.jsonl")
-        self.errors_log = os.path.join(self.log_dir, "errors.jsonl")
-        self.paths_log = os.path.join(self.log_dir, "paths.jsonl")
-        self.session_text = os.path.join(self.log_dir, "session.log")
-        self.tools_text = os.path.join(self.log_dir, "tools.log")
-        self.errors_text = os.path.join(self.log_dir, "errors.log")
-        self.paths_text = os.path.join(self.log_dir, "paths.log")
+        
+        s_name = names.get("session", "session")
+        t_name = names.get("tools", "tools")
+        e_name = names.get("errors", "errors")
+        p_name = names.get("paths", "paths")
+
+        self.session_log = os.path.join(self.log_dir, f"{s_name}.jsonl")
+        self.tools_log = os.path.join(self.log_dir, f"{t_name}.jsonl")
+        self.errors_log = os.path.join(self.log_dir, f"{e_name}.jsonl")
+        self.paths_log = os.path.join(self.log_dir, f"{p_name}.jsonl")
+        self.session_text = os.path.join(self.log_dir, f"{s_name}.log")
+        self.tools_text = os.path.join(self.log_dir, f"{t_name}.log")
+        self.errors_text = os.path.join(self.log_dir, f"{e_name}.log")
+        self.paths_text = os.path.join(self.log_dir, f"{p_name}.log")
         self._seen_paths: set[str] = set()
 
     def _write_jsonl(self, path: str, obj: dict):
@@ -136,9 +157,13 @@ class AuditLogger:
         observation_preview: str = "",
     ):
         dur_ms = int(max(0.0, (ended_ts - started_ts) * 1000))
-        args_preview = _redact(tool_args)[:2000]
-        val_preview = (validation or "")[:500]
-        obs_preview = _redact(observation_preview or "")[:800]
+        args_limit = int(self.log_cfg.get("args_truncation_limit", 2000))
+        val_limit = int(self.log_cfg.get("validation_truncation_limit", 500))
+        obs_limit = int(self.log_cfg.get("observation_truncation_limit", 800))
+        
+        args_preview = _redact(tool_args, cfg=self.cfg)[:args_limit]
+        val_preview = (validation or "")[:val_limit]
+        obs_preview = _redact(observation_preview or "", cfg=self.cfg)[:obs_limit]
         obj = {
             "ts": _now_iso(),
             "event": "tool_call",
@@ -176,7 +201,8 @@ class AuditLogger:
             pass
 
     def error(self, session_id: str, where: str, message: str):
-        msg = _redact(message)[:4000]
+        error_limit = int(self.log_cfg.get("error_truncation_limit", 4000))
+        msg = _redact(message, cfg=self.cfg)[:error_limit]
         obj = {
             "ts": _now_iso(),
             "event": "error",

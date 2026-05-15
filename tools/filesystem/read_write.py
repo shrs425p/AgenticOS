@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 
+from core.tool_base import tool
 class ReadWriteMixin:
+    @tool(name="read_file", desc="Read file. Args: path, start_line (optional), num_lines (optional)", category="Files")
     def read_file(self, path: str, start_line: int = 0, num_lines: int = 0) -> str:
         p = self._resolve(path)
         try:
@@ -15,6 +17,7 @@ class ReadWriteMixin:
         except Exception as e:
             return f"Error reading file: {e}"
 
+    @tool(name="write_file", desc="Write/overwrite a file. Args: path, content", category="Files")
     def write_file(self, path: str, content: str) -> str:
         import os
 
@@ -31,6 +34,7 @@ class ReadWriteMixin:
         except Exception as e:
             return f"Error writing file: {e}"
 
+    @tool(name="append_file", desc="Append to a file. Args: path, content", category="Files")
     def append_file(self, path: str, content: str, encoding: str = "utf-8") -> str:
         p = self._resolve(path)
         self._deny_file_modify()

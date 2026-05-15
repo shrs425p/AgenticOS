@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Optional
 
 
+from core.tool_base import tool
 class RunnerMixin:
     def _shell_args(self, command: str) -> dict:
         if self.system == "Windows":
@@ -66,9 +67,11 @@ class RunnerMixin:
         except Exception as e:
             return f"Error running command: {type(e).__name__}: {e}"
 
+    @tool(name="run_command", desc="Run shell command. Args: command", category="Terminal")
     def run_command(self, command: str, timeout: int = 30) -> str:
         return self._run(command, timeout=timeout)
 
+    @tool(name="run_powershell", desc="Run PowerShell command. Args: command", category="Terminal")
     def run_powershell(self, command: str, timeout: int = 60) -> str:
         if self.system != "Windows":
             return self._run(command, timeout=timeout)
@@ -100,9 +103,11 @@ class RunnerMixin:
             code = code.replace(char, replacement)
         return code
 
+    @tool(name="run_python", desc="Run Python code string. Args: code", category="Terminal")
     def run_python(self, code: str) -> str:
         return self._run("python -", timeout=60, input_data=self._sanitize_code(code))
 
+    @tool(name="run_script", desc="Run a script file. Args: path, interpreter (optional)", category="Terminal")
     def run_script(self, path: str, interpreter: str = "") -> str:
         p = Path(path).resolve()
         if not p.exists():

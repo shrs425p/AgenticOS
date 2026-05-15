@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 
+from core.tool_base import tool
 class MutationsMixin:
+    @tool(name="delete_file", desc="Delete a file. Args: path", category="Files")
     def delete_file(self, path: str) -> str:
         import os
 
@@ -16,6 +18,7 @@ class MutationsMixin:
         except Exception as e:
             return f"Error deleting file: {e}"
 
+    @tool(name="delete_dir", desc="Delete directory recursively. Args: path", category="Files")
     def delete_dir(self, path: str) -> str:
         import shutil
 
@@ -30,6 +33,7 @@ class MutationsMixin:
         except Exception as e:
             return f"Error deleting directory: {e}"
 
+    @tool(name="copy_file", desc="Copy file. Args: src, dst", category="Files")
     def copy_file(self, src: str, dst: str) -> str:
         import shutil
 
@@ -44,6 +48,7 @@ class MutationsMixin:
         except Exception as e:
             return f"Error copying file: {e}"
 
+    @tool(name="move_file", desc="Move/rename file. Args: src, dst", category="Files")
     def move_file(self, src: str, dst: str) -> str:
         import shutil
 
@@ -58,6 +63,7 @@ class MutationsMixin:
         except Exception as e:
             return f"Error moving file: {e}"
 
+    @tool(name="create_dir", desc="Create directory. Args: path", category="Files")
     def create_dir(self, path: str) -> str:
         p = self._resolve(path)
         self._deny_file_modify()
@@ -68,6 +74,7 @@ class MutationsMixin:
         except Exception as e:
             return f"Error creating directory: {e}"
 
+    @tool(name="touch", desc="Create empty file or update timestamps. Args: path", category="Files")
     def touch(self, path: str) -> str:
         p = self._resolve(path)
         self._deny_file_modify()

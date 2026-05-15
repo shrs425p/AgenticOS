@@ -49,6 +49,10 @@ class WebTools(
         """Get timeout from config or use default."""
         return self.cfg.get("timeouts", {}).get(key, default)
 
+    def _get_endpoint(self, key: str, default: str) -> str:
+        """Get endpoint from config or use default."""
+        return self.cfg.get("web", {}).get("search_endpoints", {}).get(key, default)
+
     def _get_session(self):
         if self._session is None:
             self._session = build_default_session()

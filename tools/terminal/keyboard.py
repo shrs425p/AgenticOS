@@ -219,6 +219,7 @@ def _combo_to_osascript(combo: str) -> str:
         return f'tell application "System Events" to key code (key code of "{key}"){using_clause}'
 
 
+from core.tool_base import tool
 class KeyboardMixin:
     """Keyboard shortcut, hotkey, and text-input methods."""
 
@@ -316,6 +317,7 @@ class KeyboardMixin:
             return custom[alias]
         return k
 
+    @tool(name="hotkey", desc="Send a keyboard shortcut/hotkey. Args: keys (e.g. ctrl+c, alt+f4, win+d), window(optional)", category="Terminal")
     def hotkey(self, keys: str, window: str = "") -> str:
         """Send a keyboard shortcut / hotkey combination.
 
@@ -386,6 +388,7 @@ class KeyboardMixin:
 
     # ── custom key management ─────────────────────────────────────────────────
 
+    @tool(name="hotkey_list", desc="List all custom named shortcut aliases.", category="Terminal")
     def hotkey_list(self) -> str:
         """List all custom named shortcut aliases defined for this session.
 
@@ -397,6 +400,7 @@ class KeyboardMixin:
         lines = [f"  {name:25s} → {combo}" for name, combo in sorted(custom.items())]
         return f"Custom shortcuts ({len(custom)}):\n" + "\n".join(lines)
 
+    @tool(name="hotkey_set", desc="Define/update a custom named shortcut (session). Args: name, keys", category="Terminal")
     def hotkey_set(self, name: str, keys: str) -> str:
         """Define or update a custom named shortcut alias for this session.
 
@@ -424,6 +428,7 @@ class KeyboardMixin:
         self.custom_keys[n] = k
         return f"Custom shortcut set: '{n}' → '{k}'. Use hotkey('{n}') to trigger it."
 
+    @tool(name="hotkey_delete", desc="Remove a custom named shortcut. Args: name", category="Terminal")
     def hotkey_delete(self, name: str) -> str:
         """Remove a custom named shortcut alias from this session.
 
@@ -440,6 +445,7 @@ class KeyboardMixin:
         del custom[n]
         return f"Removed custom shortcut: '{n}'."
 
+    @tool(name="press_key", desc="Press a single key N times. Args: key (enter/tab/esc/f5/up/etc), repeat(optional)", category="Terminal")
     def press_key(self, key: str, repeat: int = 1) -> str:
         """Press a single key (or repeat it N times).
 
@@ -487,6 +493,7 @@ class KeyboardMixin:
             result = self._xdotool(*cmds)
             return f"Pressed [{key}] x{n}: {result}"
 
+    @tool(name="type_text", desc="Type text as keyboard input. Args: text, delay_ms(optional)", category="Terminal")
     def type_text(self, text: str, delay_ms: int = 0) -> str:
         """Type a string of text as keyboard input (simulates typing).
 
@@ -530,6 +537,7 @@ class KeyboardMixin:
                 result = "Error: xdotool not installed."
             return f"Typed {len(t)} characters: {result}"
 
+    @tool(name="key_down", desc="Hold a key down. Args: key (shift/ctrl/alt/etc)", category="Terminal")
     def key_down(self, key: str) -> str:
         """Hold a key down (useful for drag-and-drop or sustained modifier presses).
 
@@ -563,6 +571,7 @@ public class KBD {{
         else:
             return self._xdotool("keydown", k)
 
+    @tool(name="key_up", desc="Release a held key. Args: key", category="Terminal")
     def key_up(self, key: str) -> str:
         """Release a previously held key.
 
@@ -595,6 +604,7 @@ public class KBD {{
 
     # ── mouse helpers ─────────────────────────────────────────────────────────
 
+    @tool(name="mouse_click", desc="Simulate mouse click. Args: button(left/right/middle), x(optional), y(optional)", category="Terminal")
     def mouse_click(self, button: str = "left", x: int = -1, y: int = -1) -> str:
         """Simulate a mouse click, optionally at screen coordinates.
 
@@ -647,6 +657,7 @@ Write-Output "Clicked {btn} at ({x if x >= 0 else "current"}, {y if y >= 0 else 
             result = self._xdotool("click", btn_num)
             return f"Clicked {btn}: {result}"
 
+    @tool(name="mouse_move", desc="Move mouse cursor to coordinates. Args: x, y", category="Terminal")
     def mouse_move(self, x: int, y: int) -> str:
         """Move the mouse cursor to absolute screen coordinates.
 
@@ -673,6 +684,7 @@ Write-Output "Moved to ({x}, {y})."
         else:
             return self._xdotool("mousemove", str(x), str(y))
 
+    @tool(name="mouse_scroll", desc="Scroll mouse wheel. Args: direction(up/down), clicks(optional)", category="Terminal")
     def mouse_scroll(self, direction: str = "down", clicks: int = 3) -> str:
         """Scroll the mouse wheel.
 
@@ -763,6 +775,7 @@ Write-Output "Scrolled {d} {n} click(s)."
 
     # ── window-focus helper ───────────────────────────────────────────────────
 
+    @tool(name="focus_window_and_hotkey", desc="Focus a window then send a hotkey. Args: window, keys", category="Terminal")
     def focus_window_and_hotkey(self, window: str, keys: str) -> str:
         """Focus a window by title and then send a hotkey.
 

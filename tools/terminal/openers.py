@@ -10,7 +10,9 @@ import subprocess
 import time
 
 
+from core.tool_base import tool
 class OpenersMixin:
+    @tool(name="find_app", desc="Find an app executable path (dynamic: PATH/registry/Start Menu). Args: app_name", category="Terminal")
     def find_app(self, app_name: str) -> str:
         """Find an application executable path dynamically (Windows-focused).
 
@@ -91,6 +93,7 @@ class OpenersMixin:
 
         return "Not found."
 
+    @tool(name="open_app", desc="Open an app (dynamic discovery + launch). Args: app_name, arguments(optional)", category="Terminal")
     def open_app(self, app_name: str, arguments: str = "") -> str:
         """Open an app using dynamic discovery, then launch."""
         found = self.find_app(app_name)
@@ -120,6 +123,7 @@ class OpenersMixin:
         # Fallback: try by name
         return self.launch_application(app_name, arguments or "")
 
+    @tool(name="launch_application", desc="Launch desktop application. Args: app_name, arguments (optional)", category="Terminal")
     def launch_application(self, app_name: str, arguments: str = "") -> str:
         name = (app_name or "").strip()
         if not name:
@@ -200,17 +204,22 @@ class OpenersMixin:
 
         return self.start_background(cmd)
 
+    @tool(name="open_spotify_search", desc="Open Spotify search in browser/app. Args: query", category="Terminal")
     def open_spotify_search(self, query: str) -> str:
         q = (query or "").strip()
         if not q:
             return "Error: query required."
         # This opens Spotify web search; the OS may hand it off to the Spotify app.
-        url = "https://open.spotify.com/search/" + urllib.parse.quote(q)
+        base_url = self.cfg.get("endpoints", {}).get("spotify_search", "https://open.spotify.com/search/")
+        url = base_url + urllib.parse.quote(q)
         return self.open_url(url)
 
+    @tool(name="open_whatsapp_web", desc="Open WhatsApp Web.", category="Terminal")
     def open_whatsapp_web(self) -> str:
-        return self.open_url("https://web.whatsapp.com/")
+        base = self.cfg.get("endpoints", {}).get("whatsapp_web", "https://web.whatsapp.com/")
+        return self.open_url(base)
 
+    @tool(name="open_whatsapp_chat", desc="Open WhatsApp chat by phone. Args: phone, message(optional)", category="Terminal")
     def open_whatsapp_chat(self, phone: str, message: str = "") -> str:
         """Open a WhatsApp chat by phone number using wa.me (prefills message if provided).
 
@@ -219,78 +228,95 @@ class OpenersMixin:
         p = "".join(ch for ch in (phone or "") if ch.isdigit())
         if not p:
             return "Error: phone required (digits only, include country code)."
-        url = f"https://wa.me/{p}"
+        base = self.cfg.get("endpoints", {}).get("whatsapp_chat", "https://wa.me/")
+        url = f"{base}{p}"
         msg = (message or "").strip()
         if msg:
             url += "?text=" + urllib.parse.quote(msg)
         return self.open_url(url)
 
+    @tool(name="open_telegram", desc="Open Telegram web or username. Args: target(optional)", category="Terminal")
     def open_telegram(self, target: str = "") -> str:
         """Open Telegram (web) or a specific username/channel."""
         t = (target or "").strip().lstrip("@")
+        base_web = self.cfg.get("endpoints", {}).get("telegram_web", "https://web.telegram.org/")
+        base_tme = self.cfg.get("endpoints", {}).get("telegram_tme", "https://t.me/")
         if not t:
-            return self.open_url("https://web.telegram.org/")
-        return self.open_url("https://t.me/" + urllib.parse.quote(t))
+            return self.open_url(base_web)
+        return self.open_url(base_tme + urllib.parse.quote(t))
 
+    @tool(name="open_instagram_profile", desc="Open Instagram profile. Args: username", category="Terminal")
     def open_instagram_profile(self, username: str) -> str:
         u = (username or "").strip().lstrip("@")
         if not u:
             return "Error: username required."
-        return self.open_url("https://www.instagram.com/" + urllib.parse.quote(u) + "/")
+        base = self.cfg.get("endpoints", {}).get("instagram", "https://www.instagram.com/")
+        return self.open_url(base + urllib.parse.quote(u) + "/")
 
+    @tool(name="open_x_profile", desc="Open X/Twitter profile. Args: username", category="Terminal")
     def open_x_profile(self, username: str) -> str:
         u = (username or "").strip().lstrip("@")
         if not u:
             return "Error: username required."
-        return self.open_url("https://x.com/" + urllib.parse.quote(u))
+        base = self.cfg.get("endpoints", {}).get("x", "https://x.com/")
+        return self.open_url(base + urllib.parse.quote(u))
 
+    @tool(name="open_facebook_profile", desc="Open Facebook profile or URL. Args: handle_or_url", category="Terminal")
     def open_facebook_profile(self, handle_or_url: str) -> str:
         h = (handle_or_url or "").strip()
         if not h:
             return "Error: handle_or_url required."
         if h.startswith("http://") or h.startswith("https://"):
             return self.open_url(h)
-        return self.open_url("https://www.facebook.com/" + urllib.parse.quote(h))
+        base = self.cfg.get("endpoints", {}).get("facebook", "https://www.facebook.com/")
+        return self.open_url(base + urllib.parse.quote(h))
 
+    @tool(name="open_discord", desc="Open Discord in browser.", category="Terminal")
     def open_discord(self) -> str:
-        return self.open_url("https://discord.com/app")
+        base = self.cfg.get("endpoints", {}).get("discord", "https://discord.com/app")
+        return self.open_url(base)
 
+    @tool(name="open_google_search", desc="Open Google search. Args: query", category="Terminal")
     def open_google_search(self, query: str) -> str:
         q = (query or "").strip()
         if not q:
             return "Error: query required."
-        return self.open_url("https://www.google.com/search?q=" + urllib.parse.quote(q))
+        base = self.cfg.get("endpoints", {}).get("google_search", "https://www.google.com/search?q=")
+        return self.open_url(base + urllib.parse.quote(q))
 
+    @tool(name="open_google_maps", desc="Open Google Maps search. Args: query", category="Terminal")
     def open_google_maps(self, query: str) -> str:
         q = (query or "").strip()
         if not q:
             return "Error: query required."
-        return self.open_url(
-            "https://www.google.com/maps/search/" + urllib.parse.quote(q)
-        )
+        base = self.cfg.get("endpoints", {}).get("google_maps", "https://www.google.com/maps/search/")
+        return self.open_url(base + urllib.parse.quote(q))
 
+    @tool(name="open_youtube_search", desc="Open YouTube search. Args: query", category="Terminal")
     def open_youtube_search(self, query: str) -> str:
         q = (query or "").strip()
         if not q:
             return "Error: query required."
-        return self.open_url(
-            "https://www.youtube.com/results?search_query=" + urllib.parse.quote(q)
-        )
+        base = self.cfg.get("endpoints", {}).get("youtube_search", "https://www.youtube.com/results?search_query=")
+        return self.open_url(base + urllib.parse.quote(q))
 
+    @tool(name="open_github_search", desc="Open GitHub search. Args: query", category="Terminal")
     def open_github_search(self, query: str) -> str:
         q = (query or "").strip()
         if not q:
             return "Error: query required."
-        return self.open_url("https://github.com/search?q=" + urllib.parse.quote(q))
+        base = self.cfg.get("endpoints", {}).get("github_search", "https://github.com/search?q=")
+        return self.open_url(base + urllib.parse.quote(q))
 
+    @tool(name="open_stackoverflow_search", desc="Open StackOverflow search. Args: query", category="Terminal")
     def open_stackoverflow_search(self, query: str) -> str:
         q = (query or "").strip()
         if not q:
             return "Error: query required."
-        return self.open_url(
-            "https://stackoverflow.com/search?q=" + urllib.parse.quote(q)
-        )
+        base = self.cfg.get("endpoints", {}).get("stackoverflow_search", "https://stackoverflow.com/search?q=")
+        return self.open_url(base + urllib.parse.quote(q))
 
+    @tool(name="open_file", desc="Open file with default application. Args: path", category="Terminal")
     def open_file(self, path: str) -> str:
         raw = (path or "").strip()
         if not raw:
@@ -330,6 +356,7 @@ class OpenersMixin:
             return "Opened."
         return self._run(f"xdg-open {self._quote_arg(str(picked))}", timeout=15)
 
+    @tool(name="open_url", desc="Open URL in default browser. Args: url", category="Terminal")
     def open_url(self, url: str) -> str:
         try:
             webbrowser.open(url)
@@ -377,6 +404,7 @@ class OpenersMixin:
         except Exception as e:
             return f"Error opening mail client: {type(e).__name__}: {e}"
 
+    @tool(name="open_url_verified", desc="Open URL and verify a browser process exists (best-effort). Args: url", category="Terminal")
     def open_url_verified(self, url: str) -> str:
         """Open a URL and best-effort verify that a browser process exists."""
         out = self.open_url(url)

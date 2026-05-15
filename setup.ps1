@@ -1,7 +1,7 @@
 # AgenticOS: Environment Configuration Script
 # This script sets AGENTICOS_HOME and adds the project directory to your PATH.
 
-$ProjectRoot = "C:\AgenticOs"
+$ProjectRoot = $PSScriptRoot
 
 Write-Host "[INFO] Configuring AgenticOS environment..." -ForegroundColor Cyan
 

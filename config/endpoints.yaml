@@ -1,0 +1,26 @@
+# AgenticOs layered config: endpoints.yaml
+# Stores all internal API and integration endpoints used by WebTools and Openers
+
+endpoints:
+  duckduckgo_api: "https://api.duckduckgo.com"
+  duckduckgo_search: "https://duckduckgo.com"
+  google_search: "https://www.google.com/search?q="
+  google_maps: "https://www.google.com/maps/search/"
+  is_gd_api: "https://is.gd/create.php"
+  wayback_api: "https://archive.org/wayback/available"
+  ipify_api: "https://api.ipify.org"
+  ipinfo_api: "https://ipinfo.io"
+  
+  # Social / Web integrations
+  spotify_search: "https://open.spotify.com/search/"
+  whatsapp_web: "https://web.whatsapp.com/"
+  whatsapp_chat: "https://wa.me/"
+  telegram_web: "https://web.telegram.org/"
+  telegram_tme: "https://t.me/"
+  instagram: "https://www.instagram.com/"
+  x: "https://x.com/"
+  facebook: "https://www.facebook.com/"
+  discord: "https://discord.com/app"
+  youtube_search: "https://www.youtube.com/results?search_query="
+  github_search: "https://github.com/search?q="
+  stackoverflow_search: "https://stackoverflow.com/search?q="

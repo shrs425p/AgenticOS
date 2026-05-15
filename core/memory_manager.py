@@ -15,17 +15,123 @@ import hashlib
 class MemoryManager:
     """Manages long-term memory consolidation and daily logging for AgenticOs."""
     
-    def __init__(self, workspace_root: str):
+    def __init__(self, workspace_root: str, llm_client: Optional[Any] = None, cfg: Optional[Dict] = None):
         self.workspace_root = Path(workspace_root).resolve()
+        self.cfg = cfg or {}
         self.memory_dir = self.workspace_root / "memory"
         self.memory_dir.mkdir(exist_ok=True)
         
         self.long_term_memory_file = self.workspace_root / "MEMORY.md"
         self.daily_memory_dir = self.memory_dir
+        self.llm_client = llm_client
         
         # Configuration
         self.max_daily_entries = 50
         self.memory_consolidation_threshold = 5  # Consolidate after 5 completed tasks
+        
+        self.commitments_file = self.memory_dir / "commitments.json"
+        self.commitments = self._load_commitments()
+        
+    def _load_commitments(self) -> List[Dict[str, Any]]:
+        """Load pending commitments from disk."""
+        if self.commitments_file.exists():
+            try:
+                with open(self.commitments_file, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception:
+                return []
+        return []
+
+    def _save_commitments(self):
+        """Save commitments to disk."""
+        try:
+            with open(self.commitments_file, "w", encoding="utf-8") as f:
+                json.dump(self.commitments, f, indent=2)
+        except Exception as e:
+            print(f"Warning: Failed to save commitments: {e}")
+
+    def register_commitment(self, text: str, due_date: Optional[str] = None):
+        """Register a new commitment/follow-up."""
+        commitment = {
+            "id": hashlib.md5(f"{text}{datetime.now()}".encode()).hexdigest()[:8],
+            "text": text,
+            "created_at": datetime.now().isoformat(),
+            "due_date": due_date,
+            "status": "pending"
+        }
+        self.commitments.append(commitment)
+        self._save_commitments()
+        self.log_daily_event("COMMITMENT_REGISTERED", f"New commitment: {text}", {"due": due_date})
+        return f"Commitment registered: {text}"
+
+    def get_active_commitments(self) -> str:
+        """Get all pending commitments formatted for system prompt."""
+        active = [c for c in self.commitments if c.get("status") == "pending"]
+        if not active:
+            return ""
+        
+        header = self.cfg.get("prompts", {}).get("memory_blocks", {}).get("commitments_header", "### ACTIVE_COMMITMENTS (Follow-ups)")
+        lines = [header]
+        for c in active:
+            due = f" [Due: {c['due_date']}]" if c.get('due_date') else ""
+            lines.append(f"- {c['text']}{due} (ID: {c['id']})")
+        return "\n".join(lines) + "\n-------------------------------------------\n"
+
+    def complete_commitment(self, commitment_id: str):
+        """Mark a commitment as completed."""
+        for c in self.commitments:
+            if c["id"] == commitment_id:
+                c["status"] = "completed"
+                c["completed_at"] = datetime.now().isoformat()
+                self._save_commitments()
+                return f"Commitment {commitment_id} marked as completed."
+        return f"Error: Commitment {commitment_id} not found."
+
+    def get_relevant_context(self, query: str, limit: int = 3) -> str:
+        """Retrieve relevant snippets from long-term memory for pre-flight injection (Active Recall)."""
+        if not query or len(query) < 4:
+            return ""
+            
+        q = query.lower().strip()
+        results = []
+        
+        # 1. Search MEMORY.md
+        if self.long_term_memory_file.exists():
+            try:
+                with open(self.long_term_memory_file, "r", encoding="utf-8") as f:
+                    lines = f.readlines()
+                    for i, line in enumerate(lines):
+                        if q in line.lower():
+                            # Grab context window
+                            start = max(0, i - 2)
+                            end = min(len(lines), i + 3)
+                            snippet = "".join(lines[start:end]).strip()
+                            results.append(f"[MEMORY.md] ...{snippet}...")
+                            if len(results) >= limit: break
+            except Exception:
+                pass
+
+        # 2. Search recent daily logs (last 3 days)
+        if len(results) < limit:
+            for i in range(3):
+                date = datetime.now() - timedelta(days=i)
+                daily_file = self.get_daily_memory_file(date)
+                if daily_file.exists():
+                    try:
+                        with open(daily_file, "r", encoding="utf-8") as f:
+                            content = f.read()
+                            if q in content.lower():
+                                # Just indicate match for brevity
+                                results.append(f"[LOG {date.strftime('%Y-%m-%d')}] Relevant context found.")
+                                if len(results) >= limit: break
+                    except Exception:
+                        pass
+        
+        if not results:
+            return ""
+            
+        header = "\n### ACTIVE_RECALL (Relevant Context Found from Memory)\n"
+        return header + "\n".join(results) + "\n-------------------------------------------\n"
         
     def get_daily_memory_file(self, date: Optional[datetime] = None) -> Path:
         """Get the memory file for a specific date (defaults to today)."""
@@ -183,7 +289,7 @@ class MemoryManager:
             print(f"Warning: Memory consolidation failed: {e}")
     
     def _generate_insights_from_tasks(self, tasks: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Generate insights from a set of completed tasks."""
+        """Generate insights from a set of completed tasks using the LLM if available."""
         if not tasks:
             return {}
         
@@ -195,16 +301,74 @@ class MemoryManager:
         for task in tasks:
             for tool in task.get("tools_used", []):
                 tool_usage[tool] = tool_usage.get(tool, 0) + 1
-        
-        # Most used tools
         most_used_tools = sorted(tool_usage.items(), key=lambda x: x[1], reverse=True)[:5]
-        
-        # Success rate
         success_rate = len(successful_tasks) / len(tasks) if tasks else 0
         
-        # Common patterns in successful vs failed tasks
-        success_patterns = self._extract_patterns(successful_tasks)
-        failure_patterns = self._extract_patterns(failed_tasks)
+        # LLM-Powered Semantic Patterns
+        semantic_patterns = []
+        if self.llm_client and hasattr(self.llm_client, "chat"):
+            try:
+                task_summaries = []
+                for i, t in enumerate(tasks):
+                    status = "SUCCESS" if t.get("success") else "FAILED"
+                    goal = t.get("goal", "")
+                    ans = t.get("result", "")[:300]
+                    task_summaries.append(f"Task {i+1} ({status}): {goal}\nResult: {ans}\n")
+                
+                workspace_path = str(self.workspace_root)
+                system_prompt = (
+                    "You are the memory consolidation unit of an AI agent. "
+                    "Review the following recent tasks and extract 3 brief, highly semantic rules, facts, or lessons learned "
+                    "that will help the agent succeed in the future. "
+                    "Focus on persistent facts like 'The database is at port 5432' or 'User prefers Python'. "
+                    "Do NOT output generic advice. Output exactly 3 bullet points.\n\n"
+                    f"IMPORTANT CONTEXT: The agent's workspace root is: {workspace_path}\n"
+                    "All workspace files (MEMORY.md, AGENTS.md, USERINFO.md, etc.) are inside this workspace folder. "
+                    "When referencing file paths, use paths relative to the workspace root (e.g., just 'MEMORY.md' not a full absolute path). "
+                    "Do NOT hallucinate file paths."
+                )
+                
+                response = self.llm_client.chat(
+                    messages=[{"role": "user", "content": "\n".join(task_summaries)}],
+                    system=system_prompt
+                )
+                
+                if response:
+                    lines = [line.strip().lstrip('-').lstrip('*').strip() for line in response.split('\n') if line.strip()]
+                    semantic_patterns = [line for line in lines if line and len(line) > 5][:3]
+                    
+                    # Post-process: generically strip absolute paths back to relative
+                    # Matches any path like C:\AgenticOs\...\file or C:\AgenticOs\workspace\...\file
+                    # and reduces it to just the filename or workspace-relative path
+                    ws_str = str(self.workspace_root).replace("\\", "\\\\")
+                    # Also catch project root (parent of workspace)
+                    project_root = str(self.workspace_root.parent).replace("\\", "\\\\")
+                    
+                    fixed = []
+                    for pattern in semantic_patterns:
+                        # Replace full workspace paths with relative
+                        pattern = re.sub(
+                            re.escape(str(self.workspace_root)).replace("\\\\", r"[/\\]") + r"[/\\]?",
+                            "", pattern
+                        )
+                        # Replace project root paths (e.g. C:\AgenticOs\MEMORY.md -> MEMORY.md)
+                        pattern = re.sub(
+                            re.escape(str(self.workspace_root.parent)).replace("\\\\", r"[/\\]") + r"[/\\]?",
+                            "", pattern
+                        )
+                        # Clean up any leftover backslash-only fragments
+                        pattern = pattern.replace("``", "`").strip()
+                        fixed.append(pattern)
+                    semantic_patterns = fixed
+
+
+            except Exception as e:
+                print(f"Warning: LLM memory consolidation failed: {e}")
+                
+        # Fallback to old string-matching logic if LLM fails or is missing
+        if not semantic_patterns:
+            semantic_patterns.extend(self._extract_patterns(successful_tasks))
+            semantic_patterns.extend(self._extract_patterns(failed_tasks))
         
         return {
             "period": {
@@ -214,8 +378,8 @@ class MemoryManager:
             },
             "success_rate": success_rate,
             "most_used_tools": most_used_tools,
-            "success_patterns": success_patterns,
-            "failure_patterns": failure_patterns,
+            "success_patterns": semantic_patterns,
+            "failure_patterns": [],
             "avg_duration": sum(t.get("duration", 0) for t in tasks) / len(tasks) if tasks else 0
         }
     
@@ -387,10 +551,10 @@ Curated knowledge, insights, and learned patterns from agent experiences.
 _memory_manager: Optional[MemoryManager] = None
 
 
-def initialize_memory_manager(workspace_root: str) -> MemoryManager:
+def initialize_memory_manager(workspace_root: str, llm_client: Optional[Any] = None, cfg: Optional[Dict] = None) -> MemoryManager:
     """Initialize the global memory manager."""
     global _memory_manager
-    _memory_manager = MemoryManager(workspace_root)
+    _memory_manager = MemoryManager(workspace_root, llm_client, cfg)
     return _memory_manager
 
 

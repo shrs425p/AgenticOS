@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 
+from core.tool_base import tool
 class EditMixin:
+    @tool(name="edit_file", desc="Replace text in file. Args: path, old_text, new_text", category="Files")
     def edit_file(self, path: str, old_text: str, new_text: str) -> str:
         p = self._resolve(path)
         self._deny_file_modify()
@@ -16,6 +18,7 @@ class EditMixin:
         except Exception as e:
             return f"Error editing file: {e}"
 
+    @tool(name="edit_line", desc="Replace a specific line. Args: path, line_number, new_content", category="Files")
     def edit_line(self, path: str, line_number: str, new_content: str) -> str:
         p = self._resolve(path)
         self._deny_file_modify()
@@ -31,6 +34,7 @@ class EditMixin:
         except Exception as e:
             return f"Error editing line: {e}"
 
+    @tool(name="insert_line", desc="Insert a line before line_number. Args: path, line_number, content", category="Files")
     def insert_line(self, path: str, line_number: str, content: str) -> str:
         p = self._resolve(path)
         self._deny_file_modify()

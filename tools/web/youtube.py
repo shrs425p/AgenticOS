@@ -6,7 +6,9 @@ import urllib.parse
 from tools.web.session import requests_module
 
 
+from core.tool_base import tool
 class YouTubeMixin:
+    @tool(name="find_youtube_video", desc="Find YouTube video link. Args: query, channel (optional)", category="Web")
     def find_youtube_video(self, query: str, channel: str = "") -> str:
         """Best-effort: find a YouTube watch URL for a query.
 
@@ -24,7 +26,8 @@ class YouTubeMixin:
         try:
             r = requests_module()
             dq = urllib.parse.quote_plus(full_query)
-            url = f"https://api.duckduckgo.com/?q={dq}&format=json&no_redirect=1&no_html=1"
+            api_base = self.cfg.get("endpoints", {}).get("duckduckgo_api", "https://api.duckduckgo.com")
+            url = f"{api_base}/?q={dq}&format=json&no_redirect=1&no_html=1"
             timeout = self._get_timeout("web_search", 15)
             resp = r.get(url, timeout=timeout)
             data = resp.json() or {}

@@ -14,6 +14,7 @@ import shutil
 import subprocess
 
 
+from core.tool_base import tool
 class MediaMixin:
     """Media playback and audio control methods."""
 
@@ -100,6 +101,7 @@ class MediaMixin:
 
     # ── playback controls ──────────────────────────────────────────────────────
 
+    @tool(name="media_play_pause", desc="Toggle play/pause for the active media player.", category="Terminal")
     def media_play_pause(self) -> str:
         """Toggle play/pause for the active media player."""
         if self.system == "Windows":
@@ -109,6 +111,7 @@ class MediaMixin:
         else:
             return self._run_playerctl("play-pause")
 
+    @tool(name="media_play", desc="Resume/start media playback.", category="Terminal")
     def media_play(self) -> str:
         """Resume / start playback."""
         if self.system == "Windows":
@@ -118,6 +121,7 @@ class MediaMixin:
         else:
             return self._run_playerctl("play")
 
+    @tool(name="media_pause", desc="Pause the active media player.", category="Terminal")
     def media_pause(self) -> str:
         """Pause the active media player."""
         if self.system == "Windows":
@@ -127,6 +131,7 @@ class MediaMixin:
         else:
             return self._run_playerctl("pause")
 
+    @tool(name="media_stop", desc="Stop media playback.", category="Terminal")
     def media_stop(self) -> str:
         """Stop media playback."""
         if self.system == "Windows":
@@ -136,6 +141,7 @@ class MediaMixin:
         else:
             return self._run_playerctl("stop")
 
+    @tool(name="media_next", desc="Skip to the next track.", category="Terminal")
     def media_next(self) -> str:
         """Skip to the next track."""
         if self.system == "Windows":
@@ -145,6 +151,7 @@ class MediaMixin:
         else:
             return self._run_playerctl("next")
 
+    @tool(name="media_previous", desc="Go to the previous track.", category="Terminal")
     def media_previous(self) -> str:
         """Go back to the previous track."""
         if self.system == "Windows":
@@ -154,6 +161,7 @@ class MediaMixin:
         else:
             return self._run_playerctl("previous")
 
+    @tool(name="media_status", desc="Get currently playing track info and playback status.", category="Terminal")
     def media_status(self) -> str:
         """Get currently playing track info / playback status."""
         if self.system == "Windows":
@@ -224,6 +232,7 @@ end tell"""
 
     # ── seek / position ───────────────────────────────────────────────────────
 
+    @tool(name="media_seek", desc="Seek forward/backward by N seconds. Args: seconds (+/-)", category="Terminal")
     def media_seek(self, seconds: float) -> str:
         """Seek forward (positive) or backward (negative) by N seconds.
 
@@ -253,6 +262,7 @@ end tell"""
 
     # ── volume controls ───────────────────────────────────────────────────────
 
+    @tool(name="volume_set", desc="Set system master volume 0-100. Args: level", category="Terminal")
     def volume_set(self, level: int) -> str:
         """Set system master volume (0–100).
 
@@ -316,6 +326,7 @@ if (Get-Command nircmd -ErrorAction SilentlyContinue) {{
                 return result.stdout.strip() or f"Volume set to {lvl}%"
             return "Error: Install pactl (PulseAudio) or amixer (ALSA)."
 
+    @tool(name="volume_up", desc="Raise system volume by step% (default 10). Args: step(optional)", category="Terminal")
     def volume_up(self, step: int = 10) -> str:
         """Raise system volume by step% (default +10).
 
@@ -359,6 +370,7 @@ if (Get-Command nircmd -ErrorAction SilentlyContinue) {{
                 return f"Volume increased by {s}%"
             return "Error: Install pactl or amixer."
 
+    @tool(name="volume_down", desc="Lower system volume by step% (default 10). Args: step(optional)", category="Terminal")
     def volume_down(self, step: int = 10) -> str:
         """Lower system volume by step% (default -10).
 
@@ -399,6 +411,7 @@ if (Get-Command nircmd -ErrorAction SilentlyContinue) {{
                 return f"Volume decreased by {s}%"
             return "Error: Install pactl or amixer."
 
+    @tool(name="volume_mute", desc="Toggle system mute on/off.", category="Terminal")
     def volume_mute(self) -> str:
         """Toggle system mute on/off."""
         if self.system == "Windows":
@@ -427,6 +440,7 @@ if (Get-Command nircmd -ErrorAction SilentlyContinue) {{
                 return "Mute toggled."
             return "Error: Install pactl or amixer."
 
+    @tool(name="volume_get", desc="Get current system master volume level.", category="Terminal")
     def volume_get(self) -> str:
         """Get the current system master volume level."""
         if self.system == "Windows":

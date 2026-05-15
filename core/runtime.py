@@ -25,7 +25,7 @@ from typing import Dict, Optional, Callable
 from core.memory_manager import initialize_memory_manager, log_task_completion, get_memory_manager
 from core.session_memory_sqlite import SqliteSessionMemory
 from core.audit_logger import AuditLogger, infer_success
-from core.model_clients import GeminiClient, NvidiaClient, OllamaClient, GroqClient, OpenAIClient, OpenRouterClient, GithubClient, DeepseekClient
+from core.model_clients import GeminiClient, NvidiaClient, OllamaClient, GroqClient, OpenAIClient, OpenRouterClient, GithubClient, DeepseekClient, TieredClient
 from core.runtime_config import BASE_DIR, DEFAULT_WORKSPACE, load_config
 from core.task_tracker import TaskTracker
 from core.runtime_ui import (
@@ -43,12 +43,26 @@ from core.runtime_ui import (
     typewriter_print,
 )
 from core.tool_registry import ToolRegistry
+from core.context_engine import ContextEngine
 
 
 class Agent:
     def __init__(self, cfg: dict, confirm_handler: Optional[Callable] = None):
         self.cfg = cfg
         self.confirm_handler = confirm_handler
+
+        # 1. Load Heuristics and Performance FIRST (required by other components)
+        self.heuristics = self.cfg.get("heuristics", {})
+        self.performance = self.cfg.get("performance", {})
+        self.enable_cov = self.cfg["agent"].get("enable_cov", True)
+        self.cov_model = self.heuristics.get("cov_model")
+        self.max_iter = cfg["agent"]["max_iterations"]
+        self.verbose = cfg["agent"]["verbose_thinking"]
+        self.confirm = cfg["agent"].get("auto_confirm", True)
+        self.hot_reload_enabled = cfg["agent"].get("hot_reload", True)
+        self.autonomy_cfg = cfg.get("autonomy", {})
+
+        # 2. Client Initialization
         provider = cfg["agent"].get("provider", "ollama").lower()
         if provider == "nvidia":
             self.client = NvidiaClient(cfg)
@@ -67,6 +81,31 @@ class Agent:
         else:
             self.client = OllamaClient(cfg)
 
+        # Wrap in TieredClient for automatic failover
+        fallback_providers = cfg.get("agent", {}).get("fallback_providers", [])
+        if fallback_providers:
+            fallback_clients = []
+            client_map = {
+                "ollama": OllamaClient,
+                "gemini": GeminiClient,
+                "groq": GroqClient,
+                "openai": OpenAIClient,
+                "openrouter": OpenRouterClient,
+                "nvidia": NvidiaClient,
+                "github": GithubClient,
+                "deepseek": DeepseekClient,
+            }
+            for fb_provider in fallback_providers:
+                fb_provider = fb_provider.strip().lower()
+                if fb_provider != provider and fb_provider in client_map:
+                    try:
+                        fallback_clients.append(client_map[fb_provider](cfg))
+                    except Exception:
+                        pass
+            if fallback_clients:
+                self.client = TieredClient(self.client, fallback_clients)
+
+        # 3. Path and Environment Setup
         self.workspace = os.path.abspath(
             cfg["agent"].get("workspace", DEFAULT_WORKSPACE)
         )
@@ -78,40 +117,11 @@ class Agent:
             sqlite_cfg["db_path"] = db_path
         self.memory = SqliteSessionMemory(sqlite_cfg)
 
-        # One-time best-effort migration from legacy JSON memory.
-        try:
-            import json as _json
-            import os as _os
-            from datetime import datetime as _dt
-
-            legacy_path = _os.path.join(
-                self.cfg["agent"].get("workspace", DEFAULT_WORKSPACE), "memory.json"
-            )
-            if legacy_path and _os.path.exists(legacy_path):
-                # Only migrate into a fresh session with no messages.
-                if not self.memory.get_messages():
-                    with open(legacy_path, "r", encoding="utf-8") as handle:
-                        data = _json.load(handle) or {}
-                    msgs = data.get("messages", []) or []
-                    if msgs:
-                        self.memory.import_messages(msgs)
-                        bak = (
-                            legacy_path
-                            + ".bak_"
-                            + _dt.now().strftime("%Y%m%d_%H%M%S")
-                        )
-                        try:
-                            _os.replace(legacy_path, bak)
-                        except Exception:
-                            pass
-        except Exception:
-            pass
-
         self.tools = ToolRegistry(
             cfg, memory_backend=self.memory, confirm_handler=confirm_handler
         )
 
-        # Audit logging (no chat content)
+        # 4. Audit and Session Logging
         logging_cfg = self.cfg.get("logging", {}) or {}
         audit_enabled = bool(logging_cfg.get("audit_enabled", True))
         audit_dir = logging_cfg.get("audit_dir") or os.path.join(
@@ -120,11 +130,11 @@ class Agent:
         if not os.path.isabs(audit_dir):
             audit_dir = os.path.join(BASE_DIR, audit_dir)
         audit_fmt = (logging_cfg.get("audit_format") or "jsonl").lower().strip()
-        if audit_fmt not in ("jsonl", "log", "both"):
-            audit_fmt = "jsonl"
-        self.audit = AuditLogger(audit_dir, enabled=audit_enabled, fmt=audit_fmt)
+        self.audit = AuditLogger(audit_dir, enabled=audit_enabled, fmt=audit_fmt, cfg=self.cfg)
+        
         self.session_id = getattr(
-            self.memory, "session_id", datetime.now().strftime("%Y%m%d_%H%M%S")
+            self.memory, "session_id", 
+            datetime.now().strftime(self.heuristics.get("session_id_format", "%Y%m%d_%H%M%S"))
         )
         try:
             self.audit.session_start(
@@ -135,34 +145,27 @@ class Agent:
             )
         except Exception:
             pass
-        self.max_iter = cfg["agent"]["max_iterations"]
-        self.verbose = cfg["agent"]["verbose_thinking"]
-        self.confirm = cfg["agent"].get("auto_confirm", True)
-        self.hot_reload_enabled = cfg["agent"].get("hot_reload", True)
-        self.autonomy_cfg = cfg.get("autonomy", {})
+
         self.task_tracker = TaskTracker(
-            cfg["agent"].get("workspace", DEFAULT_WORKSPACE), session_id=self.session_id
+            cfg["agent"].get("workspace", DEFAULT_WORKSPACE), session_id=self.session_id, cfg=self.cfg
         )
 
-        # Autopilot: minimize human interaction while staying inside safety rails.
         if self.autonomy_cfg.get("autopilot", False):
             self.confirm = True
 
-        # Heuristics and Limits
-        self.heuristics = self.cfg.get("heuristics", {})
-        self.performance = self.cfg.get("performance", {})
-        self.enable_cov = self.cfg["agent"].get("enable_cov", True)
-        self.cov_model = self.heuristics.get("cov_model")
+        # 5. Engine and Memory Initialization
+        self.context_engine = ContextEngine(self)
+        mm = initialize_memory_manager(self.workspace, self.client, self.cfg)
+        self.context_engine.set_memory_manager(mm)
 
-        # Initialize OpenClaw-inspired Memory Manager
-        initialize_memory_manager(self.workspace)
-
-        # Auto-create AGENTS.md and MEMORY.md if they don't exist
         os.makedirs(self.workspace, exist_ok=True)
-        for init_file, init_content in [
+        file_templates = self.cfg.get("prompts", {}).get("file_templates", {})
+        for init_file, default_content in [
             ("AGENTS.md", "# Agent Identity\n\nDefine your agent persona and rules here.\n"),
-            ("MEMORY.md", "# AgenticOs Long-Term Memory\n\nCurated knowledge, insights, and learned patterns from agent experiences.\n")
+            ("MEMORY.md", "# AgenticOs Long-Term Memory\n\nCurated knowledge, insights, and learned patterns from agent experiences.\n"),
+            ("USERINFO.md", "# User Profile\n\nStore user name, preferences, and personal info here.\n"),
         ]:
+            init_content = file_templates.get(init_file, default_content)
             init_path = os.path.join(self.workspace, init_file)
             if not os.path.exists(init_path):
                 try:
@@ -171,22 +174,20 @@ class Agent:
                 except Exception:
                     pass
 
-        # Dynamic hot-reload tracking
+        # 6. Hot-Reload Tracking (must be last)
         self.mtimes: Dict[str, float] = (
             self._get_mtimes() if self.hot_reload_enabled else {}
         )
         self._last_reload_check = time.time()
-        self._reload_throttle = 2.0  # seconds
+        self._reload_throttle = float(self.heuristics.get("hot_reload_throttle", 2.0))
         self._cached_system = None
+
 
     def _get_mtimes(self) -> Dict[str, float]:
         mtimes: Dict[str, float] = {}
-        tracked_dirs = [
-            BASE_DIR,
-            os.path.join(BASE_DIR, "core"),
-            os.path.join(BASE_DIR, "tools"),
-            os.path.join(BASE_DIR, "scripts"),
-        ]
+        tracked_dirs = [os.path.join(BASE_DIR, d) for d in self.cfg.get("hot_reload", {}).get("tracked_dirs", ["core", "tools", "scripts"])]
+        if BASE_DIR not in tracked_dirs:
+            tracked_dirs.append(BASE_DIR)
         try:
             for directory in tracked_dirs:
                 if not os.path.isdir(directory):
@@ -257,6 +258,7 @@ class Agent:
                 self.task_tracker = TaskTracker(
                     self.cfg["agent"].get("workspace", DEFAULT_WORKSPACE),
                     session_id=self.session_id,
+                    cfg=self.cfg
                 )
 
             if py_changed:
@@ -300,88 +302,7 @@ class Agent:
             print_error(f"Failed to reload: {e}")
             self.mtimes = new_mtimes or self._get_mtimes()
 
-    def build_system(self) -> str:
-        # Get unified system prompt from config
-        raw_prompt = self.cfg.get("prompts", {}).get(
-            "system_prompt", "You are an AI assistant."
-        )
-        tools_block = self.tools.tool_descriptions()
-
-        # Inject Active Task Memory from disk (User suggestion)
-        task_memory = ""
-        if self.task_tracker.current:
-            c = self.task_tracker.current
-            task_memory = (
-                "\n\n### ACTIVE_TASK_MEMORY (Loaded from session file)\n"
-                f"GOAL: {c.get('goal', 'N/A')}\n"
-                f"OBJECTIVE: {c.get('objective', 'N/A')}\n"
-                f"PLAN: {', '.join(c.get('plan', []))}\n"
-                f"CURRENT_STEP: {c.get('current_step', 'N/A')}\n"
-                f"ITERATION: {c.get('iteration', 0)}\n"
-                f"LAST_ACTION: {c.get('last_action', 'N/A')}\n"
-                f"LAST_OBSERVATION: {c.get('last_observation', 'N/A')}\n"
-                "-------------------------------------------\n"
-            )
-
-        # Avoid KeyError crashes from unrelated braces in prompt text.
-        if "{tool_descriptions}" in raw_prompt:
-            system = raw_prompt.replace("{tool_descriptions}", tools_block)
-        else:
-            system = f"{raw_prompt}\n\nAVAILABLE_TOOLS:\n{tools_block}"
-
-        # Inject Thinking Canvas (Working Memory)
-        canvas_block = ""
-        if self.tools._canvas:
-            canvas_block = (
-                "\n\n### THINKING_CANVAS (Current Draft/Working Memory)\n"
-                f"{self.tools._canvas}\n"
-                "-------------------------------------------\n"
-            )
-
-        # Inject Shadow Mode Warning
-        shadow_block = ""
-        if self.tools.shadow_mode:
-            shadow_block = (
-                "\n\n### ⚠ WARNING: SHADOW MODE (DRY RUN) ACTIVE\n"
-                "You are currently in SHADOW MODE. Your 'Dangerous' actions (write, delete, run) will be SIMULATED.\n"
-                "Read-only tools still work normally. Use this mode to test your logic safely.\n"
-                "-------------------------------------------\n"
-            )
-
-        # Inject Workspace Path
-        workspace_block = (
-            f"\n\n### WORKSPACE_ROOT\n"
-            f"Your absolute workspace root is: {self.workspace}\n"
-            "Use this for all file operations. If a path is relative, it is relative to this root.\n"
-            "-------------------------------------------\n"
-        )
-
-        # Inject Agent Identity Files (OpenClaw style)
-        identity_block = ""
-        for identity_file in ["AGENTS.md", "SOUL.md"]:
-            file_path = os.path.join(self.workspace, identity_file)
-            if os.path.exists(file_path):
-                try:
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        identity_block += f"\n\n### AGENT_IDENTITY ({identity_file})\n"
-                        identity_block += f.read().strip() + "\n"
-                        identity_block += "-------------------------------------------\n"
-                except Exception:
-                    pass
-
-        # Inject Long-Term Memory (OpenClaw style)
-        memory_block = ""
-        memory_file = os.path.join(self.workspace, "MEMORY.md")
-        if os.path.exists(memory_file):
-            try:
-                with open(memory_file, "r", encoding="utf-8") as f:
-                    memory_block += f"\n\n### LONG_TERM_MEMORY (MEMORY.md)\n"
-                    memory_block += f.read().strip() + "\n"
-                    memory_block += "-------------------------------------------\n"
-            except Exception:
-                pass
-
-        return system + task_memory + canvas_block + shadow_block + workspace_block + identity_block + memory_block
+        return self.context_engine.build_system_prompt()
 
     def verify_action(self, tool_name: str, args: Dict, context: str) -> (bool, str):
         """
@@ -392,23 +313,28 @@ class Agent:
             return False, f"Tool '{tool_name}' is not in the registry. Check /tools for available capabilities."
 
         # Soft Check: Model Verification
-        prompt = (
-            "You are the Technical Verification Monitor for AgenticOs.\n"
-            "Your ONLY job is to verify the technical validity and safety of the proposed action.\n\n"
-            f"TOOL: {tool_name}\n"
-            f"ARGS: {args}\n\n"
-            "CONTEXT (Recent history):\n"
-            f"{context}\n\n"
-            "STRICT VERIFICATION RULES:\n"
-            "1. TECHNICAL VALIDITY: Are the arguments logically sound? (e.g. if reading a file, has it been identified/created?)\n"
-            "2. ANTI-LOOP: Is the agent repeating the EXACT same command that just failed or yielded no new info?\n"
-            "3. NO STRATEGY JUDGMENT: Do NOT reject an action because it is 'insufficient' to solve the whole task. "
-            "Tasks are solved via MANY small, sequential steps. Sequential searches are VALID.\n"
-            f"4. TOOL EXISTENCE: Assume the tool '{tool_name}' is valid and registered. Do NOT reject based on tool name existence.\n\n"
-            "REPLY FORMAT:\n"
-            "If the action is technically valid, reply ONLY with 'OK'.\n"
-            "If invalid, broken, or a loop, reply 'REJECT: [concise technical reason]'."
-        )
+        verification_cfg = self.cfg.get("prompts", {}).get("verification", {})
+        prompt_tmpl = verification_cfg.get("prompt", "").strip()
+        if not prompt_tmpl:
+            prompt_tmpl = (
+                "You are the Technical Verification Monitor for AgenticOs.\n"
+                "Your ONLY job is to verify the technical validity and safety of the proposed action.\n\n"
+                f"TOOL: {{tool_name}}\n"
+                f"ARGS: {{args}}\n\n"
+                "CONTEXT (Recent history):\n"
+                f"{{context}}\n\n"
+                "STRICT VERIFICATION RULES:\n"
+                "1. TECHNICAL VALIDITY: Are the arguments logically sound? (e.g. if reading a file, has it been identified/created?)\n"
+                "2. ANTI-LOOP: Is the agent repeating the EXACT same command that just failed or yielded no new info?\n"
+                "3. NO STRATEGY JUDGMENT: Do NOT reject an action because it is 'insufficient' to solve the whole task. "
+                "Tasks are solved via MANY small, sequential steps. Sequential searches are VALID.\n"
+                f"4. TOOL EXISTENCE: Assume the tool '{{tool_name}}' is valid and registered. Do NOT reject based on tool name existence.\n\n"
+                "REPLY FORMAT:\n"
+                "If the action is technically valid, reply ONLY with 'OK'.\n"
+                "If invalid, broken, or a loop, reply 'REJECT: [concise technical reason]'"
+            )
+        
+        prompt = prompt_tmpl.format(tool_name=tool_name, args=args, context=context)
 
         try:
             # Use cov_model if specified, otherwise use active model
@@ -418,7 +344,8 @@ class Agent:
 
             # Use a minimal message history for speed
             verification_msgs = [{"role": "user", "content": prompt}]
-            response = self.client.chat(verification_msgs, system="You are a strict verification monitor.")
+            system_msg = verification_cfg.get("system", "You are a strict verification monitor.")
+            response = self.client.chat(verification_msgs, system=system_msg)
 
             if self.cov_model:
                 self.client.model = original_model
@@ -447,7 +374,7 @@ class Agent:
         if not text or len(text) > max_chars:
             return False
         upper = text.upper()
-        control_markers = (
+        control_markers = self.cfg.get("parser", {}).get("keywords", [
             "OBJECTIVE:",
             "TASK:",
             "PLAN:",
@@ -455,7 +382,7 @@ class Agent:
             "STRATEGY:",
             "ACTION:",
             "OBSERVATION:",
-        )
+        ])
         if any(marker in upper for marker in control_markers):
             return False
         if has_final_answer(text):
@@ -538,6 +465,11 @@ class Agent:
 
         self.memory.add("user", user_input)
         messages = self.memory.get_messages()
+
+        # Phase 3: Context Compaction — compress long histories before they hit token limits
+        max_msgs = int(self.performance.get("max_context_messages", 40))
+        messages = self.context_engine.compact_history(messages, max_messages=max_msgs)
+
         last_response = None
         repetition_count = 0
         last_action_signature = None
@@ -547,12 +479,17 @@ class Agent:
 
         for iteration in range(1, self.max_iter + 1):
             self.check_reload()
-            system = self.build_system()  # Recalculate every iteration for hot-reload
+            
+            # Active Recall & Commitments (Phase 2 Proactive Architecture)
+            recall = self.context_engine.get_active_recall(original_user_input)
+            commitments = self.context_engine.get_commitments()
+            
+            system = self.context_engine.build_system_prompt(recall, commitments)
 
             # Detect repetitive loops
             if repetition_count >= 2:
                 repetition_count = 0
-                reminder = "You're repeating the same approach. Try a COMPLETELY DIFFERENT strategy."
+                reminder = self.cfg.get("prompts", {}).get("nudges", {}).get("repetition", "You're repeating the same approach. Try a COMPLETELY DIFFERENT strategy.")
                 messages.append({"role": "user", "content": reminder})
                 print(
                     f"{C.YELLOW}⚠  Repetition detected. Suggesting alternative approach.{C.RESET}"
@@ -621,10 +558,7 @@ class Agent:
                 messages.append(
                     {
                         "role": "user",
-                        "content": (
-                            "Your last message was empty. "
-                            "Respond NOW with one of the required formats and include ACTION if any tool is needed."
-                        ),
+                        "content": self.cfg.get("prompts", {}).get("nudges", {}).get("empty_response", "Your last message was empty. Respond NOW with one of the required formats and include ACTION if any tool is needed."),
                     }
                 )
                 self.memory.add("user", messages[-1]["content"])
@@ -659,12 +593,7 @@ class Agent:
                 if "FINAL ANSWER:" not in r_upper:
                     print_warning("Model output unclear. Reminding about format...")
                     messages.append({"role": "assistant", "content": response})
-                    obs = (
-                        "Please respond with one of these: "
-                        "1) FINAL ANSWER: ... "
-                        "2) OBJECTIVE/PLAN/CURRENT_STEP/ACTION "
-                        "3) TASK/CONTEXT/STRATEGY/ACTION"
-                    )
+                    obs = self.cfg.get("prompts", {}).get("nudges", {}).get("format_error", "Please respond with one of these: 1) FINAL ANSWER: ... 2) OBJECTIVE/PLAN/CURRENT_STEP/ACTION 3) TASK/CONTEXT/STRATEGY/ACTION")
                     # In autopilot/minimal-clarifications mode, keep nudges short and action-oriented.
                     nudge = obs if minimal_clarifications else f"Clarification: {obs}"
                     messages.append({"role": "user", "content": nudge})
@@ -716,7 +645,7 @@ class Agent:
 
                     # Optional confirmation for destructive actions
                     if (self.cfg["rules"].get("require_confirm_destructive") and not self.confirm):
-                        destructive = {"delete_file", "delete_dir", "kill_process", "run_command", "run_script"}
+                        destructive = set(self.cfg.get("policy", {}).get("destructive_tools", ["delete_file", "delete_dir", "kill_process", "run_command", "run_script"]))
                         if tool_name in destructive:
                             try:
                                 ans = input(f"\n{C.RED}⚠  Confirm destructive '{tool_name}'? [y/N]: {C.RESET}").strip().lower()
@@ -808,7 +737,7 @@ class Agent:
 
                 # Limit observation length
                 try:
-                    max_obs_chars = int(self.cfg.get("agent", {}).get("max_observation_chars", 12000))
+                    max_obs_chars = int(self.cfg.get("agent", {}).get("max_observation_chars", self.heuristics.get("max_observation_chars", 12000)))
                 except Exception:
                     max_obs_chars = 12000
                 
@@ -928,43 +857,37 @@ class Agent:
                         ws = self.cfg["agent"].get("workspace", DEFAULT_WORKSPACE)
                         if not os.path.isabs(ws):
                             ws = os.path.join(BASE_DIR, ws)
-                        # Use session_id for the report folder (one per session, not per iteration)
-                        session_report_dir = os.path.join(
-                            ws, "reports", str(self.session_id)
-                        )
+                        session_report_dir = os.path.join(ws, "reports", str(self.session_id))
                         os.makedirs(session_report_dir, exist_ok=True)
-                        # Append to result.md for this session (multiple answers can be added)
-                        out_path = os.path.join(session_report_dir, "result.md")
+                        
+                        report_cfg = self.cfg.get("prompts", {}).get("session_report", {})
+                        file_name = report_cfg.get("file_name", "result.md")
+                        out_path = os.path.join(session_report_dir, file_name)
                         is_new = not os.path.exists(out_path)
+                        
                         with open(out_path, "a", encoding="utf-8") as handle:
                             if is_new:
-                                handle.write("# Session Report\n\n")
-                                handle.write("## Session Metadata\n\n")
-                                handle.write("| Field | Value |\n")
-                                handle.write("|-------|-------|\n")
-                                handle.write(
-                                    f"| **Session ID** | `{self.session_id}` |\n"
-                                )
-                                handle.write(
-                                    f"| **Provider** | {self.client.provider} |\n"
-                                )
-                                handle.write(f"| **Model** | `{self.client.model}` |\n")
-                                handle.write(
-                                    f"| **Started** | {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} |\n"
-                                )
+                                handle.write(report_cfg.get("header", "# Session Report\n\n"))
+                                handle.write(report_cfg.get("metadata_header", "## Session Metadata\n\n"))
+                                handle.write("| Field | Value |\n|-------|-------|\n")
+                                
+                                row_tmpl = report_cfg.get("metadata_table_row", "| **{key}** | `{value}` |\n")
+                                handle.write(row_tmpl.format(key="Session ID", value=self.session_id))
+                                handle.write(row_tmpl.format(key="Provider", value=self.client.provider))
+                                handle.write(row_tmpl.format(key="Model", value=self.client.model))
+                                handle.write(row_tmpl.format(key="Started", value=datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
                                 handle.write("\n")
 
                             ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                             goal = "Task"
-                            if (
-                                self.task_tracker.current
-                                and self.task_tracker.current.get("goal")
-                            ):
+                            if self.task_tracker.current and self.task_tracker.current.get("goal"):
                                 goal = self.task_tracker.current.get("goal")
 
-                            handle.write(f"## COMPLETED [{ts}] {goal}\n\n")
+                            entry_tmpl = report_cfg.get("task_entry", "## COMPLETED [{ts}] {goal}\n\n")
+                            handle.write(entry_tmpl.format(ts=ts, goal=goal))
                             handle.write(final_ans.strip() + "\n\n")
-                            handle.write("---\n\n")
+                            handle.write(report_cfg.get("footer", "---\n\n"))
+                        
                         try:
                             self.memory.record_artifact(
                                 out_path, action="final_answer", kind="report"
@@ -976,9 +899,8 @@ class Agent:
 
                 # Send notification per rule #9
                 try:
-                    self.tools.ui.send_notification(
-                        "AgenticOs", "Task completed successfully."
-                    )
+                    msg = self.cfg.get("prompts", {}).get("notifications", {}).get("task_completed", "Task completed successfully.")
+                    self.tools.ui.send_notification("AgenticOs", msg)
                 except Exception:
                     pass
 
@@ -1026,7 +948,10 @@ class Agent:
                     "memory", {}
                 ).get("auto_summarize", True):
                     try:
-                        summary = f"Goal: {original_user_input.strip()}\nResult: {(final_ans or '').strip()}"
+                        rpt = self.cfg.get("prompts", {}).get("reporting", {})
+                        g_label = rpt.get("goal_label", "Goal:")
+                        r_label = rpt.get("result_label", "Result:")
+                        summary = f"{g_label} {original_user_input.strip()}\n{r_label} {(final_ans or '').strip()}"
                         self.memory.set_summary(summary.strip())
                     except Exception:
                         pass
@@ -1037,11 +962,13 @@ class Agent:
                             next_steps = "\n".join(
                                 self.task_tracker.current.get("plan", [])[-3:]
                             )
+                        rpt = self.cfg.get("prompts", {}).get("reporting", {})
+                        g_label = rpt.get("goal_label", "Goal:")
                         self.memory.complete_task(
                             self.task_tracker.current["task_id"],
                             final_answer=final_ans or response,
                             next_steps=next_steps,
-                            summary=f"Goal: {original_user_input.strip()}",
+                            summary=f"{g_label} {original_user_input.strip()}",
                         )
                     except Exception:
                         pass
@@ -1056,10 +983,10 @@ class Agent:
                     "active_planning", True
                 ):
                     no_action_count = 0
-                    stall_obs = (
+                    stall_obs = self.cfg.get("prompts", {}).get("nudges", {}).get("stall_detected", (
                         "Stall detected: produce an ACTION (tool call) or FINAL ANSWER. "
                         "Update PLAN and CURRENT_STEP, then choose a concrete next action."
-                    )
+                    ))
                     print_warning("Stall detected. Requesting replan.")
                     if self.autonomy_cfg.get("task_tracking", True):
                         self.task_tracker.note_stall(stall_obs)
@@ -1067,11 +994,13 @@ class Agent:
                     self.memory.add("user", stall_obs)
                 continue
 
+        rpt = self.cfg.get("prompts", {}).get("reporting", {})
+        max_iter_tmpl = rpt.get("max_iter_reached", "Reached max iterations ({max_iter}) without a final answer.")
+        fail_msg = max_iter_tmpl.format(max_iter=self.max_iter)
+        
         if self.autonomy_cfg.get("task_tracking", True):
-            self.task_tracker.fail(
-                f"Reached max iterations ({self.max_iter}) without a final answer."
-            )
-        print_error(f"Reached max iterations ({self.max_iter}) without a final answer.")
+            self.task_tracker.fail(fail_msg)
+        print_error(fail_msg)
         try:
             self.audit.session_end(self.session_id, status="max_iterations")
         except Exception:
@@ -1468,7 +1397,7 @@ class CLI:
             print_error(f"Unknown command: {base}. Type /help.")
 
     def run(self):
-        banner()
+        banner(cfg=self.cfg)
 
         autonomy_cfg = self.cfg.get("autonomy", {})
         if autonomy_cfg.get("startup_provider_prompt", False):

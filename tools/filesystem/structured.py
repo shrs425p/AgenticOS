@@ -4,7 +4,9 @@ import csv
 import json
 
 
+from core.tool_base import tool
 class StructuredMixin:
+    @tool(name="read_json", desc="Read and parse JSON file. Args: path", category="Files")
     def read_json(self, path: str) -> str:
         p = self._resolve(path)
         try:
@@ -13,6 +15,7 @@ class StructuredMixin:
         except Exception as e:
             return f"Error: {e}"
 
+    @tool(name="write_json", desc="Write JSON file. Args: path, data (JSON string)", category="Files")
     def write_json(self, path: str, data: str) -> str:
         p = self._resolve(path)
         self._deny_file_modify()
@@ -25,6 +28,7 @@ class StructuredMixin:
         except Exception as e:
             return f"Error: {e}"
 
+    @tool(name="read_csv", desc="Read CSV as text table. Args: path", category="Files")
     def read_csv(self, path: str, max_rows: str = "50") -> str:
         p = self._resolve(path)
         try:
@@ -40,6 +44,7 @@ class StructuredMixin:
         except Exception as e:
             return f"Error: {e}"
 
+    @tool(name="write_csv", desc="Write CSV (JSON array of arrays). Args: path, data", category="Files")
     def write_csv(self, path: str, data: str) -> str:
         p = self._resolve(path)
         self._deny_file_modify()

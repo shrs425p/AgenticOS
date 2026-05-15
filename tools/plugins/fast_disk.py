@@ -8,11 +8,13 @@ from core.runtime_ui import C
     desc="Optimized disk analysis using native PowerShell. Finds large files, duplicates, and old files in seconds.",
     category="Files"
 )
-def fast_disk_audit(path: str = "C:\\", top_n: int = 20, min_mb: int = 100, mode: str = "all"):
+def fast_disk_audit(path: str = None, top_n: int = 20, min_mb: int = 100, mode: str = "all"):
     """
     Performs a high-speed disk audit using PowerShell.
     Modes: 'large' (top files), 'duplicates' (duplicate filenames), 'old' (not accessed in 180d), 'all'.
     """
+    if path is None:
+        path = os.path.abspath(os.sep)
     allowed_modes = {"large", "duplicates", "old", "all"}
     mode = (mode or "all").strip().lower()
     if mode not in allowed_modes:
@@ -62,7 +64,7 @@ def fast_disk_audit(path: str = "C:\\", top_n: int = 20, min_mb: int = 100, mode
     if mode in ("all", "duplicates"):
         results.append(f"\n{C.CYAN}--- DUPLICATE FILENAMES IN COMMON DIRS ---{C.RESET}")
         # Focus on user dirs to avoid system junk duplicates
-        scan_path = os.path.join(path, "Users") if path == "C:\\" else path
+        scan_path = os.path.join(path, "Users") if path == os.path.abspath(os.sep) else path
         safe_scan_path = scan_path.replace("'", "''")
         cmd = (
             f"Get-ChildItem -Path '{safe_scan_path}' -File -Recurse -ErrorAction SilentlyContinue | "

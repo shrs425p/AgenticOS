@@ -77,6 +77,10 @@ Controlling the user environment and peripherals.
 | :--- | :--- | :--- |
 | `volume_set` | `level` (0-100) | Adjusts master system volume. |
 | `media_play_pause`| `none` | Toggles active media playback. |
+| `ocr_image` | `path` | Extracts text from a local image file (PNG, JPG). |
+| `ocr_screen` | `none` | Captures the full screen and extracts all visible text. |
+| `take_screenshot` | `name` | Saves a PNG of the screen to the workspace. |
+| `list_windows` | `filter_str` | Lists all active application windows. |
 | `set_wallpaper` | `path` | Updates the desktop background. |
 | `hotkey` | `keys` | Sends global shortcuts (e.g., `win+d`). |
 | `type_text` | `text`, `delay_ms` | Injects keyboard input into any focused app. |

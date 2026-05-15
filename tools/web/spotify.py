@@ -3,7 +3,9 @@ from __future__ import annotations
 import re
 
 
+from core.tool_base import tool
 class SpotifyMixin:
+    @tool(name="find_spotify_track", desc="Find Spotify track link. Args: title, artist (optional)", category="Web")
     def find_spotify_track(self, title: str, artist: str = "") -> str:
         """Find an open.spotify.com/track URL for a given song using the search engine."""
         q = (title or "").strip()
@@ -37,6 +39,7 @@ class SpotifyMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
+    @tool(name="play_spotify_track", desc="Find and immediately play a song on Spotify. Args: title, artist (optional)", category="Web")
     def play_spotify_track(self, title: str, artist: str = "") -> str:
         """Find and immediately play a song on Spotify.
 

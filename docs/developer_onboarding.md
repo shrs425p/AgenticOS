@@ -41,25 +41,41 @@ subprocess.run("git status", shell=True)
 
 ---
 
-## [TEST] Testing Your Changes
+## [TEST] Testing Standards
 
-We use a two-tier testing system to ensure stability.
+AgenticOS enforces a high-coverage testing standard using `pytest`. Every new core feature or tool MUST be accompanied by a corresponding test in the `tests/` directory.
 
-### Tier 1: Unit Tests (Fast)
-Located in the `tests/` directory. These test individual functions and tool logic.
+### Running Tests
 ```powershell
-pytest tests/core/test_registry.py
+# Run the full suite with coverage
+pytest tests/ --cov=core --cov=tools --cov-report=term-missing
+
+# Run a specific test file
+pytest tests/test_fs_read_write.py
 ```
 
-### Tier 2: The Crucible Suite (Comprehensive)
-Before any pull request is merged, you must run a selection of the 96 tasks from `task.md` using the evaluation harness.
-```powershell
-python scripts/run_eval.py --task 5 --task 8 --task 11
+### Mocking Guidelines
+- **No Live IO**: Use `tmp_path` for filesystem tests.
+- **No Live Network**: Use `unittest.mock` to patch `requests.get` or `subprocess.run`.
+- **Deterministic**: Tests must be 100% deterministic and pass in a clean CI environment.
+
+---
+
+## [PORT] Environment Portability Standards
+
+We follow a **Zero-Hardcoding Policy**. The core engine must be 100% environment-agnostic.
+
+### The Rules
+1. **No Absolute Paths**: Never use `C:\` or `/home/`. Use `self.cfg.get("workspace")` or `Path.home()`.
+2. **No Hardcoded URLs**: All API endpoints and service URLs must reside in `config/endpoints.yaml`.
+3. **No Magic Numbers**: Timeouts, retry counts, and heuristic thresholds belong in `config/runtime.yaml`.
+
+### Accessing Config
+Inside a tool or core component, use the `self.cfg` helper:
+```python
+# Fetching an endpoint
+api_url = self.cfg.get("endpoints", {}).get("github_api", "https://api.github.com")
 ```
-Verify that:
--   The "Fast-Path" optimizations are triggered.
--   No `429` rate limits cause a crash.
--   The UI remains responsive.
 
 ---
 

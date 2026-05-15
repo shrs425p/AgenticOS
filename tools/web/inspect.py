@@ -9,7 +9,9 @@ import ssl
 from tools.web.session import requests_module
 
 
+from core.tool_base import tool
 class InspectMixin:
+    @tool(name="check_url", desc="Check if URL is reachable. Args: url", category="Web")
     def check_url(self, url: str) -> str:
         err = self._network_error()
         if err:
@@ -22,6 +24,7 @@ class InspectMixin:
         except Exception as e:
             return f"Error: {e}"
 
+    @tool(name="http_headers", desc="Get HTTP headers. Args: url", category="Web")
     def http_headers(self, url: str) -> str:
         err = self._network_error()
         if err:
@@ -35,6 +38,7 @@ class InspectMixin:
         except Exception as e:
             return f"Error: {e}"
 
+    @tool(name="get_ssl_info", desc="Get SSL certificate info. Args: hostname", category="Web")
     def get_ssl_info(self, hostname: str) -> str:
         err = self._network_error()
         if err:
@@ -48,6 +52,7 @@ class InspectMixin:
         except Exception as e:
             return f"SSL error: {e}"
 
+    @tool(name="whois_lookup", desc="WHOIS lookup. Args: domain", category="Web")
     def whois_lookup(self, domain: str) -> str:
         err = self._network_error()
         if err:
@@ -60,6 +65,7 @@ class InspectMixin:
         except Exception as e:
             return f"WHOIS error: {e}"
 
+    @tool(name="resolve_dns", desc="DNS lookup. Args: hostname, record_type (optional)", category="Web")
     def resolve_dns(self, hostname: str, record_type: str = "A") -> str:
         err = self._network_error()
         if err:
@@ -72,6 +78,7 @@ class InspectMixin:
         except Exception as e:
             return f"DNS error: {e}"
 
+    @tool(name="get_public_ip", desc="Get public IP of this machine.", category="Web")
     def get_public_ip(self) -> str:
         err = self._network_error()
         if err:
@@ -79,11 +86,13 @@ class InspectMixin:
         try:
             r = requests_module()
             timeout = self._get_timeout("web_inspect", 10)
-            resp = r.get("https://api.ipify.org?format=json", timeout=timeout)
+            api = self.cfg.get("endpoints", {}).get("ipify_api", "https://api.ipify.org")
+            resp = r.get(f"{api}?format=json", timeout=timeout)
             return resp.text
         except Exception as e:
             return f"IP error: {e}"
 
+    @tool(name="get_ip_info", desc="Get IP geolocation. Args: ip (optional)", category="Web")
     def get_ip_info(self, ip: str = "") -> str:
         err = self._network_error()
         if err:
@@ -100,7 +109,8 @@ class InspectMixin:
                 return "Error: Could not determine IP."
             r = requests_module()
             timeout = self._get_timeout("web_inspect", 15)
-            resp = r.get(f"https://ipinfo.io/{target}/json", timeout=timeout)
+            api_base = self.cfg.get("endpoints", {}).get("ipinfo_api", "https://ipinfo.io")
+            resp = r.get(f"{api_base}/{target}/json", timeout=timeout)
             return resp.text
         except Exception as e:
             return f"IP info error: {e}"

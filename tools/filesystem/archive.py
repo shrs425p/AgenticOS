@@ -3,7 +3,9 @@ from __future__ import annotations
 import zipfile
 
 
+from core.tool_base import tool
 class ArchiveMixin:
+    @tool(name="zip_files", desc="Zip files/dirs. Args: output_path, *sources", category="Files")
     def zip_files(self, output_path: str, *sources) -> str:
         out = self._resolve(output_path)
         self._deny_file_modify()
@@ -27,6 +29,7 @@ class ArchiveMixin:
         except Exception as e:
             return f"Zip error: {e}"
 
+    @tool(name="unzip_file", desc="Unzip archive. Args: path, dest", category="Files")
     def unzip_file(self, path: str, dest: str = ".") -> str:
         p = self._resolve(path)
         d = self._resolve(dest)

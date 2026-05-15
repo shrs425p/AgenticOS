@@ -5,7 +5,9 @@ import mimetypes
 from datetime import datetime
 
 
+from core.tool_base import tool, _size_human
 class InfoMixin:
+    @tool(name="file_info", desc="Get metadata of file. Args: path", category="Files")
     def file_info(self, path: str) -> str:
         p = self._resolve(path)
         try:
@@ -17,7 +19,7 @@ class InfoMixin:
                 "path": str(p),
                 "is_dir": p.is_dir(),
                 "size": stat.st_size,
-                "size_human": self._size_human(stat.st_size),
+                "size_human": _size_human(stat.st_size),
                 "modified": datetime.fromtimestamp(stat.st_mtime).isoformat(
                     sep=" ", timespec="seconds"
                 ),
@@ -27,12 +29,14 @@ class InfoMixin:
         except Exception as e:
             return f"Error: {e}"
 
+    @tool(name="file_exists", desc="Check if path exists. Args: path", category="Files")
     def file_exists(self, path: str) -> str:
         try:
             return str(self._resolve(path).exists())
         except Exception:
             return "false"
 
+    @tool(name="file_hash", desc="Compute file hash. Args: path, algorithm (optional)", category="Files")
     def file_hash(self, path: str, algorithm: str = "sha256") -> str:
         p = self._resolve(path)
         try:

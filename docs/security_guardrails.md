@@ -27,14 +27,14 @@ The `PathGuard` system divides the host machine into three distinct security zon
 -   **Behavior**: The agent can read, write, and delete files here without any prompts. This is the "Sandbox" where the agent performs its work.
 
 ### 2. The Yellow Zone (Other User Paths)
--   **Definition**: Any path outside the workspace that is not a system path (e.g., `C:\Users\shrs\Downloads`).
+-   **Definition**: Any path outside the workspace that is not a system path (e.g., `<USER_PROFILE>\Downloads`).
 -   **Policy**: READ-ONLY AUTONOMY / WRITE-BY-APPROVAL.
 -   **Behavior**:
     -   **Read**: The agent can read files (e.g., to analyze a document).
     -   **Write/Delete**: The agent is **BLOCKED**. It must trigger a `HITM_REQUIRED` event, which prompts the user for a `y/N` confirmation in the terminal.
 
 ### 3. The Red Zone (System Paths)
--   **Definition**: `C:\Windows`, `C:\Program Files`, `C:\Program Files (x86)`.
+-   **Definition**: `<SYSTEM_ROOT>\Windows`, `<SYSTEM_DRIVE>\Program Files`, `<SYSTEM_DRIVE>\Program Files (x86)`.
 -   **Policy**: STRICTLY FORBIDDEN.
 -   **Behavior**: Any attempt to access these paths (even for reading) is blocked at the code level with a `SECURITY ALERT`. The agent cannot bypass this even with "Power Mode" enabled.
 
@@ -51,7 +51,7 @@ The HITM system is the ultimate fail-safe. When an agent attempts an operation t
     ```text
     [STOP] SECURITY GUARDRAIL
     The agent is attempting a WRITE action outside the workspace.
-    Target Path: C:\Users\shrs\Desktop\report.md
+    Target Path: <USER_PROFILE>\Desktop\report.md
     Do you allow this specific action? [y/N]:
     ```
 4.  **Resume**: If the user presses `y`, the action is executed once. If `n`, the agent receives a `PermissionError` and must attempt a different (safer) strategy.
@@ -63,7 +63,7 @@ The HITM system is the ultimate fail-safe. When an agent attempts an operation t
 During stress testing, we identified that agents can accidentally "attack" the host machine by performing massive recursive scans. AgenticOS now includes **Performance Guardrails** to prevent system lockups.
 
 ### 1. Root Scan Protection
-If an agent attempts to run `find_large_files` or `grep_dir` on the root `C:\` drive using standard Python libraries, the system will **block the execution**.
+If an agent attempts to run `find_large_files` or `grep_dir` on the root `<SYSTEM_DRIVE>\` drive using standard Python libraries, the system will **block the execution**.
 -   **Rationale**: Python-based file walkers are too slow for millions of files and cause 100% SSD usage.
 -   **Enforcement**: The agent is told to use the optimized `fast_disk_audit` tool instead.
 
@@ -82,7 +82,7 @@ The `run_command` and `run_powershell` tools are the most powerful and dangerous
 -   **User Management**: `net user /add`, `passwd`
 -   **System Shutdown**: `shutdown`, `restart`, `halt`
 -   **Registry Tampering**: `reg delete` (unless `allow_registry_edit` is true)
--   **Mass Deletion**: `rm -rf /`, `del /s /q C:\*`
+-   **Mass Deletion**: `rm -rf /`, `del /s /q <SYSTEM_DRIVE>\*`
 
 ---
 
@@ -99,9 +99,20 @@ Every action taken by the agent is logged in `data/logs/audit.jsonl`. This file 
 
 ---
 
-## [CONFIG] Security Configuration (`config.yaml`)
+## [REDACT] Secret Redaction Engine (New in v2.1)
 
-You can customize the strictness of the security system in the `security:` section:
+To prevent sensitive information from leaking into session logs or persistent memory, AgenticOS includes a real-time **Secret Redaction Engine**.
+
+### How it works:
+- **Regex Scanning**: Every tool output, observation, and thought block is scanned against a list of high-sensitivity regex patterns (defined in `config/policy.yaml`).
+- **In-Memory Masking**: Sensitive strings (API keys, bearer tokens, passwords) are replaced with `[REDACTED]` before being saved to the database or shown in the UI.
+- **Privacy First**: This ensures that even if an agent accidentally prints a `.env` file or an API response containing a token, that secret remains private.
+
+---
+
+## [CONFIG] Security Configuration (`config/policy.yaml`)
+
+Security settings are now centralized in the `config/` directory. The primary file is `policy.yaml`:
 
 ```yaml
 security:
@@ -113,12 +124,13 @@ security:
   
   # Require human approval for actions outside workspace
   require_hitm_outside_workspace: true
-  
-  # Prevent absolute paths from being used (rebases to workspace)
-  restrict_paths: false
-  
-  # Non-bypassable safety for production
-  hard_guardrails: true
+
+redaction:
+  # Regex patterns for masking sensitive data
+  patterns:
+    - "sk-[a-zA-Z0-9]{48}"      # OpenAI Keys
+    - "ghp_[a-zA-Z0-9]{36}"     # GitHub Tokens
+    - "AIzaSy[a-zA-Z0-9_-]{33}" # Google Keys
 ```
 
 ---

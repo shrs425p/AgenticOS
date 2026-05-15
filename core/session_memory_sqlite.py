@@ -162,18 +162,20 @@ class SqliteSessionMemory:
             return ""
 
         s = str(text)
-        patterns = [
-            # Common env-like secrets
-            (r"(?i)(NVIDIA_API_KEY\s*=\s*)([^\s]+)", r"\1[REDACTED]"),
-            (r"(?i)(OPENAI_API_KEY\s*=\s*)([^\s]+)", r"\1[REDACTED]"),
-            (r"(?i)(API[_-]?KEY\s*=\s*)([^\s]+)", r"\1[REDACTED]"),
-            (r"(?i)(TOKEN\s*=\s*)([^\s]+)", r"\1[REDACTED]"),
-            # Bearer tokens
-            (r"(?i)(Authorization:\s*Bearer\s+)([A-Za-z0-9._-]+)", r"\1[REDACTED]"),
-            (r"(?i)(Bearer\s+)([A-Za-z0-9._-]{12,})", r"\1[REDACTED]"),
-            # nvapi keys shown in banner
-            (r"(?i)(nvapi-[A-Za-z0-9_-]{8,})", "[REDACTED]"),
-        ]
+        patterns = self.cfg.get("policy", {}).get("redaction_patterns")
+        if not patterns:
+            patterns = [
+                # Common env-like secrets
+                (r"(?i)(NVIDIA_API_KEY\s*=\s*)([^\s]+)", r"\1[REDACTED]"),
+                (r"(?i)(OPENAI_API_KEY\s*=\s*)([^\s]+)", r"\1[REDACTED]"),
+                (r"(?i)(API[_-]?KEY\s*=\s*)([^\s]+)", r"\1[REDACTED]"),
+                (r"(?i)(TOKEN\s*=\s*)([^\s]+)", r"\1[REDACTED]"),
+                # Bearer tokens
+                (r"(?i)(Authorization:\s*Bearer\s+)([A-Za-z0-9._-]+)", r"\1[REDACTED]"),
+                (r"(?i)(Bearer\s+)([A-Za-z0-9._-]{12,})", r"\1[REDACTED]"),
+                # nvapi keys shown in banner
+                (r"(?i)(nvapi-[A-Za-z0-9_-]{8,})", "[REDACTED]"),
+            ]
         for pat, repl in patterns:
             try:
                 s = re.sub(pat, repl, s)

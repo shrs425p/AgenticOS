@@ -3,7 +3,9 @@ from __future__ import annotations
 import fnmatch
 
 
+from core.tool_base import tool
 class BulkMixin:
+    @tool(name="find_large_files", desc="Find large files. Args: path, min_mb (optional)", category="Files")
     def find_large_files(self, path: str, min_mb: str = "10") -> str:
         root = self._resolve(path)
         try:

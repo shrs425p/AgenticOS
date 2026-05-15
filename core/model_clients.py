@@ -7,6 +7,7 @@ import time
 from collections import defaultdict, deque
 
 import requests
+from core.runtime_ui import C
 
 from core.runtime_config import BASE_DIR
 from core.runtime_ui import C, Spinner
@@ -265,12 +266,13 @@ class NvidiaClient:
             import time
             from openai import RateLimitError, APIError
             
-            max_retries = 5
-            base_delay = 5.0
+            performance = self.cfg.get("performance", {})
+            max_retries = int(performance.get("max_retries", 5))
+            base_delay = float(performance.get("base_retry_delay", 5.0))
             
             for attempt in range(max_retries):
                 try:
-                    with Spinner(f"Requesting {self.model}"):
+                    with Spinner(f"Requesting {self.model}", cfg=self.cfg):
                         # Defensive: never send invalid max_tokens to the API.
                         mt = self.max_tokens
                         try:
@@ -383,7 +385,7 @@ class GeminiClient:
     def __init__(self, cfg: dict):
         self.cfg = cfg
         gemini_cfg = cfg.get("cloud", {}).get("gemini", {})
-        self.model = gemini_cfg.get("model", "gemini-2.0-flash")
+        self.model = gemini_cfg.get("model", cfg.get("agent", {}).get("default_model", "gemini-2.0-flash"))
         self.temp = gemini_cfg.get("temperature", 1.0)
         self.max_tokens = gemini_cfg.get("max_tokens", 8192)
         self.top_p = gemini_cfg.get("top_p", 0.95)
@@ -512,7 +514,7 @@ class GroqClient:
     def __init__(self, cfg: dict):
         self.cfg = cfg
         groq_cfg = cfg.get("cloud", {}).get("groq", {})
-        self.model = groq_cfg.get("model", "llama3-70b-8192")
+        self.model = groq_cfg.get("model", cfg.get("agent", {}).get("default_model", "llama3-70b-8192"))
         self.temp = groq_cfg.get("temperature", 1.0)
         self.max_tokens = groq_cfg.get("max_tokens", 8192)
         self.top_p = groq_cfg.get("top_p", 0.95)
@@ -702,17 +704,104 @@ class OpenAICompatibleClient:
 
 class OpenAIClient(OpenAICompatibleClient):
     def __init__(self, cfg: dict):
-        super().__init__(cfg, "openai", "OPENAI_API_KEY", "gpt-4o-mini")
+        super().__init__(cfg, "openai", "OPENAI_API_KEY", cfg.get("agent", {}).get("default_model", "gpt-4o-mini"))
 
 class OpenRouterClient(OpenAICompatibleClient):
     def __init__(self, cfg: dict):
-        super().__init__(cfg, "openrouter", "OPENROUTER_API_KEY", "google/gemma-2-9b-it:free", "https://openrouter.ai/api/v1")
+        super().__init__(cfg, "openrouter", "OPENROUTER_API_KEY", cfg.get("agent", {}).get("default_model", "google/gemma-2-9b-it:free"), "https://openrouter.ai/api/v1")
 
 class GithubClient(OpenAICompatibleClient):
     def __init__(self, cfg: dict):
-        super().__init__(cfg, "github", "GITHUB_TOKEN", "gpt-4o-mini", "https://models.inference.ai.azure.com")
+        super().__init__(cfg, "github", "GITHUB_TOKEN", cfg.get("agent", {}).get("default_model", "gpt-4o-mini"), "https://models.inference.ai.azure.com")
 
 
 class DeepseekClient(OpenAICompatibleClient):
     def __init__(self, cfg: dict):
-        super().__init__(cfg, "deepseek", "DEEPSEEK_API_KEY", "deepseek-chat", "https://api.deepseek.com")
+        super().__init__(cfg, "deepseek", "DEEPSEEK_API_KEY", cfg.get("agent", {}).get("default_model", "deepseek-chat"), "https://api.deepseek.com")
+
+
+class TieredClient:
+    """Wraps multiple model clients and provides automatic failover.
+
+    If the primary client raises an exception during `chat()`, the TieredClient
+    automatically tries the next client in the tier list.  This ensures near-100%
+    uptime across providers.
+
+    Usage:
+        primary = OllamaClient(cfg)
+        fallbacks = [GeminiClient(cfg), GroqClient(cfg)]
+        client = TieredClient(primary, fallbacks)
+        response = client.chat(messages, system="...")
+    """
+
+    def __init__(self, primary, fallbacks: list = None):
+        self.primary = primary
+        self.fallbacks = fallbacks or []
+        self._active = primary
+        self._failure_count: dict[str, int] = {}  # provider -> count
+
+    # ── Proxy properties (delegate to active client) ──
+    @property
+    def provider(self):
+        return self._active.provider
+
+    @property
+    def model(self):
+        return self._active.model
+
+    @model.setter
+    def model(self, value):
+        self._active.model = value
+
+    @property
+    def last_list_error(self):
+        return getattr(self._active, "last_list_error", "")
+
+    @last_list_error.setter
+    def last_list_error(self, value):
+        self._active.last_list_error = value
+
+    def list_models(self) -> list:
+        return self._active.list_models()
+
+    def chat(self, messages: list, system: str = "") -> str:
+        """Try the active client; on failure, cascade through fallbacks."""
+        clients = [self._active] + [
+            c for c in ([self.primary] + self.fallbacks) if c is not self._active
+        ]
+
+        last_error = None
+        for client in clients:
+            try:
+                response = client.chat(messages, system=system)
+                # Success: reset failure count and promote this client
+                self._failure_count[client.provider] = 0
+                if client is not self._active:
+                    print(
+                        f"{C.YELLOW}-> Failover succeeded. Now using: "
+                        f"{client.provider}/{client.model}{C.RESET}"
+                    )
+                    self._active = client
+                return response
+            except Exception as e:
+                self._failure_count[client.provider] = (
+                    self._failure_count.get(client.provider, 0) + 1
+                )
+                print(
+                    f"{C.RED}[TieredClient] {client.provider}/{client.model} "
+                    f"failed ({e}). Trying next...{C.RESET}"
+                )
+                last_error = e
+
+        # All clients failed
+        raise RuntimeError(
+            f"All tiered clients exhausted. Last error: {last_error}"
+        )
+
+    def get_active_provider(self) -> str:
+        """Return the currently active provider name."""
+        return self._active.provider
+
+    def get_failure_stats(self) -> dict:
+        """Return per-provider failure counts."""
+        return dict(self._failure_count)

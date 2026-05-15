@@ -14,6 +14,7 @@ CONFIG_LAYERS = [
     "tools.yaml",
     "storage.yaml",
     "prompts.yaml",
+    "endpoints.yaml",
 ]
 
 
@@ -38,15 +39,80 @@ DEFAULT_WORKSPACE = resolve_local_path(
 default_structure = {
     "ollama": {},
     "agent": {"workspace": DEFAULT_WORKSPACE},
+    "endpoints": {},
+    "windows_paths": {},
+    "policy": {"redaction_patterns": []},
     "autonomy": {},
     "cloud": {"nvidia": {}},
     "memory": {},
     "rules": {},
     "security": {},
-    "logging": {},
-    "tools": {},
-    "performance": {},
-    "timeouts": {},
+    "logging": {
+        "fmt": "jsonl",
+        "filenames": {
+            "session": "session",
+            "tools": "tools",
+            "errors": "errors",
+            "paths": "paths",
+        }
+    },
+    "tools": {
+        "web": {
+            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0 Safari/537.36",
+        }
+    },
+    "performance": {
+        "max_retries": 5,
+        "base_retry_delay": 5.0,
+    },
+    "heuristics": {
+        "dream_interval_hours": 6,
+        "slow_task_threshold_seconds": 120,
+        "dream_task_limit": 15,
+        "prose_vs_tool_threshold": 120,
+        "hot_reload_throttle": 2.0,
+        "max_dots_in_response": 50,
+        "iteration_warning_threshold": 20,
+    },
+    "prompts": {
+        "reflection": {},
+        "verification": {},
+        "nudges": {
+            "stall_detected": "Stall detected: produce an ACTION (tool call) or FINAL ANSWER. Update PLAN and CURRENT_STEP, then choose a concrete next action."
+        },
+        "notifications": {
+            "task_completed": "Task completed successfully.",
+        },
+        "session_report": {},
+        "dream_cycle": {},
+        "file_templates": {},
+        "ui_labels": {
+            "spinner_message": "Thinking",
+            "banner_subtitle": "Autonomous CLI Agent  •  Ollama / Nvidia NIM  •  Session Memory",
+        },
+        "reporting": {
+            "goal_label": "Goal:",
+            "result_label": "Result:",
+            "max_iter_reached": "Reached max iterations ({max_iter}) without a final answer.",
+        }
+    },
+    "policy": {
+        "redaction_patterns": [
+            ["(?i)(NVIDIA_API_KEY\\s*=\\s*)([^\\s]+)", "\\1[REDACTED]"],
+            ["(?i)(OPENAI_API_KEY\\s*=\\s*)([^\\s]+)", "\\1[REDACTED]"],
+            ["(?i)(Authorization:\\s*Bearer\\s+)([A-Za-z0-9._-]+)", "\\1[REDACTED]"],
+            ["(?i)(Bearer\\s+)([A-Za-z0-9._-]{12,})", "\\1[REDACTED]"],
+            ["(?i)(nvapi-[A-Za-z0-9_-]{8,})", "[REDACTED]"],
+        ]
+    },
+    "timeouts": {
+        "browser_nav": 30000,
+        "browser_action": 10000,
+        "web_search": 15,
+        "service_control": 60,
+        "package_manager": 60,
+        "system_admin": 30,
+    },
 }
 
 

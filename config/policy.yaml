@@ -1,11 +1,79 @@
 # AgenticOs layered config: 30-policy.yaml
 # Edit this file for advanced settings in this area.
 
+policy:
+  redaction_patterns:
+    - ["(?i)(NVIDIA_API_KEY\\s*=\\s*)([^\\s]+)", "\\1[REDACTED]"]
+    - ["(?i)(OPENAI_API_KEY\\s*=\\s*)([^\\s]+)", "\\1[REDACTED]"]
+    - ["(?i)(API[_-]?KEY\\s*=\\s*)([^\\s]+)", "\\1[REDACTED]"]
+    - ["(?i)(TOKEN\\s*=\\s*)([^\\s]+)", "\\1[REDACTED]"]
+    - ["(?i)(Authorization:\\s*Bearer\\s+)([A-Za-z0-9._-]+)", "\\1[REDACTED]"]
+    - ["(?i)(Bearer\\s+)([A-Za-z0-9._-]{12,})", "\\1[REDACTED]"]
+    - ["(?i)(nvapi-[A-Za-z0-9_-]{8,})", "[REDACTED]"]
+  write_tools:
+    - "write_file"
+    - "append_file"
+    - "delete_file"
+    - "create_dir"
+    - "delete_dir"
+    - "copy_file"
+    - "move_file"
+    - "edit_file"
+    - "edit_line"
+    - "insert_line"
+    - "replace_in_dir"
+    - "write_json"
+    - "write_csv"
+    - "touch"
+    - "run_command"
+    - "run_powershell"
+    - "run_script"
+    - "run_python"
+    - "pip_install"
+    - "npm_install"
+    - "git"
+    - "kill_process"
+    - "kill_process_by_name"
+    - "start_background"
+    - "hotkey"
+    - "press_key"
+    - "type_text"
+    - "mouse_click"
+    - "mouse_move"
+  read_only_tools:
+    - "read_file"
+    - "list_dir"
+    - "file_info"
+    - "grep_file"
+    - "grep_dir"
+    - "read_json"
+    - "read_csv"
+    - "tree"
+    - "count_lines"
+    - "word_count"
+    - "file_exists"
+    - "file_hash"
+  path_keys:
+    - "path"
+    - "src"
+    - "dst"
+    - "dest_path"
+    - "filename"
+    - "output_path"
+    - "directory"
+
 rules:
   allow_file_delete: true
   allow_file_modify: true
   allow_shell_exec: true
   allow_web_download: true
+  allow_agent_self_mod: false
+  destructive_tools:
+    - "delete_file"
+    - "delete_dir"
+    - "kill_process"
+    - "run_command"
+    - "run_script"
   allow_web_search: true
   allow_system_changes: true
   allow_process_control: true
@@ -15,6 +83,7 @@ rules:
   require_confirm_destructive: false
   require_confirm_network: false
   require_confirm_shell: false
+
 system_control:
   allow_shutdown: true
   allow_restart: true
@@ -22,6 +91,7 @@ system_control:
   allow_process_control: true
   allow_registry_access: true
   allow_scheduled_tasks: true
+
 security:
   sandbox_mode: false
   restrict_paths: false
@@ -31,6 +101,7 @@ security:
   require_hitm_outside_workspace: false
   audit_logging: true
   hard_guardrails: false
+
 performance:
   max_pref_chars: 80
   max_pref_items: 20

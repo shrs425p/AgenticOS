@@ -16,7 +16,8 @@ The architecture is built on four pillars:
 ```mermaid
 graph TD
     User([User Request]) --> Main[main.py]
-    Main --> Orchestrator[Runtime Orchestrator]
+    Main --> Config[ConfigLoader / Layered YAML]
+    Config --> Orchestrator[Runtime Orchestrator]
     Orchestrator --> Agent[Autonomous Agent]
     Agent --> Memory[Session Memory / SQLite]
     Agent --> Registry[Tool Registry]
@@ -28,6 +29,8 @@ graph TD
     
     Orchestrator --> UI[Typewriter UI / Notifications]
     Orchestrator --> Guard[PathGuard / Security]
+    Guard --> Redact[Secret Redaction Engine]
+    Orchestrator --> Test[Pytest / Testing Layer]
 ```
 
 ---
@@ -35,6 +38,13 @@ graph TD
 ## [LOOP] The Orchestration Loop (Execution Cycle)
 
 AgenticOS follows a strict, iterative "Replan-Act-Verify" loop managed by `core/runtime.py`.
+
+### 0. Configuration Layer
+Before the loop starts, the `ConfigLoader` merges multiple YAML sources from the `config/` directory:
+- **`runtime.yaml`**: Environment-specific paths and heuristics.
+- **`policy.yaml`**: Security rules and redaction patterns.
+- **`endpoints.yaml`**: External URLs and service presets.
+- **`prompts.yaml`**: System prompts and instruction templates.
 
 ### 1. Context Assembly
 Before every iteration, the Orchestrator assembles the "Global Context Window":
@@ -96,6 +106,7 @@ The architecture enforces a "Zero Trust" model for the local system.
 -   **Green Zone (Workspace)**: Full autonomous access for read/write/delete.
 -   **Yellow Zone (User Folders)**: Read-only access allowed; Write/Delete requires a **Human-In-The-Middle (HITM)** confirmation.
 -   **Red Zone (System)**: Access to critical paths like `C:\Windows` or `C:\Program Files` is strictly blocked by the hardware-level guardrails.
+-   **Redaction Engine**: Automatically masks API keys, tokens, and sensitive PII in all logs and memory stores based on regex patterns in `policy.yaml`.
 
 ---
 

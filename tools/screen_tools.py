@@ -13,6 +13,7 @@ import shutil
 from datetime import datetime
 
 
+from core.tool_base import tool
 class ScreenManager:
     def __init__(self, rules: dict = None, base_dir: str = "workspace"):
         self.rules = rules or {}
@@ -59,6 +60,7 @@ class ScreenManager:
         return os.path.join(self.screenshots_dir, name)
 
     # ── Screenshot ────────────────────────────────────────────────────────────
+    @tool(name="take_screenshot", desc="Take screenshot. Args: name (optional)", category="General")
     def take_screenshot(self, name: str = "") -> str:
         """Take a screenshot of the entire screen and save it.
 
@@ -105,6 +107,7 @@ $g.Dispose(); $bmp.Dispose();
                 return "Error: No screenshot tool found. Install scrot: sudo apt install scrot"
 
     # ── Window management ─────────────────────────────────────────────────────
+    @tool(name="minimize_all", desc="Minimize all windows.", category="General")
     def minimize_all(self) -> str:
         """Minimize all open windows to show the desktop."""
         if self.system == "Windows":
@@ -121,6 +124,7 @@ $g.Dispose(); $bmp.Dispose();
             else:
                 return "Error: Install wmctrl: sudo apt install wmctrl"
 
+    @tool(name="minimize_app", desc="Minimize specific app. Args: app_name", category="General")
     def minimize_app(self, app_name: str) -> str:
         """Minimize a specific application by name.
 
@@ -171,6 +175,7 @@ if ($procs) {{
             else:
                 return "Error: Install wmctrl: sudo apt install wmctrl"
 
+    @tool(name="maximize_app", desc="Maximize specific app. Args: app_name", category="General")
     def maximize_app(self, app_name: str) -> str:
         """Maximize a specific application by name.
 
@@ -219,6 +224,7 @@ if ($procs) {{
             else:
                 return "Error: Install wmctrl: sudo apt install wmctrl"
 
+    @tool(name="list_windows", desc="List visible application windows. Args: filter_str (optional)", category="General")
     def list_windows(self, filter_str: str = "") -> str:
         """List visible application windows, optionally filtered by title."""
         filter_text = filter_str.lower().strip()
@@ -247,6 +253,7 @@ foreach ($p in $procs) {
             lines = [line for line in lines if filter_text in line.lower()]
         return "\n".join(lines[:100]) if lines else "No matching windows found."
 
+    @tool(name="focus_app", desc="Focus specific app window. Args: app_name", category="General")
     def focus_app(self, app_name: str) -> str:
         """Bring a matching application window to the foreground."""
         if self.system == "Windows":

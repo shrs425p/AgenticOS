@@ -5,7 +5,9 @@ from __future__ import annotations
 from tools.web.session import bs4_beautifulsoup, requests_module
 
 
+from core.tool_base import tool
 class UtilsMixin:
+    @tool(name="shorten_url", desc="Shorten a URL. Args: url", category="Web")
     def shorten_url(self, url: str) -> str:
         err = self._network_error()
         if err:
@@ -13,8 +15,9 @@ class UtilsMixin:
         try:
             r = requests_module()
             timeout = self._get_timeout("web_utils", 15)
+            api = self.cfg.get("endpoints", {}).get("is_gd_api", "https://is.gd/create.php")
             resp = r.get(
-                "https://is.gd/create.php",
+                api,
                 params={"format": "simple", "url": url},
                 timeout=timeout,
             )
@@ -22,6 +25,7 @@ class UtilsMixin:
         except Exception as e:
             return f"Shorten error: {e}"
 
+    @tool(name="expand_url", desc="Follow redirects to final URL. Args: url", category="Web")
     def expand_url(self, url: str) -> str:
         err = self._network_error()
         if err:
@@ -34,6 +38,7 @@ class UtilsMixin:
         except Exception as e:
             return f"Expand error: {e}"
 
+    @tool(name="rss_feed", desc="Fetch and parse RSS feed. Args: url, num_items (optional)", category="Web")
     def rss_feed(self, url: str, num_items: str = "5") -> str:
         err = self._network_error()
         if err:
@@ -71,6 +76,7 @@ class UtilsMixin:
         except Exception as e:
             return f"RSS error: {e}"
 
+    @tool(name="wayback_snapshot", desc="Get Wayback Machine snapshot. Args: url", category="Web")
     def wayback_snapshot(self, url: str) -> str:
         err = self._network_error()
         if err:
@@ -78,12 +84,13 @@ class UtilsMixin:
         try:
             r = requests_module()
             timeout = self._get_timeout("web_utils", 20)
-            api = "https://archive.org/wayback/available"
+            api = self.cfg.get("endpoints", {}).get("wayback_api", "https://archive.org/wayback/available")
             resp = r.get(api, params={"url": url}, timeout=timeout)
             return resp.text
         except Exception as e:
             return f"Wayback error: {e}"
 
+    @tool(name="scrape_table", desc="Scrape HTML table. Args: url, table_index (optional)", category="Web")
     def scrape_table(self, url: str, table_index: str = "0") -> str:
         err = self._network_error()
         if err:

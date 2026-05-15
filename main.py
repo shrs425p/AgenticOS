@@ -65,6 +65,56 @@ def _apply_cache_env() -> None:
 def main() -> None:
     _apply_cache_env()
 
+    import sys
+    # Ensure stdout/stderr handle UTF-8 correctly, especially on Windows
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+    if hasattr(sys.stderr, "reconfigure"):
+        try:
+            sys.stderr.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+
+    if "--dream" in sys.argv:
+        # Run the Self-Improvement "Dreaming" cycle and exit
+        import yaml
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        cfg_path = os.path.join(base_dir, "config.yaml")
+        try:
+            with open(cfg_path, "r", encoding="utf-8") as f:
+                cfg = yaml.safe_load(f) or {}
+        except Exception:
+            cfg = {}
+        
+        workspace = cfg.get("agent", {}).get("workspace", "workspace")
+        if not os.path.isabs(workspace):
+            workspace = os.path.join(base_dir, workspace)
+
+        from core.self_improvement import run_dream_cycle
+        # Try to get an LLM client for high-quality reflections
+        llm = None
+        try:
+            from core.runtime_config import load_config
+            full_cfg = load_config()
+            provider = full_cfg.get("agent", {}).get("provider", "ollama").lower()
+            if provider == "gemini":
+                from core.model_clients import GeminiClient
+                llm = GeminiClient(full_cfg)
+            elif provider == "ollama":
+                from core.model_clients import OllamaClient
+                llm = OllamaClient(full_cfg)
+        except Exception:
+            pass
+
+        print("\n  AgenticOS Dream Cycle")
+        print("  Analyzing past performance...\n")
+        result = run_dream_cycle(workspace, llm_client=llm, force=True)
+        print(f"  {result}\n")
+        return
+
     from core.runtime import main as _runtime_main
 
     _runtime_main()

@@ -73,13 +73,14 @@ class PathGuard:
             return self.on_confirm(path, operation)
 
         # Default CLI implementation (blocking)
-        print("\n\033[91m🛑 SECURITY GUARDRAIL\033[0m")
+        from core.runtime_ui import C
+        print(f"\n{C.RED}🛑 SECURITY GUARDRAIL{C.RESET}")
         print(
-            f"The agent is attempting a \033[1m{operation.upper()}\033[0m action outside the workspace."
+            f"The agent is attempting a {C.BOLD}{operation.upper()}{C.RESET} action outside the workspace."
         )
-        print(f"Target Path: \033[36m{path}\033[0m")
+        print(f"Target Path: {C.CYAN}{path}{C.RESET}")
         print(
-            "\033[90m(You can allow this once, or modify config.yaml to change security rules)\033[0m"
+            f"{C.GRAY}(You can allow this once, or modify config.yaml to change security rules){C.RESET}"
         )
         try:
             ans = input("\nDo you allow this specific action? [y/N]: ").strip().lower()

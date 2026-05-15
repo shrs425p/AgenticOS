@@ -4,7 +4,23 @@ This document tracks the technical evolution of AgenticOS from its initial proto
 
 ---
 
-## [PROVEN] v2.0 - The "Hardened" Edition (Current)
+---
+
+## [LAUNCH] v2.1 - The "Portable & Resilient" Edition (Current)
+*Release Date: 2026-05-15*
+
+The v2.1 release focuses on decoupling AgenticOS from the host environment and establishing a professional-grade testing framework.
+
+### Key Innovations:
+1.  **Layered Configuration System**: Migrated from a single `config.yaml` to a multi-file configuration directory (`config/`). This enables clean separation of security policy, service endpoints, and system heuristics.
+2.  **Comprehensive Testing Suite**: Launched a `pytest`-based framework with 40+ unit tests covering core logic, filesystem tools, and security guardrails.
+3.  **Zero-Hardcoding Policy**: Fully refactored the codebase to eliminate absolute paths and hardcoded URLs, ensuring 100% environment portability.
+4.  **Secret Redaction Engine**: Implemented an automated regex-based masking system that protects API keys and PII in all logs and persistent memory.
+5.  **CI/CD Automation**: Integrated GitHub Actions to enforce testing and coverage standards on every code submission.
+
+---
+
+## [PROVEN] v2.0 - The "Hardened" Edition
 *Release Date: 2026-05-14*
 
 The v2.0 release focuses on transforming AgenticOS into a resilient system capable of handling enterprise-scale tasks with minimal resource impact and maximum security.
