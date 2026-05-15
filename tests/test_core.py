@@ -1,9 +1,6 @@
-import os
-import sqlite3
-import pytest
 from unittest import mock
 
-from core.audit_logger import _redact, AuditLogger
+from core.audit_logger import _redact
 from core.session_memory_sqlite import SqliteSessionMemory
 
 def test_audit_logger_redact_with_patterns():

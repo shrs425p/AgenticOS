@@ -1,7 +1,3 @@
-import os
-import json
-import pytest
-from pathlib import Path
 from core.memory_manager import MemoryManager
 
 def test_memory_manager_init(tmp_path):

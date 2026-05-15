@@ -4,7 +4,7 @@ import sys
 import time
 import threading
 import itertools
-from typing import Optional, Dict, Any
+from typing import Optional
 
 
 class Spinner:

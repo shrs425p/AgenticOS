@@ -1,4 +1,3 @@
-import pytest
 from core.tool_registry import ToolRegistry, tool
 
 class DummyPlugin:

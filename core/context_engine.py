@@ -3,12 +3,7 @@ ContextEngine for AgenticOs.
 Manages system prompt assembly, message history pruning, 
 and proactive context injection (Active Recall).
 """
-
 import os
-import re
-from datetime import datetime
-from typing import Dict, List, Optional, Any
-from core.runtime_config import DEFAULT_WORKSPACE
 
 
 class ContextEngine:

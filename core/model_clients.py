@@ -7,8 +7,6 @@ import time
 from collections import defaultdict, deque
 
 import requests
-from core.runtime_ui import C
-
 from core.runtime_config import BASE_DIR
 from core.runtime_ui import C, Spinner
 

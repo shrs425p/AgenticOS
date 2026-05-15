@@ -41,7 +41,6 @@ default_structure = {
     "agent": {"workspace": DEFAULT_WORKSPACE},
     "endpoints": {},
     "windows_paths": {},
-    "policy": {"redaction_patterns": []},
     "autonomy": {},
     "cloud": {"nvidia": {}},
     "memory": {},

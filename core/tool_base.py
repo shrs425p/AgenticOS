@@ -1,6 +1,6 @@
 """Base classes and decorators for AgenticOs tools."""
 
-from typing import Any, Callable
+
 
 def tool(
     name: str = None,

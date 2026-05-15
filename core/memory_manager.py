@@ -3,7 +3,6 @@ Enhanced memory management system for AgenticOs.
 Provides long-term memory consolidation, daily logging, and knowledge retention.
 """
 
-import os
 import json
 import re
 from datetime import datetime, timedelta
@@ -107,7 +106,8 @@ class MemoryManager:
                             end = min(len(lines), i + 3)
                             snippet = "".join(lines[start:end]).strip()
                             results.append(f"[MEMORY.md] ...{snippet}...")
-                            if len(results) >= limit: break
+                            if len(results) >= limit:
+                                break
             except Exception:
                 pass
 
@@ -123,7 +123,8 @@ class MemoryManager:
                             if q in content.lower():
                                 # Just indicate match for brevity
                                 results.append(f"[LOG {date.strftime('%Y-%m-%d')}] Relevant context found.")
-                                if len(results) >= limit: break
+                                if len(results) >= limit:
+                                    break
                     except Exception:
                         pass
         
@@ -150,7 +151,7 @@ class MemoryManager:
         log_entry += f"{description}\n"
         
         if metadata:
-            log_entry += f"\n**Metadata:**\n"
+            log_entry += "\n**Metadata:**\n"
             for key, value in metadata.items():
                 log_entry += f"- {key}: {value}\n"
         
@@ -338,11 +339,6 @@ class MemoryManager:
                     semantic_patterns = [line for line in lines if line and len(line) > 5][:3]
                     
                     # Post-process: generically strip absolute paths back to relative
-                    # Matches any path like C:\AgenticOs\...\file or C:\AgenticOs\workspace\...\file
-                    # and reduces it to just the filename or workspace-relative path
-                    ws_str = str(self.workspace_root).replace("\\", "\\\\")
-                    # Also catch project root (parent of workspace)
-                    project_root = str(self.workspace_root.parent).replace("\\", "\\\\")
                     
                     fixed = []
                     for pattern in semantic_patterns:

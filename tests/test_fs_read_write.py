@@ -1,6 +1,4 @@
-import pytest
 from pathlib import Path
-
 from tools.filesystem.read_write import ReadWriteMixin
 from tools.filesystem.edit import EditMixin
 
@@ -42,7 +40,7 @@ def test_append_file(tmp_path):
     f.write_text("hello\n")
     
     tool = MockFileSystemTools(tmp_path)
-    res = tool.append_file("test.txt", "world")
+    tool.append_file("test.txt", "world")
     
     assert "world" in (tmp_path / "test.txt").read_text()
 
@@ -51,7 +49,7 @@ def test_edit_file(tmp_path):
     f.write_text("hello old_text world")
     
     tool = MockFileSystemTools(tmp_path)
-    res = tool.edit_file("test.txt", "old_text", "new_text")
+    tool.edit_file("test.txt", "old_text", "new_text")
     
     assert "new_text" in (tmp_path / "test.txt").read_text()
     assert "old_text" not in (tmp_path / "test.txt").read_text()
@@ -61,7 +59,7 @@ def test_edit_line(tmp_path):
     f.write_text("line 1\nline 2\nline 3\n")
     
     tool = MockFileSystemTools(tmp_path)
-    res = tool.edit_line("test.txt", "2", "new line 2")
+    tool.edit_line("test.txt", "2", "new line 2")
     
     lines = (tmp_path / "test.txt").read_text().splitlines()
     assert lines[1] == "new line 2"
@@ -71,7 +69,7 @@ def test_insert_line(tmp_path):
     f.write_text("line 1\nline 2\n")
     
     tool = MockFileSystemTools(tmp_path)
-    res = tool.insert_line("test.txt", "2", "inserted line")
+    tool.insert_line("test.txt", "2", "inserted line")
     
     lines = (tmp_path / "test.txt").read_text().splitlines()
     assert lines[1] == "inserted line"

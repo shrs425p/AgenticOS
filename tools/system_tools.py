@@ -1,4 +1,3 @@
-import sys
 import os
 from core.tool_base import tool
 

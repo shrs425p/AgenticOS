@@ -1,5 +1,4 @@
 import os
-import pytest
 from core.task_tracker import TaskTracker
 
 def test_set_goal(tmp_path):

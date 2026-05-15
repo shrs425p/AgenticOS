@@ -1,6 +1,5 @@
 import os
 from unittest import mock
-import pytest
 
 from core.runtime_config import load_config, resolve_local_path, default_structure
 

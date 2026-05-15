@@ -1,6 +1,5 @@
 import os
 from unittest import mock
-import pytest
 
 from tools.plugins.fast_disk import fast_disk_audit
 

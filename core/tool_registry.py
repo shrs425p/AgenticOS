@@ -18,7 +18,6 @@ from tools import ocr_tools as ocr
 from tools import terminal
 from tools import web
 from tools import system_tools
-from tools.web.web_pick_best_link import web_pick_best_link
 
 from core.runtime_config import DEFAULT_WORKSPACE
 from core.url_presets import load_url_presets

@@ -22,7 +22,7 @@ import requests
 import re
 from typing import Dict, Optional, Callable
 
-from core.memory_manager import initialize_memory_manager, log_task_completion, get_memory_manager
+from core.memory_manager import initialize_memory_manager, log_task_completion
 from core.session_memory_sqlite import SqliteSessionMemory
 from core.audit_logger import AuditLogger, infer_success
 from core.model_clients import GeminiClient, NvidiaClient, OllamaClient, GroqClient, OpenAIClient, OpenRouterClient, GithubClient, DeepseekClient, TieredClient
@@ -319,16 +319,16 @@ class Agent:
             prompt_tmpl = (
                 "You are the Technical Verification Monitor for AgenticOs.\n"
                 "Your ONLY job is to verify the technical validity and safety of the proposed action.\n\n"
-                f"TOOL: {{tool_name}}\n"
-                f"ARGS: {{args}}\n\n"
+                "TOOL: {tool_name}\n"
+                "ARGS: {args}\n\n"
                 "CONTEXT (Recent history):\n"
-                f"{{context}}\n\n"
+                "{context}\n\n"
                 "STRICT VERIFICATION RULES:\n"
                 "1. TECHNICAL VALIDITY: Are the arguments logically sound? (e.g. if reading a file, has it been identified/created?)\n"
                 "2. ANTI-LOOP: Is the agent repeating the EXACT same command that just failed or yielded no new info?\n"
                 "3. NO STRATEGY JUDGMENT: Do NOT reject an action because it is 'insufficient' to solve the whole task. "
                 "Tasks are solved via MANY small, sequential steps. Sequential searches are VALID.\n"
-                f"4. TOOL EXISTENCE: Assume the tool '{{tool_name}}' is valid and registered. Do NOT reject based on tool name existence.\n\n"
+                "4. TOOL EXISTENCE: Assume the tool '{tool_name}' is valid and registered. Do NOT reject based on tool name existence.\n\n"
                 "REPLY FORMAT:\n"
                 "If the action is technically valid, reply ONLY with 'OK'.\n"
                 "If invalid, broken, or a loop, reply 'REJECT: [concise technical reason]'"

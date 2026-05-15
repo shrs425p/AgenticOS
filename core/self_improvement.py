@@ -7,7 +7,6 @@ or called programmatically at the start of a new session.
 """
 
 import json
-import os
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional

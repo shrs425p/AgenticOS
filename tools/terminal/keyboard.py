@@ -20,6 +20,7 @@ from __future__ import annotations
 import shutil
 import subprocess
 import time
+from core.tool_base import tool
 
 
 # ── SendKeys key-name translation table ──────────────────────────────────────
@@ -219,7 +220,7 @@ def _combo_to_osascript(combo: str) -> str:
         return f'tell application "System Events" to key code (key code of "{key}"){using_clause}'
 
 
-from core.tool_base import tool
+
 class KeyboardMixin:
     """Keyboard shortcut, hotkey, and text-input methods."""
 

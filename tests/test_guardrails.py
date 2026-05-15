@@ -1,5 +1,3 @@
-import pytest
-from pathlib import Path
 from core.guardrails import PathGuard
 
 def test_guardrails_workspace_access(tmp_path):
@@ -18,11 +16,11 @@ def test_guardrails_workspace_access(tmp_path):
     guard = PathGuard(cfg)
     
     # Inside workspace is allowed for read and write
-    assert guard.check_path(str(ws / "test.txt"), "read")[0] == True
-    assert guard.check_path(str(ws / "test.txt"), "write")[0] == True
+    assert guard.check_path(str(ws / "test.txt"), "read")[0]
+    assert guard.check_path(str(ws / "test.txt"), "write")[0]
     
     # Relative paths resolve to workspace
-    assert guard.check_path("test2.txt", "write")[0] == True
+    assert guard.check_path("test2.txt", "write")[0]
 
 def test_guardrails_blocked_paths(tmp_path):
     ws = tmp_path / "workspace"
@@ -44,7 +42,7 @@ def test_guardrails_blocked_paths(tmp_path):
     
     # Blocked paths should fail
     allowed, msg = guard.check_path(str(blocked_dir / "secret.txt"), "read")
-    assert allowed == False
+    assert not allowed
     assert "blocked" in msg
 
 def test_guardrails_outside_workspace(tmp_path):
@@ -66,9 +64,9 @@ def test_guardrails_outside_workspace(tmp_path):
     guard = PathGuard(cfg)
     
     # Read outside workspace is allowed
-    assert guard.check_path(str(outside_dir / "file.txt"), "read")[0] == True
+    assert guard.check_path(str(outside_dir / "file.txt"), "read")[0]
     
     # Write outside workspace requires hitm
     allowed, msg = guard.check_path(str(outside_dir / "file.txt"), "write")
-    assert allowed == False
+    assert not allowed
     assert "HITM_REQUIRED" in msg
