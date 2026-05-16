@@ -11,9 +11,10 @@ jobs:
       pull-requests: write
       contents: write
     steps:
-      - name: Enable auto-merge
-        run: gh pr merge --auto --squash "$PR_URL"
+      - name: Auto-merge and cleanup
+        run: |
+          # The --delete-branch flag tells GitHub to kill the branch as soon as it merges
+          gh pr merge --auto --squash --delete-branch "$PR_URL"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
           GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
-          
