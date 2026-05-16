@@ -1,9 +1,15 @@
 name: CI
+
 on:
   push:
-    branches: [ main ]
+    branches: [ "**" ]
   pull_request:
-    branches: [ main ]
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+  pull_request_review:
+    types: [submitted, edited]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
 
 permissions:
   contents: read
@@ -12,22 +18,44 @@ jobs:
   test:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest]
-        python-version: ["3.12"]
+        python-version: ["3.10", "3.12"]
+
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
+
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: pip
+
       - name: Install dependencies
         run: |
+          pip install --upgrade pip
           pip install ruff pytest pytest-cov playwright
-          pip install -r requirements.txt || echo "No requirements.txt found"
-      - name: Playwright Install
+          pip install -r requirements.txt
+
+      - name: Playwright Install (Linux)
+        if: runner.os == 'Linux'
         run: playwright install chromium --with-deps
+
+      - name: Playwright Install (Windows)
+        if: runner.os == 'Windows'
+        run: playwright install chromium
+
       - name: Lint (Ruff)
         run: ruff check .
+
       - name: Run Tests
-        run: pytest tests/ --cov=core --cov=tools
+        run: pytest tests/ --cov=core --cov=tools --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage report
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+          retention-days: 7

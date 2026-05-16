@@ -1,18 +1,42 @@
 name: Auto-Merge Bot
+
 on:
+  push:
+    branches: [ "**" ]
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+  pull_request_review:
+    types: [submitted]
+  workflow_dispatch:
 
 jobs:
   auto-merge:
     runs-on: ubuntu-latest
-    if: github.actor == 'google-labs-jules' || github.actor == 'shrs425p'
+    if: |
+      github.event_name == 'pull_request' &&
+      (github.actor == 'google-labs-jules' || github.actor == 'shrs425p')
     permissions:
       pull-requests: write
       contents: write
+
     steps:
-      - name: Auto-merge and cleanup
-        run: gh pr merge --auto --squash --delete-branch "$PR_URL"
+      - name: Validate PR number
         env:
-          PR_URL: ${{github.event.pull_request.html_url}}
-          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+            echo "Invalid PR number: $PR_NUMBER"
+            exit 1
+          fi
+
+      - name: Enable auto-merge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh pr merge "$PR_NUMBER" \
+            --repo "$REPO" \
+            --auto \
+            --squash \
+            --delete-branch

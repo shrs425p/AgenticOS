@@ -1,7 +1,11 @@
-name: 'Dependency review'
+name: Dependency Review
+
 on:
+  push:
+    branches: [ "**" ]
   pull_request:
-    branches: [ "main" ]
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -10,9 +14,30 @@ permissions:
 jobs:
   dependency-review:
     runs-on: ubuntu-latest
+    # Dependency review requires a PR context to diff dependencies.
+    # On plain pushes we run pip-audit as a fallback full scan instead.
     steps:
       - uses: actions/checkout@v4
-      - name: 'Dependency Review'
+
+      - name: Dependency Review (PR only)
+        if: github.event_name == 'pull_request'
         uses: actions/dependency-review-action@v4
         with:
           comment-summary-in-pr: always
+          fail-on-severity: high
+          deny-licenses: GPL-2.0, GPL-3.0, AGPL-3.0
+
+      - name: Full dependency audit (push / manual)
+        if: github.event_name != 'pull_request'
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt --output-format=json > pip-audit-results.json || true
+          pip-audit -r requirements.txt
+
+      - name: Upload pip-audit results
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pip-audit-results
+          path: pip-audit-results.json
+          retention-days: 7
