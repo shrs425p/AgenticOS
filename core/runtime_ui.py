@@ -361,9 +361,8 @@ def print_warning(msg: str):
 
 
 def print_info(msg: str):
-    # Proactively mask common sensitive keywords to prevent clear-text logging
-    masked = re.sub(r"(?i)(key|token|password|secret|auth)([:=\s]+)(\S+)", r"\1\2[REDACTED]", msg)
-    print(f"{C.BLUE}INFO: {masked}{C.RESET}")
+    print(f"{C.BLUE}INFO: {msg}{C.RESET}")
+
 
 
 

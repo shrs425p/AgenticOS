@@ -1414,21 +1414,15 @@ class CLI:
                 print_success(f"Ollama connected — {len(models)} model(s) available.")
                 print_info(f"Active model: {C.BOLD}{self.agent.client.model}{C.RESET}")
         elif provider == "gemini":
-            key_preview = (
-                (self.agent.client.api_key[:8] + "...")
-                if self.agent.client.api_key
-                else "NOT SET"
-            )
+            key_status = "[SET]" if self.agent.client.api_key else "NOT SET"
             print_success("Google Gemini provider connected.")
-            print_info(f"API key: {key_preview}")
+            print_info(f"API key: {key_status}")
+
         else:
-            key_preview = (
-                (self.agent.client.api_key[:8] + "...")
-                if self.agent.client.api_key
-                else "NOT SET"
-            )
+            key_status = "[SET]" if self.agent.client.api_key else "NOT SET"
             print_success("Nvidia NIM provider connected.")
-            print_info(f"API key: {key_preview}")
+            print_info(f"API key: {key_status}")
+
 
         if autonomy_cfg.get("startup_model_prompt", False):
             # Non-forced by default so startup can remain quick for autopilot runs.
