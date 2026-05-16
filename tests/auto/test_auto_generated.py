@@ -17,9 +17,10 @@ def registry():
     try:
         with open("config.yaml", "r") as f:
             cfg = yaml.safe_load(f)
-    except:
+    except Exception:
         cfg = {}
-    if "rules" not in cfg: cfg["rules"] = {}
+    if "rules" not in cfg:
+        cfg["rules"] = {}
     return ToolRegistry(cfg, MockApp())
 
 @pytest.fixture(autouse=True)

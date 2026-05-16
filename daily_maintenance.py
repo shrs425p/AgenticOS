@@ -162,9 +162,10 @@ def registry():
     try:
         with open("config.yaml", "r") as f:
             cfg = yaml.safe_load(f)
-    except:
+    except Exception:
         cfg = {}
-    if "rules" not in cfg: cfg["rules"] = {}
+    if "rules" not in cfg:
+        cfg["rules"] = {}
     return ToolRegistry(cfg, MockApp())
 
 @pytest.fixture(autouse=True)
@@ -190,20 +191,28 @@ def mock_external_calls(monkeypatch):
             sig = inspect.signature(fn)
             args_str = []
             for param in sig.parameters.values():
-                if param.name == "self": continue
-                if param.annotation == int: args_str.append("1")
-                elif param.annotation == str: args_str.append('"test"')
-                elif param.annotation == float: args_str.append("1.0")
-                elif param.annotation == bool: args_str.append("True")
-                elif param.annotation == list: args_str.append("[]")
-                elif param.annotation == dict: args_str.append("{}")
-                else: args_str.append('"dummy"')
+                if param.name == "self":
+                    continue
+                if param.annotation is int:
+                    args_str.append("1")
+                elif param.annotation is str:
+                    args_str.append('"test"')
+                elif param.annotation is float:
+                    args_str.append("1.0")
+                elif param.annotation is bool:
+                    args_str.append("True")
+                elif param.annotation is list:
+                    args_str.append("[]")
+                elif param.annotation is dict:
+                    args_str.append("{}")
+                else:
+                    args_str.append('"dummy"')
 
             args_call = ", ".join(args_str)
 
             append_tests += f"def test_{tool_name}_auto(registry, monkeypatch):\n"
             append_tests += f"    res = registry.call('{tool_name}', [{args_call}])\n"
-            append_tests += f"    assert res is not None\n\n"
+            append_tests += "    assert res is not None\n\n"
             new_tests_generated.append(tool_name)
         except Exception:
             pass
