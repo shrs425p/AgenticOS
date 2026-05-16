@@ -1,6 +1,6 @@
-#name: Bandit Security Scan
+name: Bandit Security Scan
 
-#on:
+on:
   push:
     branches: [ "**" ]
   pull_request:
@@ -11,7 +11,7 @@
   schedule:
     - cron: '33 9 * * *'
 
-#jobs:
+jobs:
   bandit:
     runs-on: ubuntu-latest
     permissions:
