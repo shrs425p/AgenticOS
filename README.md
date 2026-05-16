@@ -17,9 +17,9 @@
     <img src="https://img.shields.io/badge/status-early_beta-orange?style=flat-square" alt="Status">
     <img src="https://img.shields.io/badge/latest-v2.0.0-blue?style=flat-square" alt="Latest Version">
     <img src="https://img.shields.io/badge/license-Apache_2.0-red?style=flat-square" alt="License">
-    <img src="https://img.shields.io/badge/tools-350%2B-green?style=flat-square" alt="Tools">
-    <img src="https://img.shields.io/badge/tests-40%2B_passed-brightgreen?style=flat-square" alt="Tests">
-    <img src="https://img.shields.io/badge/coverage-24%25-yellow?style=flat-square" alt="Coverage">
+    <img src="https://img.shields.io/badge/tools-50-green?style=flat-square" alt="Tools">
+    <img src="https://img.shields.io/badge/tests-98_passed-brightgreen?style=flat-square" alt="Tests">
+    <img src="https://img.shields.io/badge/coverage-37%25-yellow?style=flat-square" alt="Coverage">
   </p>
   
   <p>
@@ -43,7 +43,7 @@
 
 ---
 
-**AgenticOS** is a secure autonomous operating system designed for extreme performance, deep system orchestration, and resilient multi-modal research. It integrates high-scale cloud models (NVIDIA NIM, Google Gemini) and local LLMs (Ollama) with a modular ecosystem of over **350+ specialized tools** to provide a proactive, self-healing operational experience.
+**AgenticOS** is a secure autonomous operating system designed for extreme performance, deep system orchestration, and resilient multi-modal research. It integrates high-scale cloud models (NVIDIA NIM, Google Gemini) and local LLMs (Ollama) with a modular ecosystem of over **50 specialized tools** to provide a proactive, self-healing operational experience.
 
 ---
 
@@ -94,7 +94,7 @@ Explore the full AgenticOS manual for deep technical insights:
 ### [TOOL] Developer & Tooling
 *   [**Developer Onboarding**](docs/developer_onboarding.md): Guide for contributing to the core engine.
 *   [**Tool Development Guide**](docs/tool_development.md): Write your own plugins and optimize performance.
-*   [**API & Tool Reference**](docs/api_reference.md): Overview of the 300+ tools in the registry.
+*   [**API & Tool Reference**](docs/api_reference.md): Overview of the 50 tools in the registry.
 *   [**Autonomous Operations**](docs/autonomous_operations.md): How the "Agent Brain" plans and self-heals.
 *   [**Prompt Engineering Guide**](docs/prompt_engineering_guide.md): Best practices for task optimization.
 
@@ -133,6 +133,7 @@ Explore the full AgenticOS manual for deep technical insights:
 ```powershell
 pip install -r requirements.txt
 playwright install chromium
+.\setup.ps1
 ```
 
 ### 2. Configuration
