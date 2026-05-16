@@ -1,5 +1,4 @@
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from tools.plugins.competitive_intel import competitive_intel
 import os
 from datetime import datetime

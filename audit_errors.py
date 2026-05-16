@@ -3,7 +3,6 @@ import ast
 import datetime
 import subprocess
 from collections import Counter
-from pathlib import Path
 
 def get_commit_age(filepath, lineno):
     try:
@@ -83,8 +82,8 @@ def main():
 
             # Find logging.error, logging.warning, logger.error, print_error
             if isinstance(node, ast.Call):
-                func_name = None
                 is_error_call = False
+
 
                 if isinstance(node.func, ast.Name):
                     if node.func.id in ["print_error"]:

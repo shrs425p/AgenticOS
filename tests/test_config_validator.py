@@ -1,7 +1,6 @@
 import pytest
 import yaml
 import datetime
-import os
 from pathlib import Path
 from tools.plugins.config_validator import validate_config
 

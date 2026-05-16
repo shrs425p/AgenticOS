@@ -3,8 +3,6 @@ import os
 import time
 import datetime
 from pathlib import Path
-import json
-import re
 import inspect
 
 # Adjust Python path to load core
@@ -27,16 +25,17 @@ def generate_minimal_inputs(func):
             continue
 
         # Try to infer type
-        if param.annotation == int:
+        if param.annotation is int:
             inputs[name] = 1
-        elif param.annotation == float:
+        elif param.annotation is float:
             inputs[name] = 1.0
-        elif param.annotation == bool:
+        elif param.annotation is bool:
             inputs[name] = True
-        elif param.annotation == list:
+        elif param.annotation is list:
             inputs[name] = []
-        elif param.annotation == dict:
+        elif param.annotation is dict:
             inputs[name] = {}
+
         else:
             # Fallback to string
             inputs[name] = "test"
@@ -121,10 +120,10 @@ def run_error_recovery(registry):
         # Pass an integer instead of a string path
         fn(path=123)
         return False, "Did not raise exception"
-    except AttributeError as e:
+    except AttributeError:
         # Expected from read_file when trying to call .replace or .resolve on int
         return True, "Raised specific exception: AttributeError"
-    except TypeError as e:
+    except TypeError:
          return True, "Raised specific exception: TypeError"
     except Exception as e:
         # Bare exception
@@ -139,9 +138,10 @@ def run_tool_chains(registry):
     # Chain 1: web_search -> fetch_url -> write_file
     if "web_search" in reg and "fetch_url" in reg and "write_file" in reg:
         try:
-            search_res = registry.call("web_search", {"query": "python", "num_results": "1"})
+            registry.call("web_search", {"query": "python", "num_results": "1"})
             fetch_res = registry.call("fetch_url", {"url": "https://example.com"})
-            write_res = registry.call("write_file", {"path": "workspace/test_web.txt", "content": fetch_res[:100]})
+            registry.call("write_file", {"path": "workspace/test_web.txt", "content": fetch_res[:100]})
+
             chain_results.append(("web_search -> fetch_url -> write_file", "PASS"))
         except Exception as e:
             chain_results.append(("web_search -> fetch_url -> write_file", f"FAIL ({str(e)})"))
@@ -151,12 +151,13 @@ def run_tool_chains(registry):
     if "read_file" in reg and "write_file" in reg and process_tool:
         try:
             registry.call("write_file", {"path": "workspace/test_dummy.txt", "content": "hello world"})
-            read_res = registry.call("read_file", {"path": "workspace/test_dummy.txt"})
+            registry.call("read_file", {"path": "workspace/test_dummy.txt"})
             if process_tool == "word_count":
                 process_res = registry.call(process_tool, {"path": "workspace/test_dummy.txt"})
             else:
                 process_res = registry.call(process_tool, {"path": "workspace/test_dummy.txt", "query": "hello"})
-            write_res = registry.call("write_file", {"path": "workspace/test_process.txt", "content": str(process_res)})
+            registry.call("write_file", {"path": "workspace/test_process.txt", "content": str(process_res)})
+
             chain_results.append((f"read_file -> {process_tool} -> write_file", "PASS"))
         except Exception as e:
             chain_results.append((f"read_file -> {process_tool} -> write_file", f"FAIL ({str(e)})"))
@@ -164,9 +165,10 @@ def run_tool_chains(registry):
     # Chain 3: terminal_command -> capture_output -> parse_result
     if "run_command" in reg:
         try:
-            cmd_res = registry.call("run_command", {"command": "echo 'test command output' > workspace/cmd_out.txt"})
+            registry.call("run_command", {"command": "echo 'test command output' > workspace/cmd_out.txt"})
             if "grep_file" in reg:
-                parse_res = registry.call("grep_file", {"path": "workspace/cmd_out.txt", "query": "test"})
+                registry.call("grep_file", {"path": "workspace/cmd_out.txt", "query": "test"})
+
                 chain_results.append(("terminal_command -> capture_output -> grep_file", "PASS"))
             else:
                  chain_results.append(("run_command -> capture_output -> parse_result", "SKIPPED (no parse tool)"))

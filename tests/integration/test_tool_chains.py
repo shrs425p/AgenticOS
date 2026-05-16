@@ -1,6 +1,5 @@
 import pytest
 from core.tool_registry import ToolRegistry
-import os
 
 @pytest.fixture
 def registry():

@@ -36,7 +36,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install ruff pytest pytest-cov playwright
-          pip install -r requirements.txt
+          pip install -r requirements.txt || echo "requirements.txt not found"
 
       - name: Playwright Install (Linux)
         if: runner.os == 'Linux'
@@ -50,7 +50,10 @@ jobs:
         run: ruff check .
 
       - name: Run Tests
+        env:
+          PYTHONPATH: .
         run: pytest tests/ --cov=core --cov=tools --cov-report=xml --cov-report=term-missing
+
 
       - name: Upload coverage report
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'

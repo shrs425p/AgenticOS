@@ -1,4 +1,3 @@
-import os
 import datetime
 import json
 from pathlib import Path
@@ -51,7 +50,7 @@ def self_healing_test() -> str:
         f"# Self Healing Test ({today})\n\n"
         f"**Outcome:** {result['outcome']}\n\n"
         f"**Steps:**\n" + "\n".join(f"- {s}" for s in result['steps']) + "\n\n"
-        f"**Recovery Actions:**\n" + "\n".join(f"- {a}" for a in result['recovery_actions']) + "\n"
+        "**Recovery Actions:**\n" + "\n".join(f"- {a}" for a in result['recovery_actions']) + "\n"
     )
 
     try:

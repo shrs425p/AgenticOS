@@ -1,7 +1,5 @@
-import pytest
 import json
-from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from tools.plugins.self_healing_test import self_healing_test
 
@@ -55,7 +53,8 @@ def test_self_healing_test_log_file_write_fail(tmp_path, monkeypatch):
     workspace.mkdir()
 
     # Mock the log file writing to raise an exception
-    with patch("pathlib.Path.write_text") as mock_write:
+    with patch("pathlib.Path.write_text"):
+
         # We need the first write (target_file) to succeed, but log_file to fail
         # This is tricky because both use write_text. Let's patch at the function level
         # Actually it's easier to mock the open or write inside the tool

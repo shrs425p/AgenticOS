@@ -1,6 +1,4 @@
-import pytest
 import json
-from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 from tools.plugins.research_loop import research_loop

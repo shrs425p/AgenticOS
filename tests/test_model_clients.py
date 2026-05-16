@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, MagicMock, Mock
+from unittest.mock import patch, MagicMock
 from core.model_clients import OllamaClient, NvidiaClient
 from core.exceptions import RateLimitExhausted
 import requests

@@ -1,5 +1,3 @@
-import os
-import glob
 import sqlite3
 import datetime
 import logging

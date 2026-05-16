@@ -5,7 +5,6 @@ a module docstring, and at least one callable.
 """
 
 import ast
-import os
 from datetime import datetime
 from pathlib import Path
 from typing import Dict

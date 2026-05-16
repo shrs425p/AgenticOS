@@ -75,7 +75,6 @@ class C:
 
     @staticmethod
     def strip(text: str) -> str:
-        import re
 
         return re.sub(r"\033\[[0-9;]*m", "", text)
 
@@ -105,7 +104,6 @@ def parse_actions(text: str) -> list[tuple]:
     - ACTION: {"tool": "...", "args": {...}}
     - ACTION: tool(arg1, arg2)
     """
-    import re
     import json
 
     # Strip thinking blocks
