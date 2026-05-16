@@ -67,8 +67,8 @@ def test_replace_in_dir(tmp_path):
     res = tool.replace_in_dir(".", "*.txt", "missing", "found")
     assert res == "Updated 0 file(s)."
 
-    # Handle unreadable files gracefully
-    file1.chmod(0o000)
-    res = tool.replace_in_dir(".", "*.txt", "hello", "goodbye")
-    assert "Updated 0 file(s)." in res
-    file1.chmod(0o644)
+    # Handle unreadable files gracefully using mock
+    import unittest.mock
+    with unittest.mock.patch("pathlib.Path.read_text", side_effect=Exception("mocked unreadable")):
+        res = tool.replace_in_dir(".", "*.txt", "hello", "goodbye")
+        assert "Updated 0 file(s)." in res
