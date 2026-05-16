@@ -1,4 +1,6 @@
 from unittest import mock
+from urllib.parse import urlparse
+
 
 from tools.web.youtube import YouTubeMixin
 from tools.web.search import SearchMixin
@@ -39,7 +41,8 @@ def test_youtube_search(mock_req):
     assert "https://youtube.com/watch?v=123456" in res
     mock_req().get.assert_called_once()
     args, kwargs = mock_req().get.call_args
-    assert args[0].startswith("https://api.mockduck.com")
+    assert urlparse(args[0]).netloc == "api.mockduck.com"
+
 
 @mock.patch("tools.web.search.requests_module")
 def test_web_search(mock_req):
@@ -53,7 +56,8 @@ def test_web_search(mock_req):
     assert isinstance(res, str)
     mock_req().get.assert_called_once()
     args, kwargs = mock_req().get.call_args
-    assert args[0].startswith("https://api.mockduck.com")
+    assert urlparse(args[0]).netloc == "api.mockduck.com"
+
 
 @mock.patch("tools.web.utils.requests_module")
 def test_utils_shorten(mock_req):
@@ -80,7 +84,8 @@ def test_inspect_ip(mock_req):
     
     assert "1.2.3.4" in res
     args, kwargs = mock_req().get.call_args
-    assert args[0].startswith("https://mock.ipify.org")
+    assert urlparse(args[0]).netloc == "mock.ipify.org"
+
 
 @mock.patch("tools.web.web_pick_best_link.requests")
 @mock.patch("tools.web.web_pick_best_link.load_config")
@@ -100,4 +105,5 @@ def test_web_pick_best_link(mock_load_cfg, mock_req):
     assert res == "https://example.com"
     mock_req.get.assert_called_once()
     args, kwargs = mock_req.get.call_args
-    assert args[0].startswith("https://mock.google.com")
+    assert urlparse(args[0]).netloc == "mock.google.com"
+
