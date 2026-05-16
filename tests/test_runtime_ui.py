@@ -1,7 +1,5 @@
-import pytest
-import sys
 from io import StringIO
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from core.runtime_ui import (
     Spinner,
     typewriter_print,
@@ -23,8 +21,8 @@ from core.runtime_ui import (
 def test_spinner():
     with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
         with Spinner("Testing", delay=0.01) as sp:
-            assert sp.running == True
-        assert sp.running == False
+            assert sp.running
+        assert not sp.running
         assert "Testing" in mock_stdout.getvalue()
 
 def test_typewriter_print():
@@ -73,8 +71,8 @@ def test_parse_action():
     assert parse_action("Hello world") is None
 
 def test_has_final_answer():
-    assert has_final_answer("Here is my FINAL ANSWER:") == True
-    assert has_final_answer("No answer here") == False
+    assert has_final_answer("Here is my FINAL ANSWER:")
+    assert not has_final_answer("No answer here")
 
 def test_print_utilities():
     with patch("sys.stdout", new_callable=StringIO) as mock_stdout:

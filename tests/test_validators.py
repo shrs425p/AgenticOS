@@ -1,5 +1,3 @@
-import pytest
-from pathlib import Path
 from core.validators import _normalize_path, _resolve_path, validate_tool, _arg_get
 
 def test_normalize_path():

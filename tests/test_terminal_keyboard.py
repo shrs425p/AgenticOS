@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import MagicMock, patch
 from tools.terminal.keyboard import KeyboardMixin, _combo_to_sendkeys, _combo_to_osascript
 
