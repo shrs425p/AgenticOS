@@ -79,6 +79,10 @@ def main() -> None:
             pass
 
     if "--dream" in sys.argv:
+        import logging
+        logging.basicConfig(level=logging.INFO, format="%(message)s")
+        logger = logging.getLogger("dream_cycle")
+
         # Run the Self-Improvement "Dreaming" cycle and exit
         import yaml
         base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -109,10 +113,10 @@ def main() -> None:
         except Exception:
             pass
 
-        print("\n  AgenticOS Dream Cycle")
-        print("  Analyzing past performance...\n")
+        logger.info("\n  AgenticOS Dream Cycle")
+        logger.info("  Analyzing past performance...\n")
         result = run_dream_cycle(workspace, llm_client=llm, force=True)
-        print(f"  {result}\n")
+        logger.info(f"  {result}\n")
         return
 
     from core.runtime import main as _runtime_main

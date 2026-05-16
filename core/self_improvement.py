@@ -31,6 +31,12 @@ class SelfImprovementDaemon:
 
     def should_dream(self, force: bool = False) -> bool:
         """Check if enough time has passed since the last dream cycle."""
+        # Check if today's daily dream_log exists
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        daily_log_path = self.workspace / "daily_logs" / f"dream_log_{today_str}.md"
+        if daily_log_path.exists():
+            return False
+
         if force:
             return True
         if not self.dream_marker_file.exists():
@@ -54,21 +60,17 @@ class SelfImprovementDaemon:
         4. Appends the lessons to MEMORY.md.
         """
         if not self.should_dream(force):
-            return "Dream cycle skipped (too recent)."
+            return "Dream cycle skipped (already done today)."
 
         tracking_file = self.memory_dir / "task_tracking.json"
-        if not tracking_file.exists():
-            return "No task history to analyze."
-
-        try:
-            with open(tracking_file, "r", encoding="utf-8") as f:
-                tracking = json.load(f)
-        except Exception as e:
-            return f"Error reading task history: {e}"
-
-        tasks = tracking.get("completed_tasks", [])
-        if not tasks:
-            return "No completed tasks to reflect on."
+        tasks = []
+        if tracking_file.exists():
+            try:
+                with open(tracking_file, "r", encoding="utf-8") as f:
+                    tracking = json.load(f)
+                tasks = tracking.get("completed_tasks", [])
+            except Exception as e:
+                print(f"Warning: Error reading task history: {e}")
 
         # Focus on failures and slow tasks
         failures = [t for t in tasks if not t.get("success", True)]
@@ -93,10 +95,22 @@ class SelfImprovementDaemon:
         # Generate reflections
         lessons = self._generate_reflections(unique_tasks)
         if not lessons:
-            return "Dream cycle completed but no new lessons generated."
+            # Try offline fallback mode if no normal lessons were generated
+            lessons = self._offline_fallback_scan()
+            if not lessons:
+                return "Dream cycle completed but no new lessons generated."
 
-        # Write to MEMORY.md
-        self._append_lessons(lessons)
+            # Write to MEMORY.md
+            self._append_lessons(lessons)
+
+            # Write to daily dream log with OFFLINE MODE prefix
+            self._write_daily_dream_log(lessons, prefix="OFFLINE MODE")
+        else:
+            # Write to MEMORY.md
+            self._append_lessons(lessons)
+
+            # Write to daily dream log
+            self._write_daily_dream_log(lessons)
 
         # Mark the dream as done
         self.memory_dir.mkdir(exist_ok=True)
@@ -105,6 +119,57 @@ class SelfImprovementDaemon:
         )
 
         return f"Dream cycle completed. {len(lessons)} lessons written to MEMORY.md."
+
+    def _offline_fallback_scan(self) -> List[str]:
+        """Offline mode: Scans for missing docstrings in plugins and errors in logs."""
+        findings = []
+
+        # Scan tools/plugins/ for files with no docstring
+        plugins_dir = Path("tools/plugins")
+        if plugins_dir.exists() and plugins_dir.is_dir():
+            for filepath in plugins_dir.rglob("*.py"):
+                try:
+                    content = filepath.read_text(encoding="utf-8")
+                    import ast
+                    tree = ast.parse(content)
+                    if not ast.get_docstring(tree):
+                        findings.append(f"Plugin missing docstring: {filepath.name}")
+                except Exception as e:
+                    findings.append(f"Could not parse plugin {filepath.name}: {e}")
+
+        # Scan data/logs/ for ERROR/WARNING lines
+        logs_dir = Path("data/logs")
+        if logs_dir.exists() and logs_dir.is_dir():
+            for filepath in logs_dir.rglob("*.log"):
+                try:
+                    with open(filepath, "r", encoding="utf-8") as f:
+                        for line in f:
+                            if "ERROR" in line or "WARNING" in line:
+                                findings.append(f"Log issue in {filepath.name}: {line.strip()[:100]}...")
+                except Exception:
+                    pass
+
+        return findings
+
+    def _write_daily_dream_log(self, lessons: List[str], prefix: str = "") -> None:
+        """Write lessons to the daily dream log."""
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        daily_logs_dir = self.workspace / "daily_logs"
+        daily_logs_dir.mkdir(parents=True, exist_ok=True)
+        daily_log_path = daily_logs_dir / f"dream_log_{today_str}.md"
+
+        block = f"# Dream Log {today_str}\n\n"
+        if prefix:
+            block += f"**{prefix}**\n\n"
+        for lesson in lessons:
+            block += f"- {lesson}\n"
+        block += "\n"
+
+        try:
+            with open(daily_log_path, "w", encoding="utf-8") as f:
+                f.write(block)
+        except Exception as e:
+            print(f"Warning: Failed to write daily dream log: {e}")
 
     def _generate_reflections(self, tasks: List[Dict]) -> List[str]:
         """Use LLM to reflect on past task performance."""
