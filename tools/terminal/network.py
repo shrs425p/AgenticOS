@@ -1,3 +1,4 @@
+"""Module for network.py"""
 from __future__ import annotations
 
 import socket

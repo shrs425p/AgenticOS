@@ -1,3 +1,4 @@
+"""Module for edit.py"""
 from __future__ import annotations
 
 
