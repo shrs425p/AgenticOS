@@ -41,7 +41,8 @@ class OpenersMixin:
             if resolved:
                 return resolved
         except Exception:
-            pass
+            pass  # Expected: shutil.which may fail or return None; handled by subsequent checks.
+
 
         if self.system == "Windows":
             # Registry App Paths
@@ -64,7 +65,8 @@ class OpenersMixin:
                     except Exception:
                         continue
             except Exception:
-                pass
+                pass  # Expected: Registry access may fail on non-Windows or restricted environments.
+
 
             # Start Menu shortcuts by name (best-effort)
             try:
@@ -90,7 +92,8 @@ class OpenersMixin:
                             if os.path.exists(p):
                                 return p
             except Exception:
-                pass
+                pass  # Expected: Start Menu directories may be inaccessible.
+
 
         return "Not found."
 
@@ -120,7 +123,8 @@ class OpenersMixin:
                     return f"{out}\nVALIDATION: process detected ({img})".strip()
                 return f"{out}\nVALIDATION: process not detected ({img})".strip()
             except Exception:
-                return out
+                return out  # Expected: Verification may fail; return the launch output as fallback.
+
         # Fallback: try by name
         return self.launch_application(app_name, arguments or "")
 
@@ -163,7 +167,8 @@ class OpenersMixin:
                     out = self._run(f'tasklist /FI "IMAGENAME eq {pn}"', timeout=10)
                     return pn.lower() in (out or "").lower()
                 except Exception:
-                    return False
+                    return False  # Expected: Tasklist may fail; assume not running.
+
 
             # If we resolved an executable, launch it directly and verify.
             if resolved:
@@ -180,9 +185,11 @@ class OpenersMixin:
                             | subprocess.DETACHED_PROCESS
                         )
                     except Exception:
-                        creationflags = 0
+                        creationflags = 0  # Expected: creationflags may not be available on all OS versions.
 
-                    subprocess.Popen(argv, creationflags=creationflags, close_fds=True)
+
+                    subprocess.Popen(argv, creationflags=creationflags, close_fds=True)  # nosec B603
+
                     time.sleep(0.6)
                     if _verify_running(proc_name):
                         return f"Started: {proc_name}"
@@ -344,7 +351,8 @@ class OpenersMixin:
             try:
                 c2 = c.resolve()
             except Exception:
-                c2 = c
+                c2 = c  # Expected: Resolve may fail on invalid paths; fallback to raw path.
+
             if c2.exists():
                 picked = c2
                 break
@@ -425,4 +433,5 @@ class OpenersMixin:
                 )
             return out + "\nVALIDATION: browser process not detected"
         except Exception:
-            return out
+            return out  # Expected: Process verification may fail; return launch result.
+

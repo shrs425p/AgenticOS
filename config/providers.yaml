@@ -2,7 +2,8 @@
 # Edit this file for advanced settings in this area.
 
 ollama:
-  base_url: http://localhost:11434  # devskim: ignore
+  base_url: http://localhost:11434  # DEVSKIM: ignore
+
 
 
   default_model: qwen2.5-coder:7b

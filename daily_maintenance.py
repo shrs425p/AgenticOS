@@ -7,10 +7,13 @@ from core.tool_registry import ToolRegistry
 import datetime
 import yaml
 
+import tempfile
+
 class MockApp:
     def __init__(self):
-        self.workspace_root = "/tmp"
+        self.workspace_root = tempfile.gettempdir()
         self.sys_mgr = None
+
 
 def main():
     try:

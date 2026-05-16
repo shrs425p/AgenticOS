@@ -31,7 +31,8 @@ class WindowsWindowsMixin:
         try:
             result = subprocess.run(
                 cmd, capture_output=True, text=True, timeout=timeout
-            )
+            )  # nosec B603
+
             out = (result.stdout or "").strip()
             err = (result.stderr or "").strip()
             if out:

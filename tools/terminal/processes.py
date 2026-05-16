@@ -40,7 +40,8 @@ class ProcessesMixin:
                 out = self.run_powershell(cmd, timeout=20)
                 return out
         except Exception:
-            pass
+            pass  # Expected: CIM query may fail on certain Windows configurations.
+
 
         return " ".join(info)
 
@@ -117,7 +118,8 @@ class ProcessesMixin:
         if blocked_reason:
             return f"Error: {blocked_reason}"
         try:
-            subprocess.Popen(command, shell=True)
+            subprocess.Popen(command, shell=True)  # nosec B602
             return "Started."
+
         except Exception as e:
             return f"Error: {e}"

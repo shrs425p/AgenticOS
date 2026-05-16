@@ -53,5 +53,6 @@ def parse_headers_json(headers: str) -> dict:
         if isinstance(parsed, dict):
             return parsed
     except Exception:
-        pass
+        pass  # Expected: Invalid JSON in headers string; return empty dict as fallback.
+
     return {}

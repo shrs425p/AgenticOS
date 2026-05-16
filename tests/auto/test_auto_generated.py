@@ -7,10 +7,13 @@ import subprocess
 import requests
 import shutil
 
+import tempfile
+
 class MockApp:
     def __init__(self):
-        self.workspace_root = "/tmp"
+        self.workspace_root = tempfile.gettempdir()
         self.sys_mgr = None
+
 
 @pytest.fixture
 def registry():

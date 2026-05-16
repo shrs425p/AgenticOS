@@ -69,25 +69,29 @@ class BrowserManager:
             try:
                 await self.page.close()
             except Exception:
-                pass
+                pass  # Expected: Resource cleanup may fail if already closed or not initialized.
+
             self.page = None
         if self.context:
             try:
                 await self.context.close()
             except Exception:
-                pass
+                pass  # Expected: Resource cleanup may fail if already closed or not initialized.
+
             self.context = None
         if self.browser:
             try:
                 await self.browser.close()
             except Exception:
-                pass
+                pass  # Expected: Resource cleanup may fail if already closed or not initialized.
+
             self.browser = None
         if self.pw:
             try:
                 await self.pw.stop()
             except Exception:
-                pass
+                pass  # Expected: Resource cleanup may fail if already closed or not initialized.
+
             self.pw = None
 
 
