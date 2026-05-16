@@ -52,9 +52,9 @@ class MemoryManager:
     def register_commitment(self, text: str, due_date: Optional[str] = None):
         """Register a new commitment/follow-up."""
         import secrets
-        salt = secrets.token_hex(8)
         commitment = {
-            "id": hashlib.sha256(f"{text}{datetime.now()}{salt}".encode()).hexdigest()[:8],
+            "id": secrets.token_hex(4),
+
 
             "text": text,
             "created_at": datetime.now().isoformat(),

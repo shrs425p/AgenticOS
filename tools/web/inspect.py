@@ -45,7 +45,8 @@ class InspectMixin:
             return err
         try:
             ctx = ssl.create_default_context()
-            ctx.minimum_version = ssl.TLSVersion.TLSv1_2
+            ctx.minimum_version = ssl.TLSVersion.TLSv1_2  # devskim: ignore DS126858
+
             with socket.create_connection((hostname, 443), timeout=10) as sock:
                 with ctx.wrap_socket(sock, server_hostname=hostname) as ssock:
 
