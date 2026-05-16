@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import base64
 import platform
-import subprocess  # nosec B404
+import subprocess
+
   
 
 import time
@@ -33,7 +34,8 @@ class WindowsWindowsMixin:
         try:
             result = subprocess.run(
                 cmd, capture_output=True, text=True, timeout=timeout
-            )  # nosec B603
+            )
+
 
 
             out = (result.stdout or "").strip()
