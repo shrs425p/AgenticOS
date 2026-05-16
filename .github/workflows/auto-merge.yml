@@ -4,7 +4,7 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  auto-approve-and-merge:
+  auto-merge:
     runs-on: ubuntu-latest
     if: github.actor == 'google-labs-jules' || github.actor == 'shrs425p'
     permissions:
@@ -12,9 +12,7 @@ jobs:
       contents: write
     steps:
       - name: Auto-merge and cleanup
-        run: |
-          # The --delete-branch flag tells GitHub to kill the branch as soon as it merges
-          gh pr merge --auto --squash --delete-branch "$PR_URL"
+        run: gh pr merge --auto --squash --delete-branch "$PR_URL"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
           GH_TOKEN: ${{secrets.GITHUB_TOKEN}}

@@ -4,30 +4,20 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  schedule:
-    - cron: '16 0 * * 5'
 
 jobs:
   bandit:
     permissions:
-      contents: read 
-      security-events: write 
-      actions: read 
-
+      contents: read
+      security-events: write
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Bandit Scan
         uses: shundor/python-bandit-scan@ab1d87dfccc5a0ffab88be3aaac6ffe35c10d6cd
         with:
-          # Only report issues that are Low, Medium, or High severity (hides "Notes")
           level: LOW
-          # Only report issues with Medium or High confidence
           confidence: MEDIUM
-          # Exclude test files to prevent "assert" warnings from cluttering results
           excluded_paths: "tests/*"
-          # Ensure the workflow passes even if issues are found (so your PRs don't block)
           exit_zero: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
