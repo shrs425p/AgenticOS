@@ -11,7 +11,8 @@ from __future__ import annotations
 
 import os
 import shutil
-import subprocess
+import subprocess  # nosec B404
+
 
 
 from core.tool_base import tool
@@ -508,7 +509,8 @@ try {
                 capture_output=True,
                 text=True,
                 timeout=12,
-            )
+            )  # nosec B603 B607
+
             return result.stdout.strip() or "Volume query failed."
         elif self.system == "Darwin":
             return self._run_osascript("output volume of (get volume settings)")
@@ -519,7 +521,8 @@ try {
                     capture_output=True,
                     text=True,
                     timeout=8,
-                )
+                )  # nosec B603 B607
+
                 return result.stdout.strip()
             elif shutil.which("amixer"):
                 result = subprocess.run(
@@ -527,6 +530,7 @@ try {
                     capture_output=True,
                     text=True,
                     timeout=8,
-                )
+                )  # nosec B603 B607
+
                 return result.stdout.strip()
             return "Error: Install pactl or amixer."

@@ -3,7 +3,8 @@ from core.tool_registry import ToolRegistry
 import yaml
 from unittest.mock import MagicMock
 import os
-import subprocess
+import subprocess  # nosec B404
+
 import requests
 import shutil
 

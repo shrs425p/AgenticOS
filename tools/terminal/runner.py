@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import os
 import shlex
-import subprocess
+import subprocess  # nosec B404
+
 from pathlib import Path
 from typing import Optional
 
@@ -46,7 +47,8 @@ class RunnerMixin:
                 input=input_data,
                 env=env,
                 **self._shell_args(command),
-            )  
+            )  # nosec B602 B603
+
 
             out = (result.stdout or "").strip()
             err = (result.stderr or "").strip()

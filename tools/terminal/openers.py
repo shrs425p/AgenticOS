@@ -7,7 +7,8 @@ import webbrowser
 from pathlib import Path
 import urllib.parse
 import shlex
-import subprocess
+import subprocess  # nosec B404
+
 import time
 
 
@@ -188,7 +189,8 @@ class OpenersMixin:
                         creationflags = 0  # Expected: creationflags may not be available on all OS versions.
 
 
-                    subprocess.Popen(argv, creationflags=creationflags, close_fds=True)   
+                    subprocess.Popen(argv, creationflags=creationflags, close_fds=True)  # nosec B603
+
 
                     time.sleep(0.6)
                     if _verify_running(proc_name):

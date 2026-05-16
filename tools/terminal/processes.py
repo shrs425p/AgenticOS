@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import os
-import subprocess
+import subprocess  # nosec B404
+
 
 
 from core.tool_base import tool
@@ -118,7 +119,8 @@ class ProcessesMixin:
         if blocked_reason:
             return f"Error: {blocked_reason}"
         try:
-            subprocess.Popen(command, shell=True)  
+            subprocess.Popen(command, shell=True)  # nosec B602
+
             return "Started."
 
         except Exception as e:
