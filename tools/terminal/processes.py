@@ -118,7 +118,7 @@ class ProcessesMixin:
         if blocked_reason:
             return f"Error: {blocked_reason}"
         try:
-            subprocess.Popen(command, shell=True)  # nosec B602
+            subprocess.Popen(command, shell=True)  
             return "Started."
 
         except Exception as e:

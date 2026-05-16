@@ -188,7 +188,7 @@ class OpenersMixin:
                         creationflags = 0  # Expected: creationflags may not be available on all OS versions.
 
 
-                    subprocess.Popen(argv, creationflags=creationflags, close_fds=True)  # nosec B603
+                    subprocess.Popen(argv, creationflags=creationflags, close_fds=True)   
 
                     time.sleep(0.6)
                     if _verify_running(proc_name):

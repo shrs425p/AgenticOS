@@ -46,7 +46,7 @@ class RunnerMixin:
                 input=input_data,
                 env=env,
                 **self._shell_args(command),
-            )  # nosec B602 B603
+            )  
 
             out = (result.stdout or "").strip()
             err = (result.stderr or "").strip()
