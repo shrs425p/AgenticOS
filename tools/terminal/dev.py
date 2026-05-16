@@ -1,3 +1,4 @@
+"""Module for dev.py"""
 from __future__ import annotations
 
 

@@ -1,3 +1,4 @@
+"""Module for fast_disk.py"""
 import subprocess
 import os
 from core.tool_registry import tool

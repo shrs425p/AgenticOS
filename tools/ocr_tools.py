@@ -1,3 +1,4 @@
+"""Module for ocr_tools.py"""
 import os
 import subprocess
 from pathlib import Path
