@@ -66,7 +66,8 @@ def test_utils_shorten(mock_req):
     mock_req().get.return_value = mock_resp
     
     tool = MockWebTools()
-    res = tool.shorten_url("http://long.url")
+    res = tool.shorten_url("https://long.url")
+
     
     assert res == "https://mock.is.gd/short"
     mock_req().get.assert_called_once()

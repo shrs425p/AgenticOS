@@ -62,7 +62,8 @@ def main():
             if "#" in line:
                 comment_part = line[line.find("#"):]
                 upper_comment = comment_part.upper()
-                if any(x in upper_comment for x in ["TODO", "FIXME", "HACK", "XXX"]):
+                if any(x in upper_comment for x in ["TODO", "FIXME", "HACK", "XXX"]):  # devskim: ignore DS176209
+
                     age = get_commit_age(filepath, i + 1)
                     todos.append((filepath, i + 1, comment_part, age))
 
@@ -183,7 +184,8 @@ def main():
         for fp, ln in sensitive_messages:
             f.write(f"- {fp}:{ln} - [REDACTED]\n")
 
-        f.write("\n## Old TODO/FIXME Comments (> 7 days)\n")
+        f.write("\n## Old TODO/FIXME Comments (> 7 days)\n")  # devskim: ignore DS176209
+
         # Ensure we only list old ones
         old_todos = [t for t in todos if t[3] > 7]
         for fp, ln, comment, age in old_todos:

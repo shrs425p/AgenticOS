@@ -33,8 +33,9 @@ class NetworkMixin:
         return self._run("netstat -anp", timeout=30)
 
     def wait_for_port(
-        self, port: str, host: str = "localhost", timeout: str = "10"
+        self, port: str, host: str = "localhost", timeout: str = "10"  # devskim: ignore DS137138
     ) -> str:
+
         try:
             p = int(port)
             t = float(timeout)

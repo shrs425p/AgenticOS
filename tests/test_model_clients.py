@@ -10,7 +10,8 @@ class TestModelClientsRateLimiting:
         self.cfg = {
             "performance": {"max_retries": 3, "base_retry_delay": 0.01},
             "agent": {"stream": False, "default_model": "test"},
-            "ollama": {"base_url": "http://localhost:11434", "default_model": "llama2", "timeout": 10, "temperature": 0.7, "num_ctx": 4096},
+            "ollama": {"base_url": "http://localhost:11434", "default_model": "llama2", "timeout": 10, "temperature": 0.7, "num_ctx": 4096},  # devskim: ignore DS137138
+
             "cloud": {"nvidia": {"base_url": "https://api.nvidia.com", "model": "nemotron", "timeout": 10, "temperature": 0.7, "top_p": 1.0, "max_tokens": 1000}}
         }
 
@@ -80,7 +81,8 @@ class TestModelClientsRateLimiting:
         mock_create = MagicMock()
         mock_create.side_effect = RateLimitError(
             message="Rate limit reached",
-            response=httpx.Response(429, request=httpx.Request("POST", "http://test.com")),
+            response=httpx.Response(429, request=httpx.Request("POST", "https://test.com")),
+
             body=None
         )
 
