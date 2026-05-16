@@ -4,10 +4,13 @@ import json
 import os
 import sys
 import time
+import random
+import logging
 from collections import defaultdict, deque
 
 import requests
 from core.runtime_config import BASE_DIR
+from core.exceptions import RateLimitExhausted
 from core.runtime_ui import C, Spinner
 
 
@@ -130,30 +133,49 @@ class OllamaClient:
         }
 
         full = ""
-        try:
-            with requests.post(
-                f"{self.base_url}/api/chat",
-                json=payload,
-                stream=self.stream,
-                timeout=self.timeout,
-            ) as response:
-                response.raise_for_status()
-                if self.stream:
-                    print(f"{C.GREEN}", end="", flush=True)
-                    for line in response.iter_lines():
-                        if not line:
-                            continue
-                        chunk = json.loads(line)
-                        token = chunk.get("message", {}).get("content", "")
-                        full += token
-                        print(token, end="", flush=True)
-                    print(C.RESET)
+        performance = self.cfg.get("performance", {})
+        max_retries = int(performance.get("max_retries", 5))
+        base_delay = float(performance.get("base_retry_delay", 5.0))
+
+        for attempt in range(max_retries):
+            try:
+                with requests.post(
+                    f"{self.base_url}/api/chat",
+                    json=payload,
+                    stream=self.stream,
+                    timeout=self.timeout,
+                ) as response:
+                    response.raise_for_status()
+                    if self.stream:
+                        print(f"{C.GREEN}", end="", flush=True)
+                        for line in response.iter_lines():
+                            if not line:
+                                continue
+                            chunk = json.loads(line)
+                            token = chunk.get("message", {}).get("content", "")
+                            full += token
+                            print(token, end="", flush=True)
+                        print(C.RESET)
+                    else:
+                        full = response.json().get("message", {}).get("content", "")
+                break
+            except requests.exceptions.ConnectionError as exc:
+                raise RuntimeError(
+                    f"Cannot reach Ollama at {self.base_url}. Is `ollama serve` running?"
+                ) from exc
+            except requests.exceptions.HTTPError as exc:
+                if exc.response is not None and exc.response.status_code == 429:
+                    if attempt < max_retries - 1:
+                        delay = base_delay * (2 ** attempt)
+                        delay += random.uniform(0, delay * 0.1)
+                        logging.warning(f"ollama rate limit hit (attempt {attempt + 1}). Waiting {delay:.2f}s")
+                        print(f"\n\033[93m⚠ Rate limit hit (429). Retrying in {delay:.2f} seconds...\033[0m")
+                        time.sleep(delay)
+                    else:
+                        raise RateLimitExhausted(f"Rate limit exhausted for ollama after {max_retries} retries") from exc
                 else:
-                    full = response.json().get("message", {}).get("content", "")
-        except requests.exceptions.ConnectionError as exc:
-            raise RuntimeError(
-                f"Cannot reach Ollama at {self.base_url}. Is `ollama serve` running?"
-            ) from exc
+                    raise
+
         return full
 
 
@@ -292,16 +314,22 @@ class NvidiaClient:
                 except RateLimitError as e:
                     if attempt < max_retries - 1:
                         delay = base_delay * (2 ** attempt)
-                        print(f"\n\033[93m⚠ Rate limit hit (429). Retrying in {delay} seconds...\033[0m")
+                        delay += random.uniform(0, delay * 0.1)
+                        logging.warning(f"{self.provider} rate limit hit (attempt {attempt + 1}). Waiting {delay:.2f}s")
+                        print(f"\n\033[93m⚠ Rate limit hit (429). Retrying in {delay:.2f} seconds...\033[0m")
                         time.sleep(delay)
                     else:
-                        raise e
+                        raise RateLimitExhausted(f"Rate limit exhausted for {self.provider} after {max_retries} retries") from e
                 except APIError as e:
                     if "429" in str(e) and attempt < max_retries - 1:
                         delay = base_delay * (2 ** attempt)
-                        print(f"\n\033[93m⚠ API Rate limit hit. Retrying in {delay} seconds...\033[0m")
+                        delay += random.uniform(0, delay * 0.1)
+                        logging.warning(f"{self.provider} rate limit hit (attempt {attempt + 1}). Waiting {delay:.2f}s")
+                        print(f"\n\033[93m⚠ API Rate limit hit. Retrying in {delay:.2f} seconds...\033[0m")
                         time.sleep(delay)
                     else:
+                        if "429" in str(e):
+                            raise RateLimitExhausted(f"Rate limit exhausted for {self.provider} after {max_retries} retries") from e
                         raise e
 
         extra = None
