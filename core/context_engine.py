@@ -46,7 +46,7 @@ class ContextEngine:
                 # Count children for context
                 try:
                     child_count = len(os.listdir(full_path))
-                except Exception:
+                except OSError:
                     child_count = 0
                 file_map_lines.append(f"  {entry}/  ({child_count} items)")
             elif os.path.isfile(full_path):
@@ -140,8 +140,9 @@ class ContextEngine:
                         if divider not in segment:
                             segment += divider
                         file_memory_block += segment
-            except Exception:
-                pass
+            except OSError as e:
+                from core.logger import get_logger
+                get_logger("context_engine").warning("Failed to auto-inject file %s: %s", f_name, e)
 
         return system + workspace_block + task_block + canvas_block + shadow_block + proactive_block + file_map_block + file_memory_block
 
@@ -224,8 +225,9 @@ class ContextEngine:
                         "content": f"{start_marker}{summary.strip()}{end_marker}",
                     }
                     return [compacted_msg] + to_keep
-            except Exception:
-                pass
+            except Exception as e:
+                from core.logger import get_logger
+                get_logger("context_engine").warning("LLM context compaction failed, falling back to truncation: %s", e)
 
         # Fallback: simple truncation with a marker
         fallback_tmpl = compact_cfg.get("fallback_note", "[CONTEXT NOTE: {count} messages pruned]")
