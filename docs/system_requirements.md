@@ -1,4 +1,4 @@
-# AgenticOS: System Requirements & Prerequisites
+# AgenticOS: System Requirements and Prerequisites
 
 To ensure stable, high-performance autonomous operations, your host machine must meet certain hardware and software requirements. This document outlines the minimum and recommended specifications for running AgenticOS in both local-only and cloud-hybrid modes.
 
@@ -24,7 +24,7 @@ Running high-quality local models like `qwen2.5-coder:7b` or `llama-3.1:8b` requ
 
 ---
 
-## [TOOL] Software Prerequisites
+## Software Prerequisites
 
 ### 1. Python Environment
 -   **Version**: Python 3.12 or later is strictly required.
@@ -44,20 +44,20 @@ For local-first privacy, you must install and run the Ollama service.
 
 ---
 
-## [WEB] Network Requirements
+## Network Requirements
 
 ### Connectivity
 -   **Cloud Mode**: Stable internet connection is required for Nvidia/Google/OpenAI APIs.
 -   **Local Mode**: Can run entirely offline once the models are downloaded.
 
-### Ports & Firewall
+### Ports and Firewall
 AgenticOS typically communicates over the following ports:
 -   **Port 11434**: Default port for the local Ollama API.
 -   **Port 443**: Standard HTTPS port for cloud API communication.
 
 ---
 
-## [SECURE] OS-Level Permissions
+## OS-Level Permissions
 
 AgenticOS is designed to run in a standard user context. 
 -   **Standard User**: Sufficient for 95% of tasks (File editing, Web research, Process monitoring).
@@ -66,7 +66,7 @@ AgenticOS is designed to run in a standard user context.
 
 ---
 
-## [STATS] Scaling Guidelines
+## Scaling Guidelines
 
 | Workload | Recommended Specs | Key Bottleneck |
 | :--- | :--- | :--- |
@@ -77,7 +77,7 @@ AgenticOS is designed to run in a standard user context.
 
 ---
 
-## [TEST] System Health Check
+## System Health Check
 
 You can verify if your current machine meets the requirements by asking the agent:
 > *"Run a system health check and tell me if my hardware is ready for local Ollama models."*

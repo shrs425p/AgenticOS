@@ -4,7 +4,7 @@ AgenticOS uses a high-performance, layered configuration system. Instead of a si
 
 ---
 
-## [ARCH] The `config/` Directory Structure
+## The `config/` Directory Structure
 
 The system loads and merges these files in the following order:
 
@@ -21,7 +21,7 @@ The system loads and merges these files in the following order:
 
 ---
 
-## [SYNC] Core Configuration Files
+## Core Configuration Files
 
 ### 1. `runtime.yaml` (The "Nervous System")
 Controls the basic heuristics of the agent execution loop.
@@ -49,7 +49,7 @@ Centralizes all hardcoded URLs to ensure portability.
 
 ---
 
-## [SECURE] Zero-Hardcoding Policy
+## Zero-Hardcoding Policy
 
 Developers must **never** hardcode absolute paths (e.g., `C:\`) or URLs in the Python source code. All environment-specific values must be fetched via the config system:
 
@@ -63,13 +63,13 @@ url = "https://www.google.com/search?q="
 
 ---
 
-## [STATS] Hot-Reloading
+## Hot-Reloading
 
 AgenticOS supports **Hot-Reloading**. If you modify any YAML file in the `config/` directory while the agent is running, the changes are detected and applied instantly to the next iteration without requiring a restart.
 
 ---
 
-## [LOGIC] Configuration Merging Logic
+## Configuration Merging Logic
 
 When a key is requested (e.g., `self.cfg.get("security")`), the `ConfigLoader`:
 1. Checks the merged global dictionary.

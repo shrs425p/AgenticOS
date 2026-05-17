@@ -1,10 +1,10 @@
-# AgenticOS: Deployment Scenarios & Recipes
+# AgenticOS: Deployment Scenarios and Recipes
 
 AgenticOS is a versatile framework that can be configured for a wide variety of operational roles. This document provides "Recipes" for the three most common deployment scenarios: The Isolated Researcher, The Enterprise Automator, and The High-Volume Data Analyst.
 
 ---
 
-## [SECURE] Scenario A: The Isolated Researcher (Local-Only)
+## Scenario A: The Isolated Researcher (Local-Only)
 
 **Goal**: Maximum privacy and 0% data leakage. Suitable for analyzing confidential codebases or sensitive personal data.
 
@@ -26,7 +26,7 @@ security:
 
 ---
 
-## [LAUNCH] Scenario B: The Enterprise Automator (Hybrid-Cloud)
+## Scenario B: The Enterprise Automator (Hybrid-Cloud)
 
 **Goal**: Maximum reasoning power and speed. Suitable for complex system orchestration, large-scale audits, and technical report writing.
 
@@ -48,7 +48,7 @@ autonomy:
 
 ---
 
-## [DATA] Scenario C: The High-Volume Data Analyst (Web-Focus)
+## Scenario C: The High-Volume Data Analyst (Web-Focus)
 
 **Goal**: Maximum web intelligence and data extraction. Suitable for competitive research, financial analysis, and monitoring tech trends.
 
@@ -70,7 +70,7 @@ browser:
 
 ---
 
-## [STATS] Scenario Comparison Table
+## Scenario Comparison Table
 
 | Feature | Isolated Researcher | Enterprise Automator | Data Analyst |
 | :--- | :--- | :--- | :--- |
@@ -82,7 +82,7 @@ browser:
 
 ---
 
-## [PROVEN] Selecting Your Path
+## Selecting Your Path
 
 You can switch between these scenarios instantly by modifying your `config.yaml`. AgenticOS is designed to be "Mode-Agnostic"-your tools, plugins, and workspace artifacts remain consistent regardless of which deployment path you choose.
 

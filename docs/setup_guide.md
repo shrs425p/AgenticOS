@@ -4,7 +4,7 @@ Welcome to AgenticOS! This guide will walk you through the end-to-end setup proc
 
 ---
 
-## [TOOL] Step 1: System Prerequisites
+## Step 1: System Prerequisites
 
 Before you begin, ensure your machine meets the [System Requirements](system_requirements.md).
 
@@ -15,7 +15,7 @@ Before you begin, ensure your machine meets the [System Requirements](system_req
 
 ---
 
-## [FILE] Step 2: Clone & Environment Setup
+## Step 2: Clone and Environment Setup
 
 ### Recommended Path: C:\AgenticOs
 For maximum stability and performance, we strongly recommend cloning the project into a root-level directory without spaces (e.g., `C:\AgenticOs`). This ensures that the **Fast-Path** PowerShell optimizations and terminal commands function with 100% reliability.
@@ -36,7 +36,7 @@ python -m venv venv
 
 ---
 
-## [DEP] Step 3: Install Dependencies
+## Step 3: Install Dependencies
 
 Install the core Python packages and the Playwright browser engine:
 
@@ -47,7 +47,7 @@ playwright install chromium
 
 ---
 
-## [ENV] Step 4: Configure Credentials (.env)
+## Step 4: Configure Credentials (.env)
 
 AgenticOS needs API keys to talk to cloud providers. Create a file named `.env` in the root directory:
 
@@ -69,7 +69,7 @@ OPENAI_API_KEY=your_openai_key
 Important: AgenticOS loads the `.env` file early at startup via `main.py`. The `.env` file in the repository root is the canonical source of API keys for the running agent and is applied to the process environment before provider clients and plugins initialize. If you run modules directly (for debugging or tests), some modules include a local fallback that may re-load `.env`, but for normal operation keep your `.env` file in the repo root so credentials are discovered consistently.
 ---
 
-## [CONFIG] Step 5: Runtime Configuration (`config/`)
+## Step 5: Runtime Configuration (`config/`)
 
 AgenticOS uses a layered configuration system located in the `config/` directory.
 
@@ -88,7 +88,7 @@ Review `config/policy.yaml` to ensure the **Secret Redaction Engine** and **Path
 
 ---
 
-## [LAUNCH] Step 6: Launching AgenticOS
+## Step 6: Launching AgenticOS
 
 Once everything is configured, start the agent by typing `agent` in any terminal:
 
@@ -106,7 +106,7 @@ agent
 
 ---
 
-## [TEST] Step 7: Your First Task
+## Step 7: Your First Task
 
 Try giving the agent a simple system-level task to verify it has the correct permissions:
 
@@ -120,7 +120,7 @@ The agent should:
 
 ---
 
-## [FILE] Step 8: Safety Guide
+## Step 8: Safety Guide
 
 By default, AgenticOS is in **Secure Mode**.
 -   **Security**: It will ask for permission before writing to any folder outside `workspace/`.
@@ -128,7 +128,7 @@ By default, AgenticOS is in **Secure Mode**.
 
 ---
 
-## [FILE] Project Structure
+## Project Structure
 - `core/`: The Runtime Engine, Tool Registry, Memory, and Security Guardrails.
 - `tools/`: Modular library of core tools and dynamic `plugins/`.
 - `config/`: Layered YAML configuration system.
@@ -139,7 +139,7 @@ By default, AgenticOS is in **Secure Mode**.
 
 ---
 
-## [FILE] Troubleshooting the Setup
+## Troubleshooting the Setup
 
 -   **ModuleNotFoundError**: Ensure you are inside the `venv` (`.\venv\Scripts\activate`).
 -   **API Key Error**: Double-check that your `.env` variables are correctly named and have no extra spaces.
@@ -149,7 +149,7 @@ By default, AgenticOS is in **Secure Mode**.
 
 ---
 
-## [TEST] Step 9: Running the Test Suite (Optional)
+## Step 9: Running the Test Suite (Optional)
 
 To verify your installation is 100% stable:
 
@@ -161,7 +161,7 @@ This will run the automated suite to ensure core components, filesystem tools, a
 
 ---
 
-## [END] Next Steps
+## Next Steps
 -   Read the [Architecture Deep-Dive](architecture.md).
 -   Learn how to write [Custom Plugins](tool_development.md).
 -   Explore the [Testing Guide](testing_guide.md).

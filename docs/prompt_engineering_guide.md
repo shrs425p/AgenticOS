@@ -1,24 +1,24 @@
-# AgenticOS: Prompt Engineering & Task Optimization
+# AgenticOS: Prompt Engineering and Task Optimization
 
 While AgenticOS is highly autonomous, the quality of its output depends significantly on how you structure your requests. This document provides best practices for "Prompt Engineering" within the context of an autonomous OS agent to ensure accuracy, safety, and speed.
 
 ---
 
-## [GOAL] The Anatomy of a Perfect Prompt
+## The Anatomy of a Perfect Prompt
 
 A high-performance prompt for AgenticOS should contain three elements: **Context**, **Objective**, and **Verification**.
 
-### [NO] Weak Prompt:
+### Weak Prompt:
 > *"Clean up my computer."*
 > **Result**: The agent might wander aimlessly, looking for temp files or large videos, wasting tokens.
 
-### [YES] Strong Prompt:
+### Strong Prompt:
 > *"Analyze my C:\Users\shrs\Downloads folder. Identify any .zip or .exe files older than 30 days that are larger than 500MB. Write a list of these files to 'workspace/cleanup_suggestions.md' and ask for my permission before deleting anything."*
 > **Result**: The agent has a clear directory, specific criteria, a defined output format, and a safety constraint.
 
 ---
 
-## [LOGIC] Leveraging the Reasoning Engine
+## Leveraging the Reasoning Engine
 
 AgenticOS is designed to "Think Before Acting." You can nudge this behavior to improve success rates on complex tasks.
 
@@ -34,7 +34,7 @@ For massive tasks, break them down into sub-objectives.
 
 ---
 
-## [SECURE] Avoiding Hallucination Loops
+## Avoiding Hallucination Loops
 
 Agents can sometimes get stuck in a "hallucination loop" where they guess file paths or tool arguments repeatedly.
 
@@ -45,7 +45,7 @@ Agents can sometimes get stuck in a "hallucination loop" where they guess file p
 
 ---
 
-## [FAST] Performance Prompting
+## Performance Prompting
 
 To make the agent work faster (and save on API costs):
 
@@ -59,7 +59,7 @@ Instead of one-by-one commands, give the agent a structured list.
 
 ---
 
-## [TOOL] Task-Specific Prompt Templates
+## Task-Specific Prompt Templates
 
 ### For Security Audits:
 > *"Act as a security researcher. Enumerate all auto-start programs. Cross-reference their names against a web search for known malware or adware. Flag any that look suspicious and provide a rationale."*
@@ -69,14 +69,14 @@ Instead of one-by-one commands, give the agent a structured list.
 
 ---
 
-## [FILE] Handling File Chunks
+## Handling File Chunks
 
 If you are working with a 5,000-line source file, the agent cannot read it all at once without hitting context limits.
 -   **Prompt**: *"I need to fix a bug in 'main.py' around line 1200. Read lines 1150 to 1250 and explain what the logic is doing."*
 
 ---
 
-## [TEST] Prompt Engineering Best Practices
+## Prompt Engineering Best Practices
 
 -   **Be Specific**: Use absolute paths whenever possible.
 -   **Set Boundaries**: Use "Do not..." or "Avoid..." to prevent the agent from touching sensitive data.
@@ -85,7 +85,7 @@ If you are working with a 5,000-line source file, the agent cannot read it all a
 
 ---
 
-## [END] Summary
+## Summary
 Think of the agent as a highly capable intern. The more context and structure you provide, the less likely it is to make a mistake. By combining **Specific Objectives** with **Native-Path Optimization**, you can unlock the full "Hardened" power of AgenticOS.
 
 ---

@@ -1,10 +1,10 @@
-# AgenticOS: Troubleshooting & Diagnostic Guide
+# AgenticOS: Troubleshooting and Diagnostic Guide
 
 AgenticOS is a complex system interacting with multiple APIs and the local operating system. This guide covers common errors, performance issues, and recovery strategies for high-intensity environments.
 
 ---
 
-## [STOP] Common Error Codes
+## Common Error Codes
 
 ### 1. `Error: 429 Too Many Requests`
 -   **Symptom**: The agent pauses and displays a rate-limit warning.
@@ -23,7 +23,7 @@ AgenticOS is a complex system interacting with multiple APIs and the local opera
 
 ---
 
-## [FAST] Performance Issues
+## Performance Issues
 
 ### 1. "My system is lagging when the agent scans the drive."
 -   **Cause**: The agent is using a slow Python-based recursive search (e.g., `grep_dir` on `C:\`).
@@ -42,7 +42,7 @@ AgenticOS is a complex system interacting with multiple APIs and the local opera
 
 ---
 
-## [SECURE] Security & Access Denied
+## Security and Access Denied
 
 ### 1. `PermissionError: [WinError 5] Access is denied`
 -   **Cause**: The agent is trying to modify a file that is protected or in use by another process.
@@ -56,7 +56,7 @@ AgenticOS is a complex system interacting with multiple APIs and the local opera
 
 ---
 
-## [LOGIC] Model Reasoning Issues
+## Model Reasoning Issues
 
 ### 1. "The agent is ignoring my instructions."
 -   **Cause**: System prompt fatigue or context window saturation.
@@ -70,7 +70,7 @@ AgenticOS is a complex system interacting with multiple APIs and the local opera
 
 ---
 
-## [FILE] Diagnostic Tools
+## Diagnostic Tools
 
 AgenticOS includes several built-in tools to help you diagnose its health:
 
@@ -83,7 +83,7 @@ AgenticOS includes several built-in tools to help you diagnose its health:
 
 ---
 
-## [HELP] Still Having Issues?
+## Still Having Issues?
 
 1.  **Check the Logs**: Open `agent.log` and search for `ERROR`.
 2.  **Audit the SQLite DB**: Use a tool like SQLite Browser to view the `tool_events` table in `data/memory.sqlite3`.

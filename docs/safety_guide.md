@@ -1,10 +1,10 @@
-# AgenticOS: System Harmony & Operator Guidance
+# AgenticOS: System Harmony and Operator Guidance
 
 AgenticOS is a high-performance autonomous orchestration framework. To achieve the best possible results and maintain peak system performance, it is important to follow a few core principles of "Precision Prompting" and operator-led oversight. This guide details how you can work in perfect harmony with the agent.
 
 ---
 
-## [SECURE] The Collaborative Success Model
+## The Collaborative Success Model
 
 Optimal results in AgenticOS are achieved through a partnership:
 1.  **The Project**: Provides high-speed execution, non-bypassable guardrails (PathGuard), and real-time observability.
@@ -12,7 +12,7 @@ Optimal results in AgenticOS are achieved through a partnership:
 
 ---
 
-## [FAST] The Power of Precision
+## The Power of Precision
 
 The agent's efficiency is a direct reflection of the clarity of its instructions. By providing clear, detailed goals, you ensure the agent remains focused and performs at its highest level.
 
@@ -25,7 +25,7 @@ The agent's efficiency is a direct reflection of the clarity of its instructions
 
 ---
 
-## [ARCH] Maintaining System Peak Performance
+## Maintaining System Peak Performance
 
 AgenticOS is designed to work deep within your OS to automate complex tasks. By following these guidelines, you ensure your hardware remains optimized during even the most intensive automated missions.
 
@@ -34,7 +34,7 @@ AgenticOS is designed to work deep within your OS to automate complex tasks. By 
 
 ---
 
-## [PROVEN] Operator Sovereignty
+## Operator Sovereignty
 
 By initializing AgenticOS, the user maintains ultimate sovereignty over their system's environment. This framework is a powerful tool for research and automation, and its best results are achieved when guided by an informed and engaged operator.
 
@@ -42,7 +42,7 @@ By initializing AgenticOS, the user maintains ultimate sovereignty over their sy
 
 ---
 
-## [GOAL] Best Practices for Success
+## Best Practices for Success
 
 1.  **Workspace First**: Start by running your first few missions within the `workspace/` folder to see how the agent handles file I/O.
 2.  **Guide the Process**: Keep `require_hitm_outside_workspace: true` enabled to stay involved in the agent's decision-making process.

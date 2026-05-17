@@ -1,10 +1,10 @@
-# AgenticOS: Developer Onboarding & Core Contribution
+# AgenticOS: Developer Onboarding and Core Contribution
 
 Welcome to the AgenticOS engineering team! This guide is designed to help you understand the internal architecture, coding standards, and testing procedures required to contribute to the core AgenticOS engine.
 
 ---
 
-## [CORE] The Architecture of "Thought"
+## The Architecture of "Thought"
 
 AgenticOS is built around the **Cortex Engine**. Understanding this loop is the first step to contributing.
 
@@ -16,7 +16,7 @@ AgenticOS is built around the **Cortex Engine**. Understanding this loop is the 
 
 ---
 
-## [SECURE] Coding Standards & Safety
+## Coding Standards and Safety
 
 To maintain our "Hardened" status, all core contributions must adhere to these standards:
 
@@ -41,7 +41,7 @@ subprocess.run("git status", shell=True)
 
 ---
 
-## [TEST] Testing Standards
+## Testing Standards
 
 AgenticOS enforces a high-coverage testing standard using `pytest`. Every new core feature or tool MUST be accompanied by a corresponding test in the `tests/` directory.
 
@@ -61,7 +61,7 @@ pytest tests/test_fs_read_write.py
 
 ---
 
-## [PORT] Environment Portability Standards
+## Environment Portability Standards
 
 We follow a **Zero-Hardcoding Policy**. The core engine must be 100% environment-agnostic.
 
@@ -79,7 +79,7 @@ api_url = self.cfg.get("endpoints", {}).get("github_api", "https://api.github.co
 
 ---
 
-## [PLUGIN] Adding New Capabilities
+## Adding New Capabilities
 
 Most developers should contribute by writing **Plugins**.
 1.  Create a new file in `tools/plugins/`.
@@ -89,7 +89,7 @@ Most developers should contribute by writing **Plugins**.
 
 ---
 
-## [DOC] Internal API Documentation
+## Internal API Documentation
 
 | Module | Responsibility |
 | :--- | :--- |
@@ -100,7 +100,7 @@ Most developers should contribute by writing **Plugins**.
 
 ---
 
-## [END] Onboarding Checklist
+## Onboarding Checklist
 - [ ] Read the [Architecture Manual](architecture.md).
 - [ ] Set up your local development environment using the [Setup Guide](setup_guide.md).
 - [ ] Run the full `pytest` suite.

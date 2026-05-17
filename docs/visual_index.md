@@ -1,10 +1,10 @@
-# AgenticOS: Visual Index & Flowcharts
+# AgenticOS: Visual Index and Flowcharts
 
 This document serves as a central hub for all technical diagrams and architectural flowcharts within AgenticOS. It provides a visual representation of how the agent thinks, acts, and maintains system safety.
 
 ---
 
-## [ARCH] The System Macro-Architecture
+## The System Macro-Architecture
 
 This diagram shows the high-level relationship between the user, the core orchestrator, and the host operating system.
 
@@ -27,7 +27,7 @@ graph TD
 
 ---
 
-## [LOOP] The Reasoning Cycle (Cortex Engine)
+## The Reasoning Cycle (Cortex Engine)
 
 The internal logic flow of a single agent iteration.
 
@@ -49,7 +49,7 @@ sequenceDiagram
 
 ---
 
-## [SECURE] Zone-Based Security (PathGuard)
+## Zone-Based Security (PathGuard)
 
 How AgenticOS categorizes your filesystem and enforces safety.
 
@@ -74,7 +74,7 @@ graph LR
 
 ---
 
-## [SYNC] The "Fast-Path" Optimization Flow
+## The "Fast-Path" Optimization Flow
 
 How the system switches between slow Python processing and high-speed PowerShell pipelines.
 
@@ -91,7 +91,7 @@ graph TD
 
 ---
 
-## [LOGIC] Persistent Memory Layers
+## Persistent Memory Layers
 
 The relationship between short-term context and long-term SQLite storage.
 
@@ -113,7 +113,7 @@ graph TD
 
 ---
 
-## [END] Summary
+## Summary
 These diagrams represent the "Hardened" v2.0.0 architecture. For deeper technical details on any of these components, please refer to the specific documentation files linked in the [README](../README.md).
 
 ---

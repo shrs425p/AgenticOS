@@ -1,10 +1,10 @@
-# AgenticOS: Model Integration & Provider Guide
+# AgenticOS: Model Integration and Provider Guide
 
 AgenticOS is provider-agnostic, supporting a hybrid ecosystem of local "Edge" models (Ollama) and high-performance "Cloud" models (Nvidia, Google, OpenAI). This document explains how to configure providers and how the system handles API resilience.
 
 ---
 
-## [ARCH] Supported Providers
+## Supported Providers
 
 AgenticOS natively supports the following providers through the `core/model_clients.py` interface:
 
@@ -24,7 +24,7 @@ AgenticOS natively supports the following providers through the `core/model_clie
 
 ---
 
-## [SECURE] API Resilience & The 429 Shield
+## API Resilience and The 429 Shield
 
 In production, API rate limits are a common cause of agent failure. AgenticOS centralizes exponential backoff and retry behavior in `core/retry.py` as `retry_call()`. Provider clients (for example, Nvidia and OpenAI-compatible adapters) call `retry_call()` to handle transient 429/RateLimit errors and apply jittered exponential backoff. If retries are exhausted the client will raise `RateLimitExhausted`, allowing the orchestrator to decide on fallbacks or recovery strategies.
 
@@ -44,7 +44,7 @@ performance:
 
 ---
 
-## [CONFIG] Provider Configuration Details
+## Provider Configuration Details
 
 ### Ollama Setup
 Ollama is the heart of the local-first philosophy.
@@ -69,7 +69,7 @@ cloud:
 
 ---
 
-##  Dynamic Model Switching & Fallbacks
+##  Dynamic Model Switching and Fallbacks
 
 AgenticOS supports **Self-Healing Fallbacks**. If a primary model fails to generate valid JSON or hits a persistent error, the orchestrator can automatically switch to a fallback model to complete the turn.
 
@@ -82,7 +82,7 @@ heuristics:
 
 ---
 
-## [DATA] Performance Benchmarks (Tokens/Sec)
+## Performance Benchmarks (Tokens/Sec)
 
 | Provider | Model | Latency (First Token) | Throughput |
 | :--- | :--- | :--- | :--- |
@@ -92,7 +92,7 @@ heuristics:
 
 ---
 
-## [TEST] Token Management & Context Pruning
+## Token Management and Context Pruning
 
 To keep costs low and performance high, AgenticOS implements several token-saving strategies:
 
@@ -102,7 +102,7 @@ To keep costs low and performance high, AgenticOS implements several token-savin
 
 ---
 
-## [TOOL] Troubleshooting API Issues
+## Troubleshooting API Issues
 
 ### 1. Connection Refused (Ollama)
 -   **Cause**: Ollama is not running or is bound to the wrong port.

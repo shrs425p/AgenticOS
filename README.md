@@ -1,4 +1,4 @@
-# AgenticOS - High-Performance Autonomous Framework [SECURE][LAUNCH]
+# AgenticOS: High-Performance Autonomous Framework
 
 <div align="center">
   <img src="assets/AgenticOS-Logo.png" alt="AgenticOS Banner" width="85%">
@@ -47,7 +47,7 @@
 
 ---
 
-## [PROVEN] Proven in the "Crucible" Stress Test
+## Proven in the "Crucible" Stress Test
 AgenticOS recently completed a **96-task autonomous audit** of a live Windows system.
 -   **Disk Hygiene**: Scanned 1M+ files on C:\ in < 3 minutes using native PowerShell optimization.
 -   **Security Audit**: Successfully identified 12+ suspicious scheduled tasks and non-standard firewall ports.
@@ -56,7 +56,7 @@ AgenticOS recently completed a **96-task autonomous audit** of a live Windows sy
 
 ---
 
-## [SECURE] System Harmony & Operator Sovereignty
+## System Harmony and Operator Sovereignty
 AgenticOS is a high-performance autonomous tool. Its best results are achieved through clear, precise guidance from the user.
 -   **Sovereignty**: The user maintains ultimate control over the system, providing the vision for the agent to execute.
 -   **Collaboration**: Best practices involve starting with "Autopilot: False" to fine-tune your collaborative style with the agent.
@@ -64,7 +64,7 @@ AgenticOS is a high-performance autonomous tool. Its best results are achieved t
 
 ---
 
-## [ARCH] The "Crucible" Hardened Architecture
+## The "Crucible" Hardened Architecture
 Following a massive 96-item stress test, AgenticOS v2.0.0 has been hardened for real-world production environments. It solves the core bottlenecks of traditional agents:
 -   **No-Lag Terminal UI**: Block-level rendering removes the character-by-character "typewriter lag."
 -   **Rate-Limit Shield**: Built-in exponential backoff masks all `429 Too Many Requests` errors.
@@ -80,7 +80,7 @@ Following a massive 96-item stress test, AgenticOS v2.0.0 has been hardened for 
 
 Explore the full AgenticOS manual for deep technical insights:
 
-### [LAUNCH] Getting Started & Architecture
+### Getting Started and Architecture
 *   [**Setup Guide**](docs/setup_guide.md): Step-by-step instructions for new users.
 *   [**System Architecture**](docs/architecture.md): Deep dive into the Orchestrator and Memory loops.
 *   [**Visual Index & Flowcharts**](docs/visual_index.md): Central hub for all architectural diagrams.
@@ -92,27 +92,27 @@ Explore the full AgenticOS manual for deep technical insights:
 *   [**Version History**](docs/version_history.md): Technical evolution from v1.0 to v2.0.0.
 *   [**Runtime Configuration**](docs/runtime_configuration.md): Exhaustive guide to `config.yaml`.
 
-### [TOOL] Developer & Tooling
+### Developer and Tooling
 *   [**Developer Onboarding**](docs/developer_onboarding.md): Guide for contributing to the core engine.
 *   [**Tool Development Guide**](docs/tool_development.md): Write your own plugins and optimize performance.
 *   [**API & Tool Reference**](docs/api_reference.md): Overview of the 180 tools in the registry.
 *   [**Autonomous Operations**](docs/autonomous_operations.md): How the "Agent Brain" plans and self-heals.
 *   [**Prompt Engineering Guide**](docs/prompt_engineering_guide.md): Best practices for task optimization.
 
-### [SECURE] Security & Performance
+### Security and Performance
 *   [**Security Guardrails**](docs/security_guardrails.md): PathGuard, HITM, and System Protection.
 *   [**Privacy & Data Policy**](docs/privacy_data_policy.md): Data residency and "Zero-Cloud" configuration.
 *   [**Performance Optimization**](docs/performance_optimization.md): Typewriter fixes and Fast-Disk strategies.
 *   [**Troubleshooting Guide**](docs/troubleshooting.md): Common errors, 429s, and fixes.
 
-### [WEB] Special Capabilities
+### Special Capabilities
 *   [**Web Automation & Browser**](docs/web_automation.md): Playwright, Scrapers, and Smart Downloads.
 *   [**Model Integration**](docs/model_integration.md): Configuring Ollama, Nvidia, and Cloud providers.
 *   [**User Interface (UX)**](docs/user_interface.md): Terminal aesthetics, colors, and notifications.
 
 ---
 
-## [SECURE] Core Security Features
+## Core Security Features
 
 -   **Zone-Based Guardrails**: Restrict the agent to `workspace/` (Green Zone) while enforcing Human-in-the-Middle (HITM) for user folders (Yellow Zone) and blocking system paths (Red Zone).
 -   **Command Validation**: Advanced regex blocking for dangerous patterns like `rm -rf`, `format`, or `net user`.
@@ -120,7 +120,7 @@ Explore the full AgenticOS manual for deep technical insights:
 
 ---
 
-## [FAST] High-Speed Capabilities
+## High-Speed Capabilities
 
 -   **Self-Evolution**: The agent can autonomously identify missing capabilities, `pip install` libraries, and generate new tool plugins at runtime.
 -   **Typewriter Optimization**: Optimized rendering engine ensures 100% CPU focus on the task, not the terminal.
@@ -128,7 +128,7 @@ Explore the full AgenticOS manual for deep technical insights:
 
 ---
 
-## [TOOL] Quick Start
+## Quick Start
 
 ### 1. Installation
 ```powershell
@@ -149,7 +149,7 @@ agent
 
 ---
 
-## [FILE] Project Structure
+## Project Structure
 - `core/`: The Runtime Engine, Tool Registry, Memory, and Security Guardrails.
 - `tools/`: Modular library of core tools and dynamic `plugins/`.
 - `config/`: Layered YAML configuration system (Endpoints, Policy, Runtime).
@@ -160,7 +160,7 @@ agent
 
 ---
 
-## [DOC] License
+## License
 Distributed under the Apache-2.0 License.
 
 *AgenticOS: Hardened. Autonomous. Ready.*

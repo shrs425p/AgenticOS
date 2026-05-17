@@ -17,7 +17,7 @@ Please describe the tests that you ran to verify your changes.
 - [ ] **Coverage**: Ensured coverage did not decrease (run `pytest --cov`).
 - [ ] **Manual Verification**: Verified on local machine (Windows).
 
-## Portability & Hardening
+## Portability and Hardening
 - [ ] **No Hardcoded Paths**: Confirmed no absolute paths (C:\, etc.) are in code.
 - [ ] **No Hardcoded URLs**: Confirmed all URLs are in `config/endpoints.yaml`.
 - [ ] **Secrets Redacted**: Verified no API keys or tokens are in logs or code.

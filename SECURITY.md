@@ -41,7 +41,7 @@ Inaccurate responses or "hallucinations" by the underlying LLM are not considere
 
 ---
 
-## Disclosure & Response Process
+## Disclosure and Response Process
 
 When we receive a vulnerability report, we follow a strict Coordinated Vulnerability Disclosure (CVD) process:
 

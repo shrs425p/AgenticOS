@@ -1,10 +1,10 @@
-# AgenticOS: Web Automation & Browser Intelligence
+# AgenticOS: Web Automation and Browser Intelligence
 
 AgenticOS is equipped with a powerful suite of web tools, ranging from simple static scrapers to a full-featured Playwright browser automation engine. This document explains how the agent interacts with the internet and how to configure browser environments.
 
 ---
 
-## [WEB] The Web Tool Stack
+## The Web Tool Stack
 
 AgenticOS categorizes its web capabilities into three levels of complexity:
 
@@ -13,7 +13,7 @@ AgenticOS categorizes its web capabilities into three levels of complexity:
 -   **Method**: Uses standard Python `requests` or `httpx`.
 -   **Best For**: Reading blogs, documentation, news, and Wikipedia. It is fast and uses minimal resources.
 
-### Level 2: Smart Extraction & APIs
+### Level 2: Smart Extraction and APIs
 -   **Tools**: `get_json_api`, `rss_feed`, `scrape_table`, `wayback_snapshot`.
 -   **Method**: Specialized parsers (e.g., BeautifulSoup) to extract structured data.
 -   **Best For**: Financial data, competitive research, and historical analysis.
@@ -25,7 +25,7 @@ AgenticOS categorizes its web capabilities into three levels of complexity:
 
 ---
 
-## [BOT] Browser Automation (Playwright)
+## Browser Automation (Playwright)
 
 The `browser_*` tools allow the agent to "drive" a web browser just like a human.
 
@@ -45,7 +45,7 @@ args: { "user_data_dir": "<USER_PROFILE>\\AppData\\Local\\Google\\Chrome\\User D
 
 ---
 
-## [LAUNCH] Smart Downloads & Resilience
+## Smart Downloads and Resilience
 
 Downloading files from the web can be unreliable. AgenticOS uses a "Smart Download" strategy:
 1.  **Attempt 1**: `curl` (Fastest, native).
@@ -55,7 +55,7 @@ Downloading files from the web can be unreliable. AgenticOS uses a "Smart Downlo
 
 ---
 
-## [SEARCH] Deep Intelligence Tools
+## Deep Intelligence Tools
 
 AgenticOS includes several specialized tools for web-based threat intelligence and research:
 
@@ -69,7 +69,7 @@ AgenticOS includes several specialized tools for web-based threat intelligence a
 
 ---
 
-## [SECURE] Web Safety & Privacy
+## Web Safety and Privacy
 
 To protect the user and the system, the web tools are governed by the following rules:
 -   **Confirmation**: If `require_confirm_network` is true in `config.yaml`, the agent will ask before every external request.
@@ -78,7 +78,7 @@ To protect the user and the system, the web tools are governed by the following 
 
 ---
 
-## [CONFIG] Web Configuration (`config.yaml`)
+## Web Configuration (`config.yaml`)
 
 ```yaml
 timeouts:
@@ -94,7 +94,7 @@ rules:
 
 ---
 
-## [END] Summary of Web Best Practices
+## Summary of Web Best Practices
 1.  **Search First**: Always use `web_search` before `fetch_url` to find the most accurate URL.
 2.  **Prefer Text**: Use `get_page_text` instead of `fetch_url` (raw HTML) to save model tokens.
 3.  **Screenshot for Debugging**: If the agent is stuck on a dynamic page, tell it to call `browser_screenshot` so you can see what it sees.

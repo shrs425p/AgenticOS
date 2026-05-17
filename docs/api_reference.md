@@ -1,10 +1,10 @@
-# AgenticOS: API & Tool Reference Guide
+# AgenticOS: API and Tool Reference Guide
 
 AgenticOS features a massive registry of over 180+ specialized tools. This document provides a high-level overview of the primary tool categories and their intended use cases.
 
 ---
 
-## [FILE] Filesystem Tools (`Files` Category)
+## Filesystem Tools (`Files` Category)
 
 The foundation of the agent's ability to manipulate data.
 
@@ -21,7 +21,7 @@ The foundation of the agent's ability to manipulate data.
 
 ---
 
-## [SHELL] Terminal & OS Tools (`Terminal` Category)
+## Terminal and OS Tools (`Terminal` Category)
 
 Direct interaction with the Windows Operating System.
 
@@ -41,7 +41,7 @@ Direct interaction with the Windows Operating System.
 
 ---
 
-## [WEB] Web & API Tools (`Web` Category)
+## Web and API Tools (`Web` Category)
 
 Connecting the agent to global intelligence.
 
@@ -57,7 +57,7 @@ Connecting the agent to global intelligence.
 
 ---
 
-## [BOT] Browser Automation (`Browser` Category)
+## Browser Automation (`Browser` Category)
 
 Playwright-driven interactive web navigation.
 
@@ -72,7 +72,7 @@ Playwright-driven interactive web navigation.
 
 ---
 
-## [MUSIC] Media & UI Control (`Media` Category)
+## Media and UI Control (`Media` Category)
 
 Controlling the user environment and peripherals.
 
@@ -90,7 +90,7 @@ Controlling the user environment and peripherals.
 
 ---
 
-## [LAUNCH] Performance Plugins (`Custom`)
+## Performance Plugins (`Custom`)
 
 Specialized tools added for the v2.0.0 Production hardening.
 
@@ -102,7 +102,7 @@ Specialized tools added for the v2.0.0 Production hardening.
 
 ---
 
-## [DOC] Using the Reference
+## Using the Reference
 This is a condensed list. For a full, live inventory of every tool available to your specific instance, type the following command into your terminal:
 
 ```powershell

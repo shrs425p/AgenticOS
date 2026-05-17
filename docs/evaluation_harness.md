@@ -1,10 +1,10 @@
-# AgenticOS: Evaluation Harness & Stress Testing
+# AgenticOS: Evaluation Harness and Stress Testing
 
 The "Hardened" status of AgenticOS was earned through rigorous automated testing. This document explains how the `scripts/run_eval.py` harness works, how to run your own evaluations, and how to interpret the results of the 96-task "Crucible" suite.
 
 ---
 
-## [TEST] Purpose of the Harness
+## Purpose of the Harness
 
 In autonomous agent development, small changes in the prompt or code can have catastrophic ripple effects. The Evaluation Harness serves as a **Regression Testing System** to ensure that:
 1.  **Safety Guardrails** remain non-bypassable.
@@ -13,7 +13,7 @@ In autonomous agent development, small changes in the prompt or code can have ca
 
 ---
 
-## [LAUNCH] Running an Evaluation
+## Running an Evaluation
 
 The harness is a standalone script that orchestrates the agent through a series of predefined tasks.
 
@@ -29,7 +29,7 @@ python scripts/run_eval.py
 
 ---
 
-## [PROVEN] The 96-Task "Crucible" Suite
+## The 96-Task "Crucible" Suite
 
 The `task.md` file in the project root contains the full list of production stress tests. These are divided into several categories:
 
@@ -37,17 +37,17 @@ The `task.md` file in the project root contains the full list of production stre
 -   **Objective**: Audit the host OS, check disk health, and monitor process telemetry.
 -   **Key Success**: The agent must use native PowerShell for the `C:\` drive scan to pass the performance gate.
 
-### 2. Security & Compliance (Tasks 16-30)
+### 2. Security and Compliance (Tasks 16-30)
 -   **Objective**: Audit firewall rules, check for CVEs in installed apps, and analyze event logs.
 -   **Key Success**: The agent must identify "Suspicious" items and correctly report them in Markdown.
 
-### 3. Web Research & OSINT (Tasks 31-50)
+### 3. Web Research and OSINT (Tasks 31-50)
 -   **Objective**: Perform deep web research, check SSL certs, and summarize technical documentation.
 -   **Key Success**: The agent must use the `web_search` and `fetch_url` tools effectively without getting stuck in loops.
 
 ---
 
-## [DOC] Interpreting the Logs
+## Interpreting the Logs
 
 During an evaluation, the system generates a high-fidelity mirror of the session in `evaluation_output.txt`.
 
@@ -59,7 +59,7 @@ During an evaluation, the system generates a high-fidelity mirror of the session
 
 ---
 
-## [TOOL] Adding Your Own Test Cases
+## Adding Your Own Test Cases
 
 You can expand the evaluation suite by adding new entries to `task.md`.
 
@@ -90,7 +90,7 @@ The harness produces a summary at the end of the run:
 
 ---
 
-## [CONFIG] Harness Configuration
+## Harness Configuration
 
 The harness behavior can be tuned in the `logging:` section of `config.yaml`.
 -   **`audit_enabled`**: Must be `true` to generate the session mirror.
@@ -98,7 +98,7 @@ The harness behavior can be tuned in the `logging:` section of `config.yaml`.
 
 ---
 
-## [END] Summary
+## Summary
 The Evaluation Harness is your primary tool for **Continuous Integration**. Before making a major commit to the AgenticOS core, always run a sample of the Crucible tasks to ensure no safety or performance regressions were introduced.
 
 ---

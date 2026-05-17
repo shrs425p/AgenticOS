@@ -1,10 +1,10 @@
-# AgenticOS: Privacy & Data Security Policy
+# AgenticOS: Privacy and Data Security Policy
 
 AgenticOS is built on a "Privacy-First" architecture. Unlike centralized AI assistants that process all data in the cloud, AgenticOS gives you granular control over where your data is processed and how it is stored. This document details our data handling practices and how to configure the system for maximum privacy.
 
 ---
 
-## [SECURE] The Local-First Philosophy
+## The Local-First Philosophy
 
 The core design of AgenticOS prioritizes local execution. All system interactions, file reads, and OS-level commands happen natively on your machine. No raw file contents or system logs are ever transmitted to a third party unless you explicitly choose a cloud-based model provider.
 
@@ -16,7 +16,7 @@ The core design of AgenticOS prioritizes local execution. All system interaction
 
 ---
 
-## [SYNC] Cloud vs. Local Processing
+## Cloud vs. Local Processing
 
 AgenticOS allows you to switch between model providers. Your choice of provider determines the "Data Privacy Level" of your session.
 
@@ -32,7 +32,7 @@ AgenticOS allows you to switch between model providers. Your choice of provider 
 
 ---
 
-##  Data Minimization & Redaction
+##  Data Minimization and Redaction
 
 Even when using cloud providers, AgenticOS implements "Context Pruning" to minimize the amount of data transmitted.
 
@@ -44,7 +44,7 @@ The system can be configured to scan tool outputs for common patterns (API keys,
 
 ---
 
-## [SECURE] PathGuard & Information Siloing
+## PathGuard and Information Siloing
 
 The **PathGuard** system serves as a privacy barrier. By blocking the agent from accessing directories like `C:\Windows` or `C:\Users\Admin\Documents`, we ensure that the agent cannot "casually" read sensitive files into its context window, even if it is asked to do so by a model.
 
@@ -65,7 +65,7 @@ The SQLite database (`data/memory.sqlite3`) contains a record of your interactio
 
 ---
 
-## [CONFIG] Privacy Configuration (`config.yaml`)
+## Privacy Configuration (`config.yaml`)
 
 You can harden your privacy settings using the following keys:
 
@@ -85,7 +85,7 @@ memory:
 
 ---
 
-## [TEST] Verification of Privacy
+## Verification of Privacy
 
 You can audit the agent's network activity to verify that no unauthorized data is being sent:
 1.  Run the agent in `autopilot: false` mode.
@@ -94,7 +94,7 @@ You can audit the agent's network activity to verify that no unauthorized data i
 
 ---
 
-## [END] Summary for Enterprise Users
+## Summary for Enterprise Users
 AgenticOS is designed to be **SOC2-Compliant Friendly**. By using the local SQLite backend and an air-gapped Ollama instance, you can satisfy the most stringent data residency requirements while still leveraging the power of autonomous agentic reasoning.
 
 ---

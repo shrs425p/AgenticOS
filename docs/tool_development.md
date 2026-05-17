@@ -1,10 +1,10 @@
-# AgenticOS: Tool & Plugin Development Guide
+# AgenticOS: Tool and Plugin Development Guide
 
 AgenticOS is designed to be infinitely extensible. Its power comes from its ability to integrate new capabilities through a modular plugin system. This guide explains how to develop, register, and optimize tools for the AgenticOS ecosystem.
 
 ---
 
-## [TOOL] The Anatomy of a Tool
+## The Anatomy of a Tool
 
 In AgenticOS, a tool is a Python function that is:
 1.  **Decorated** with the `@tool` decorator.
@@ -31,7 +31,7 @@ def get_weather(city: str, units: str = "metric"):
 
 ---
 
-## [PLUGIN] Developing Plugins
+## Developing Plugins
 
 Plugins are dynamic tools loaded from the `tools/plugins/` directory at runtime. This allows you to add new capabilities without modifying the core codebase.
 
@@ -48,7 +48,7 @@ AgenticOS supports **Hot-Reloading**. If `agent.hot_reload` is set to `true` in 
 
 ---
 
-## [FAST] Performance Optimization (Native vs. Python)
+## Performance Optimization (Native vs. Python)
 
 One of the most important lessons from our intensive stress tests is the **Performance Philosophy**:
 
@@ -71,7 +71,7 @@ When writing a tool that might touch the whole drive, use `subprocess` to call P
 
 ---
 
-## [BASE] The Tool Registry Interface
+## The Tool Registry Interface
 
 Your tools can interact with the core `FileManager`, `Terminal`, and `Web` classes through the `ToolRegistry`.
 
@@ -90,7 +90,7 @@ api_url = self.cfg.get("endpoints", {}).get("github_api")
 
 ---
 
-## [TEST] Tool Design Best Practices
+## Tool Design Best Practices
 
 To ensure your tools are "Agent-Friendly," follow these rules:
 
@@ -117,7 +117,7 @@ If your tool modifies the system (e.g., `create_user`), it should return a confi
 
 ---
 
-## [FILE] Category Reference
+## Category Reference
 
 Standardize your tools using these categories to help the LLM organize its thoughts:
 -   **Files**: File I/O and metadata.
@@ -129,7 +129,7 @@ Standardize your tools using these categories to help the LLM organize its thoug
 
 ---
 
-## [TOOL] Example: Creating a "Disk Audit" Plugin
+## Example: Creating a "Disk Audit" Plugin
 
 Here is a high-performance example of a performance-optimized plugin using the "Native-First" philosophy:
 
@@ -159,7 +159,7 @@ def quick_disk_audit(self, path: str = None):
 
 ---
 
-## [END] Deployment
+## Deployment
 Once your plugin is in `tools/plugins/`, run:
 ```powershell
 agent

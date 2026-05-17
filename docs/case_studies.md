@@ -1,10 +1,10 @@
-# AgenticOS: Case Studies & Evaluation Results
+# AgenticOS: Case Studies and Evaluation Results
 
 This document provides real-world examples of tasks performed during the "Crucible" production stress test. These case studies demonstrate the agent's reasoning, tool use, and performance under high-load scenarios.
 
 ---
 
-## [FILE] Case Study 1: Enterprise Disk Hygiene Audit (Task 8)
+## Case Study 1: Enterprise Disk Hygiene Audit (Task 8)
 
 ### The Challenge:
 Analyze the entire `C:\` drive to find:
@@ -28,7 +28,7 @@ Analyze the entire `C:\` drive to find:
 
 ---
 
-## [STATS] Case Study 2: Self-Monitoring & Process Profiling (Task 5)
+## Case Study 2: Self-Monitoring and Process Profiling (Task 5)
 
 ### The Challenge:
 Profile the AgenticOS process itself:
@@ -46,7 +46,7 @@ The agent autonomously generated a Python script (`profile_self.py`) using `psut
 
 ---
 
-## [SECURE] Case Study 3: Scheduled Task Security Audit (Task 6)
+## Case Study 3: Scheduled Task Security Audit (Task 6)
 
 ### The Challenge:
 Enumerate all Windows Scheduled Tasks and identify "Suspicious" entries (tasks pointing to Temp folders or non-standard paths).
@@ -63,7 +63,7 @@ The agent used `run_powershell` to fetch the task registry. It identified severa
 
 ---
 
-## [BASE] Case Study 4: Firewall Penetration Audit (Task 11)
+## Case Study 4: Firewall Penetration Audit (Task 11)
 
 ### The Challenge:
 Query Windows firewall rules for inbound traffic on non-standard ports (>1024) and research their typical service usage via the web.
@@ -73,7 +73,7 @@ The agent extracted hundreds of rules, filtered them for ports like `8080`, `330
 
 ---
 
-## [DATA] Summary of Evaluation Performance
+## Summary of Evaluation Performance
 
 | Task Category | Success Rate | Avg. Time to Complete | Key Tools Used |
 | :--- | :--- | :--- | :--- |
@@ -84,7 +84,7 @@ The agent extracted hundreds of rules, filtered them for ports like `8080`, `330
 
 ---
 
-## [END] Conclusion
+## Conclusion
 The "Crucible" test proved that AgenticOS can handle enterprise-level workloads without degrading system performance, thanks to its **Native Optimization** and **Autonomous Self-Correction** capabilities.
 
 ---

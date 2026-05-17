@@ -1,10 +1,10 @@
-# AgenticOS: User Interface & User Experience (UX)
+# AgenticOS: User Interface and User Experience (UX)
 
 AgenticOS is designed to feel like a living part of the operating system. While it primarily operates through a CLI (Command Line Interface), its UI is optimized for real-time observability, high-speed feedback, and aesthetic appeal.
 
 ---
 
-## [UI] Aesthetic Philosophy
+## Aesthetic Philosophy
 
 AgenticOS uses a "Premium Terminal" aesthetic. It avoids plain, monochromatic text in favor of a curated, harmonious color palette that helps users distinguish between the agent's thoughts, its actions, and the system's responses.
 
@@ -17,7 +17,7 @@ AgenticOS uses a "Premium Terminal" aesthetic. It avoids plain, monochromatic te
 
 ---
 
-## [FAST] The "No-Lag" Typewriter
+## The "No-Lag" Typewriter
 
 As of v2.0.0, AgenticOS features a highly optimized terminal rendering engine. We solved the "IPC Lag" issue where character-by-character printing would pin the CPU.
 
@@ -28,7 +28,7 @@ As of v2.0.0, AgenticOS features a highly optimized terminal rendering engine. W
 
 ---
 
-## [SYNC] Desktop Notifications
+## Desktop Notifications
 
 AgenticOS isn't just trapped in the terminal. It can communicate with you via native Windows notifications using the `desktop_notifications` tool.
 
@@ -39,7 +39,7 @@ AgenticOS isn't just trapped in the terminal. It can communicate with you via na
 
 ---
 
-## [DATA] Real-Time Charts & Visualization
+## Real-Time Charts and Visualization
 
 The agent can generate visual data using `matplotlib`. While these charts aren't rendered *inside* the terminal, they are saved as high-resolution `.png` files in the `workspace/` folder.
 
@@ -50,7 +50,7 @@ The agent can generate visual data using `matplotlib`. While these charts aren't
 
 ---
 
-## [INPUT] Command-Line Arguments
+## Command-Line Arguments
 
 You can control the UI behavior directly from the command line when starting the agent:
 
@@ -62,7 +62,7 @@ agent --theme dark  # (Experimental) Toggle high-contrast modes
 
 ---
 
-## [SECURE] Input Sanitization & Safety
+## Input Sanitization and Safety
 
 The UI is the primary bridge between the user and the agent. To prevent accidental inputs or command injection:
 -   **Confirmations**: Destructive actions (like `format` or `delete_dir`) are visually highlighted with a red block before asking for `y/N`.
@@ -70,7 +70,7 @@ The UI is the primary bridge between the user and the agent. To prevent accident
 
 ---
 
-## [CONFIG] UI Configuration (`config.yaml`)
+## UI Configuration (`config.yaml`)
 
 ```yaml
 agent:
@@ -90,7 +90,7 @@ logging:
 
 ---
 
-## [FILE] UI Diagnostic: The "Crucible" Test
+## UI Diagnostic: The "Crucible" Test
 
 To verify your terminal's compatibility with AgenticOS, run the UI stress test:
 ```powershell
@@ -104,7 +104,7 @@ This will test:
 
 ---
 
-## [END] Summary of UI Best Practices
+## Summary of UI Best Practices
 1.  **Keep it Focused**: If the terminal is too noisy, set `log_level: WARNING` in your config.
 2.  **Use `evaluation_output.txt`**: If you miss a message in the terminal, check this file-it's a 1:1 mirror of the session.
 3.  **Enable Notifications**: For long-running tasks (like a 30-minute web crawl), enable notifications so you can walk away from your desk.

@@ -1,10 +1,10 @@
-# AgenticOS: Autonomous Operations & Autopilot
+# AgenticOS: Autonomous Operations and Autopilot
 
 At its core, AgenticOS is not just a chatbot; it is an **Autonomous Agent**. This document explains the internal decision-making processes, the "Autopilot" mode, and how the system manages complex tasks over long periods.
 
 ---
 
-## [LOGIC] The Agent's Internal Monologue
+## The Agent's Internal Monologue
 
 AgenticOS uses a structured reasoning format to ensure consistency and reliability. Depending on the task complexity, the agent uses one of two modes:
 
@@ -48,7 +48,7 @@ Unlike simple scripts, AgenticOS maintains its state across restarts. If the sys
 
 ---
 
-## [SECURE] Expert Mode (`expert_mode: true`)
+## Expert Mode (`expert_mode: true`)
 
 For power users, `expert_mode` strips away the conversational "fluff." 
 -   **Impact**: Responses are shorter, and the agent spends more tokens on pure tool-work rather than explaining itself.
@@ -56,7 +56,7 @@ For power users, `expert_mode` strips away the conversational "fluff."
 
 ---
 
-##  Self-Healing & Fallback Logic
+##  Self-Healing and Fallback Logic
 
 One of the most advanced autonomous features is the **Self-Healing Loop**.
 
@@ -67,7 +67,7 @@ One of the most advanced autonomous features is the **Self-Healing Loop**.
 
 ---
 
-## [STATS] Planning Heuristics
+## Planning Heuristics
 
 AgenticOS uses several heuristics to ensure the plan stays on track:
 -   **Loop Detection**: If the agent repeats the exact same tool call 3 times with the same result, it triggers a "Stall Detection" and forces a replan.
@@ -75,7 +75,7 @@ AgenticOS uses several heuristics to ensure the plan stays on track:
 
 ---
 
-## [CONFIG] Configuration Reference
+## Configuration Reference
 
 ```yaml
 autonomy:
@@ -94,7 +94,7 @@ autonomy:
 
 ---
 
-## [END] Summary of Autonomous Best Practices
+## Summary of Autonomous Best Practices
 1.  **Trust the Plan**: Let the agent build its own plan; it is better at understanding its own tool dependencies.
 2.  **Monitor the Step**: If the `CURRENT_STEP` doesn't change for 3 iterations, the agent is likely stuck.
 3.  **Use Autopilot for Evaluation**: When running the 96-task suite, ensure `autopilot: true` to avoid being prompted for every step.

@@ -1,10 +1,10 @@
-# AgenticOS: Security & Guardrails Manual
+# AgenticOS: Security and Guardrails Manual
 
 Security is not an afterthought in AgenticOS; it is a foundational component of the runtime. This document outlines the multi-layered security architecture designed to prevent unauthorized system access, data exfiltration, and accidental system damage.
 
 ---
 
-## [STOP] The "Zero-Trust" Execution Model
+## The "Zero-Trust" Execution Model
 
 AgenticOS operates on a principle of least privilege. Even when running on a local machine, the agent is restricted by the `PathGuard` and a series of "Hard Guardrails" that cannot be bypassed by the model's reasoning alone.
 
@@ -40,7 +40,7 @@ The `PathGuard` system divides the host machine into three distinct security zon
 
 ---
 
-## [USER] Human-In-The-Middle (HITM)
+## Human-In-The-Middle (HITM)
 
 The HITM system is the ultimate fail-safe. When an agent attempts an operation that crosses a security threshold, the `ToolRegistry` pauses the execution and waits for a physical human response.
 
@@ -58,7 +58,7 @@ The HITM system is the ultimate fail-safe. When an agent attempts an operation t
 
 ---
 
-## [FAST] Performance Safety Gates (New in v2.0.0)
+## Performance Safety Gates (New in v2.0.0)
 
 During stress testing, we identified that agents can accidentally "attack" the host machine by performing massive recursive scans. AgenticOS now includes **Performance Guardrails** to prevent system lockups.
 
@@ -73,7 +73,7 @@ If an agent attempts to run `find_large_files` or `grep_dir` on the root `<SYSTE
 
 ---
 
-## [SHELL] Terminal & Command Validation
+## Terminal and Command Validation
 
 The `run_command` and `run_powershell` tools are the most powerful and dangerous in the registry. They are protected by a regex-based validator.
 
@@ -86,7 +86,7 @@ The `run_command` and `run_powershell` tools are the most powerful and dangerous
 
 ---
 
-## [DOC] Audit Logging & Forensic Traceability
+## Audit Logging and Forensic Traceability
 
 Every action taken by the agent is logged in `data/logs/audit.jsonl`. This file is separate from the chat logs and is intended for forensic review.
 
@@ -99,7 +99,7 @@ Every action taken by the agent is logged in `data/logs/audit.jsonl`. This file 
 
 ---
 
-## [REDACT] Secret Redaction Engine (New in v2.0.0)
+## Secret Redaction Engine (New in v2.0.0)
 
 To prevent sensitive information from leaking into session logs or persistent memory, AgenticOS includes a real-time **Secret Redaction Engine**.
 
@@ -110,7 +110,7 @@ To prevent sensitive information from leaking into session logs or persistent me
 
 ---
 
-## [CONFIG] Security Configuration (`config/policy.yaml`)
+## Security Configuration (`config/policy.yaml`)
 
 Security settings are now centralized in the `config/` directory. The primary file is `policy.yaml`:
 
@@ -135,7 +135,7 @@ redaction:
 
 ---
 
-## [SECURE] Best Practices for Developers
+## Best Practices for Developers
 1.  **Always use `_resolve()`**: When writing new tools, always resolve paths through the `FileManager` to ensure they are checked against the guardrails.
 2.  **Avoid Shell=True**: Use subprocess lists instead of raw strings to prevent shell injection.
 3.  **Fail Safely**: If a security check fails, return a clear `PermissionError` so the agent can understand it was a policy block, not a technical bug.

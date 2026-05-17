@@ -1,10 +1,10 @@
-# AgenticOS: Performance Optimization & Scaling
+# AgenticOS: Performance Optimization and Scaling
 
 AgenticOS is engineered for speed. During production stress testing, we identified and eliminated several major bottlenecks that traditionally slow down autonomous agents. This document details the optimization techniques used to achieve near-instant UI response times and high-speed system scanning.
 
 ---
 
-## [FAST] The "No-Lag" Terminal UI
+## The "No-Lag" Terminal UI
 
 The most common performance issue in terminal-based agents is "Typewriter Lag." Traditionally, agents print every character individually to simulate "thinking," which causes massive IPC (Inter-Process Communication) overhead.
 
@@ -25,7 +25,7 @@ def typewriter_print(text, style=None):
 
 ---
 
-## [LAUNCH] Native PowerShell "Fast-Path"
+## Native PowerShell "Fast-Path"
 
 Standard Python libraries like `pathlib` or `os.walk` are slow when dealing with millions of files on a Windows NTFS filesystem.
 
@@ -46,7 +46,7 @@ For heavy operations (Task 8: Disk Audit), AgenticOS automatically bypasses Pyth
 
 ---
 
-## [LOGIC] Memory & Context Optimization
+## Memory and Context Optimization
 
 LLM context windows are precious. AgenticOS uses several heuristics to minimize memory bloat.
 
@@ -60,7 +60,7 @@ By moving from JSON to SQLite (`session_memory_sqlite.py`), the system can handl
 
 ---
 
-## [SECURE] API Resilience & Backoff
+## API Resilience and Backoff
 
 Network latency and rate limits (429s) can stall an agent. AgenticOS centralizes retry/backoff logic in `core/retry.py` and exposes a `retry_call()` helper that provider clients use to handle transient failures. The helper implements exponential backoff with configurable jitter and a maximum retry limit. If retries are exhausted, clients raise `RateLimitExhausted` so the orchestrator can trigger fallbacks or user-facing errors.
 
@@ -77,7 +77,7 @@ Example behaviour (conceptual):
 
 ---
 
-## [TOOL] Performance Configuration Reference
+## Performance Configuration Reference
 
 Adjust these values in `config.yaml` to scale the performance based on your hardware:
 
@@ -102,7 +102,7 @@ performance:
 
 ---
 
-## [FILE] Benchmarking Your System
+## Benchmarking Your System
 
 You can run the built-in performance suite to measure your local optimization levels:
 ```powershell
@@ -115,7 +115,7 @@ This will generate a `self-monitoring chart` showing:
 
 ---
 
-## [END] Summary of Best Practices
+## Summary of Best Practices
 -   **Prefer Native Tools**: For drive-wide operations, always use a PowerShell plugin.
 -   **Batch Operations**: Avoid calling `read_file` 10 times in a row; use a single `grep_dir` or custom script.
 -   **Monitor `agent.log`**: Check for `VERBOSE` or `DEBUG` lines to identify slow-running tools.

@@ -2,7 +2,7 @@
 
 AgenticOS is a secure, autonomous agentic framework designed for high-performance local and cloud-based operations. This document provides a deep dive into the internal mechanics, orchestration loop, and modular design of the system.
 
-## [ARCH] Core Philosophy
+## Core Philosophy
 The architecture is built on four pillars:
 1.  **Autonomy**: The agent should handle ambiguity and recover from errors without human intervention.
 2.  **Safety**: A multi-layered guardrail system protects the host OS from destructive actions.
@@ -11,7 +11,7 @@ The architecture is built on four pillars:
 
 ---
 
-## [SYNC] High-Level Component Overview
+## High-Level Component Overview
 
 ```mermaid
 graph TD
@@ -35,7 +35,7 @@ graph TD
 
 ---
 
-## [LOOP] The Orchestration Loop (Execution Cycle)
+## The Orchestration Loop (Execution Cycle)
 
 AgenticOS follows a strict, iterative "Replan-Act-Verify" loop managed by `core/runtime.py`.
 
@@ -62,14 +62,14 @@ When the model generates an `ACTION` block, the `ToolRegistry` intercepts it.
 -   **Security Check**: The `PathGuard` evaluates any filesystem paths against the Zone-Based security policy.
 -   **Dispatch**: If allowed, the tool is executed natively (Python, PowerShell, or Bash).
 
-### 4. Observation & Self-Healing
+### 4. Observation and Self-Healing
 The tool output (the `OBSERVATION`) is fed back into the model. If a tool fails (e.g., "File not found"), the `Self-Healing` logic kicks in:
 -   **Auto-Correction**: The agent identifies the error and attempts a different approach (e.g., searching for the file instead of guessing the path).
 -   **Fallback Models**: If the primary model generates invalid JSON, the orchestrator can transparently retry with a secondary, more structured model.
 
 ---
 
-## [LOGIC] Memory Management (Long-Term & Short-Term)
+## Memory Management (Long-Term and Short-Term)
 
 ### SQLite Backend
 Unlike standard chatbots, AgenticOS uses a persistent SQLite database (`data/memory.sqlite3`) to track:
@@ -82,7 +82,7 @@ To prevent context window bloat, the agent automatically summarizes the history 
 
 ---
 
-## [TOOL] Tool Registry & Plugin Architecture
+## Tool Registry and Plugin Architecture
 
 The registry (`core/tool_registry.py`) is the brain of the agent's capabilities. It manages over 180+ tools across several categories.
 
@@ -100,7 +100,7 @@ One of the most advanced components of the architecture is the **Fast-Path** opt
 
 ---
 
-## [SECURE] Security & PathGuard
+## Security and PathGuard
 
 The architecture enforces a "Zero Trust" model for the local system.
 -   **Green Zone (Workspace)**: Full autonomous access for read/write/delete.
@@ -110,7 +110,7 @@ The architecture enforces a "Zero Trust" model for the local system.
 
 ---
 
-## [STATS] Performance Characteristics
+## Performance Characteristics
 
 | Metric | Target | Real-World Performance |
 | :--- | :--- | :--- |
@@ -131,7 +131,7 @@ The architecture enforces a "Zero Trust" model for the local system.
 
 ---
 
-## [TEST] Hardening & Resilience Checklist
+## Hardening and Resilience Checklist
 Before deploying AgenticOS in an enterprise environment, ensure the following:
 - [ ] `autopilot` is enabled for non-blocking runs.
 - [ ] `sqlite` backend is active for persistent artifact tracking.

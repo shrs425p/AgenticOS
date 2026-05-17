@@ -1,10 +1,10 @@
-# AgenticOS: Testing & Quality Assurance Guide
+# AgenticOS: Testing and Quality Assurance Guide
 
 AgenticOS uses a robust, high-coverage testing framework built on `pytest`. To maintain the stability and security of the system, all core logic and tool interactions must be validated through automated tests.
 
 ---
 
-## [ARCH] Testing Philosophy
+## Testing Philosophy
 
 Our testing strategy follows the **"Isolated Simulation"** model:
 1.  **Safety**: Tests must never modify the real host system. Use temporary directories and mocks.
@@ -14,7 +14,7 @@ Our testing strategy follows the **"Isolated Simulation"** model:
 
 ---
 
-## [SYNC] The `tests/` Directory Structure
+## The `tests/` Directory Structure
 
 | File | Scope | Key Features |
 | :--- | :--- | :--- |
@@ -26,7 +26,7 @@ Our testing strategy follows the **"Isolated Simulation"** model:
 
 ---
 
-## [TOOL] Running the Test Suite
+## Running the Test Suite
 
 ### Basic Execution
 ```powershell
@@ -48,7 +48,7 @@ pytest --cov=core --cov=tools --cov-report=term-missing
 
 ---
 
-## [SECURE] Mocking Strategies
+## Mocking Strategies
 
 ### 1. Filesystem Mocking (`tmp_path`)
 Always use the built-in `tmp_path` fixture to avoid touching the real disk.
@@ -71,7 +71,7 @@ def test_fetch_url(mock_get):
 
 ---
 
-## [STATS] CI/CD Integration
+## CI/CD Integration
 
 The test suite is automatically executed on every push to GitHub via `.github/workflows/ci.yml`.
 - **Enforcement**: Pull Requests will be blocked if any test fails or if coverage drops significantly.
@@ -79,7 +79,7 @@ The test suite is automatically executed on every push to GitHub via `.github/wo
 
 ---
 
-## [END] Contributing New Tests
+## Contributing New Tests
 
 When adding a new tool:
 1. Create a corresponding file in `tests/`.

@@ -1,4 +1,4 @@
-# AgenticOS: Version History & Evolution
+# AgenticOS: Version History and Evolution
 
 This document tracks the technical evolution of AgenticOS from its initial prototype to the current secure framework. Each major version represents a significant leap in safety, performance, and autonomous reasoning.
 
@@ -6,7 +6,7 @@ This document tracks the technical evolution of AgenticOS from its initial proto
 
 ---
 
-## [LAUNCH] v2.0.0 - The "Portable & Resilient" Edition (Current)
+## v2.0.0 - The "Portable and Resilient" Edition (Current)
 *Release Date: 2026-05-15*
 
 The v2.0.0 release focuses on decoupling AgenticOS from the host environment and establishing a professional-grade testing framework.
@@ -20,7 +20,7 @@ The v2.0.0 release focuses on decoupling AgenticOS from the host environment and
 
 ---
 
-## [PROVEN] v2.0 - The "Hardened" Edition
+## v2.0 - The "Hardened" Edition
 *Release Date: 2026-05-14*
 
 The v2.0 release focuses on transforming AgenticOS into a resilient system capable of handling enterprise-scale tasks with minimal resource impact and maximum security.
@@ -38,7 +38,7 @@ The v2.0 release focuses on transforming AgenticOS into a resilient system capab
 
 ---
 
-## [ARCH] v1.5 - The Modular Refactor
+## v1.5 - The Modular Refactor
 *Release Date: 2026-04-20*
 
 This version moved the system away from a single-file script toward a modular, scalable architecture.
@@ -51,7 +51,7 @@ This version moved the system away from a single-file script toward a modular, s
 
 ---
 
-## [BASE] v1.0 - The Autonomous Prototype
+## v1.0 - The Autonomous Prototype
 *Release Date: 2026-03-05*
 
 The initial proof-of-concept for an agent that could interact directly with the Windows Operating System.
@@ -68,7 +68,7 @@ The initial proof-of-concept for an agent that could interact directly with the 
 
 ---
 
-## [NAV] The Future Roadmap (v3.0 and Beyond)
+## The Future Roadmap (v3.0 and Beyond)
 
 The next phase of AgenticOS development will focus on multi-agent collaboration and advanced visual reasoning.
 

@@ -3,7 +3,7 @@
 ### New Features
 - Daily maintenance plugins framework for scheduled automated tasks and monitoring.
 
-### Dependencies & Updates
+### Dependencies and Updates
 - Updated `lxml` from >=4.9.0 to >=6.1.0 for improved XML/HTML parsing performance.
 - Updated `numpy` from >=1.24.0 to >=2.4.5 for enhanced numerical computing capabilities.
 - Updated `playwright` from >=1.43.0 to >=1.59.0 for latest browser automation features.
@@ -20,11 +20,11 @@
 - Silently suppress duplicate tool registration console logs in `core/tool_registry.py` to keep boot output clean.
 - Fix async mock behaviors in `tests/test_web_browser.py` to properly handle `AsyncMock` context engines.
 
-### Infrastructure & Operations
+### Infrastructure and Operations
 - Increase Dependabot's open pull request limit to 15 in `.github/dependabot.yml` to permit concurrent security and version updates.
 - Fully align all developer guides and user manuals (`docs/user_interface.md`, `docs/tool_development.md`) to run the standard `agent` launcher globally instead of the legacy `python main.py` command.
 
-### Maintenance & Refactors
+### Maintenance and Refactors
 - Add `core/retry.py` and migrate provider clients to use a centralized `retry_call()` helper for exponential backoff and jittered retries.
 - Centralize `.env` loading in `main.py` (the `.env` file in the repo root is now the canonical credentials source); modules include a fallback for direct runs.
 - Namespaced plugin imports under `tools.plugins.<module>` and updated `ToolRegistry` to register top-level `@tool` callables, improving hot-reload and test patchability.
