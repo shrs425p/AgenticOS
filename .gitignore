@@ -3,10 +3,9 @@ evaluation_output.txt
 evaluation_log.txt
 *.log
 agent.log
-data/logs/
+data/
 scratch/
-data/cache/
-data/memory.sqlite3*
+changes_diff/
 
 # Workspace generated files
 workspace/
@@ -20,15 +19,27 @@ Thumbs.db
 tmp/
 venv/
 .env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
 *.pyc
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
+.pytype/
+.ipynb_checkpoints/
 .coverage
 htmlcov/
 coverage.xml
 cov.json
 coverage_report.txt
 .hypothesis/
+
+# Node / NPM dependencies
+node_modules/
+.npm/
 
 # Python Build & Distribution
 __pycache__/
