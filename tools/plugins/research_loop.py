@@ -3,7 +3,6 @@ import datetime
 import json
 from pathlib import Path
 from core.tool_registry import tool
-import importlib
 from tools.web import WebTools  # noqa: F401
 
 @tool(name="research_loop", desc="Runs a multi-round research loop on a topic.", category="Research")
@@ -29,8 +28,7 @@ def research_loop(topic: str, rounds: str = "3") -> str:
 
     # Resolve WebTools from this module's attribute so tests that patch
     # "tools.plugins.research_loop.WebTools" reliably replace the class.
-    mod = importlib.import_module(__name__)
-    web_tools_cls = getattr(mod, "WebTools", None)
+    web_tools_cls = globals().get("WebTools")
     if web_tools_cls is None:
         from tools.web import WebTools as web_tools_cls
     web_tools = web_tools_cls()
