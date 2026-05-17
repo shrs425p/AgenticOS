@@ -42,7 +42,7 @@ def test_read_process_write_chain(registry):
 def test_run_command_to_parse_chain(registry):
     # run_command -> capture_output -> parse_result
 
-    cmd_res = registry.call("run_command", {"command": "echo 'chain test'"})
+    cmd_res = registry.call("run_command", {"command": "echo chain test"})
     assert "chain test" in cmd_res
 
     parsed = cmd_res.strip().split()

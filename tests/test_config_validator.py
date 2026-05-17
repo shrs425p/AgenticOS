@@ -2,7 +2,7 @@ import pytest
 import yaml
 import datetime
 from pathlib import Path
-from tools.plugins.config_validator import validate_config
+from tools.plugins.validate_config_tool import validate_config
 
 @pytest.fixture
 def mock_fs(tmp_path, monkeypatch):
@@ -35,7 +35,7 @@ def mock_fs(tmp_path, monkeypatch):
                     return original_path(str(workspace_dir))
             return original_path(*args, **kwargs)
 
-    monkeypatch.setattr("tools.plugins.config_validator.Path", MockPath)
+    monkeypatch.setattr("tools.plugins.validate_config_tool.Path", MockPath)
 
     return root_dir, config_dir, workspace_dir, logs_dir
 
@@ -157,7 +157,7 @@ def test_validate_config_non_writable_workspace(mock_fs, monkeypatch):
     # Define a custom Path object instead of modifying __class__ on PosixPath
     class FailingPath(type(Path())):
         def touch(self, *args, **kwargs):
-            if "/root/forbidden/path" in str(self):
+            if "forbidden" in str(self).replace("\\", "/"):
                 raise PermissionError("Permission denied")
             super().touch(*args, **kwargs)
 
@@ -177,7 +177,7 @@ def test_validate_config_non_writable_workspace(mock_fs, monkeypatch):
                  return original_path(str(logs_dir))
             return original_path(*args, **kwargs)
 
-    monkeypatch.setattr("tools.plugins.config_validator.Path", MockPathWriteFail)
+    monkeypatch.setattr("tools.plugins.validate_config_tool.Path", MockPathWriteFail)
 
     res = validate_config()
     assert res["agent.workspace"] == "not_writable"

@@ -74,3 +74,59 @@ def test_insert_line(tmp_path):
     lines = (tmp_path / "test.txt").read_text().splitlines()
     assert lines[1] == "inserted line"
     assert len(lines) == 3
+
+def test_read_file_paging(tmp_path):
+    f = tmp_path / "test.txt"
+    f.write_text("1\n2\n3\n4\n5\n")
+    
+    tool = MockFileSystemTools(tmp_path)
+    
+    # start_line non-zero, num_lines zero
+    res1 = tool.read_file("test.txt", start_line=2)
+    assert res1 == "3\n4\n5\n"
+    
+    # start_line non-zero, num_lines non-zero
+    res2 = tool.read_file("test.txt", start_line=1, num_lines=2)
+    assert res2 == "2\n3\n"
+
+def test_read_head_and_tail(tmp_path):
+    f = tmp_path / "test.txt"
+    f.write_text("1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n")
+    
+    tool = MockFileSystemTools(tmp_path)
+    
+    # Default head
+    res_head = tool.read_head("test.txt")
+    assert res_head == "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n"
+    
+    # Custom head count
+    res_head_custom = tool.read_head("test.txt", "3")
+    assert res_head_custom == "1\n2\n3\n"
+    
+    # Default tail
+    res_tail = tool.read_tail("test.txt")
+    assert res_tail == "2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n"
+    
+    # Custom tail count
+    res_tail_custom = tool.read_tail("test.txt", "2")
+    assert res_tail_custom == "10\n11\n"
+
+def test_read_write_errors(tmp_path):
+    tool = MockFileSystemTools(tmp_path)
+    
+    # 1. Read file error (nonexistent file)
+    assert "Error reading file:" in tool.read_file("nonexistent.txt")
+    
+    # 2. Write file error (invalid path / directory permissions)
+    # We pass an empty path or directory path to write
+    assert "Error writing file:" in tool.write_file("", "content")
+    
+    # 3. Append file error
+    assert "Error appending:" in tool.append_file("", "content")
+    
+    # 4. Read head error (invalid count format)
+    assert "Error:" in tool.read_head("nonexistent.txt", "invalid")
+    
+    # 5. Read tail error (nonexistent file)
+    assert "Error:" in tool.read_tail("nonexistent.txt")
+

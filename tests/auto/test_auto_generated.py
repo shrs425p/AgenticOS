@@ -30,6 +30,7 @@ def registry():
 
 @pytest.fixture(autouse=True)
 def mock_external_calls(monkeypatch):
+    import webbrowser
     monkeypatch.setattr(os, "system", MagicMock(return_value=0))
     monkeypatch.setattr(subprocess, "run", MagicMock())
     monkeypatch.setattr(requests, "get", MagicMock())
@@ -37,6 +38,10 @@ def mock_external_calls(monkeypatch):
     monkeypatch.setattr(shutil, "rmtree", MagicMock())
     monkeypatch.setattr(os, "remove", MagicMock())
     monkeypatch.setattr(os, "makedirs", MagicMock())
+    monkeypatch.setattr(os, "_exit", MagicMock())
+    monkeypatch.setattr(webbrowser, "open", MagicMock())
+    if hasattr(os, "startfile"):
+        monkeypatch.setattr(os, "startfile", MagicMock())
 def test_append_file_auto(registry, monkeypatch):
     res = registry.call('append_file', ["dummy", "dummy", "dummy"])
     assert res is not None
