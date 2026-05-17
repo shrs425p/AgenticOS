@@ -110,6 +110,23 @@ To prevent sensitive information from leaking into session logs or persistent me
 
 ---
 
+## Next-Generation Threat Intel & Auditing Plugins (New in v2.1.0)
+
+To achieve maximum protection when interacting with foreign codebases or untrusted remote endpoints, AgenticOS integrates two core security and sandbox audit systems:
+
+### 🛡️ 1. Cryptographic SSL & WHOIS Threat Scorer (`url_safety_check`)
+Before communicating with external domains, the agent can trigger cryptographic and metadata heuristics:
+- **Peer Handshake Checking**: Probes the destination server to extract and verify the peer SSL certificate lifecycle, ensuring against expired or self-signed man-in-the-middle attacks.
+- **Port 43 WHOIS Registrar Audits**: Establishes raw socket connections to top-level domain registries to parse registration age and check for newly-registered domains (often indicative of high-risk phishing activity).
+- **Risk Grading Engine**: Computes a secure compound threat index (0 to 10) mapping certificate trust, domain age, and HTTPS protocols.
+
+### 💻 2. Dynamic Sandbox Auditing (`os_sandbox_auditor`)
+Ensures full visibility into local sandboxing barriers:
+- **Runtime Discovery**: Probes and lists compiler paths to ensure the environment is constrained.
+- **GUI Process Scanner**: Scans open GUI window handles to check for unauthorized administrative overlays or keyloggers on the desktop, returning process mappings cross-platform.
+
+---
+
 ## Security Configuration (`config/policy.yaml`)
 
 Security settings are now centralized in the `config/` directory. The primary file is `policy.yaml`:

@@ -32,6 +32,7 @@ Direct interaction with the Windows Operating System.
 | `process_list` | `filter_str` | Lists all running processes with PID and RAM. |
 | `kill_process` | `pid` | Terminates a process (Subject to Guardrails). |
 | `system_health` | `none` | Real-time CPU/RAM/Disk diagnostic. |
+| `get_system_telemetry` | `none` | High-fidelity CPU core, Virtual Memory, Disk space, and Network Bandwidth byte query. |
 | `installed_apps` | `filter_str` | Lists software registered in the Windows Registry. |
 | `service_list` | `filter_str` | Lists Windows services and their status. |
 | `eventlog_query` | `log_name`, `query`, `n` | **Cross-Platform**: Queries Windows Event Logs or Unix journalctl logs. |
@@ -99,6 +100,12 @@ Specialized tools added for the v2.0.0 Production hardening.
 | `find_large_files` | `path`, `min_mb` | Find large files. |
 | `plugin_health_check` | None | Run plugin health check. |
 | `generate_session_summary` | None | Generates a daily session summary from logs. |
+| `diff_summarizer` | `str1`, `str2` | Compiles plain-English summaries of text deltas. |
+| `url_safety_check` | `url` | Conducts WHOIS lookups, cryptographic SSL handshakes, and rates risk. |
+| `os_sandbox_auditor` | None | Queries PATH runtimes/compilers and maps open desktop windows. |
+| `check_package_managers`| None | Diagnostics of system managers (`winget`, `choco`, `brew`, `apt`). |
+| `install_system_package`| `package_name`| Installs system software packages autonomously. |
+| `code_complexity` | `file_path` | Computes python AST cyclomatic complexity using Radon. |
 
 ---
 

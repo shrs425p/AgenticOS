@@ -23,6 +23,11 @@ Our testing strategy follows the **"Isolated Simulation"** model:
 | `test_guardrails.py`| Security Logic | Validates `PathGuard` and secret redaction. |
 | `test_runtime.py`   | Core Engine | Tests the orchestration loop with a mock LLM. |
 | `test_plugins.py`   | Dynamic Loading | Verifies plugin registration and hot-reload. |
+| `test_diff_summarizer.py`| Plain Diff Summary | Offline mocks line addition/deletion delta checks. |
+| `test_url_safety_check.py`| WHOIS/SSL Security | Mock handshakes and WHOIS sockets offline. |
+| `test_os_sandbox_auditor.py`| Sandbox Runtimes | Mocks CLI subprocesses and platform system layers. |
+| `test_sys_package_installer.py`| Package Managers | Mock cross-platform installer execution sequences. |
+| `test_code_complexity.py`| Radon AST Complexity| Mock visitor node traversal and grading offline. |
 
 ---
 
