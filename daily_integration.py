@@ -226,7 +226,7 @@ def generate_markdown_report(results, failed_tools, error_recovery_pass, chain_r
     report_lines.append("")
 
     if flags:
-        report_lines.append("## ⚠️ Regression Flags")
+        report_lines.append("## ⚠ Regression Flags")
         for f in flags:
             report_lines.append(f"- {f}")
         report_lines.append("")

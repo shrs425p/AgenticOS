@@ -1072,7 +1072,7 @@ class CLI:
 
     def handle_security_confirmation(self, path: str, operation: str) -> bool:
         """Confirm action with user (CLI implementation)."""
-        print("\n\033[91m🛑 SECURITY GUARDRAIL\033[0m")
+        print("\n\033[91m⚠ STOP — SECURITY GUARDRAIL\033[0m")
         print(
             f"The agent is attempting a \033[1m{operation.upper()}\033[0m action outside the workspace."
         )

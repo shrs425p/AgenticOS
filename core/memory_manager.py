@@ -428,7 +428,7 @@ class MemoryManager:
         
         # Generate new content section
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        new_section = f"\n## 📝 Memory Consolidation - {timestamp}\n\n"
+        new_section = f"\n## ▪ SAVE — Memory Consolidation - {timestamp}\n\n"
         
         # Add insights
         if insights:
@@ -449,7 +449,7 @@ class MemoryManager:
         # Add notable recent tasks
         new_section += "**Notable Recent Tasks:**\n"
         for i, task in enumerate(recent_tasks[-5:], 1):  # Last 5 tasks
-            status = "✅" if task.get("success") else "❌"
+            status = "✓" if task.get("success") else "✗"
             goal = task.get("goal", "Unknown goal")[:100]
             new_section += f"{i}. {status} {goal}...\n"
         
