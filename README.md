@@ -19,7 +19,7 @@
     <img src="https://img.shields.io/badge/license-Apache_2.0-red?style=flat-square" alt="License">
     <img src="https://img.shields.io/badge/tools-180-green?style=flat-square" alt="Tools">
     <img src="https://img.shields.io/badge/tests-387_passed-brightgreen?style=flat-square" alt="Tests">
-    [![Coverage](https://codecov.io/gh/shrs425p/AgenticOS/branch/main/graph/badge.svg)](https://codecov.io/gh/shrs425p/AgenticOS)
+    <a href="https://codecov.io/gh/shrs425p/AgenticOS"><img src="https://codecov.io/gh/shrs425p/AgenticOS/branch/main/graph/badge.svg" alt="Coverage"></a>
   </p>
   
   <p>
