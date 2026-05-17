@@ -22,7 +22,7 @@ jobs:
 
       - name: Run AI inference on issue
         id: inference
-        uses: actions/ai-inference@v1
+        uses: actions/ai-inference@v2
         with:
           system-prompt: |
             You are a helpful assistant that summarizes GitHub issues for the AgenticOS project.
@@ -64,7 +64,7 @@ jobs:
 
       - name: Run AI inference on PR
         id: inference
-        uses: actions/ai-inference@v1
+        uses: actions/ai-inference@v2
         with:
           system-prompt: |
             You are a helpful assistant that summarizes GitHub pull requests for the AgenticOS project.
