@@ -5,18 +5,17 @@ from __future__ import annotations
 from core.tool_base import tool
 class SystemAdminMixin:
     # ---- Windows Event Logs ----
+    @tool(name="eventlog_query", desc="Query system event logs (Windows Event Log or Linux journalctl). Args: log_name(optional), query(optional), n(optional)", category="Terminal")
     def eventlog_query(
         self, log_name: str = "System", query: str = "", n: str = "50"
     ) -> str:
-        """Query Windows Event Log using PowerShell (best-effort).
+        """Query system event logs (Windows Event Log or Linux journalctl).
 
         Args:
-            log_name: e.g. System, Application, Security
-            query: optional substring filter on message/provider/id (best-effort)
+            log_name: Windows Event Log name (e.g. System, Application, Security) (ignored on Linux)
+            query: optional substring filter on message/provider/id
             n: max events to return
         """
-        if self.system != "Windows":
-            return "Error: eventlog_query is Windows-only."
         try:
             limit = int(n)
         except Exception:
@@ -24,8 +23,16 @@ class SystemAdminMixin:
         limit = max(1, min(limit, 500))
 
         q = (query or "").strip().replace('"', "'")
-        ln = (log_name or "System").strip().replace('"', "")
 
+        if self.system != "Windows":
+            # Unix/Linux journalctl implementation
+            cmd = f"journalctl -n {limit} --no-pager"
+            if q:
+                cmd += f" | grep -i {self._quote_arg(q)}"
+            return self._run(cmd, timeout=self._get_timeout("system_admin", 30))
+
+        # Windows Event Log implementation
+        ln = (log_name or "System").strip().replace('"', "")
         if q:
             ps = (
                 f'$ev=Get-WinEvent -LogName "{ln}" -MaxEvents {limit} | '
@@ -140,6 +147,7 @@ class SystemAdminMixin:
             timeout=self._get_timeout("system_admin", 30),
         )
 
+    @tool(name="scheduled_task_create_daily", desc="Create a daily scheduled task (Windows only). Args: task_name, command, time_hhmm(optional)", category="Terminal")
     def scheduled_task_create_daily(
         self, task_name: str, command: str, time_hhmm: str = "09:00"
     ) -> str:
@@ -157,3 +165,33 @@ class SystemAdminMixin:
             f'schtasks /Create /F /SC DAILY /TN "{name}" /TR "{cmd}" /ST {t}',
             timeout=self._get_timeout("system_admin", 30),
         )
+
+    @tool(name="firewall_rules_list", desc="List firewall rules for security compliance audits. Args: filter_str(optional)", category="Terminal")
+    def firewall_rules_list(self, filter_str: str = "") -> str:
+        """List active firewall rules.
+
+        Args:
+            filter_str: optional substring filter on rule name/display name
+        """
+        flt = (filter_str or "").strip()
+        if self.system == "Windows":
+            ps = "Get-NetFirewallRule | Select-Object Name,DisplayName,Enabled,Profile,Action,Direction"
+            if flt:
+                flt = flt.replace('"', "'")
+                ps += f" | Where-Object {{ $_.DisplayName -like '*{flt}*' -or $_.Name -like '*{flt}*' }}"
+            ps += " | Sort-Object Enabled -Descending | Format-Table -AutoSize | Out-String -Width 240"
+            return self.run_powershell(ps, timeout=self._get_timeout("system_admin", 60))
+        else:
+            # Linux/macOS
+            if flt:
+                return self._run(f"iptables -L -n | grep -i {self._quote_arg(flt)}", timeout=self._get_timeout("system_admin", 30))
+            return self._run("iptables -L -n", timeout=self._get_timeout("system_admin", 30))
+
+    @tool(name="active_ports_list", desc="Audit all active network ports and TCP/UDP socket connections. Args: none", category="Terminal")
+    def active_ports_list(self) -> str:
+        """Audit all active network ports and TCP/UDP socket connections."""
+        if self.system == "Windows":
+            ps = "Get-NetTCPConnection | Select-Object LocalAddress,LocalPort,RemoteAddress,RemotePort,State,OwningProcess | Format-Table -AutoSize | Out-String -Width 240"
+            return self.run_powershell(ps, timeout=self._get_timeout("system_admin", 60))
+        else:
+            return self._run("ss -tulpn || netstat -tulan", timeout=self._get_timeout("system_admin", 30))
