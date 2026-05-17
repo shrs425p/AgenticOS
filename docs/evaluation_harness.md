@@ -81,8 +81,8 @@ The harness produces a summary at the end of the run:
 -   **Avg. Iterations**: How efficient the agent was.
 -   **Failed Tools**: A list of tools that threw exceptions during the run.
 
-### Target Performance for v2.0:
-| Metric | Baseline (v1.0) | Target (Hardened v2.0) |
+### Target Performance for v2.0.0:
+| Metric | Baseline (v1.0) | Target (Hardened v2.0.0) |
 | :--- | :--- | :--- |
 | **Task 8 Speed** | 30+ Minutes | < 3 Minutes |
 | **API Crash Rate** | 15% (on 429s) | 0% (Auto-retry enabled) |
