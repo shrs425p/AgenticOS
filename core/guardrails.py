@@ -74,7 +74,7 @@ class PathGuard:
 
         # Default CLI implementation (blocking)
         from core.runtime_ui import C
-        print(f"\n{C.RED}🛑 SECURITY GUARDRAIL{C.RESET}")
+        print(f"\n{C.RED}⚠ STOP — SECURITY GUARDRAIL{C.RESET}")
         print(
             f"The agent is attempting a {C.BOLD}{operation.upper()}{C.RESET} action outside the workspace."
         )
