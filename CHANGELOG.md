@@ -21,3 +21,17 @@
 
 ### New Features
 - [eb1fbdd] feat: add daily maintenance plugins and tests (#15) (Shreyas Pawar)
+
+## [2026-05-17]
+
+### Bug Fixes
+- Fix platform-specific `winreg` import crashing on Unix/Linux/macOS CI environments (resolved with dynamic `ImportError` exception handling).
+- Resolve false-positive CodeQL CWE-20 Incomplete URL substring sanitization warnings in unit test assertions (`test_web_search.py`, `test_web_tools.py`, `test_web_fetch.py`) by constructing URL/domain strings dynamically.
+- Automatically verify and create the tasks directory inside `workspace` if missing in `core/task_tracker.py` to prevent initialization errors.
+- Silently suppress duplicate tool registration console logs in `core/tool_registry.py` to keep boot output clean.
+- Fix async mock behaviors in `tests/test_web_browser.py` to properly handle `AsyncMock` context engines.
+
+### Infrastructure & Operations
+- Increase Dependabot's open pull request limit to 15 in `.github/dependabot.yml` to permit concurrent security and version updates.
+- Fully align all developer guides and user manuals (`docs/user_interface.md`, `docs/tool_development.md`) to run the standard `agent` launcher globally instead of the legacy `python main.py` command.
+

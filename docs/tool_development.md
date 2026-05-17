@@ -160,7 +160,7 @@ def quick_disk_audit(self, path: str = None):
 ## [END] Deployment
 Once your plugin is in `tools/plugins/`, run:
 ```powershell
-python main.py
+agent
 ```
 Type `/tools` in the console to verify that your new capability is recognized by the system.
 

@@ -55,9 +55,9 @@ The agent can generate visual data using `matplotlib`. While these charts aren't
 You can control the UI behavior directly from the command line when starting the agent:
 
 ```powershell
-python main.py --verbose     # Show all model thinking and raw tool outputs
-python main.py --autopilot   # Reduce UI noise and run silently
-python main.py --theme dark  # (Experimental) Toggle high-contrast modes
+agent --verbose     # Show all model thinking and raw tool outputs
+agent --autopilot   # Reduce UI noise and run silently
+agent --theme dark  # (Experimental) Toggle high-contrast modes
 ```
 
 ---
