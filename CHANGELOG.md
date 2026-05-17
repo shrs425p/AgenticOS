@@ -31,6 +31,14 @@
 - Add `core/config_types.py` types and annotate `core/runtime_config.py` for clearer config typing.
 - Add `tests/test_retry.py` to cover retry behaviour.
 
+## [2.0.1] - 2026-05-16
+
+### New Features
+- Daily maintenance plugins framework: `feat: add daily maintenance plugins and tests (#15)` (Shreyas Pawar)
+  - Introduced automated maintenance task scheduler for periodic health checks and cleanup operations
+  - Added comprehensive test coverage for new plugin architecture
+  - Enables users to define custom maintenance routines and lifecycle hooks
+
 ## [2.0.0] - 2026-05-14
 
 ### New Features
@@ -49,8 +57,3 @@
 
 ### Bug Fixes
 - API Resilience / Exponential Backoff Shield: Handled over 50+ "429 Rate Limit" errors flawlessly without a single agent crash.
-
-## [2026-05-16]
-
-### New Features
-- [eb1fbdd] feat: add daily maintenance plugins and tests (#15) (Shreyas Pawar)
