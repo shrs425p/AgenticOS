@@ -36,7 +36,7 @@ python -m venv venv
 
 ---
 
-##  Step 3: Install Dependencies
+## [DEP] Step 3: Install Dependencies
 
 Install the core Python packages and the Playwright browser engine:
 
@@ -47,7 +47,7 @@ playwright install chromium
 
 ---
 
-##  Step 4: Configure Credentials (.env)
+## [ENV] Step 4: Configure Credentials (.env)
 
 AgenticOS needs API keys to talk to cloud providers. Create a file named `.env` in the root directory:
 
