@@ -41,7 +41,7 @@ def test_open_app():
     
     # Shortcut case
     with patch.object(tool, "find_app", return_value="C:\\path\\to\\app.lnk"), \
-         patch("os.startfile") as mock_start:
+         patch("os.startfile", create=True) as mock_start:
              assert "Opened shortcut:" in tool.open_app("app")
              mock_start.assert_called_once()
              
@@ -115,7 +115,7 @@ def test_open_file(tmp_path):
     # Found and opened on Windows
     file_path = tmp_path / "test.txt"
     file_path.touch()
-    with patch("os.startfile") as mock_start:
+    with patch("os.startfile", create=True) as mock_start:
         assert tool.open_file(str(file_path)) == "Opened."
         mock_start.assert_called_with(str(file_path))
         

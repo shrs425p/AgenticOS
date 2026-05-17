@@ -1,3 +1,4 @@
+import ctypes
 from unittest import mock
 
 from tools.terminal.openers import OpenersMixin
@@ -57,9 +58,9 @@ def test_system_set_wallpaper():
     # We just want to check the registry verification part
     # since we can't easily mock ctypes
     # We can mock ctypes and run_powershell
-    with mock.patch("ctypes.windll.user32.SystemParametersInfoW") as mock_spi, \
+    with mock.patch.object(ctypes, "windll", create=True) as mock_windll, \
          mock.patch("os.path.exists") as mock_exists:
-        mock_spi.return_value = True
+        mock_windll.user32.SystemParametersInfoW.return_value = True
         mock_exists.return_value = True
         res = tool.set_wallpaper("C:\\mock\\image.jpg")
         
