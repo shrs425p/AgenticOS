@@ -14,11 +14,11 @@
   </p>
 
   <p>
-    <img src="https://img.shields.io/badge/status-early_beta-orange?style=flat-square" alt="Status">
-    <img src="https://img.shields.io/badge/latest-v2.0.0-blue?style=flat-square" alt="Latest Version">
+    <img src="https://img.shields.io/badge/status-production_stable-orange?style=flat-square" alt="Status">
+    <img src="https://img.shields.io/badge/latest-v2.1.0-blue?style=flat-square" alt="Latest Version">
     <img src="https://img.shields.io/badge/license-Apache_2.0-red?style=flat-square" alt="License">
     <img src="https://img.shields.io/badge/tools-180-green?style=flat-square" alt="Tools">
-    <img src="https://img.shields.io/badge/tests-387_passed-brightgreen?style=flat-square" alt="Tests">
+    <img src="https://img.shields.io/badge/tests-576_passed-brightgreen?style=flat-square" alt="Tests">
     <a href="https://codecov.io/gh/shrs425p/AgenticOS"><img src="https://codecov.io/gh/shrs425p/AgenticOS/branch/main/graph/badge.svg" alt="Coverage"></a>
   </p>
   
@@ -65,14 +65,17 @@ AgenticOS is a high-performance autonomous tool. Its best results are achieved t
 ---
 
 ## The "Crucible" Hardened Architecture
-Following a massive 96-item stress test, AgenticOS v2.0.0 has been hardened for real-world production environments. It solves the core bottlenecks of traditional agents:
+Following a massive 96-item stress test, AgenticOS v2.1.0 has been hardened for real-world production environments. It solves the core bottlenecks of traditional agents:
 -   **No-Lag Terminal UI**: Block-level rendering removes the character-by-character "typewriter lag."
--   **Rate-Limit Shield**: Built-in exponential backoff masks all `429 Too Many Requests` errors.
 -   **Rate-Limit Shield**: Built-in exponential backoff masks all `429 Too Many Requests` errors (implemented in `core/retry.py` as `retry_call()`).
--   **Fast-Path IO**: Native PowerShell-optimized scanning is 20x faster than Python's `rglob`.
+-   **Centralized Logging**: Consistent, structured stream formatting and persistent storage (`data/logs/agenticos.log`) with a unified logger factory.
+-   **Early Schema Validation**: Real-time boot diagnostics verify `config.yaml` layers and halt early if critical sections are missing.
+-   **Native Windows COM Audio**: C# code dynamically compiled via PowerShell provides native, dependency-free volume controls.
+-   **Fast-Path IO & Checkguards**: Native PowerShell scanning is 20x faster than Python's `rglob`, wrapped in strict tool checkguards (e.g. `shutil.which` warnings) on Linux.
+-   **OS-Level Desktop Accessibility**: AppleScript accessibility control (AXMinimized / AXZoomed) and recursive window queries for scriptable Cocoa & non-scriptable macOS applications.
 -   **Zone-Based Security**: Hardware-level path guardrails protect critical system folders.
 -   **Environment Portability**: 100% configuration-driven logic with zero hardcoded paths or URLs.
--   **Resilient Testing**: Comprehensive `pytest` suite ensuring 100% deterministic tool behavior.
+-   **Resilient Testing**: Comprehensive `pytest` suite with 576+ tests ensuring 100% deterministic tool behavior.
 
 ---
 
