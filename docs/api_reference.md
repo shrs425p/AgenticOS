@@ -1,6 +1,6 @@
 # AgenticOS: API & Tool Reference Guide
 
-AgenticOS features a massive registry of over 300+ specialized tools. This document provides a high-level overview of the primary tool categories and their intended use cases.
+AgenticOS features a massive registry of over 180+ specialized tools. This document provides a high-level overview of the primary tool categories and their intended use cases.
 
 ---
 
