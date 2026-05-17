@@ -126,3 +126,67 @@ Introduce an **Asynchronous Hardware Event Bus** that listens to background oper
 
 *Last Updated: 2026-05-18*
 *Status: Ultimate PC Control Blueprint Approved*
+
+---
+
+# Phase 2: Autonomic Process Stabilizer & Screen Tree Integration (Proposed)
+
+Following the successful realization of all five Module structures in Phase 1, we propose the architectural blueprint for **Phase 2: Autonomic Telemetry Stabilizers & Native Accessibility Trees**.
+
+## 6. Autonomic Telemetry Process Stabilizer
+
+While the Asynchronous OS Event Bus successfully tracks telemetry spikes (CPU > 90%, Memory > 90%), it lacks the native authority to analyze and resolve these resource blockages autonomously.
+
+### Technical Solution:
+Implement a background process analyzer in `core/stabilizer.py` that hooks directly into the Event Bus callbacks. Upon detecting a resource hazard (e.g., `CPU_SPIKE` or `MEMORY_CRITICAL`), it:
+1. Queries the operating system process table (`psutil`) to identify the top resource-consuming binaries.
+2. Cross-references identified processes with safety guardrails (never terminate system binaries like `explorer.exe`, `lsass.exe`, or core AgenticOS runtimes).
+3. Exposes an autonomic tool `stabilize_system_resources()` that can dynamically adjust process priorities (`nice` levels / CPU affinity) or gracefully terminate runaway processes to restore machine equilibrium.
+
+```text
+[ Event Bus Spike Trigger ]
+            |
+            v
+[ Stabilizer Process Audit ] ---> Exclude Protected/System Binaries
+            |
+            v
+[ Autonomic Stabilization Actions ]
+  - Lower Priority (Nice)
+  - Terminate Runaway Process
+  - Trigger Garbage Collection
+```
+
+### Proposed API Hooks:
+* `get_process_resource_audit()`: Return a structured list of top processes sorted by CPU and memory consumption.
+* `stabilize_system_resources(pid, action)`: Set nice priority, reduce affinity, or terminate specified PID under strict security filters.
+
+---
+
+## 7. Native Accessibility Tree Crawler
+
+Visual OCR-based coordinate mapping (`vision_coordinator.py`) is exceptionally robust for graphical elements but carries rendering overhead. Accessibility tree inspections provide instant, structural window bounds.
+
+### Technical Solution:
+Create a dual-engine visual coordinator. It first inspects the OS structural accessibility tree to locate the target label's exact pixel boundary:
+* **Windows**: Query the `UI Automation` framework via a C# assembly compiled on-the-fly.
+* **macOS**: Crawl application `AXUIElement` references via PyObjC.
+* **Linux**: Query `at-spi2` dbus interfaces.
+
+If the structural crawler fails (e.g., in Blender or a graphic game engine), the coordinator falls back to high-fidelity visual OCR coordinate mapping!
+
+```text
+               [ Search for Element "File" ]
+                             |
+              +--------------+--------------+
+              |                             |
+              v (Try First)                 v (Fallback)
+      [ Accessibility Tree ]         [ Visual OCR Mapping ]
+      - Windows UI Automation        - WinRT / Tesseract OCR
+      - macOS AXUIElement            - Phrase Match & Center Map
+              |                             |
+              +--------------+--------------+
+                             |
+                             v
+                 [ Return Click Coordinates ]
+```
+
