@@ -136,7 +136,9 @@ def _read_yaml_file(path: str) -> dict:
     return data
 
 
-def _load_layered_config(root_path: str) -> dict:
+def _load_layered_config(root_path: str) -> tuple[dict, dict]:
+    """Return (merged_cfg, raw_root_cfg) where raw_root_cfg is the dict
+    loaded *only* from root_path before any layer merges."""
     cfg: dict = {}
     config_dir = os.path.join(os.path.dirname(root_path), "config")
     if os.path.isdir(config_dir):
@@ -144,8 +146,9 @@ def _load_layered_config(root_path: str) -> dict:
             layer_path = os.path.join(config_dir, name)
             if os.path.exists(layer_path):
                 _deep_merge(cfg, _read_yaml_file(layer_path))
-    _deep_merge(cfg, _read_yaml_file(root_path))
-    return cfg
+    raw_root = _read_yaml_file(root_path)
+    _deep_merge(cfg, raw_root)
+    return cfg, raw_root
 
 
 def load_config(path: str = None) -> dict:
@@ -155,7 +158,7 @@ def load_config(path: str = None) -> dict:
     if not os.path.exists(path):
         raise FileNotFoundError(f"Configuration file not found: {path}")
 
-    cfg = _load_layered_config(path)
+    cfg, raw_root = _load_layered_config(path)
 
     if not cfg:
         raise ValueError(f"Configuration file is empty or invalid: {path}")
@@ -224,5 +227,14 @@ def load_config(path: str = None) -> dict:
         import warnings
 
         warnings.warn(f"Invalid numeric value in cloud.nvidia config: {e}")
+
+    # ── Startup config validation ────────────────────────────────────────────
+    # Run after all merges/normalisation so the validator sees the final state.
+    # Import lazily to avoid circular imports at module load time.
+    try:
+        from core.config_validator import warn_config_issues  # noqa: PLC0415
+        warn_config_issues(cfg, root_cfg=raw_root)
+    except Exception:
+        pass  # Validator must never crash the agent
 
     return cfg
