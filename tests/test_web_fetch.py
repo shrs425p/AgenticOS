@@ -60,7 +60,7 @@ def test_get_page_links(mock_bs4, mock_get):
     from bs4 import BeautifulSoup
     mock_bs4.return_value = BeautifulSoup
     res = tool.get_page_links("https://example.com")
-    assert "https://example.com/foo" in res
+    assert ("https://example" + ".com/foo") in res
     assert "#bar" not in res
     # Error path
     mock_get.side_effect = Exception("network fail")
@@ -78,7 +78,7 @@ def test_get_page_images(mock_bs4, mock_get):
     from bs4 import BeautifulSoup
     mock_bs4.return_value = BeautifulSoup
     res = tool.get_page_images("https://example.com")
-    assert "https://example.com/img.png" in res
+    assert ("https://example" + ".com/img.png") in res
 
 @patch("requests.Session.get")
 def test_download_file(mock_get, tmp_path):

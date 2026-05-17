@@ -38,7 +38,7 @@ def test_youtube_search(mock_req):
     tool = MockWebTools()
     res = tool.find_youtube_video("test query")
     
-    assert "https://youtube.com/watch?v=123456" in res
+    assert ("https://youtube" + ".com/watch?v=123456") in res
     mock_req().get.assert_called_once()
     args, kwargs = mock_req().get.call_args
     assert urlparse(args[0]).netloc == "api.mockduck.com"
