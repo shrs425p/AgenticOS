@@ -1,3 +1,4 @@
+import os
 from unittest.mock import patch
 from tools.terminal.openers import OpenersMixin
 
@@ -34,7 +35,7 @@ def test_find_app():
          patch("os.path.isdir", return_value=True), \
          patch("os.walk", return_value=[("/mock/dir", [], ["my_app.lnk"])]), \
          patch("os.path.exists", return_value=True):
-             assert tool.find_app("my_app") == "/mock/dir\\my_app.lnk"
+             assert tool.find_app("my_app") == os.path.join("/mock/dir", "my_app.lnk")
 
 def test_open_app():
     tool = MockTool(system="Windows")
