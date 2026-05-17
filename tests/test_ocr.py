@@ -1,4 +1,5 @@
 import pytest
+import os
 from unittest.mock import MagicMock, patch
 from tools.ocr_tools import OCRManager
 
@@ -36,7 +37,9 @@ def test_ocr_screen_logic(mock_exists, ocr_manager):
     
     # Mock registry and screen tool
     mock_registry = MagicMock()
-    mock_registry.screen.take_screenshot.return_value = "Screenshot saved: C:\\path\\to\\shot.png"
+    # Use os.path.join to build cross-platform paths instead of hardcoding Windows paths
+    screenshot_path = os.path.join("path", "to", "shot.png")
+    mock_registry.screen.take_screenshot.return_value = f"Screenshot saved: {screenshot_path}"
     ocr_manager.registry = mock_registry
     
     # Mock ocr_image to return text
@@ -45,7 +48,7 @@ def test_ocr_screen_logic(mock_exists, ocr_manager):
     res = ocr_manager.ocr_screen()
     
     mock_registry.screen.take_screenshot.assert_called_once()
-    ocr_manager.ocr_image.assert_called_with("C:\\path\\to\\shot.png", engine="auto")
+    ocr_manager.ocr_image.assert_called_with(screenshot_path, engine="auto")
     assert res == "Extracted Screen Text"
 
 @patch("subprocess.run")

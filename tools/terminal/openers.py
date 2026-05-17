@@ -41,7 +41,7 @@ class OpenersMixin:
             resolved = shutil.which(exe) or shutil.which(name)
             if resolved:
                 return resolved
-        except Exception:
+        except (OSError, FileNotFoundError, TypeError):
             pass  # Expected: shutil.which may fail or return None; handled by subsequent checks.
 
 
@@ -63,9 +63,9 @@ class OpenersMixin:
                             val, _ = winreg.QueryValueEx(h, "")
                             if val and os.path.exists(val):
                                 return val
-                    except Exception:
+                    except (OSError, EnvironmentError):
                         continue
-            except Exception:
+            except (OSError, EnvironmentError):
                 pass  # Expected: Registry access may fail on non-Windows or restricted environments.
 
 
@@ -92,7 +92,7 @@ class OpenersMixin:
                             p = os.path.join(root, fn)
                             if os.path.exists(p):
                                 return p
-            except Exception:
+            except (OSError, FileNotFoundError):
                 pass  # Expected: Start Menu directories may be inaccessible.
 
 
@@ -123,7 +123,7 @@ class OpenersMixin:
                 if chk and "No matches" not in chk and "ERROR" not in chk.upper():
                     return f"{out}\nVALIDATION: process detected ({img})".strip()
                 return f"{out}\nVALIDATION: process not detected ({img})".strip()
-            except Exception:
+            except (RuntimeError, OSError):
                 return out  # Expected: Verification may fail; return the launch output as fallback.
 
         # Fallback: try by name
@@ -157,7 +157,7 @@ class OpenersMixin:
                             if Path(expanded).exists():
                                 resolved = expanded
                                 break
-                        except Exception:
+                        except (OSError, ValueError):
                             continue
 
             def _verify_running(proc_name: str) -> bool:
@@ -167,7 +167,7 @@ class OpenersMixin:
                         pn += ".exe"
                     out = self._run(f'tasklist /FI "IMAGENAME eq {pn}"', timeout=10)
                     return pn.lower() in (out or "").lower()
-                except Exception:
+                except (OSError, subprocess.CalledProcessError):
                     return False  # Expected: Tasklist may fail; assume not running.
 
 
@@ -185,7 +185,7 @@ class OpenersMixin:
                             subprocess.CREATE_NEW_PROCESS_GROUP
                             | subprocess.DETACHED_PROCESS
                         )
-                    except Exception:
+                    except (AttributeError, ValueError):
                         creationflags = 0  # Expected: creationflags may not be available on all OS versions.
 
 
@@ -352,7 +352,7 @@ class OpenersMixin:
         for c in candidates:
             try:
                 c2 = c.resolve()
-            except Exception:
+            except (OSError, ValueError):
                 c2 = c  # Expected: Resolve may fail on invalid paths; fallback to raw path.
 
             if c2.exists():
@@ -434,6 +434,6 @@ class OpenersMixin:
                     + f"\nVALIDATION: browser process detected ({', '.join(checks[:3])})"
                 )
             return out + "\nVALIDATION: browser process not detected"
-        except Exception:
+        except (RuntimeError, OSError):
             return out  # Expected: Process verification may fail; return launch result.
 

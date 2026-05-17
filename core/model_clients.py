@@ -297,7 +297,7 @@ class NvidiaClient:
                         mt = self.max_tokens
                         try:
                             mt = int(mt)
-                        except Exception:
+                        except (ValueError, TypeError):
                             mt = self.cfg.get("timeouts", {}).get("fallback_max_tokens", 1024)
                         if mt < 1:
                             mt = self.cfg.get("timeouts", {}).get("fallback_max_tokens", 1024)
@@ -399,7 +399,7 @@ class NvidiaClient:
                     full2 = msg2.content or ""
                 if full2.strip():
                     return full2
-            except Exception:
+            except (ValueError, RuntimeError, AttributeError):
                 # If retry fails, fall through to empty handling in runtime.
                 pass
         return full

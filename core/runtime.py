@@ -100,8 +100,8 @@ class Agent:
                 if fb_provider != provider and fb_provider in client_map:
                     try:
                         fallback_clients.append(client_map[fb_provider](cfg))
-                    except Exception:
-                        pass
+                    except RuntimeError as e:
+                        print_warning(f"Warning: Failed to initialize fallback client {fb_provider}: {e}")
             if fallback_clients:
                 self.client = TieredClient(self.client, fallback_clients)
 
@@ -143,7 +143,8 @@ class Agent:
                 model=self.client.model,
                 workspace=self.cfg["agent"].get("workspace", DEFAULT_WORKSPACE),
             )
-        except Exception:
+        except (IOError, OSError) as e:
+            print_warning(f"Warning: Failed to log audit session: {e}")
             pass
 
         self.task_tracker = TaskTracker(
@@ -171,8 +172,8 @@ class Agent:
                 try:
                     with open(init_path, "w", encoding="utf-8") as f:
                         f.write(init_content)
-                except Exception:
-                    pass
+                except (IOError, OSError) as e:
+                    print_warning(f"Warning: Failed to create initialization file {init_file}: {e}")
 
         # 6. Hot-Reload Tracking (must be last)
         self.mtimes: Dict[str, float] = (
@@ -253,6 +254,14 @@ class Agent:
                     self.client = GeminiClient(self.cfg)
                 elif provider == "groq":
                     self.client = GroqClient(self.cfg)
+                elif provider == "openai":
+                    self.client = OpenAIClient(self.cfg)
+                elif provider == "openrouter":
+                    self.client = OpenRouterClient(self.cfg)
+                elif provider == "github":
+                    self.client = GithubClient(self.cfg)
+                elif provider == "deepseek":
+                    self.client = DeepseekClient(self.cfg)
                 else:
                     self.client = OllamaClient(self.cfg)
                 self.task_tracker = TaskTracker(
@@ -276,8 +285,8 @@ class Agent:
                             if mod in sys.modules:
                                 try:
                                     importlib.reload(sys.modules[mod])
-                                except Exception:
-                                    pass
+                                except (ImportError, AttributeError) as e:
+                                    print_warning(f"Warning: Failed to reload module {mod}: {e}")
 
                 # Standard reload for other changed modules
                 for f in changed_files:
@@ -302,6 +311,10 @@ class Agent:
             print_error(f"Failed to reload: {e}")
             self.mtimes = new_mtimes or self._get_mtimes()
 
+        # Add null check before calling build_system_prompt
+        if self.context_engine is None:
+            print_error("Context engine failed to initialize during reload")
+            return ""
         return self.context_engine.build_system_prompt()
 
     def verify_action(self, tool_name: str, args: Dict, context: str) -> (bool, str):
@@ -406,8 +419,8 @@ class Agent:
             try:
                 sys_info = self.tools.term.system_info()
                 user_input = f"[System Context: {sys_info.replace(chr(10), ' ')}]\n\n{user_input}"
-            except Exception:
-                pass
+            except RuntimeError as e:
+                print_warning(f"Warning: Failed to gather system info: {e}")
 
             # Auto-load preferences into context
             try:
@@ -460,8 +473,8 @@ class Agent:
                         self.memory.start_task(
                             self.task_tracker.current["task_id"], original_user_input
                         )
-                    except Exception:
-                        pass
+                    except (IOError, OSError, ValueError) as e:
+                        print_warning(f"Warning: Failed to start task in memory: {e}")
 
         self.memory.add("user", user_input)
         messages = self.memory.get_messages()
@@ -575,8 +588,8 @@ class Agent:
                             )
                             self.client.model = new_model
                             no_action_count = 0
-                    except Exception:
-                        pass
+                    except (RuntimeError, ValueError) as e:
+                        print_warning(f"Warning: Failed to perform model fallback: {e}")
                 continue
 
             r_upper = response.strip().upper()
@@ -693,8 +706,8 @@ class Agent:
                     except Exception as exc:
                         try:
                             self.audit.error(self.session_id, "audit.tool_call", str(exc))
-                        except Exception:
-                            pass
+                        except (IOError, OSError) as e:
+                            print_warning(f"Warning: Failed to log audit error: {e}")
 
                     # Persist tool events + artifacts for SQLite memory backend.
                     if hasattr(self.memory, "record_tool_event"):
@@ -708,20 +721,20 @@ class Agent:
                                 else str(args),
                                 observation=str(obs),
                             )
-                        except Exception:
-                            pass
+                        except (IOError, OSError, ValueError) as e:
+                            print_warning(f"Warning: Failed to record tool event: {e}")
 
                     if hasattr(self.memory, "record_artifact"):
                         try:
                             self._record_artifacts_from_tool(tool_name, args)
-                        except Exception:
-                            pass
+                        except (IOError, OSError, ValueError) as e:
+                            print_warning(f"Warning: Failed to record artifact: {e}")
 
                     if hasattr(self.memory, "update_task") and self.task_tracker.current:
                         try:
                             self.memory.update_task(self.task_tracker.current["task_id"])
-                        except Exception:
-                            pass
+                        except (IOError, OSError, ValueError) as e:
+                            print_warning(f"Warning: Failed to update task in memory: {e}")
                     if self.autonomy_cfg.get("task_tracking", True):
                         self.task_tracker.record_observation(obs)
 
@@ -738,7 +751,8 @@ class Agent:
                 # Limit observation length
                 try:
                     max_obs_chars = int(self.cfg.get("agent", {}).get("max_observation_chars", self.heuristics.get("max_observation_chars", 12000)))
-                except Exception:
+                except ValueError as e:
+                    print_warning(f"Warning: Invalid max_observation_chars config: {e}")
                     max_obs_chars = 12000
                 
                 if max_obs_chars and len(combined_obs) > max_obs_chars:
@@ -779,8 +793,6 @@ class Agent:
                     
                     if not persisted:
                         # Disabled heuristic: Was forcing write_file for long responses, but wastes API quota.
-                        # if len(response) > 1000:
-                        #     print_warning("Persistence Guardrail: Model provided a long response but didn't call write_file.")
                         pass
 
                 print(f"\n{C.GREEN}{C.BOLD}{'═' * 60}")
@@ -842,15 +854,16 @@ class Agent:
                                 + "\n"
                                 + "\n".join((m.get("content") or "") for m in messages)
                             )
-                        except Exception:
+                        except (RuntimeError, ValueError) as e:
+                            print_warning(f"Warning: Failed to build conversation for token estimation: {e}")
                             convo = (system or "") + "\n" + (original_user_input or "")
                         down = _est_tokens(convo)
                         up = _est_tokens(response or "")
                         print_info(
                             f"Time: {elapsed_s:.1f}s | Tokens (est) down={down} up={up}"
                         )
-                    except Exception:
-                        pass
+                    except RuntimeError as e:
+                        print_warning(f"Warning: Failed to compute token estimates: {e}")
 
                     # Artifact-first workflow: persist a per-session result artifact.
                     try:
@@ -892,17 +905,17 @@ class Agent:
                             self.memory.record_artifact(
                                 out_path, action="final_answer", kind="report"
                             )
-                        except Exception:
-                            pass
-                    except Exception:
-                        pass
+                        except (IOError, OSError, ValueError) as e:
+                            print_warning(f"Warning: Failed to record result artifact: {e}")
+                    except (IOError, OSError) as e:
+                        print_warning(f"Warning: Failed to write session report: {e}")
 
                 # Send notification per rule #9
                 try:
                     msg = self.cfg.get("prompts", {}).get("notifications", {}).get("task_completed", "Task completed successfully.")
                     self.tools.ui.send_notification("AgenticOs", msg)
-                except Exception:
-                    pass
+                except RuntimeError as e:
+                    print_warning(f"Warning: Failed to send notification: {e}")
 
                 self.memory.add("assistant", response)
                 if self.autonomy_cfg.get("task_tracking", True):
@@ -942,8 +955,8 @@ class Agent:
                         self.memory.set_outcome(
                             final_answer=final_ans or response, next_steps=next_steps
                         )
-                    except Exception:
-                        pass
+                    except ValueError as e:
+                        print_warning(f"Warning: Failed to set outcome in memory: {e}")
                 if hasattr(self.memory, "set_summary") and self.cfg.get(
                     "memory", {}
                 ).get("auto_summarize", True):
@@ -953,8 +966,8 @@ class Agent:
                         r_label = rpt.get("result_label", "Result:")
                         summary = f"{g_label} {original_user_input.strip()}\n{r_label} {(final_ans or '').strip()}"
                         self.memory.set_summary(summary.strip())
-                    except Exception:
-                        pass
+                    except ValueError as e:
+                        print_warning(f"Warning: Failed to set summary in memory: {e}")
                 if hasattr(self.memory, "complete_task") and self.task_tracker.current:
                     try:
                         next_steps = ""
@@ -970,8 +983,8 @@ class Agent:
                             next_steps=next_steps,
                             summary=f"{g_label} {original_user_input.strip()}",
                         )
-                    except Exception:
-                        pass
+                    except ValueError as e:
+                        print_warning(f"Warning: Failed to complete task in memory: {e}")
                 return
 
             else:
@@ -1003,13 +1016,13 @@ class Agent:
         print_error(fail_msg)
         try:
             self.audit.session_end(self.session_id, status="max_iterations")
-        except Exception:
-            pass
+        except (IOError, OSError) as e:
+            print_warning(f"Warning: Failed to log audit session end: {e}")
         if hasattr(self.memory, "set_outcome"):
             try:
                 self.memory.set_outcome(final_answer="", next_steps="")
-            except Exception:
-                pass
+            except ValueError as e:
+                print_warning(f"Warning: Failed to set outcome on max iterations: {e}")
 
     def _record_artifacts_from_tool(self, tool_name: str, args):
         """Best-effort artifact capture for SQLite memory backend.
@@ -1168,9 +1181,8 @@ class CLI:
                         print(f"  {m}")
                     if len(ollama_models) > 60:
                         print(f"  {C.DIM}... ({len(ollama_models) - 60} more){C.RESET}")
-        except Exception:
-            # Silent: this is a convenience listing and should not block selection.
-            pass
+        except (RuntimeError, OSError) as e:
+            print_warning(f"Warning: Failed to list models: {e}")
 
         while True:
             try:
@@ -1382,15 +1394,16 @@ class CLI:
                     print(f"\n{C.CYAN}Goodbye. Session memory wiped.{C.RESET}")
                 else:
                     print(f"\n{C.CYAN}Goodbye.{C.RESET}")
-            except Exception:
+            except (IOError, OSError, ValueError) as e:
+                print_warning(f"Warning: Error during exit cleanup: {e}")
                 print(f"\n{C.CYAN}Goodbye.{C.RESET}")
             try:
                 if hasattr(self.agent, "audit"):
                     self.agent.audit.session_end(
                         getattr(self.agent, "session_id", "unknown"), status="exit"
                     )
-            except Exception:
-                pass
+            except (IOError, OSError) as e:
+                print_warning(f"Warning: Failed to log audit session end: {e}")
             self.running = False
 
         else:
@@ -1437,8 +1450,8 @@ class CLI:
 
         try:
             readline.parse_and_bind("tab: complete")
-        except Exception:
-            pass
+        except (RuntimeError, ImportError) as e:
+            print_warning(f"Warning: Failed to configure readline: {e}")
 
         while self.running:
             try:

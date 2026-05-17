@@ -4,10 +4,14 @@ Provides long-term memory consolidation, daily logging, and knowledge retention.
 """
 
 import json
+import logging
 import re
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Any, Optional
+import threading
+
+logger = logging.getLogger(__name__)
 
 
 class MemoryManager:
@@ -28,33 +32,35 @@ class MemoryManager:
         self.memory_consolidation_threshold = 5  # Consolidate after 5 completed tasks
         
         self.commitments_file = self.memory_dir / "commitments.json"
+        self._lock = threading.RLock()  # Add lock for thread safety
         self.commitments = self._load_commitments()
         
     def _load_commitments(self) -> List[Dict[str, Any]]:
         """Load pending commitments from disk."""
         if self.commitments_file.exists():
             try:
-                with open(self.commitments_file, "r", encoding="utf-8") as f:
-                    return json.load(f)
-            except Exception:
+                with self._lock:
+                    with open(self.commitments_file, "r", encoding="utf-8") as f:
+                        return json.load(f)
+            except (json.JSONDecodeError, IOError) as e:
+                logger.warning(f"Failed to load commitments: {e}")
                 return []
         return []
 
     def _save_commitments(self):
-        """Save commitments to disk."""
+        """Save commitments to disk with thread safety."""
         try:
-            with open(self.commitments_file, "w", encoding="utf-8") as f:
-                json.dump(self.commitments, f, indent=2)
-        except Exception as e:
-            print(f"Warning: Failed to save commitments: {e}")
+            with self._lock:
+                with open(self.commitments_file, "w", encoding="utf-8") as f:
+                    json.dump(self.commitments, f, indent=2)
+        except (IOError, OSError) as e:
+            logger.error(f"Failed to save commitments: {e}")
 
     def register_commitment(self, text: str, due_date: Optional[str] = None):
         """Register a new commitment/follow-up."""
         import secrets
         commitment = {
             "id": secrets.token_hex(4),
-
-
             "text": text,
             "created_at": datetime.now().isoformat(),
             "due_date": due_date,
@@ -103,15 +109,14 @@ class MemoryManager:
                     lines = f.readlines()
                     for i, line in enumerate(lines):
                         if q in line.lower():
-                            # Grab context window
                             start = max(0, i - 2)
                             end = min(len(lines), i + 3)
                             snippet = "".join(lines[start:end]).strip()
                             results.append(f"[MEMORY.md] ...{snippet}...")
                             if len(results) >= limit:
                                 break
-            except Exception:
-                pass
+            except (IOError, OSError) as e:
+                logger.debug(f"Failed to search MEMORY.md: {e}")
 
         # 2. Search recent daily logs (last 3 days)
         if len(results) < limit:
@@ -123,12 +128,11 @@ class MemoryManager:
                         with open(daily_file, "r", encoding="utf-8") as f:
                             content = f.read()
                             if q in content.lower():
-                                # Just indicate match for brevity
                                 results.append(f"[LOG {date.strftime('%Y-%m-%d')}] Relevant context found.")
                                 if len(results) >= limit:
                                     break
-                    except Exception:
-                        pass
+                    except (IOError, OSError) as e:
+                        logger.debug(f"Failed to search daily log {date}: {e}")
         
         if not results:
             return ""

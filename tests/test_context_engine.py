@@ -14,19 +14,24 @@ class MockTools:
         return "mock tools"
 
 class MockAgent:
-    def __init__(self, workspace="/tmp/mock_workspace"):
+    def __init__(self, workspace: str = None):
+        if workspace is None:
+            # Create a temporary workspace directory
+            import tempfile
+            self.workspace = tempfile.mkdtemp()
+        else:
+            self.workspace = workspace
         self.cfg = {}
-        self.workspace = workspace
         self.task_tracker = MockTaskTracker()
         self.tools = MockTools()
         self.client = MagicMock()
 
-def test_context_engine_init():
-    agent = MockAgent()
+def test_context_engine_init(tmp_path):
+    agent = MockAgent(str(tmp_path))
     ce = ContextEngine(agent)
     assert ce.agent == agent
     assert ce.cfg == agent.cfg
-    assert ce.workspace == agent.workspace
+    assert ce.workspace == str(tmp_path)
     assert ce.memory_manager is None
 
 def test_set_memory_manager():

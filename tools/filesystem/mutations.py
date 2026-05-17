@@ -17,7 +17,7 @@ class MutationsMixin:
             os.remove(p)
             return f"Deleted file: {path}"
         except Exception as e:
-            return f"Error deleting file: {e}"
+            return f"Error: delete_file: {e}"
 
     @tool(name="delete_dir", desc="Delete directory recursively. Args: path", category="Files")
     def delete_dir(self, path: str) -> str:
@@ -32,7 +32,7 @@ class MutationsMixin:
             shutil.rmtree(p)
             return f"Deleted directory: {path}"
         except Exception as e:
-            return f"Error deleting directory: {e}"
+            return f"Error: delete_dir: {e}"
 
     @tool(name="copy_file", desc="Copy file. Args: src, dst", category="Files")
     def copy_file(self, src: str, dst: str) -> str:
@@ -47,7 +47,7 @@ class MutationsMixin:
             shutil.copy2(s, d)
             return f"Copied {src} -> {dst}"
         except Exception as e:
-            return f"Error copying file: {e}"
+            return f"Error: copy_file: {e}"
 
     @tool(name="move_file", desc="Move/rename file. Args: src, dst", category="Files")
     def move_file(self, src: str, dst: str) -> str:
@@ -62,7 +62,7 @@ class MutationsMixin:
             shutil.move(str(s), str(d))
             return f"Moved {src} -> {dst}"
         except Exception as e:
-            return f"Error moving file: {e}"
+            return f"Error: move_file: {e}"
 
     @tool(name="create_dir", desc="Create directory. Args: path", category="Files")
     def create_dir(self, path: str) -> str:
@@ -73,7 +73,7 @@ class MutationsMixin:
             p.mkdir(parents=True, exist_ok=True)
             return f"Created directory: {path}"
         except Exception as e:
-            return f"Error creating directory: {e}"
+            return f"Error: create_dir: {e}"
 
     @tool(name="touch", desc="Create empty file or update timestamps. Args: path", category="Files")
     def touch(self, path: str) -> str:
@@ -87,4 +87,4 @@ class MutationsMixin:
             os_utime(p, None)
             return f"Touched: {path}"
         except Exception as e:
-            return f"Error touching: {e}"
+            return f"Error: touch: {e}"

@@ -68,28 +68,28 @@ class BrowserManager:
         if self.page:
             try:
                 await self.page.close()
-            except Exception:
+            except (RuntimeError, AttributeError):
                 pass  # Expected: Resource cleanup may fail if already closed or not initialized.
 
             self.page = None
         if self.context:
             try:
                 await self.context.close()
-            except Exception:
+            except (RuntimeError, AttributeError):
                 pass  # Expected: Resource cleanup may fail if already closed or not initialized.
 
             self.context = None
         if self.browser:
             try:
                 await self.browser.close()
-            except Exception:
+            except (RuntimeError, AttributeError):
                 pass  # Expected: Resource cleanup may fail if already closed or not initialized.
 
             self.browser = None
         if self.pw:
             try:
                 await self.pw.stop()
-            except Exception:
+            except (RuntimeError, AttributeError):
                 pass  # Expected: Resource cleanup may fail if already closed or not initialized.
 
             self.pw = None
@@ -477,7 +477,7 @@ class BrowserMixin:
             t = int(timeout_ms) if str(timeout_ms).isdigit() else self._get_timeout("browser_action", 10000)
             await mgr.page.wait_for_selector(selector, timeout=t)
             return f"Appeared: {selector}"
-        except Exception:
+        except (RuntimeError, TimeoutError, AttributeError):
             return f"Timeout: {selector}"
 
     @_ensure_browser

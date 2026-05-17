@@ -4,20 +4,39 @@ Manages system prompt assembly, message history pruning,
 and proactive context injection (Active Recall).
 """
 import os
+from typing import TYPE_CHECKING, Any, Optional, Tuple, List, Dict
+
+if TYPE_CHECKING:
+    from core.runtime import Agent
 
 
 class ContextEngine:
-    def __init__(self, agent):
+    def __init__(self, agent: "Agent") -> None:
+        """Initialize the context engine.
+        
+        Args:
+            agent: The agent instance containing configuration and runtime state.
+        """
         self.agent = agent
         self.cfg = agent.cfg
         self.workspace = agent.workspace
-        self.memory_manager = None  # Set later via agent.memory_manager
+        self.memory_manager: Optional[Any] = None  # Set later via agent.memory_manager
         
-    def set_memory_manager(self, manager):
+    def set_memory_manager(self, manager: Any) -> None:
+        """Set the memory manager instance.
+        
+        Args:
+            manager: The memory manager instance to use for context retrieval.
+        """
         self.memory_manager = manager
 
-    def _scan_workspace(self):
-        """Dynamically scan the workspace to build a real-time file map and inject all .md files."""
+    def _scan_workspace(self) -> Tuple[List[str], List[Tuple[str, str]]]:
+        """Dynamically scan the workspace to build a real-time file map and inject all .md files.
+        
+        Returns:
+            A tuple of (file_map_lines, md_files) where file_map_lines is a list of formatted
+            file descriptions and md_files is a list of (filename, path) tuples for markdown files.
+        """
         file_map_lines = []
         md_files = []
 
@@ -127,18 +146,31 @@ class ContextEngine:
         return system + workspace_block + task_block + canvas_block + shadow_block + proactive_block + file_map_block + file_memory_block
 
     def get_active_recall(self, user_input: str) -> str:
-        """Perform pre-flight retrieval from memory manager."""
+        """Perform pre-flight retrieval from memory manager.
+        
+        Args:
+            user_input: The user's input query to retrieve relevant context for.
+            
+        Returns:
+            A string containing relevant context from the memory manager, or an empty
+            string if no memory manager is available.
+        """
         if not self.memory_manager:
             return ""
         return self.memory_manager.get_relevant_context(user_input)
 
     def get_commitments(self) -> str:
-        """Retrieve active commitments."""
+        """Retrieve active commitments.
+        
+        Returns:
+            A string containing active commitments from the memory manager, or an empty
+            string if no memory manager is available.
+        """
         if not self.memory_manager:
             return ""
         return self.memory_manager.get_active_commitments()
 
-    def compact_history(self, messages: list, max_messages: int = 40) -> list:
+    def compact_history(self, messages: List[Dict[str, str]], max_messages: int = 40) -> List[Dict[str, str]]:
         """Compress old messages into a high-density summary to preserve context.
         
         When conversation history exceeds max_messages, the oldest messages 
