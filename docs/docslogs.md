@@ -1,11 +1,11 @@
+# Documentation Maintenance Logs
+
 ## 2026-05-17
 - Fixed broken tool references in `docs/api_reference.md` and `docs/setup_guide.md`
 - Replaced non-existent `tools_list` command with `/tools` in docs
 - Replaced `fast_disk_audit` and `eventlog_query` in `troubleshooting.md` with existing tools
 - Added `url_presets.yaml` to the configuration list in `runtime_configuration.md`
 - Updated all references to version numbers like `v2.0` and `v2.1` to `v2.0.0`
-
-# Documentation Maintenance Logs
 
 ## 2026-05-16
 - Updated `README.md` to correct the tool count badge from 50 to 180.

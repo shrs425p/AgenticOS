@@ -5,7 +5,7 @@
   
   <br>
 
-  <h3>AgenticOS is your Personal AI super intelligence. Private, Simple and extremely powerful.</h3>
+  <h3>AgenticOS is a personal artificial superintelligence framework: private, secure, and extremely powerful.</h3>
 
   <p>
     <a href="https://github.com/shrs425p/AgenticOS/discussions">Discussions</a> | 

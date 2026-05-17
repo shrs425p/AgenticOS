@@ -6,7 +6,6 @@ Scan C:\AgenticOs entirely - count Python LOC, JS LOC, YAML/JSON config size, fi
 Run a memory pressure test: write Python that allocates and releases 500MB in chunks, measures actual available RAM before/after each allocation step, log results and plot
 Pull Windows Update history via PowerShell, find the last 10 updates installed, search the web for what each KB article fixed, write an update_history.md
 
-
 [WEB] DEEP WEB INTELLIGENCE (16–35)
 
 Search for the top 10 most active Python GitHub repos updated this week, for each fetch star count, open issues, last commit message, primary language breakdown - produce a github_pulse.md
@@ -24,7 +23,6 @@ Fetch RSS feeds from 3 different tech news sources (HN, MIT Tech Review, Wired),
 Scrape https://leaderboard.lmsys.org (or similar public LLM benchmark), extract the model rankings table, write a model_rankings.md and highlight where open-source models rank vs GPT/Claude
 Fetch https://huggingface.co/models?sort=trending, scrape the top 10 trending models, for each fetch the model card summary, write a hf_trending.md
 Build a web change detector: fetch a target page (e.g. https://ollama.com/library), hash its content, wait 60 seconds, fetch again, diff the two versions, report any changes
-
 
 DEEP BROWSER AUTOMATION (31–50)
 
@@ -49,7 +47,6 @@ Navigate to https://web.archive.org/web/2020*/https://openai.com/, extract avail
 Navigate to https://shodan.io (no login needed for banner search), search for "Apache 2.4" exposed servers, extract top 5 results with IP + country + port, write a shodan_sample.md
 Navigate to LinkedIn (if logged in), go to "Jobs" search for "AI Engineer" in India, extract first 10 job titles + companies + locations, write jobs_digest.md
 
-
 AUTONOMOUS PIPELINE CHAINS (51–70)
 
 Full competitive intelligence run: search for AgenticOS competitors (AutoGPT, CrewAI, LangGraph, Agno, OpenDevin), for each visit GitHub + official site, extract stars/last commit/core feature claim, write a competitor_matrix.md with a comparison table
@@ -72,7 +69,6 @@ Write Python to parse your own config.yaml, validate all fields against expected
 Scrape the full changelog/release notes page of Ollama from GitHub, extract all version numbers and key changes since v0.1.0, write a ollama_changelog.md
 Run a full network topology scan of your local subnet using Python (socket-based, no nmap required), identify all reachable hosts + their open ports, write a lan_topology.md
 Autonomous bug reporter: scan the AgenticOS logs directory, extract all ERROR and WARNING lines, group by error type, count occurrences, search the web for each unique error message, write a bug_report.md with probable causes
-
 
 [BOT] SELF-MODIFICATION & META (71–80)
 
