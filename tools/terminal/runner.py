@@ -29,6 +29,7 @@ class RunnerMixin:
         cwd: Optional[str] = None,
         input_data: Optional[str] = None,
         env_extra: Optional[dict] = None,
+        _is_retry: bool = False,
     ) -> str:
         env = {**os.environ, **self._env_overrides}
         if env_extra:
@@ -37,6 +38,13 @@ class RunnerMixin:
         blocked_reason = self._blocked_command_reason(command)
         if blocked_reason:
             return f"Error: {blocked_reason}"
+
+        # Dynamic PATH refreshing prior to execution
+        try:
+            from core.self_provisioner import refresh_path
+            refresh_path()
+        except ImportError:
+            pass
 
         try:
             result = subprocess.run(
@@ -50,11 +58,35 @@ class RunnerMixin:
                 **self._shell_args(command),
             )
 
-
-
             out = (result.stdout or "").strip()
             err = (result.stderr or "").strip()
             code = result.returncode
+
+            # Self-healing on command-not-found exit codes
+            if code in (9009, 127) and not _is_retry:
+                cmd_name = ""
+                try:
+                    parts = shlex.split(command)
+                    if parts:
+                        cmd_name = parts[0]
+                except Exception:
+                    cmd_name = command.split()[0] if command.split() else ""
+                cmd_name = os.path.basename(cmd_name).replace('"', '').replace("'", "")
+
+                if cmd_name:
+                    try:
+                        from core.self_provisioner import self_provision_command
+                        if self_provision_command(cmd_name):
+                            return self._run(
+                                command,
+                                timeout=timeout,
+                                cwd=cwd,
+                                input_data=input_data,
+                                env_extra=env_extra,
+                                _is_retry=True,
+                            )
+                    except Exception:
+                        pass
 
             parts = []
             if out:
@@ -69,6 +101,30 @@ class RunnerMixin:
         except subprocess.TimeoutExpired:
             return f"Error: Command timed out after {timeout}s"
         except FileNotFoundError as e:
+            if not _is_retry:
+                cmd_name = ""
+                try:
+                    parts = shlex.split(command)
+                    if parts:
+                        cmd_name = parts[0]
+                except Exception:
+                    cmd_name = command.split()[0] if command.split() else ""
+                cmd_name = os.path.basename(cmd_name).replace('"', '').replace("'", "")
+
+                if cmd_name:
+                    try:
+                        from core.self_provisioner import self_provision_command
+                        if self_provision_command(cmd_name):
+                            return self._run(
+                                command,
+                                timeout=timeout,
+                                cwd=cwd,
+                                input_data=input_data,
+                                env_extra=env_extra,
+                                _is_retry=True,
+                            )
+                    except Exception:
+                        pass
             return f"Error: Command not found: {e}"
         except Exception as e:
             return f"Error running command: {type(e).__name__}: {e}"
