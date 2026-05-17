@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from core.tool_registry import tool
 import importlib
-from tools.web import WebTools
+from tools.web import WebTools  # noqa: F401
 
 @tool(name="research_loop", desc="Runs a multi-round research loop on a topic.", category="Research")
 def research_loop(topic: str, rounds: str = "3") -> str:
