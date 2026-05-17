@@ -26,6 +26,8 @@ venv/
 .coverage
 htmlcov/
 coverage.xml
+cov.json
+coverage_report.txt
 .hypothesis/
 
 # Python Build & Distribution
