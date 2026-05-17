@@ -129,40 +129,11 @@ Introduce an **Asynchronous Hardware Event Bus** that listens to background oper
 
 ---
 
-# Phase 2: Autonomic Process Stabilizer & Screen Tree Integration (Proposed)
+# Phase 2: Native Accessibility Tree Integration (Proposed)
 
-Following the successful realization of all five Module structures in Phase 1, we propose the architectural blueprint for **Phase 2: Autonomic Telemetry Stabilizers & Native Accessibility Trees**.
+Following the successful realization of all five Module structures in Phase 1, we propose the architectural blueprint for **Phase 2: Native Accessibility Tree Crawler**.
 
-## 6. Autonomic Telemetry Process Stabilizer
-
-While the Asynchronous OS Event Bus successfully tracks telemetry spikes (CPU > 90%, Memory > 90%), it lacks the native authority to analyze and resolve these resource blockages autonomously.
-
-### Technical Solution:
-Implement a background process analyzer in `core/stabilizer.py` that hooks directly into the Event Bus callbacks. Upon detecting a resource hazard (e.g., `CPU_SPIKE` or `MEMORY_CRITICAL`), it:
-1. Queries the operating system process table (`psutil`) to identify the top resource-consuming binaries.
-2. Cross-references identified processes with safety guardrails (never terminate system binaries like `explorer.exe`, `lsass.exe`, or core AgenticOS runtimes).
-3. Exposes an autonomic tool `stabilize_system_resources()` that can dynamically adjust process priorities (`nice` levels / CPU affinity) or gracefully terminate runaway processes to restore machine equilibrium.
-
-```text
-[ Event Bus Spike Trigger ]
-            |
-            v
-[ Stabilizer Process Audit ] ---> Exclude Protected/System Binaries
-            |
-            v
-[ Autonomic Stabilization Actions ]
-  - Lower Priority (Nice)
-  - Terminate Runaway Process
-  - Trigger Garbage Collection
-```
-
-### Proposed API Hooks:
-* `get_process_resource_audit()`: Return a structured list of top processes sorted by CPU and memory consumption.
-* `stabilize_system_resources(pid, action)`: Set nice priority, reduce affinity, or terminate specified PID under strict security filters.
-
----
-
-## 7. Native Accessibility Tree Crawler
+## 6. Native Accessibility Tree Crawler
 
 Visual OCR-based coordinate mapping (`vision_coordinator.py`) is exceptionally robust for graphical elements but carries rendering overhead. Accessibility tree inspections provide instant, structural window bounds.
 
