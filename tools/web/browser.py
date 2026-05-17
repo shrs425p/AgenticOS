@@ -19,6 +19,9 @@ from typing import Any, Optional
 import functools
 import urllib.parse
 
+from core.tool_base import tool
+
+
 
 def _async_playwright():
     """Lazy import of Playwright's async API."""
@@ -142,6 +145,7 @@ class BrowserMixin:
         p.parent.mkdir(parents=True, exist_ok=True)
         return str(p)
 
+    @tool(name="browser_launch", desc="Launch a new Playwright browser or connect to a running Chrome instance via CDP. Args: browser, headless, user_data_dir, cdp_url", category="Web")
     @_ensure_browser
     async def browser_launch(
         self,
@@ -149,6 +153,7 @@ class BrowserMixin:
         browser: str = "chromium",
         headless: str = "true",
         user_data_dir: str = "",
+        cdp_url: str = "",
     ) -> str:
         apw = _async_playwright()
         if apw is None:
@@ -168,7 +173,12 @@ class BrowserMixin:
             launcher = getattr(mgr.pw, b_type)
             udd = (user_data_dir or "").strip()
 
-            if udd and os.path.isdir(udd):
+            if cdp_url:
+                mgr.browser = await launcher.connect_over_cdp(cdp_url)
+                mgr.context = mgr.browser.contexts[0] if mgr.browser.contexts else await mgr.browser.new_context()
+                pages = mgr.context.pages
+                mgr.page = pages[0] if pages else await mgr.context.new_page()
+            elif udd and os.path.isdir(udd):
                 browser_cfg = self.cfg.get("browser", {})
                 mgr.context = await launcher.launch_persistent_context(
                     udd,
@@ -196,17 +206,19 @@ class BrowserMixin:
                 mgr.page = await mgr.context.new_page()
 
             mgr.browser_type = b_type
-            mode = "headless" if headless_bool else "headed"
+            mode = "cdp" if cdp_url else ("headless" if headless_bool else "headed")
             return f"Browser launched: {b_type} [{mode}]"
         except Exception as e:
             await mgr.cleanup()
             return f"Error launching browser: {type(e).__name__}: {e}"
 
+    @tool(name="browser_close", desc="Close the active browser session and cleanup resources.", category="Web")
     @_ensure_browser
     async def browser_close(self, mgr: BrowserManager) -> str:
         await mgr.cleanup()
         return "Browser session closed."
 
+    @tool(name="browser_status", desc="Get active browser status (URL, tab count, title).", category="Web")
     @_ensure_browser
     async def browser_status(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -220,6 +232,7 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
+    @tool(name="browser_navigate", desc="Navigate the browser to a target URL. Args: url, wait_until", category="Web")
     @_ensure_browser
     async def browser_navigate(
         self, mgr: BrowserManager, url: str, wait_until: str = "domcontentloaded"
@@ -238,6 +251,7 @@ class BrowserMixin:
         except Exception as e:
             return f"Navigation error: {type(e).__name__}: {e}"
 
+    @tool(name="browser_go_back", desc="Navigate back in the tab history.", category="Web")
     @_ensure_browser
     async def browser_go_back(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -250,6 +264,7 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
+    @tool(name="browser_go_forward", desc="Navigate forward in the tab history.", category="Web")
     @_ensure_browser
     async def browser_go_forward(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -262,6 +277,7 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
+    @tool(name="browser_reload", desc="Reload the active browser tab.", category="Web")
     @_ensure_browser
     async def browser_reload(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -274,6 +290,7 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
+    @tool(name="browser_new_tab", desc="Open a new blank or target tab. Args: url", category="Web")
     @_ensure_browser
     async def browser_new_tab(self, mgr: BrowserManager, url: str = "") -> str:
         err = self._require_page(mgr)
@@ -290,6 +307,7 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
+    @tool(name="browser_get_url", desc="Get the current URL of the active browser tab.", category="Web")
     @_ensure_browser
     async def browser_get_url(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -297,6 +315,7 @@ class BrowserMixin:
             return err
         return mgr.page.url
 
+    @tool(name="browser_get_title", desc="Get the active tab page title.", category="Web")
     @_ensure_browser
     async def browser_get_title(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -304,6 +323,7 @@ class BrowserMixin:
             return err
         return await mgr.page.title()
 
+    @tool(name="browser_get_text", desc="Get all visible text content of the active page.", category="Web")
     @_ensure_browser
     async def browser_get_text(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -319,6 +339,7 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
+    @tool(name="browser_get_html", desc="Get the full HTML source of the active page.", category="Web")
     @_ensure_browser
     async def browser_get_html(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -331,6 +352,7 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
+    @tool(name="browser_get_element_text", desc="Get text content of an element matching a CSS selector.", category="Web")
     @_ensure_browser
     async def browser_get_element_text(self, mgr: BrowserManager, selector: str) -> str:
         err = self._require_page(mgr)
@@ -344,6 +366,7 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
+    @tool(name="browser_get_elements", desc="Query elements on the active page via CSS selector.", category="Web")
     @_ensure_browser
     async def browser_get_elements(self, mgr: BrowserManager, selector: str) -> str:
         err = self._require_page(mgr)
@@ -362,6 +385,7 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
+    @tool(name="browser_get_links", desc="List all links found on the active page.", category="Web")
     @_ensure_browser
     async def browser_get_links(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -375,6 +399,7 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
+    @tool(name="browser_get_inputs", desc="List all input fields, buttons, and forms on the page.", category="Web")
     @_ensure_browser
     async def browser_get_inputs(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -393,6 +418,7 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
+    @tool(name="browser_click", desc="Click an element matching the CSS selector.", category="Web")
     @_ensure_browser
     async def browser_click(self, mgr: BrowserManager, selector: str) -> str:
         err = self._require_page(mgr)
@@ -405,6 +431,7 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
+    @tool(name="browser_fill", desc="Fill an input field matching the CSS selector with a value.", category="Web")
     @_ensure_browser
     async def browser_fill(self, mgr: BrowserManager, selector: str, value: str) -> str:
         err = self._require_page(mgr)
@@ -417,6 +444,7 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
+    @tool(name="browser_type", desc="Type text into an element matching a CSS selector, with custom key delay. Args: selector, text, delay_ms", category="Web")
     @_ensure_browser
     async def browser_type(
         self, mgr: BrowserManager, selector: str, text: str, delay_ms: str = "50"
@@ -432,6 +460,7 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
+    @tool(name="browser_press_key", desc="Press a keyboard key in the active page (e.g. 'Enter', 'Tab').", category="Web")
     @_ensure_browser
     async def browser_press_key(self, mgr: BrowserManager, key: str) -> str:
         err = self._require_page(mgr)
@@ -443,6 +472,7 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
+    @tool(name="browser_scroll", desc="Scroll the active page by a direction and amount. Args: direction, amount", category="Web")
     @_ensure_browser
     async def browser_scroll(
         self, mgr: BrowserManager, direction: str = "down", amount: str = "500"
@@ -466,6 +496,7 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
+    @tool(name="browser_wait_for", desc="Wait for an element matching a CSS selector to appear. Args: selector, timeout_ms", category="Web")
     @_ensure_browser
     async def browser_wait_for(
         self, mgr: BrowserManager, selector: str, timeout_ms: str = "10000"
@@ -480,6 +511,7 @@ class BrowserMixin:
         except (RuntimeError, TimeoutError, AttributeError):
             return f"Timeout: {selector}"
 
+    @tool(name="browser_execute_js", desc="Execute raw JavaScript code in the page context. Args: code", category="Web")
     @_ensure_browser
     async def browser_execute_js(self, mgr: BrowserManager, code: str) -> str:
         err = self._require_page(mgr)
@@ -491,6 +523,7 @@ class BrowserMixin:
         except Exception as e:
             return f"JS Error: {e}"
 
+    @tool(name="browser_screenshot", desc="Take a screenshot of the active browser page and save to a path. Args: path, full_page", category="Web")
     @_ensure_browser
     async def browser_screenshot(
         self, mgr: BrowserManager, path: str = "", full_page: str = "false"
@@ -506,6 +539,7 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {e}"
 
+    @tool(name="browser_select", desc="Select an option in a dropdown element matching the CSS selector. Args: selector, value", category="Web")
     @_ensure_browser
     async def browser_select(
         self, mgr: BrowserManager, selector: str, value: str
@@ -522,6 +556,7 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {e}"
 
+    @tool(name="browser_get_cookies", desc="Get all cookies for the active browser context.", category="Web")
     @_ensure_browser
     async def browser_get_cookies(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -533,6 +568,7 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {e}"
 
+    @tool(name="browser_set_cookie", desc="Set a cookie in the active browser context. Args: name, value, domain, path", category="Web")
     @_ensure_browser
     async def browser_set_cookie(
         self,
@@ -554,6 +590,7 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {e}"
 
+    @tool(name="browser_clear_cookies", desc="Clear all cookies for the active browser context.", category="Web")
     @_ensure_browser
     async def browser_clear_cookies(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -565,6 +602,7 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {e}"
 
+    @tool(name="browser_check", desc="Check or uncheck a checkbox matching the CSS selector. Args: selector, checked", category="Web")
     @_ensure_browser
     async def browser_check(
         self, mgr: BrowserManager, selector: str, checked: str = "true"

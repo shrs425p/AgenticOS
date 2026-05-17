@@ -27,6 +27,7 @@ def test_browser_launch_and_close():
     mock_apw = MagicMock()
     mock_apw_instance = AsyncMock()
     mock_apw.return_value = mock_apw_instance
+    mock_apw_instance.start.return_value = mock_apw_instance
     mock_launcher = AsyncMock()
     mock_apw_instance.chromium = mock_launcher
     
@@ -41,6 +42,32 @@ def test_browser_launch_and_close():
              res = tool.browser_launch(browser="chromium", headless="true", user_data_dir="some_dir")
              assert "launched" in res
              # Note: browser_close tested separately to avoid async mock complexity
+
+def test_browser_launch_cdp():
+    tool = MockWebTools()
+    
+    # Mock playwright instance
+    mock_apw = MagicMock()
+    mock_apw_instance = AsyncMock()
+    mock_apw.return_value = mock_apw_instance
+    mock_apw_instance.start.return_value = mock_apw_instance
+    mock_launcher = AsyncMock()
+    mock_apw_instance.chromium = mock_launcher
+    
+    # Mock CDP browser and context
+    mock_browser = AsyncMock()
+    mock_context = AsyncMock()
+    mock_page = AsyncMock()
+    mock_launcher.connect_over_cdp.return_value = mock_browser
+    mock_browser.contexts = [mock_context]
+    mock_context.pages = [mock_page]
+    
+    with patch("tools.web.browser._async_playwright", return_value=mock_apw):
+        res = tool.browser_launch(browser="chromium", cdp_url="http://localhost:9222")
+        assert "launched" in res
+        assert "cdp" in res
+        mock_launcher.connect_over_cdp.assert_called_once_with("http://localhost:9222")
+
 
 def test_browser_navigation_actions():
     tool = MockWebTools()
