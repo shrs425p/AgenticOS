@@ -21,7 +21,7 @@ numpy>=1.24.0
 matplotlib>=3.10.9
 pandas>=2.0.0
 python-whois>=0.8.0
-python-dateutil>=2.8.0
+python-dateutil>=2.9.0.post0
 
 # Dev & Testing
 pytest>=7.4.0
