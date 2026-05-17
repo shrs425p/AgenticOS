@@ -294,6 +294,198 @@
             opacity: 1;
         }
 
+        /* TELEMETRY DASHBOARD */
+        .telemetry-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2.5rem;
+            border: 1px solid var(--border);
+            padding: 3rem;
+            background: rgba(255, 255, 255, 0.01);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            margin-top: 2rem;
+        }
+
+        .telemetry-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+        }
+
+        .tel-card {
+            border: 1px solid var(--border);
+            padding: 2rem;
+            border-radius: 12px;
+            background: #000000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .tel-card:hover {
+            border-color: rgba(255,255,255,0.25);
+            transform: translateY(-5px);
+        }
+
+        .tel-gauge {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tel-gauge svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .tel-gauge circle {
+            fill: none;
+            stroke-width: 8;
+        }
+
+        .tel-gauge circle.bg {
+            stroke: rgba(255, 255, 255, 0.05);
+        }
+
+        .tel-gauge circle.fg {
+            stroke: var(--text);
+            stroke-dasharray: 301.6;
+            stroke-dashoffset: 301.6;
+            transition: stroke-dashoffset 1s ease-out, stroke 0.5s ease;
+        }
+
+        .tel-val {
+            position: absolute;
+            font-size: 1.6rem;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+        }
+
+        .tel-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .tel-status {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .status-glow {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 10px #10b981;
+            display: inline-block;
+            margin-right: 8px;
+            animation: pulse-glow 2s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.5; }
+        }
+
+        /* LIVE EVENT LOG */
+        .tel-log-container {
+            border: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 8px;
+            padding: 1.5rem;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            max-height: 250px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            text-align: left;
+        }
+
+        .log-entry {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+            animation: fadeInLog 0.3s ease forwards;
+        }
+
+        @keyframes fadeInLog {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .log-time {
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .log-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-info { background: rgba(255, 255, 255, 0.08); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.15); }
+        .badge-warning { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+        .badge-critical { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+
+        .log-msg {
+            color: #e2e8f0;
+        }
+
+        /* CONTROL BUTTONS */
+        .tel-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .tel-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 0.75rem 1.5rem;
+            border-radius: 20px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .tel-btn:hover {
+            background: var(--text);
+            color: var(--bg);
+            border-color: var(--text);
+        }
+
         /* METRICS */
         #metrics {
             min-height: unset;
@@ -898,6 +1090,7 @@
             <li><a href="#features">Features</a></li>
             <li><a href="#arch">Architecture</a></li>
             <li><a href="#crucible">Crucible</a></li>
+            <li><a href="#telemetry">Telemetry</a></li>
             <li><a href="#security">Security</a></li>
             <li><a href="#install">Install</a></li>
             <li><a href="https://github.com/shrs425p/AgenticOS" target="_blank">GitHub ↗</a></li>
@@ -1193,6 +1386,92 @@
             </div>
         </section>
 
+        <!-- TELEMETRY MONITOR -->
+        <section id="telemetry" class="reveal">
+            <h2 class="section-title">Telemetry.</h2>
+            <p style="color:var(--muted);font-size:1.1rem;font-weight:300;max-width:600px;margin-bottom:2rem;line-height:1.8;">
+                Real-time, asynchronous hardware monitoring. Powered by our multi-threaded event bus monitoring thread, tracking critical operating system signals in the background.
+            </p>
+
+            <div class="telemetry-container">
+                <div class="telemetry-grid">
+                    <!-- CPU -->
+                    <div class="tel-card" id="cpu-card">
+                        <div class="tel-gauge">
+                            <svg>
+                                <circle class="bg" cx="60" cy="60" r="48"></circle>
+                                <circle class="fg" id="cpu-ring" cx="60" cy="60" r="48"></circle>
+                            </svg>
+                            <span class="tel-val" id="cpu-value">24%</span>
+                        </div>
+                        <span class="tel-title">Processor load</span>
+                        <span class="tel-status" id="cpu-status"><span class="status-glow"></span>NOMINAL</span>
+                    </div>
+
+                    <!-- RAM -->
+                    <div class="tel-card" id="ram-card">
+                        <div class="tel-gauge">
+                            <svg>
+                                <circle class="bg" cx="60" cy="60" r="48"></circle>
+                                <circle class="fg" id="ram-ring" cx="60" cy="60" r="48"></circle>
+                            </svg>
+                            <span class="tel-val" id="ram-value">48%</span>
+                        </div>
+                        <span class="tel-title">Memory Allocation</span>
+                        <span class="tel-status" id="ram-status"><span class="status-glow"></span>NOMINAL</span>
+                    </div>
+
+                    <!-- Battery -->
+                    <div class="tel-card" id="bat-card">
+                        <div class="tel-gauge">
+                            <svg>
+                                <circle class="bg" cx="60" cy="60" r="48"></circle>
+                                <circle class="fg" id="bat-ring" cx="60" cy="60" r="48"></circle>
+                            </svg>
+                            <span class="tel-val" id="bat-value">98%</span>
+                        </div>
+                        <span class="tel-title">Battery Status</span>
+                        <span class="tel-status" id="bat-status"><span class="status-glow"></span>PLUGGED (AC)</span>
+                    </div>
+
+                    <!-- Network -->
+                    <div class="tel-card" id="net-card">
+                        <div class="tel-gauge">
+                            <svg>
+                                <circle class="bg" cx="60" cy="60" r="48"></circle>
+                                <circle class="fg" id="net-ring" cx="60" cy="60" r="48"></circle>
+                            </svg>
+                            <span class="tel-val" id="net-value">UP</span>
+                        </div>
+                        <span class="tel-title">Network Interface</span>
+                        <span class="tel-status" id="net-status"><span class="status-glow"></span>CONNECTED</span>
+                    </div>
+                </div>
+
+                <!-- Event Stream -->
+                <div class="tel-log-container" id="tel-log">
+                    <div class="log-entry">
+                        <span class="log-time">01:42:15</span>
+                        <span class="log-badge badge-info">system</span>
+                        <span class="log-msg">OS Event Bus daemon thread initialized successfully.</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-time">01:42:16</span>
+                        <span class="log-badge badge-info">network</span>
+                        <span class="log-msg">Active ping to 1.1.1.1 succeeded. Link is stable.</span>
+                    </div>
+                </div>
+
+                <!-- Triggers -->
+                <div class="tel-controls">
+                    <button class="tel-btn" onclick="simulateEvent('cpu')">Simulate CPU Spike</button>
+                    <button class="tel-btn" onclick="simulateEvent('ram')">Simulate RAM Load</button>
+                    <button class="tel-btn" onclick="simulateEvent('battery')">Simulate Unplug &amp; Low Battery</button>
+                    <button class="tel-btn" onclick="simulateEvent('network')">Simulate Network Disconnect</button>
+                </div>
+            </div>
+        </section>
+
         <!-- SECURITY -->
         <section id="security" class="reveal">
             <h2 class="section-title">Zone-Based<br>Security.</h2>
@@ -1418,6 +1697,156 @@
                 requestAnimationFrame(loop);
             })();
 
+            // TELEMETRY SIMULATOR LOGIC
+            const cpuRing = document.getElementById('cpu-ring');
+            const ramRing = document.getElementById('ram-ring');
+            const batRing = document.getElementById('bat-ring');
+            const netRing = document.getElementById('net-ring');
+
+            const cpuValue = document.getElementById('cpu-value');
+            const ramValue = document.getElementById('ram-value');
+            const ramCard = document.getElementById('ram-card');
+            const batValue = document.getElementById('bat-value');
+            const netValue = document.getElementById('net-value');
+
+            const cpuStatus = document.getElementById('cpu-status');
+            const ramStatus = document.getElementById('ram-status');
+            const batStatus = document.getElementById('bat-status');
+            const netStatus = document.getElementById('net-status');
+
+            const telLog = document.getElementById('tel-log');
+
+            function setGauge(ring, val) {
+                if (ring) {
+                    const offset = 301.6 - (301.6 * val) / 100;
+                    ring.style.strokeDashoffset = offset;
+                }
+            }
+
+            // Init values
+            let currentCpu = 24;
+            let currentRam = 48;
+            let currentBat = 98;
+            let currentNet = 100;
+
+            setGauge(cpuRing, currentCpu);
+            setGauge(ramRing, currentRam);
+            setGauge(batRing, currentBat);
+            setGauge(netRing, currentNet);
+
+            // Fluctuate loop
+            setInterval(() => {
+                if (currentCpu < 70) {
+                    currentCpu = Math.floor(18 + Math.random() * 15);
+                    if (cpuValue) cpuValue.innerText = `${currentCpu}%`;
+                    setGauge(cpuRing, currentCpu);
+                }
+                if (currentRam < 70) {
+                    currentRam = Math.floor(45 + Math.random() * 6);
+                    if (ramValue) ramValue.innerText = `${currentRam}%`;
+                    setGauge(ramRing, currentRam);
+                }
+            }, 2000);
+
+            window.addLog = function(badge, msg, severity = 'info') {
+                if (!telLog) return;
+                const now = new Date();
+                const timeStr = now.toTimeString().split(' ')[0];
+                const entry = document.createElement('div');
+                entry.className = 'log-entry';
+                entry.innerHTML = `
+                    <span class="log-time">${timeStr}</span>
+                    <span class="log-badge badge-${severity}">${badge}</span>
+                    <span class="log-msg">${msg}</span>
+                `;
+                telLog.appendChild(entry);
+                telLog.scrollTop = telLog.scrollHeight;
+            };
+
+            window.simulateEvent = function(type) {
+                if (type === 'cpu') {
+                    currentCpu = 94;
+                    if (cpuValue) cpuValue.innerText = '94%';
+                    setGauge(cpuRing, 94);
+                    if (cpuStatus) {
+                        cpuStatus.innerHTML = '<span class="status-glow" style="background:#f59e0b;box-shadow:0 0 10px #f59e0b"></span>SPIKING';
+                        cpuStatus.style.color = '#f59e0b';
+                    }
+                    addLog('cpu', 'Warning: Processor load spiking at 94%! Threshold crossed.', 'warning');
+
+                    setTimeout(() => {
+                        currentCpu = 24;
+                        if (cpuValue) cpuValue.innerText = '24%';
+                        setGauge(cpuRing, 24);
+                        if (cpuStatus) {
+                            cpuStatus.innerHTML = '<span class="status-glow"></span>NOMINAL';
+                            cpuStatus.style.color = '#cbd5e1';
+                        }
+                        addLog('system', 'CPU load stabilized to nominal levels.', 'info');
+                    }, 4000);
+                } else if (type === 'ram') {
+                    currentRam = 91;
+                    if (ramValue) ramValue.innerText = '91%';
+                    setGauge(ramRing, 91);
+                    if (ramStatus) {
+                        ramStatus.innerHTML = '<span class="status-glow" style="background:#ef4444;box-shadow:0 0 10px #ef4444"></span>CRITICAL';
+                        ramStatus.style.color = '#ef4444';
+                    }
+                    addLog('memory', 'Critical: System memory allocation reached 91% capacity!', 'critical');
+
+                    setTimeout(() => {
+                        currentRam = 48;
+                        if (ramValue) ramValue.innerText = '48%';
+                        setGauge(ramRing, 48);
+                        if (ramStatus) {
+                            ramStatus.innerHTML = '<span class="status-glow"></span>NOMINAL';
+                            ramStatus.style.color = '#cbd5e1';
+                        }
+                        addLog('system', 'Garbage collection cycle freed inactive memory targets.', 'info');
+                    }, 4000);
+                } else if (type === 'battery') {
+                    currentBat = 12;
+                    if (batValue) batValue.innerText = '12%';
+                    setGauge(batRing, 12);
+                    if (batStatus) {
+                        batStatus.innerHTML = '<span class="status-glow" style="background:#ef4444;box-shadow:0 0 10px #ef4444"></span>UNPLUGGED (12%)';
+                        batStatus.style.color = '#ef4444';
+                    }
+                    addLog('battery', 'Critical: AC power disconnected. Battery capacity has fallen below 15% threshold!', 'critical');
+
+                    setTimeout(() => {
+                        currentBat = 98;
+                        if (batValue) batValue.innerText = '98%';
+                        setGauge(batRing, 98);
+                        if (batStatus) {
+                            batStatus.innerHTML = '<span class="status-glow"></span>PLUGGED (AC)';
+                            batStatus.style.color = '#cbd5e1';
+                        }
+                        addLog('battery', 'AC Power connected. Battery capacity charging (98%).', 'info');
+                    }, 5000);
+                } else if (type === 'network') {
+                    currentNet = 0;
+                    if (netValue) netValue.innerText = 'DOWN';
+                    setGauge(netRing, 0);
+                    if (netStatus) {
+                        netStatus.innerHTML = '<span class="status-glow" style="background:#ef4444;box-shadow:0 0 10px #ef4444"></span>DISCONNECTED';
+                        netStatus.style.color = '#ef4444';
+                    }
+                    addLog('network', 'Warning: Active ping probe failed. Wi-Fi adapter has disconnected.', 'warning');
+
+                    setTimeout(() => {
+                        currentNet = 100;
+                        if (netValue) netValue.innerText = 'UP';
+                        setGauge(netRing, 100);
+                        if (netStatus) {
+                            netStatus.innerHTML = '<span class="status-glow"></span>CONNECTED';
+                            netStatus.style.color = '#cbd5e1';
+                        }
+                        addLog('network', 'Network ping successfully restored. Bandwidth nominal.', 'info');
+                    }, 4000);
+                }
+            };
+
             // HACKER TEXT on hero italic
             const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ01';
             const heroItalic = document.querySelector('.hero-title .italic-serif');
@@ -1435,6 +1864,15 @@
                     }, 35);
                 });
             }
+
+            // Register hovers on dynamic telemetry buttons
+            const telButtons = document.querySelectorAll('.tel-btn');
+            telButtons.forEach(btn => {
+                if (window.matchMedia('(pointer: fine)').matches) {
+                    btn.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+                    btn.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+                }
+            });
 
         });
     </script>
