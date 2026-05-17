@@ -17,32 +17,49 @@ Before you begin, ensure your machine meets the [System Requirements](system_req
 
 ## Step 2: Clone and Environment Setup
 
-### Recommended Path: C:\AgenticOs
-For maximum stability and performance, we strongly recommend cloning the project into a root-level directory without spaces (e.g., `C:\AgenticOs`). This ensures that the **Fast-Path** PowerShell optimizations and terminal commands function with 100% reliability.
+### Recommended Path: Root-Level Directory
+For maximum stability and performance, we recommend cloning the project into a root-level or simple home directory path without spaces (e.g., `C:\AgenticOs` on Windows, or `~/AgenticOs` on macOS/Linux). This ensures that path utilities, Fast-Path optimizations, and terminal commands execute with 100% reliability.
 
-Clone the repository and move into the project directory:
-
+#### Windows Setup:
+1. Clone the repository and navigate into it:
 ```powershell
 git clone https://github.com/shrs425p/AgenticOS.git C:\AgenticOs
 cd C:\AgenticOs
 ```
-
-Create and activate a virtual environment to keep your dependencies isolated:
-
+2. Create and activate a virtual environment:
 ```powershell
 python -m venv venv
 .\venv\Scripts\activate
+```
+
+#### macOS / Linux Setup:
+1. Clone the repository and navigate into it:
+```bash
+git clone https://github.com/shrs425p/AgenticOS.git ~/AgenticOs
+cd ~/AgenticOs
+```
+2. Create and activate a virtual environment:
+```bash
+python3 -m venv venv
+source venv/bin/activate
 ```
 
 ---
 
 ## Step 3: Install Dependencies
 
-Install the core Python packages and the Playwright browser engine:
+Install the core Python packages and initialize the Playwright browser engine along with any required system-level browser libraries:
 
+#### Windows:
 ```powershell
 pip install -r requirements.txt
 playwright install chromium
+```
+
+#### macOS / Linux:
+```bash
+pip install -r requirements.txt
+playwright install --with-deps chromium
 ```
 
 ---
@@ -90,13 +107,20 @@ Review `config/policy.yaml` to ensure the **Secret Redaction Engine** and **Path
 
 ## Step 6: Launching AgenticOS
 
-Once everything is configured, start the agent by typing `agent` in any terminal:
+Once everything is configured, start the agent from any terminal:
 
+#### Windows:
 ```powershell
 agent
 ```
+> **Prerequisite:** You must run `.\setup.ps1` once (Step 1) so the `bin/agent.bat` launcher is registered on your PATH.
 
-> **Prerequisite:** You must have run `.\setup.ps1` at least once (Step 1) so that the `bin/agent.bat` launcher is on your PATH. If the `agent` command is not recognised, re-run `.\setup.ps1` and restart your terminal.
+#### macOS / Linux:
+```bash
+# Set execution permission and run the launch script
+chmod +x bin/agent
+./bin/agent
+```
 
 ### The Startup Sequence:
 1.  **Banner**: You will see the AgenticOS ASCII art banner.
@@ -169,5 +193,5 @@ This will run the automated suite to ensure core components, filesystem tools, a
 
 ---
 
-*Last Updated: 2026-05-17*
-*Status: Secure & Verified*
+*Last Updated: 2026-05-18*
+*Status: Verified on Windows, macOS, and Linux*

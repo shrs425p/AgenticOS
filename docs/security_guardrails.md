@@ -27,14 +27,17 @@ The `PathGuard` system divides the host machine into three distinct security zon
 -   **Behavior**: The agent can read, write, and delete files here without any prompts. This is the "Sandbox" where the agent performs its work.
 
 ### 2. The Yellow Zone (Other User Paths)
--   **Definition**: Any path outside the workspace that is not a system path (e.g., `<USER_PROFILE>\Downloads`).
+-   **Definition**: Any path outside the workspace that is not a system path (e.g., `<USER_PROFILE>\Downloads` or `~/Downloads` / `~/Documents`).
 -   **Policy**: READ-ONLY AUTONOMY / WRITE-BY-APPROVAL.
 -   **Behavior**:
     -   **Read**: The agent can read files (e.g., to analyze a document).
     -   **Write/Delete**: The agent is **BLOCKED**. It must trigger a `HITM_REQUIRED` event, which prompts the user for a `y/N` confirmation in the terminal.
 
 ### 3. The Red Zone (System Paths)
--   **Definition**: `<SYSTEM_ROOT>\Windows`, `<SYSTEM_DRIVE>\Program Files`, `<SYSTEM_DRIVE>\Program Files (x86)`.
+-   **Definition**: 
+    -   **Windows**: `<SYSTEM_ROOT>\Windows`, `<SYSTEM_DRIVE>\Program Files`, `<SYSTEM_DRIVE>\Program Files (x86)`.
+    -   **macOS (Darwin)**: `/System`, `/Library`, `/usr/bin`, `/etc`.
+    -   **Linux**: `/etc`, `/sbin`, `/usr/bin`, `/var/run`, `/proc`.
 -   **Policy**: STRICTLY FORBIDDEN.
 -   **Behavior**: Any attempt to access these paths (even for reading) is blocked at the code level with a `SECURITY ALERT`. The agent cannot bypass this even with "Power Mode" enabled.
 
@@ -136,8 +139,14 @@ security:
   # Enable/Disable the entire PathGuard system
   enable_zone_guard: true
   
-  # List of paths that are NEVER accessible
-  blocked_paths: ["C:\\Windows", "C:\\Program Files"]
+  # List of paths that are NEVER accessible (Multi-platform paths can be specified)
+  blocked_paths: 
+    - "C:\\Windows"
+    - "C:\\Program Files"
+    - "/System"
+    - "/Library"
+    - "/etc"
+    - "/sbin"
   
   # Require human approval for actions outside workspace
   require_hitm_outside_workspace: true
@@ -159,5 +168,5 @@ redaction:
 
 ---
 
-*Last Updated: 2026-05-13*
-*Status: Hardened*
+*Last Updated: 2026-05-18*
+*Status: Hardened (Multi-Platform)*

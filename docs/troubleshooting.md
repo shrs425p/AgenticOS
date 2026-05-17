@@ -97,6 +97,14 @@ AgenticOS includes several built-in tools to help you diagnose its health:
 -   **Cause**: Modern GNOME ignores standard `picture-uri` modifications if System Dark Mode is active.
 -   **Fix**: AgenticOS automatically sets both the `picture-uri` and `picture-uri-dark` keys in v2.1.0 to ensure comprehensive compatibility.
 
+### 4. "AppleScript compilation syntax error during keyboard actions on macOS."
+-   **Cause**: Triggering special keys that are missing in the hardcoded mapping.
+-   **Fix**: Update the `_MACOS_KEYCODE` dictionary inside `tools/terminal/keyboard.py` to map your custom key name, or fall back to passing the key as a standard text string/keystroke.
+
+### 5. "Missing screen capture tools error on Linux."
+-   **Cause**: Linux environments do not ship with screenshot CLI tools by default.
+-   **Fix**: Install `scrot` or `gnome-screenshot` using your native package manager (e.g. `sudo apt install scrot` or calling `install_system_package('scrot')`).
+
 ---
 
 ## Still Having Issues?
@@ -107,5 +115,5 @@ AgenticOS includes several built-in tools to help you diagnose its health:
 
 ---
 
-*Last Updated: 2026-05-13*
-*Status: Troubleshooting Guide*
+*Last Updated: 2026-05-18*
+*Status: Troubleshooting Guide (Multi-Platform)*

@@ -24,7 +24,7 @@
   
   <p>
     <img src="https://img.shields.io/badge/python-3.10%2B-yellow?style=flat-square" alt="Python">
-    <img src="https://img.shields.io/badge/platform-Windows-lightgrey?style=flat-square" alt="Platform">
+    <img src="https://img.shields.io/badge/platform-Windows_|_macOS_|_Linux-blue?style=flat-square" alt="Platform">
     <img src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square" alt="PRs Welcome">
     <img src="https://img.shields.io/badge/security-verified-brightgreen?style=flat-square" alt="Security">
     <img src="https://github.com/shrs425p/AgenticOS/actions/workflows/ci.yml/badge.svg" alt="CI Build Status">
@@ -43,7 +43,7 @@
 
 ---
 
-**AgenticOS** is a secure autonomous operating system designed for extreme performance, deep system orchestration, and resilient multi-modal research. It integrates high-scale cloud models (NVIDIA NIM, Google Gemini) and local LLMs (Ollama) with a modular ecosystem of over **180 specialized tools** to provide a proactive, self-healing operational experience.
+**AgenticOS** is a secure autonomous framework designed for extreme performance, deep system orchestration, and resilient multi-modal research across **Windows, macOS, and Linux**. It integrates high-scale cloud models (NVIDIA NIM, Google Gemini) and local LLMs (Ollama) with a modular ecosystem of over **180 specialized tools** to provide a proactive, self-healing operational experience.
 
 ---
 

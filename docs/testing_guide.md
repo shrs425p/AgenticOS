@@ -34,12 +34,12 @@ Our testing strategy follows the **"Isolated Simulation"** model:
 ## Running the Test Suite
 
 ### Basic Execution
-```powershell
+```bash
 pytest
 ```
 
 ### Run a single test file
-```powershell
+```bash
 pytest tests/test_retry.py -q
 ```
 
@@ -47,7 +47,7 @@ Note: We added `tests/test_retry.py` to validate the centralized `retry_call()` 
 
 ### Coverage Reporting
 To generate a detailed line-by-line coverage report:
-```powershell
+```bash
 pytest --cov=core --cov=tools --cov-report=term-missing
 ```
 
@@ -93,5 +93,5 @@ When adding a new tool:
 
 ---
 
-*Last Updated: 2026-05-15*
-*Status: Engineering Standard*
+*Last Updated: 2026-05-18*
+*Status: Engineering Standard (Verified Cross-Platform)*

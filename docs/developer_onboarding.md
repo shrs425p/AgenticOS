@@ -46,7 +46,7 @@ subprocess.run("git status", shell=True)
 AgenticOS enforces a high-coverage testing standard using `pytest`. Every new core feature or tool MUST be accompanied by a corresponding test in the `tests/` directory.
 
 ### Running Tests
-```powershell
+```bash
 # Run the full suite with coverage
 pytest tests/ --cov=core --cov=tools --cov-report=term-missing
 
@@ -109,5 +109,5 @@ Most developers should contribute by writing **Plugins**.
 
 ---
 
-*Last Updated: 2026-05-14*
-*Status: Engineering Ready*
+*Last Updated: 2026-05-18*
+*Status: Engineering Ready (Verified Cross-Platform)*
