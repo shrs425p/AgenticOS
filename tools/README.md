@@ -51,6 +51,22 @@ A dynamic extension directory that allows AgenticOS to expand its capabilities a
 
 ---
 
+## Advanced Capabilities & Custom Plugins
+
+AgenticOS includes newly added high-performance tools and plugins:
+
+### 📊 System Telemetry & Health Tracker (`tools/system_tools.py`)
+- **`get_system_telemetry`**: Retrieves real-time CPU percentages, physical and logical core structures, virtual memory capacities, root disk partition details, and active network bandwidth sent/received bytes.
+
+### 🔌 Dynamic Plugin Library (`tools/plugins/`)
+- **`diff_summarizer`**: Computes text deltas using native diff libraries and compiles a plain-English, line-level modification summary.
+- **`url_safety_check`**: Establishes peer SSL connections to cryptographically verify certificates, queries root registrars on Port 43 via raw sockets for WHOIS details, and rates domain threat risk.
+- **`os_sandbox_auditor`**: Scans the host PATH to discover installed interpreters and compilers (`Node.js`, `Python`, `Git`, `Go`, `Rust`) and reports active GUI desktop window titles.
+- **`sys_package_installer`**: Provides unified cross-platform system package installation, mapping abstract requests to `winget`, `choco`, `brew`, `apt`, `dnf`, or `pacman` autonomously.
+- **`code_complexity`**: Installs `radon` dynamically on-demand, parses target Python files into Abstract Syntax Trees, and generates a ranked cyclomatic complexity report.
+
+---
+
 ## Tool Category Summary
 
 | Component / Path | Primary Purpose | Category |
@@ -61,7 +77,7 @@ A dynamic extension directory that allows AgenticOS to expand its capabilities a
 | `tools/plugins/` | Third-party extension hooks and self-healed dynamic code | Plugins |
 | `ocr_tools.py` | Image text extraction and screen OCR analysis | Media |
 | `screen_tools.py` | Display tracking, mouse control, and screenshot takers | Media |
-| `system_tools.py` | Resource, process handle, and hardware system checkers | System |
+| `system_tools.py` | Resource, process handle, hardware telemetry, and systems trackers | System |
 
 ---
 

@@ -74,7 +74,7 @@ This document outlines the standard 72 autonomous tasks utilized during Crucible
 51. Fetch real-time data from 3 different public REST APIs (your choice), join the datasets by a common field or theme, produce a cross_api_synthesis.md
 52. Perform a latency benchmark: ping 10 different global servers (US, EU, Asia, India), record RTT for each, plot a latency map bar chart, write a global_latency.md
 53. Write a Python daemon that checks https://api.github.com/repos/ollama/ollama every 60 seconds for 5 minutes and alerts (via desktop notification) if the star count changes
-54. Simulate a phishing URL detector: take 10 URLs from a web search for "phishing examples 2025", for each check DNS, SSL cert validity, WHOIS age, HTTP headers - score each 0-10 risk, write phishing_analysis.md
+54. [x] Simulate a phishing URL detector: take 10 URLs from a web search for "phishing examples 2025", for each check DNS, SSL cert validity, WHOIS age, HTTP headers - score each 0-10 risk, write phishing_analysis.md
 55. Clone a public GitHub repo (any small Python project), analyze its structure, run any tests that exist, summarize what the project does and its test coverage, write a repo_audit.md
 56. Build a personal portfolio scraper: given 3 developer GitHub profiles, extract repos, star counts, top languages, recent activity - write a developer_comparison.md
 57. Write an autonomous research loop: pick a topic ("Mixture of Experts architecture"), search the web, fetch top 3 articles, extract key concepts, search again with refined terms, repeat 3 rounds, write a deep_research.md that gets progressively more detailed each round
@@ -91,9 +91,9 @@ This document outlines the standard 72 autonomous tasks utilized during Crucible
 63. Write a new plugin tool called "sentiment_score" that takes a text string, uses VADER (install if needed), and returns positive/negative/neutral/compound scores - save to plugins, reload, test on 5 sample sentences
 64. Write a plugin called "pdf_to_text" using pypdf2/pdfplumber - save to plugins, reload, test on any PDF you can find or download
 65. Write a plugin called "image_to_text" using pytesseract (if tesseract is installed) or easyocr - save to plugins, reload, test on screenshot_test.png
-66. Write a plugin called "diff_summarizer" that takes two text strings and returns a human-readable plain-English summary of what changed - using difflib - save, reload, test
-67. Write a plugin called "url_safety_check" that takes a URL, checks SSL validity, WHOIS age, presence in common blocklists (via web search), and returns a risk score - save, reload, test on 3 URLs
-68. Write a plugin called "code_complexity" that takes a Python file path, uses radon (install if needed) to compute cyclomatic complexity per function, returns a complexity report - test on tool_registry.py
+66. [x] Write a plugin called "diff_summarizer" that takes two text strings and returns a human-readable plain-English summary of what changed - using difflib - save, reload, test
+67. [x] Write a plugin called "url_safety_check" that takes a URL, checks SSL validity, WHOIS age, presence in common blocklists (via web search), and returns a risk score - save, reload, test on 3 URLs
+68. [x] Write a plugin called "code_complexity" that takes a Python file path, uses radon (install if needed) to compute cyclomatic complexity per function, returns a complexity report - test on tool_registry.py
 69. Auto-generate a CHANGELOG.md for AgenticOS by reading git log of C:\AgenticOs, grouping commits by week, summarizing each week's changes in plain English
 70. Write a plugin called "auto_summarize_file" that reads any text file and returns a 3-sentence summary using the Ollama API (qwen2.5:7b) - save, reload, test on competitor_analysis.md
 71. Perform a self-audit: call tools_list, identify any tool whose description is missing or just says "No description provided", write tool_desc_audit.md listing gaps

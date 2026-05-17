@@ -1,6 +1,6 @@
 # AgenticOS Test Suite
 
-This directory contains the comprehensive, automated test suite for AgenticOS. It features over 550+ unit and integration tests covering the core loop, model clients, security guardrails, filesystem mixins, terminal utilities, and custom plugin architectures.
+This directory contains the comprehensive, automated test suite for AgenticOS. It features over 575+ unit and integration tests covering the core loop, model clients, security guardrails, filesystem mixins, terminal utilities, and custom plugin architectures.
 
 ---
 
@@ -16,7 +16,12 @@ tests/
 ├── test_model_clients.py# Mocks and assertions for Gemini, OpenAI, Groq, and Nvidia API clients
 ├── test_web_*.py        # Web scrapers, search engines, and browser tool mock assertions
 ├── test_fs_*.py         # High-speed filesystem mutations, bulk actions, and search utilities
-└── test_terminal_*.py   # Native OS, shell, audio, and keyboard input wrappers
+├── test_terminal_*.py   # Native OS, shell, audio, and keyboard input wrappers
+├── test_diff_summarizer.py # Asserts line-level plain-English diff transformations offline
+├── test_url_safety_check.py # Simulates domain WHOIS lookups and certificate peer handshakes
+├── test_os_sandbox_auditor.py # Simulates process filters and compilers checks cross-platform
+├── test_sys_package_installer.py # Asserts package manager execution bindings across platform profiles
+└── test_code_complexity.py # Verifies AST visitor processing and Radon score rankings offline
 ```
 
 ---
