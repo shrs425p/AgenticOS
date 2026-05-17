@@ -62,7 +62,7 @@ One of the most advanced autonomous features is the **Self-Healing Loop**.
 
 ### Error Recovery Scenarios:
 1.  **Tool Failure**: If `read_file` fails because the agent guessed the path, it will autonomously call `locate_path` to find the real file.
-2.  **Model Hallucination**: If the model outputs a tool name that doesn't exist, the orchestrator returns the full `tools_list` and says: *"That tool doesn't exist. Here is the correct list."*
+2.  **Model Hallucination**: If the model outputs a tool name that doesn't exist, the orchestrator returns the full tool list (as seen in `/tools`) and says: *"That tool doesn't exist. Here is the correct list."*
 3.  **JSON Errors**: If the model generates malformed JSON, the agent uses a "Repair Prompt" to fix the syntax and retry the action.
 
 ---

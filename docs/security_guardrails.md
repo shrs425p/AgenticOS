@@ -58,7 +58,7 @@ The HITM system is the ultimate fail-safe. When an agent attempts an operation t
 
 ---
 
-## [FAST] Performance Safety Gates (New in v2.0)
+## [FAST] Performance Safety Gates (New in v2.0.0)
 
 During stress testing, we identified that agents can accidentally "attack" the host machine by performing massive recursive scans. AgenticOS now includes **Performance Guardrails** to prevent system lockups.
 
@@ -99,7 +99,7 @@ Every action taken by the agent is logged in `data/logs/audit.jsonl`. This file 
 
 ---
 
-## [REDACT] Secret Redaction Engine (New in v2.1)
+## [REDACT] Secret Redaction Engine (New in v2.0.0)
 
 To prevent sensitive information from leaking into session logs or persistent memory, AgenticOS includes a real-time **Secret Redaction Engine**.
 

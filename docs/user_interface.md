@@ -19,7 +19,7 @@ AgenticOS uses a "Premium Terminal" aesthetic. It avoids plain, monochromatic te
 
 ## [FAST] The "No-Lag" Typewriter
 
-As of v2.0, AgenticOS features a highly optimized terminal rendering engine. We solved the "IPC Lag" issue where character-by-character printing would pin the CPU.
+As of v2.0.0, AgenticOS features a highly optimized terminal rendering engine. We solved the "IPC Lag" issue where character-by-character printing would pin the CPU.
 
 ### Optimization Highlights:
 -   **Block Flushing**: Text is rendered in semantic chunks rather than raw bytes.

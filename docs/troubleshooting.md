@@ -14,7 +14,7 @@ AgenticOS is a complex system interacting with multiple APIs and the local opera
 ### 2. `'Logger' object has no attribute 'isatty'`
 -   **Symptom**: The script crashes immediately after starting.
 -   **Cause**: You replaced `sys.stdout` with a custom logger that doesn't implement the full terminal interface.
--   **Fix**: Ensure your `Logger` class in `run_eval.py` has an `isatty()` method and an `encoding` property. (This was fixed in v2.0).
+-   **Fix**: Ensure your `Logger` class in `run_eval.py` has an `isatty()` method and an `encoding` property. (This was fixed in v2.0.0).
 
 ### 3. `UnicodeEncodeError: 'charmap' codec can't encode character...`
 -   **Symptom**: The agent crashes when printing symbols (e.g., [LAUNCH]) to the Windows console.
@@ -27,11 +27,11 @@ AgenticOS is a complex system interacting with multiple APIs and the local opera
 
 ### 1. "My system is lagging when the agent scans the drive."
 -   **Cause**: The agent is using a slow Python-based recursive search (e.g., `grep_dir` on `C:\`).
--   **Fix**: Use the `fast_disk_audit` tool. We implemented **Performance Guardrails** that should now block these slow scans and suggest the faster native method.
+-   **Fix**: Use the `find_large_files` tool. We implemented **Performance Guardrails** that should now block these slow scans and suggest the faster native method.
 
 ### 2. "The terminal UI is flickering or slow."
 -   **Cause**: Typewriter lag from character-by-character flushing.
--   **Fix**: Ensure `agent.stream` is configured correctly. In v2.0, we optimized `typewriter_print` to use block-level output, which removes this lag.
+-   **Fix**: Ensure `agent.stream` is configured correctly. In v2.0.0, we optimized `typewriter_print` to use block-level output, which removes this lag.
 
 ### 3. "Agent is stuck in a loop (repeating the same action)."
 -   **Cause**: The model doesn't understand the tool output or thinks the task isn't done.
@@ -77,8 +77,8 @@ AgenticOS includes several built-in tools to help you diagnose its health:
 | Tool | Purpose |
 | :--- | :--- |
 | `system_health` | Full report on CPU, RAM, Disk, and Agent process stats. |
-| `tools_list` | Verifies all tools are registered and descriptions are correct. |
-| `eventlog_query` | Checks Windows system logs for errors. |
+| `validate_config` | Verifies the runtime configuration is correctly formed. |
+| `system_info` | Provides overall system diagnostics. |
 | `self_process_info` | Shows the agent's own PID, memory, and handles. |
 
 ---

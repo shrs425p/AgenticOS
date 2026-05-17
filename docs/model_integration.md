@@ -26,7 +26,7 @@ AgenticOS natively supports the following providers through the `core/model_clie
 
 ## [SECURE] API Resilience & The 429 Shield
 
-In production, API rate limits are the most common cause of agent failure. AgenticOS v2.0 features a custom **Exponential Backoff & Retry** system built directly into the client layer.
+In production, API rate limits are the most common cause of agent failure. AgenticOS v2.0.0 features a custom **Exponential Backoff & Retry** system built directly into the client layer.
 
 ### How it Works:
 If a provider returns a `429 Too Many Requests` (Rate Limit) error:

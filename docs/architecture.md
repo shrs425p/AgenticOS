@@ -84,7 +84,7 @@ To prevent context window bloat, the agent automatically summarizes the history 
 
 ## [TOOL] Tool Registry & Plugin Architecture
 
-The registry (`core/tool_registry.py`) is the brain of the agent's capabilities. It manages over 300+ tools across several categories.
+The registry (`core/tool_registry.py`) is the brain of the agent's capabilities. It manages over 180+ tools across several categories.
 
 ### Category Breakdown
 | Category | Primary Tools | Implementation Type |

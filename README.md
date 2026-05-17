@@ -65,7 +65,7 @@ AgenticOS is a high-performance autonomous tool. Its best results are achieved t
 ---
 
 ## [ARCH] The "Crucible" Hardened Architecture
-Following a massive 96-item stress test, AgenticOS v2.0 has been hardened for real-world production environments. It solves the core bottlenecks of traditional agents:
+Following a massive 96-item stress test, AgenticOS v2.0.0 has been hardened for real-world production environments. It solves the core bottlenecks of traditional agents:
 -   **No-Lag Terminal UI**: Block-level rendering removes the character-by-character "typewriter lag."
 -   **Rate-Limit Shield**: Built-in exponential backoff masks all `429 Too Many Requests` errors.
 -   **Fast-Path IO**: Native PowerShell-optimized scanning is 20x faster than Python's `rglob`.
@@ -88,7 +88,7 @@ Explore the full AgenticOS manual for deep technical insights:
 *   [**Evaluation Harness**](docs/evaluation_harness.md): How to run stress tests and read session logs.
 *   [**System Requirements**](docs/system_requirements.md): Hardware and software prerequisites.
 *   [**Deployment Scenarios**](docs/deployment_scenarios.md): Specific "Recipes" for different use cases.
-*   [**Version History**](docs/version_history.md): Technical evolution from v1.0 to v2.0.
+*   [**Version History**](docs/version_history.md): Technical evolution from v1.0 to v2.0.0.
 *   [**Runtime Configuration**](docs/runtime_configuration.md): Exhaustive guide to `config.yaml`.
 
 ### [TOOL] Developer & Tooling

@@ -162,7 +162,7 @@ Once your plugin is in `tools/plugins/`, run:
 ```powershell
 python main.py
 ```
-Type `tools_list` in the console to verify that your new capability is recognized by the system.
+Type `/tools` in the console to verify that your new capability is recognized by the system.
 
 ---
 

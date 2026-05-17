@@ -17,6 +17,7 @@ The system loads and merges these files in the following order:
 | **`prompts.yaml`**  | Intelligence | System prompts, CoV templates, and agent "nudges." |
 | **`storage.yaml`**  | Persistence | SQLite paths, memory summarization thresholds. |
 | **`tools.yaml`**    | Capability Toggles | Enabling/disabling specific tool categories. |
+| **`url_presets.yaml`**| URL Templates | Predefined URLs and shortcuts. |
 
 ---
 

@@ -6,10 +6,10 @@ This document tracks the technical evolution of AgenticOS from its initial proto
 
 ---
 
-## [LAUNCH] v2.1 - The "Portable & Resilient" Edition (Current)
+## [LAUNCH] v2.0.0 - The "Portable & Resilient" Edition (Current)
 *Release Date: 2026-05-15*
 
-The v2.1 release focuses on decoupling AgenticOS from the host environment and establishing a professional-grade testing framework.
+The v2.0.0 release focuses on decoupling AgenticOS from the host environment and establishing a professional-grade testing framework.
 
 ### Key Innovations:
 1.  **Layered Configuration System**: Migrated from a single `config.yaml` to a multi-file configuration directory (`config/`). This enables clean separation of security policy, service endpoints, and system heuristics.

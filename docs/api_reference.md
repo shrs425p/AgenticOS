@@ -50,7 +50,7 @@ Connecting the agent to global intelligence.
 | `get_json_api` | `url`, `headers` | Fetches data from REST APIs. |
 | `whois_lookup` | `domain` | Performs registration lookups. |
 | `rss_feed` | `url` | Parses news feeds into structured lists. |
-| `download_smart` | `url`, `dest_path` | Resilient, multi-method file downloader. |
+| `download_file` | `url`, `dest_path`, `timeout` | Download file from URL. |
 
 ---
 
@@ -60,12 +60,12 @@ Playwright-driven interactive web navigation.
 
 | Tool | Arguments | Description |
 | :--- | :--- | :--- |
-| `browser_launch` | `browser`, `headless` | Starts a fresh browser instance. |
-| `browser_navigate`| `url` | Loads a specific website. |
-| `browser_click` | `selector` | Simulates a human click on an element. |
-| `browser_fill` | `selector`, `text` | Inputs text into forms/input fields. |
-| `browser_screenshot`| `path` | Takes a PNG of the current page. |
-| `browser_close` | `none` | Cleanly shuts down the browser process. |
+| `get_browser_url` | `browser` | Get the current URL shown in the active browser tab. |
+| `browser_read_page_text` | `browser` | Read all visible text from the active browser tab. |
+| `browser_read_selection` | `browser` | Read the currently selected/highlighted text in the browser. |
+| `open_url` | `url` | Open URL in default browser. |
+| `window_focus` | `title` | Focus a window by title substring. |
+| `window_close` | `title` | Close a window by title substring. |
 
 ---
 
@@ -89,13 +89,13 @@ Controlling the user environment and peripherals.
 
 ## [LAUNCH] Performance Plugins (`Custom`)
 
-Specialized tools added for the v2.0 Production hardening.
+Specialized tools added for the v2.0.0 Production hardening.
 
 | Tool | Arguments | Description |
 | :--- | :--- | :--- |
-| `fast_disk_audit` | `path`, `mode` | PowerShell-optimized full-drive auditing. |
-| `meta_evolution` | `code`, `goal` | Self-modification tool for writing new plugins. |
-| `sentiment_score` | `text` | Native NLP analysis of text strings. |
+| `find_large_files` | `path`, `min_mb` | Find large files. |
+| `plugin_health_check` | None | Run plugin health check. |
+| `generate_session_summary` | None | Generates a daily session summary from logs. |
 
 ---
 
@@ -103,10 +103,10 @@ Specialized tools added for the v2.0 Production hardening.
 This is a condensed list. For a full, live inventory of every tool available to your specific instance, type the following command into your terminal:
 
 ```powershell
-tools_list
+/tools
 ```
 
-This will output the documentation, argument schemas, and version numbers for all **300+ tools** currently registered in your system.
+This will output the documentation, argument schemas, and version numbers for all **180+ tools** currently registered in your system.
 
 ---
 
