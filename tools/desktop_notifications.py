@@ -42,6 +42,15 @@ class NotificationCenter:
                             f"file://{image_path}",
                         ]
                     )
+                    subprocess.run(
+                        [
+                            "gsettings",
+                            "set",
+                            "org.gnome.desktop.background",
+                            "picture-uri-dark",
+                            f"file://{image_path}",
+                        ]
+                    )
                     return f"Wallpaper set (Gnome): {image_path}"
                 except Exception:
                     return f"Set wallpaper not fully implemented for this Linux environment. Path: {image_path}"
@@ -82,16 +91,15 @@ class NotificationCenter:
     @tool(name="send_notification", desc="Send desktop alert. Args: title, message", category="General")
     def send_notification(self, title: str, message: str) -> str:
         """Send a desktop notification (cross-platform)."""
-        title = title.replace('"', '\\"').replace("'", "\\'")
-        message = message.replace('"', '\\"').replace("'", "\\'")
-
         if self.system == "Windows":
+            title_ps = title.replace('"', '""')
+            message_ps = message.replace('"', '""')
             ps_cmd = f"""
 [void][System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms");
 $n = New-Object System.Windows.Forms.NotifyIcon;
 $n.Icon = [System.Drawing.SystemIcons]::Information;
-$n.BalloonTipTitle = "{title}";
-$n.BalloonTipText  = "{message}";
+$n.BalloonTipTitle = "{title_ps}";
+$n.BalloonTipText  = "{message_ps}";
 $n.Visible = $true;
 $n.ShowBalloonTip(5000);
 Start-Sleep -Seconds 1;
@@ -100,7 +108,9 @@ $n.Dispose();
             return self._run_ps(ps_cmd)
 
         elif self.system == "Darwin":
-            script = f'display notification "{message}" with title "{title}"'
+            title_mac = title.replace('"', '\\"')
+            message_mac = message.replace('"', '\\"')
+            script = f'display notification "{message_mac}" with title "{title_mac}"'
             return self._run(["osascript", "-e", script])
 
         else:
@@ -121,18 +131,19 @@ $n.Dispose();
     @tool(name="show_popup", desc="Show popup message box. Args: title, message", category="General")
     def show_popup(self, title: str, message: str) -> str:
         """Show a modal popup message box (cross-platform)."""
-        title = title.replace('"', '\\"').replace("'", "\\'")
-        message = message.replace('"', '\\"').replace("'", "\\'")
-
         if self.system == "Windows":
+            title_ps = title.replace('"', '""')
+            message_ps = message.replace('"', '""')
             ps_cmd = f"""
 Add-Type -AssemblyName System.Windows.Forms;
-[System.Windows.Forms.MessageBox]::Show("{message}", "{title}");
+[System.Windows.Forms.MessageBox]::Show("{message_ps}", "{title_ps}");
 """
             return self._run_ps(ps_cmd)
 
         elif self.system == "Darwin":
-            script = f'display dialog "{message}" with title "{title}" buttons {{"OK"}} default button "OK"'
+            title_mac = title.replace('"', '\\"')
+            message_mac = message.replace('"', '\\"')
+            script = f'display dialog "{message_mac}" with title "{title_mac}" buttons {{"OK"}} default button "OK"'
             return self._run(["osascript", "-e", script])
 
         else:
@@ -152,13 +163,12 @@ Add-Type -AssemblyName System.Windows.Forms;
     @tool(name="speak", desc="Text-to-speech. Args: text", category="General")
     def speak(self, text: str) -> str:
         """Speak text using the system's TTS engine (cross-platform)."""
-        safe = text.replace('"', '\\"').replace("'", "\\'")
-
         if self.system == "Windows":
+            safe_ps = text.replace('"', '""')
             ps_cmd = f"""
 Add-Type -AssemblyName System.Speech;
 $synth = New-Object System.Speech.Synthesis.SpeechSynthesizer;
-$synth.Speak("{safe}");
+$synth.Speak("{safe_ps}");
 """
             return self._run_ps(ps_cmd)
 

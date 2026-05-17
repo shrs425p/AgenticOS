@@ -213,11 +213,9 @@ def _combo_to_osascript(combo: str) -> str:
     if key in _MACOS_KEYCODE:
         code = _MACOS_KEYCODE[key]
         return f'tell application "System Events" to key code {code}{using_clause}'
-    elif len(key) == 1:
-        return f'tell application "System Events" to keystroke "{key}"{using_clause}'
     else:
-        # Try key code by name via System Events
-        return f'tell application "System Events" to key code (key code of "{key}"){using_clause}'
+        # Safely fall back to typing the word as a string keystroke rather than compilation failure
+        return f'tell application "System Events" to keystroke "{key}"{using_clause}'
 
 
 

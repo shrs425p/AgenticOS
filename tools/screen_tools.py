@@ -149,9 +149,7 @@ if ($procs) {{
 """
             return self._run_ps(ps_cmd)
         elif self.system == "Darwin":
-            script = (
-                f'tell application "{app_name}" to set miniaturized of windows to true'
-            )
+            script = f'tell application "System Events" to set value of attribute "AXMinimized" of every window of process "{app_name}" to true'
             return self._run(["osascript", "-e", script])
         else:
             if shutil.which("wmctrl"):
@@ -200,7 +198,7 @@ if ($procs) {{
 """
             return self._run_ps(ps_cmd)
         elif self.system == "Darwin":
-            script = f'tell application "{app_name}" to set zoomed of windows to true'
+            script = f'tell application "System Events" to set value of attribute "AXZoomed" of every window of process "{app_name}" to true'
             return self._run(["osascript", "-e", script])
         else:
             if shutil.which("wmctrl"):
@@ -242,7 +240,19 @@ foreach ($p in $procs) {
             output = self._run_ps(ps_cmd)
             lines = [line for line in output.splitlines() if line.strip()]
         elif self.system == "Darwin":
-            script = 'tell application "System Events" to get name of every process whose visible is true'
+            script = """tell application "System Events"
+    set windowList to {}
+    set processList to every process whose visible is true
+    repeat with proc in processList
+        try
+            set procWindows to every window of proc
+            repeat with w in procWindows
+                set end of windowList to (name of proc & " | Title=" & name of w)
+            end repeat
+        end try
+    end repeat
+    return windowList
+end tell"""
             output = self._run(["osascript", "-e", script])
             lines = [item.strip() for item in output.split(",") if item.strip()]
         else:
