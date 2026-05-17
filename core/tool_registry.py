@@ -24,6 +24,7 @@ from core.url_presets import load_url_presets
 from core.validators import validate_tool
 from .guardrails import PathGuard
 from core.tool_base import tool
+from core.event_bus import OSEventBus
 
 import importlib.util
 import os
@@ -63,6 +64,7 @@ class ToolRegistry:
         self.screen = screen.ScreenManager(rules=self.rules, base_dir=workspace)
         self.ocr = ocr.OCRManager(rules=self.rules, base_dir=workspace, registry=self, cfg=self.cfg)
         self.sys_mgr = system_tools.SystemManager(rules=self.rules, cfg=self.cfg)
+        self.event_bus = OSEventBus(cfg=self.cfg)
         self._notepad: List[str] = []
         self._canvas: str = ""
         self.registry: Dict[str, Dict[str, Any]] = {}
@@ -82,6 +84,7 @@ class ToolRegistry:
             (self.ui, "General"),
             (self.screen, "General"),
             (self.ocr, "Media"),
+            (self.event_bus, "System"),
             (self, "Core"),
         ]:
             self._register_subsystem(obj, category)
