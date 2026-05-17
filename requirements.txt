@@ -16,7 +16,7 @@ python-dotenv>=1.0.0
 pyreadline3; sys_platform == 'win32'
 pyautogui>=0.9.54
 psutil>=5.9.0
-Pillow>=10.0.0
+Pillow>=12.2.0
 numpy>=1.24.0
 matplotlib>=3.10.9
 pandas>=2.0.0
