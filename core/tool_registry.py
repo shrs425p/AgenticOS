@@ -176,6 +176,10 @@ class ToolRegistry:
                     mod_path = rel_path[:-3].replace(os.path.sep, ".")
                     full_mod_name = f"tools.plugins.{mod_path}"
 
+                    if full_mod_name in sys.modules:
+                        self._register_module_tools(sys.modules[full_mod_name])
+                        continue
+
                     try:
                         spec = importlib.util.spec_from_file_location(
                             full_mod_name, file_path
