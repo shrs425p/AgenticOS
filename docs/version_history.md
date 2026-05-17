@@ -6,10 +6,26 @@ This document tracks the technical evolution of AgenticOS from its initial proto
 
 ---
 
-## v2.0.0 - The "Portable and Resilient" Edition (Current)
-*Release Date: 2026-05-15*
+## v2.1.0 - The "Bulletproof Cross-Platform Hardened" Edition (Current)
+*Release Date: 2026-05-18*
 
-The v2.0.0 release focuses on decoupling AgenticOS from the host environment and establishing a professional-grade testing framework.
+The v2.1.0 release establishes seamless, robust, low-level OS integrations across Windows 11, macOS Darwin, and modern Linux GNOME environments.
+
+### Key Innovations:
+1.  **C# Native Audio Endpoint COM Interoperability (Windows)**: Replaced external nircmd helpers inside `volume_set` with direct C# COM interfaces (`IAudioEndpointVolume`, `IMMDevice`, `IMMDeviceEnumerator`) dynamically compiled via PowerShell.
+2.  **CIM-Based Systems Telemetry (Windows)**: Modernized `system.py` diagnostics by replacing deprecated `wmic` utilities with modern, universal PowerShell Common Information Model (`Get-CimInstance`) queries mapping `Win32_Processor` and `Win32_OperatingSystem`.
+3.  **Linux Tool Checkguards**: Integrated `shutil.which` dependency checks inside `take_screenshot` (scrot, gnome-screenshot, import) and keyboard routines, providing clean installation advice instead of raw subprocess failures.
+4.  **OS-Level macOS Window Control (AXMinimized / AXZoomed)**: Upgraded `minimize_app` and `maximize_app` to query System Events and manipulate standard macOS accessibility attributes, ensuring compatibility with scriptable Cocoa and non-scriptable web/Electron applications (Chrome, VS Code, Spotify).
+5.  **Recursive macOS Window title query in `list_windows`**: Upgraded macOS Darwin window listings to dynamically crawl active desktop processes via AppleScript and extract their true visible window names.
+6.  **Dual GNOME picture-uri Wallpapers (Linux)**: Upgraded wallpaper configurations to simultaneously write org.gnome.desktop.background `picture-uri` and `picture-uri-dark` keys, preventing silent theme mismatches.
+7.  **Keystroke AppleScript Fallback**: Hardened mac keyboard emulation with a safe keystroke fallback pathway instead of uncompilable reflection syntax.
+8.  **Centralized Logger Factory**: Formulated `core/logger.py` to route all output to standardized console formatters and persistent file stores (`data/logs/agenticos.log`).
+9.  **Early Configuration Schema Validator**: Integrated startup schema validation on the fully-merged configuration dictionary, outputting early warnings and halting startup on critical missing keys.
+
+---
+
+## v2.0.0 - The "Portable and Resilient" Edition
+*Release Date: 2026-05-15*
 
 ### Key Innovations:
 1.  **Layered Configuration System**: Migrated from a single `config.yaml` to a multi-file configuration directory (`config/`). This enables clean separation of security policy, service endpoints, and system heuristics.

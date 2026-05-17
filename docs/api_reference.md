@@ -79,14 +79,14 @@ Controlling the user environment and peripherals.
 
 | Tool | Arguments | Description |
 | :--- | :--- | :--- |
-| `volume_set` | `level` (0-100) | Adjusts master system volume. |
+| `volume_set` | `level` (0-100) | Adjusts master system volume via native C# CoreAudio COM on Windows and AppleScript on macOS. |
 | `media_play_pause`| `none` | Toggles active media playback. |
 | `ocr_image` | `path` | Extracts text from a local image file (PNG, JPG). |
 | `ocr_screen` | `none` | Captures the full screen and extracts all visible text. |
-| `take_screenshot` | `name` | Saves a PNG of the screen to the workspace. |
-| `list_windows` | `filter_str` | Lists all active application windows. |
-| `set_wallpaper` | `path` | Updates the desktop background. |
-| `hotkey` | `keys` | Sends global shortcuts (e.g., `win+d`). |
+| `take_screenshot` | `name` | Saves a PNG of the screen to the workspace (protected by shutil.which guards on Linux). |
+| `list_windows` | `filter_str` | Lists all active application windows (using deep visible window AppleScript queries on macOS). |
+| `set_wallpaper` | `path` | Updates the desktop background (writes both light/dark picture-uri keys on GNOME Linux). |
+| `hotkey` | `keys` | Sends global shortcuts (protected by AppleScript keystroke fallbacks on macOS). |
 | `type_text` | `text`, `delay_ms` | Injects keyboard input into any focused app. |
 
 ---

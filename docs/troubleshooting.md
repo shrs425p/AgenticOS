@@ -83,6 +83,22 @@ AgenticOS includes several built-in tools to help you diagnose its health:
 
 ---
 
+## Cross-Platform OS Automation Issues
+
+### 1. "Volume controls or windows listings fail on Windows."
+-   **Cause**: The audio service endpoint enumerator or PowerShell execution policy blocks C# compilation block loads.
+-   **Fix**: Ensure your PowerShell execution policy allows local scripts (e.g. `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process`) or run `Restart-Service Audiosrv` to reset the Windows Audio service.
+
+### 2. "Minimize or Maximize fails with accessibility errors on macOS."
+-   **Cause**: The active terminal running AgenticOS lacks Accessibility control permissions in macOS System Events.
+-   **Fix**: Navigate to `System Settings` -> `Privacy & Security` -> `Accessibility`, and ensure your terminal app (e.g., Terminal, iTerm2, or VS Code) is explicitly toggled **ON** to authorize OS-level System Events commands.
+
+### 3. "Wallpaper changes fail silently on Linux."
+-   **Cause**: Modern GNOME ignores standard `picture-uri` modifications if System Dark Mode is active.
+-   **Fix**: AgenticOS automatically sets both the `picture-uri` and `picture-uri-dark` keys in v2.1.0 to ensure comprehensive compatibility.
+
+---
+
 ## Still Having Issues?
 
 1.  **Check the Logs**: Open `agent.log` and search for `ERROR`.
