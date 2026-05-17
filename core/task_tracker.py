@@ -173,6 +173,9 @@ class TaskTracker:
         if not self.current:
             return
 
+        # Ensure tasks directory exists
+        os.makedirs(self.tasks_dir, exist_ok=True)
+        
         # Write all tasks in the session to active files
         with open(self.active_json, "w", encoding="utf-8") as handle:
             json.dump(self.tasks, handle, indent=2)
