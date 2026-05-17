@@ -34,7 +34,10 @@ Direct interaction with the Windows Operating System.
 | `system_health` | `none` | Real-time CPU/RAM/Disk diagnostic. |
 | `installed_apps` | `filter_str` | Lists software registered in the Windows Registry. |
 | `service_list` | `filter_str` | Lists Windows services and their status. |
-| `eventlog_query` | `log_name`, `n` | Queries the Windows Event Log (System/Application). |
+| `eventlog_query` | `log_name`, `query`, `n` | **Cross-Platform**: Queries Windows Event Logs or Unix journalctl logs. |
+| `firewall_rules_list` | `filter_str` | **Security Audit**: Lists active Windows/Linux firewall rules. |
+| `active_ports_list` | `none` | **Network Audit**: Lists active ports and binding PIDs (TCP/UDP). |
+| `scheduled_task_create_daily` | `task_name`, `command`, `time_hhmm` | Registers a daily background scheduled task. |
 
 ---
 
