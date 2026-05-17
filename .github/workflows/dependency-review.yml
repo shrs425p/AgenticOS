@@ -21,7 +21,7 @@ jobs:
 
       - name: Dependency Review (PR only)
         if: github.event_name == 'pull_request'
-        uses: actions/dependency-review-action@v4
+        uses: actions/dependency-review-action@v5
         with:
           comment-summary-in-pr: always
           fail-on-severity: high
@@ -36,7 +36,7 @@ jobs:
 
       - name: Upload pip-audit results
         if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pip-audit-results
           path: pip-audit-results.json
