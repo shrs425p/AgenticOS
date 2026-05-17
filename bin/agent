@@ -1,0 +1,35 @@
+#!/bin/bash
+# AgenticOS Advanced Linux/macOS Launcher
+# This script manages caches, environment activation, and encoding.
+
+# Resolve the project root (one level up from the bin folder)
+BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+AGENT_BASE_DIR="$( cd "$BIN_DIR/.." && pwd )"
+
+# Route common caches into one folder (keeps repo root clean)
+CACHE_ROOT="$AGENT_BASE_DIR/data/cache"
+mkdir -p "$CACHE_ROOT/pycache"
+mkdir -p "$CACHE_ROOT/ruff"
+mkdir -p "$CACHE_ROOT/pip"
+mkdir -p "$CACHE_ROOT/pytest"
+
+export PYTHONPYCACHEPREFIX="$CACHE_ROOT/pycache"
+export RUFF_CACHE_DIR="$CACHE_ROOT/ruff"
+export PIP_CACHE_DIR="$CACHE_ROOT/pip"
+
+if [ -z "$PYTEST_ADDOPTS" ]; then
+  export PYTEST_ADDOPTS="--cache-dir=$CACHE_ROOT/pytest"
+elif [[ ! "$PYTEST_ADDOPTS" =~ "--cache-dir" ]]; then
+  export PYTEST_ADDOPTS="$PYTEST_ADDOPTS --cache-dir=$CACHE_ROOT/pytest"
+fi
+
+# Activate the virtual environment if it exists
+if [ -f "$AGENT_BASE_DIR/venv/bin/activate" ]; then
+    source "$AGENT_BASE_DIR/venv/bin/activate"
+fi
+
+# Force UTF-8 encoding
+export PYTHONIOENCODING=utf-8
+
+# Launch the core engine
+python "$AGENT_BASE_DIR/main.py" "$@"
