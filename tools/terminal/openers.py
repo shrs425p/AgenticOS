@@ -65,7 +65,7 @@ class OpenersMixin:
                                 return val
                     except (OSError, EnvironmentError):
                         continue
-            except (OSError, EnvironmentError):
+            except (OSError, EnvironmentError, ImportError):
                 pass  # Expected: Registry access may fail on non-Windows or restricted environments.
 
 
