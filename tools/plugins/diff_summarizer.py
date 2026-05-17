@@ -31,7 +31,6 @@ def summarize_text_diff(old_text: str, new_text: str) -> str:
 
     additions = 0
     deletions = 0
-    modifications = 0
 
     change_log = []
 
@@ -51,7 +50,7 @@ def summarize_text_diff(old_text: str, new_text: str) -> str:
     summary_report = [
         "# Text Diff & Modification Summary",
         "",
-        f"**Overview of Differences**:",
+        "**Overview of Differences**:",
         f"- Total additions: {additions} line(s)",
         f"- Total deletions: {deletions} line(s)",
         f"- Total lines changed: {total_changes} line(s)",
