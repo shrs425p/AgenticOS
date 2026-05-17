@@ -11,7 +11,7 @@ Before you begin, ensure your machine meets the [System Requirements](system_req
 1.  **Python 3.12+**: Download from [python.org](https://www.python.org/downloads/).
 2.  **Git**: For cloning the repository.
 3.  **Terminal**: Windows Terminal, PowerShell, or CMD.
-4.  **Environment Sync**: (Optional) Run `powershell .\setup.ps1` to set the project root in your system PATH and enable the `agent` command.
+4.  **Environment Sync**: Run `.\setup.ps1` once to add `bin/` to your system PATH. This permanently registers the `agent` command so you can launch AgenticOS from any terminal without specifying the full path.
 
 ---
 
@@ -89,16 +89,18 @@ Review `config/policy.yaml` to ensure the **Secret Redaction Engine** and **Path
 
 ## [LAUNCH] Step 6: Launching AgenticOS
 
-Once everything is configured, start the agent:
+Once everything is configured, start the agent by typing `agent` in any terminal:
 
 ```powershell
-python main.py
+agent
 ```
+
+> **Prerequisite:** You must have run `.\setup.ps1` at least once (Step 1) so that the `bin/agent.bat` launcher is on your PATH. If the `agent` command is not recognised, re-run `.\setup.ps1` and restart your terminal.
 
 ### The Startup Sequence:
 1.  **Banner**: You will see the AgenticOS ASCII art banner.
 2.  **Initialization**: The system loads the Tool Registry and checks for plugins.
-3.  **Hot-Reload**: The system monitors `config.yaml` for changes.
+3.  **Hot-Reload**: The system monitors `config/` for changes.
 
 ---
 
@@ -165,5 +167,5 @@ This will run the automated suite to ensure core components, filesystem tools, a
 
 ---
 
-*Last Updated: 2026-05-14*
+*Last Updated: 2026-05-17*
 *Status: Secure & Verified*

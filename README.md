@@ -136,12 +136,14 @@ playwright install chromium
 .\setup.ps1
 ```
 
+> **Note:** `.\setup.ps1` registers the `agent` command globally by adding `bin/` to your system PATH. You only need to run it once.
+
 ### 2. Configuration
-Edit `config.yaml` to set your default provider (Ollama or Nvidia). Add your API keys to a `.env` file.
+Edit `config/providers.yaml` to set your default provider (Ollama, Nvidia, Gemini, Groq). Add your API keys to a `.env` file.
 
 ### 3. Execution
 ```powershell
-python main.py
+agent
 ```
 
 ---
