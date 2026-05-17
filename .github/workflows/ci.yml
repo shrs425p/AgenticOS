@@ -54,6 +54,12 @@ jobs:
           PYTHONPATH: .
         run: pytest tests/ --cov=core --cov=tools --cov-report=xml --cov-report=term-missing
 
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload coverage report
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
