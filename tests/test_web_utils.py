@@ -1,4 +1,3 @@
-import pytest
 from unittest import mock
 from tools.web.utils import UtilsMixin
 

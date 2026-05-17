@@ -94,7 +94,7 @@ def test_resolve_path(tmp_path):
     assert resolved == (workspace / "test.txt").resolve()
     
     # 2. Path starting with workspace name rebased properly
-    resolved = fm._resolve(f"workspace/sub/test.txt")
+    resolved = fm._resolve("workspace/sub/test.txt")
     assert resolved == (workspace / "sub" / "test.txt").resolve()
     
     # 3. Absolute path outside rebased to base_dir / p.name when restrict_paths is True
@@ -107,7 +107,7 @@ def test_resolve_path(tmp_path):
     assert resolved == (tmp_path / "outside.txt").resolve()
 
 def test_file_manager_exceptions(tmp_path):
-    from unittest.mock import patch, MagicMock
+    from unittest.mock import patch
     
     # 1. Test init exception for internal_data_dir resolve
     orig_resolve = Path.resolve

@@ -1,4 +1,3 @@
-import math
 import pytest
 from unittest.mock import MagicMock, patch
 from core.tool_registry import ToolRegistry, tool

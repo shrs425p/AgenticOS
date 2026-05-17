@@ -1,7 +1,6 @@
 import os
 import json
 import pytest
-from unittest.mock import patch, MagicMock
 from core.task_tracker import TaskTracker
 
 @pytest.fixture

@@ -1,4 +1,3 @@
-import pytest
 from unittest import mock
 from tools.system_tools import SystemManager
 

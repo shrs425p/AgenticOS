@@ -1,8 +1,4 @@
-import os
-import shutil
-import webbrowser
-import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from tools.terminal.openers import OpenersMixin
 
 class MockTool(OpenersMixin):
@@ -140,6 +136,6 @@ def test_compose_email():
 def test_open_url_verified():
     tool = MockTool(system="Windows")
     
-    with patch("webbrowser.open") as mock_open:
+    with patch("webbrowser.open"):
         res = tool.open_url_verified("https://google.com")
         assert "process detected" in res

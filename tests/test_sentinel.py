@@ -1,6 +1,5 @@
 import os
 import json
-import pytest
 from core.sentinel import Sentinel
 
 def test_sentinel_init_default(tmp_path):

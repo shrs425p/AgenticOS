@@ -1,5 +1,4 @@
 import os
-import pytest
 from tools.terminal.env import EnvMixin
 
 class MockEnvTools(EnvMixin):

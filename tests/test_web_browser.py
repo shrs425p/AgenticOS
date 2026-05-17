@@ -1,6 +1,4 @@
 import asyncio
-import json
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from tools.web.browser import BrowserMixin, BrowserManager
 
@@ -24,7 +22,6 @@ def test_screenshot_path():
 
 def test_browser_launch_and_close():
     tool = MockWebTools()
-    mgr = tool.browser_mgr
     
     # Mock playwright instance
     mock_apw = MagicMock()

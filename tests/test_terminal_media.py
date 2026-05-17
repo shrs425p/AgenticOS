@@ -1,6 +1,3 @@
-import shutil
-import subprocess
-import pytest
 from unittest.mock import MagicMock, patch
 from tools.terminal.media import MediaMixin
 
@@ -191,7 +188,7 @@ def test_volume_up_down_mute(mock_run, mock_which):
     # Windows Up/Down with nircmd
     tool_win = MockTool(system="Windows")
     with patch.object(tool_win, "_nircmd_path", return_value="/bin/nircmd.exe"):
-        with patch.object(tool_win, "_run_nircmd", return_value="OK") as mock_nir:
+        with patch.object(tool_win, "_run_nircmd", return_value="OK"):
             assert tool_win.volume_up(10) == "OK"
             assert tool_win.volume_down(10) == "OK"
             assert tool_win.volume_mute() == "OK"
