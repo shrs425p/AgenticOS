@@ -45,71 +45,74 @@ from core.runtime_ui import (
 from core.tool_registry import ToolRegistry
 from core.context_engine import ContextEngine
 
+PROVIDER_CLIENT_MAP = {
+    "ollama": "OllamaClient",
+    "gemini": "GeminiClient",
+    "groq": "GroqClient",
+    "openai": "OpenAIClient",
+    "openrouter": "OpenRouterClient",
+    "nvidia": "NvidiaClient",
+    "github": "GithubClient",
+    "deepseek": "DeepseekClient",
+}
+
 
 class Agent:
     def __init__(self, cfg: dict, confirm_handler: Optional[Callable] = None):
         self.cfg = cfg
         self.confirm_handler = confirm_handler
 
-        # 1. Load Heuristics and Performance FIRST (required by other components)
+        self._load_agent_settings()
+        self._init_client()
+        self._setup_workspace()
+        self._init_audit_and_task_tracker()
+
+        if self.autonomy_cfg.get("autopilot", False):
+            self.confirm = True
+
+        self._init_engine()
+        self._init_hot_reload()
+
+    def _load_agent_settings(self) -> None:
         self.heuristics = self.cfg.get("heuristics", {})
         self.performance = self.cfg.get("performance", {})
         self.enable_cov = self.cfg["agent"].get("enable_cov", True)
         self.cov_model = self.heuristics.get("cov_model")
-        self.max_iter = cfg["agent"]["max_iterations"]
-        self.verbose = cfg["agent"]["verbose_thinking"]
-        self.confirm = cfg["agent"].get("auto_confirm", True)
-        self.hot_reload_enabled = cfg["agent"].get("hot_reload", True)
-        self.autonomy_cfg = cfg.get("autonomy", {})
+        self.max_iter = self.cfg["agent"]["max_iterations"]
+        self.verbose = self.cfg["agent"]["verbose_thinking"]
+        self.confirm = self.cfg["agent"].get("auto_confirm", True)
+        self.hot_reload_enabled = self.cfg["agent"].get("hot_reload", True)
+        self.autonomy_cfg = self.cfg.get("autonomy", {})
 
-        # 2. Client Initialization
-        provider = cfg["agent"].get("provider", "ollama").lower()
-        if provider == "nvidia":
-            self.client = NvidiaClient(cfg)
-        elif provider == "gemini":
-            self.client = GeminiClient(cfg)
-        elif provider == "groq":
-            self.client = GroqClient(cfg)
-        elif provider == "openai":
-            self.client = OpenAIClient(cfg)
-        elif provider == "openrouter":
-            self.client = OpenRouterClient(cfg)
-        elif provider == "github":
-            self.client = GithubClient(cfg)
-        elif provider == "deepseek":
-            self.client = DeepseekClient(cfg)
-        else:
-            self.client = OllamaClient(cfg)
+    def _create_client(self, provider: str):
+        client_name = PROVIDER_CLIENT_MAP.get(provider, "OllamaClient")
+        client_cls = getattr(sys.modules[__name__], client_name)
+        return client_cls(self.cfg)
 
-        # Wrap in TieredClient for automatic failover
-        fallback_providers = cfg.get("agent", {}).get("fallback_providers", [])
+    def _init_client(self) -> None:
+        provider = self.cfg["agent"].get("provider", "ollama").lower()
+        self.client = self._create_client(provider)
+
+        fallback_providers = self.cfg["agent"].get("fallback_providers", []) or []
         if fallback_providers:
             fallback_clients = []
-            client_map = {
-                "ollama": OllamaClient,
-                "gemini": GeminiClient,
-                "groq": GroqClient,
-                "openai": OpenAIClient,
-                "openrouter": OpenRouterClient,
-                "nvidia": NvidiaClient,
-                "github": GithubClient,
-                "deepseek": DeepseekClient,
-            }
             for fb_provider in fallback_providers:
                 fb_provider = fb_provider.strip().lower()
-                if fb_provider != provider and fb_provider in client_map:
+                if fb_provider != provider and fb_provider in PROVIDER_CLIENT_MAP:
                     try:
-                        fallback_clients.append(client_map[fb_provider](cfg))
+                        fallback_clients.append(self._create_client(fb_provider))
                     except RuntimeError as e:
-                        print_warning(f"Warning: Failed to initialize fallback client {fb_provider}: {e}")
+                        print_warning(
+                            f"Warning: Failed to initialize fallback client {fb_provider}: {e}"
+                        )
             if fallback_clients:
                 self.client = TieredClient(self.client, fallback_clients)
 
-        # 3. Path and Environment Setup
+    def _setup_workspace(self) -> None:
         self.workspace = os.path.abspath(
-            cfg["agent"].get("workspace", DEFAULT_WORKSPACE)
+            self.cfg["agent"].get("workspace", DEFAULT_WORKSPACE)
         )
-        memory_cfg = dict(cfg["memory"])
+        memory_cfg = dict(self.cfg.get("memory", {}))
         memory_cfg.setdefault("workspace", self.workspace)
         sqlite_cfg = dict(memory_cfg)
         db_path = sqlite_cfg.pop("sqlite_db_path", "") or ""
@@ -118,43 +121,41 @@ class Agent:
         self.memory = SqliteSessionMemory(sqlite_cfg)
 
         self.tools = ToolRegistry(
-            cfg, memory_backend=self.memory, confirm_handler=confirm_handler
+            self.cfg, memory_backend=self.memory, confirm_handler=self.confirm_handler
         )
 
-        # 4. Audit and Session Logging
+    def _init_audit_and_task_tracker(self) -> None:
         logging_cfg = self.cfg.get("logging", {}) or {}
         audit_enabled = bool(logging_cfg.get("audit_enabled", True))
-        audit_dir = logging_cfg.get("audit_dir") or os.path.join(
-            self.cfg["agent"].get("workspace", DEFAULT_WORKSPACE), "logs"
-        )
+        audit_dir = logging_cfg.get("audit_dir") or os.path.join(self.workspace, "logs")
         if not os.path.isabs(audit_dir):
             audit_dir = os.path.join(BASE_DIR, audit_dir)
         audit_fmt = (logging_cfg.get("audit_format") or "jsonl").lower().strip()
         self.audit = AuditLogger(audit_dir, enabled=audit_enabled, fmt=audit_fmt, cfg=self.cfg)
-        
+
         self.session_id = getattr(
-            self.memory, "session_id", 
-            datetime.now().strftime(self.heuristics.get("session_id_format", "%Y%m%d_%H%M%S"))
+            self.memory,
+            "session_id",
+            datetime.now().strftime(self.heuristics.get("session_id_format", "%Y%m%d_%H%M%S")),
         )
         try:
             self.audit.session_start(
                 session_id=self.session_id,
                 provider=self.client.provider,
                 model=self.client.model,
-                workspace=self.cfg["agent"].get("workspace", DEFAULT_WORKSPACE),
+                workspace=self.workspace,
             )
         except (IOError, OSError) as e:
             print_warning(f"Warning: Failed to log audit session: {e}")
             pass
 
         self.task_tracker = TaskTracker(
-            cfg["agent"].get("workspace", DEFAULT_WORKSPACE), session_id=self.session_id, cfg=self.cfg
+            self.workspace,
+            session_id=self.session_id,
+            cfg=self.cfg,
         )
 
-        if self.autonomy_cfg.get("autopilot", False):
-            self.confirm = True
-
-        # 5. Engine and Memory Initialization
+    def _init_engine(self) -> None:
         self.context_engine = ContextEngine(self)
         mm = initialize_memory_manager(self.workspace, self.client, self.cfg)
         self.context_engine.set_memory_manager(mm)
@@ -163,8 +164,14 @@ class Agent:
         file_templates = self.cfg.get("prompts", {}).get("file_templates", {})
         for init_file, default_content in [
             ("AGENTS.md", "# Agent Identity\n\nDefine your agent persona and rules here.\n"),
-            ("MEMORY.md", "# AgenticOs Long-Term Memory\n\nCurated knowledge, insights, and learned patterns from agent experiences.\n"),
-            ("USERINFO.md", "# User Profile\n\nStore user name, preferences, and personal info here.\n"),
+            (
+                "MEMORY.md",
+                "# AgenticOs Long-Term Memory\n\nCurated knowledge, insights, and learned patterns from agent experiences.\n",
+            ),
+            (
+                "USERINFO.md",
+                "# User Profile\n\nStore user name, preferences, and personal info here.\n",
+            ),
         ]:
             init_content = file_templates.get(init_file, default_content)
             init_path = os.path.join(self.workspace, init_file)
@@ -173,9 +180,11 @@ class Agent:
                     with open(init_path, "w", encoding="utf-8") as f:
                         f.write(init_content)
                 except (IOError, OSError) as e:
-                    print_warning(f"Warning: Failed to create initialization file {init_file}: {e}")
+                    print_warning(
+                        f"Warning: Failed to create initialization file {init_file}: {e}"
+                    )
 
-        # 6. Hot-Reload Tracking (must be last)
+    def _init_hot_reload(self) -> None:
         self.mtimes: Dict[str, float] = (
             self._get_mtimes() if self.hot_reload_enabled else {}
         )
@@ -183,6 +192,27 @@ class Agent:
         self._reload_throttle = float(self.heuristics.get("hot_reload_throttle", 2.0))
         self._cached_system = None
 
+    def _reload_config(self) -> None:
+        old_workspace = getattr(self, "workspace", None)
+        self.cfg = load_config()
+        self._load_agent_settings()
+        self._init_client()
+
+        new_workspace = os.path.abspath(
+            self.cfg["agent"].get("workspace", DEFAULT_WORKSPACE)
+        )
+        if new_workspace != old_workspace:
+            self.workspace = new_workspace
+            self._setup_workspace()
+        else:
+            # Reinitialize memory if memory config changed and workspace path is unchanged
+            self._setup_workspace()
+
+        self.task_tracker = TaskTracker(
+            self.cfg["agent"].get("workspace", DEFAULT_WORKSPACE),
+            session_id=self.session_id,
+            cfg=self.cfg,
+        )
 
     def _get_mtimes(self) -> Dict[str, float]:
         mtimes: Dict[str, float] = {}
@@ -238,37 +268,7 @@ class Agent:
                 print(
                     f"{C.YELLOW}↻  Config changed: config.yaml. Refreshing settings...{C.RESET}"
                 )
-                self.cfg = load_config()
-                # Update agent properties
-                self.max_iter = self.cfg["agent"]["max_iterations"]
-                self.verbose = self.cfg["agent"]["verbose_thinking"]
-                self.confirm = self.cfg["agent"].get("auto_confirm", True)
-                self.hot_reload_enabled = self.cfg["agent"].get("hot_reload", True)
-                self.autonomy_cfg = self.cfg.get("autonomy", {})
-
-                # Re-init client if provider changed
-                provider = self.cfg["agent"].get("provider", "ollama").lower()
-                if provider == "nvidia":
-                    self.client = NvidiaClient(self.cfg)
-                elif provider == "gemini":
-                    self.client = GeminiClient(self.cfg)
-                elif provider == "groq":
-                    self.client = GroqClient(self.cfg)
-                elif provider == "openai":
-                    self.client = OpenAIClient(self.cfg)
-                elif provider == "openrouter":
-                    self.client = OpenRouterClient(self.cfg)
-                elif provider == "github":
-                    self.client = GithubClient(self.cfg)
-                elif provider == "deepseek":
-                    self.client = DeepseekClient(self.cfg)
-                else:
-                    self.client = OllamaClient(self.cfg)
-                self.task_tracker = TaskTracker(
-                    self.cfg["agent"].get("workspace", DEFAULT_WORKSPACE),
-                    session_id=self.session_id,
-                    cfg=self.cfg
-                )
+                self._reload_config()
 
             if py_changed:
                 import importlib
@@ -302,7 +302,11 @@ class Agent:
             import core.tool_registry
 
             importlib.reload(core.tool_registry)
-            self.tools = core.tool_registry.ToolRegistry(self.cfg)
+            self.tools = core.tool_registry.ToolRegistry(
+                self.cfg,
+                memory_backend=self.memory,
+                confirm_handler=self.confirm_handler,
+            )
             self.mtimes = new_mtimes or self._get_mtimes()
             self._cached_system = None  # Ensure cache is cleared
             print_success("Environment reloaded successfully.")

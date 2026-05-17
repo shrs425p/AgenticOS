@@ -35,3 +35,10 @@
 - Increase Dependabot's open pull request limit to 15 in `.github/dependabot.yml` to permit concurrent security and version updates.
 - Fully align all developer guides and user manuals (`docs/user_interface.md`, `docs/tool_development.md`) to run the standard `agent` launcher globally instead of the legacy `python main.py` command.
 
+### Maintenance & Refactors
+- Add `core/retry.py` and migrate provider clients to use a centralized `retry_call()` helper for exponential backoff and jittered retries.
+- Centralize `.env` loading in `main.py` (the `.env` file in the repo root is now the canonical credentials source); modules include a fallback for direct runs.
+- Namespaced plugin imports under `tools.plugins.<module>` and updated `ToolRegistry` to register top-level `@tool` callables, improving hot-reload and test patchability.
+- Add `core/config_types.py` types and annotate `core/runtime_config.py` for clearer config typing.
+- Add `tests/test_retry.py` to cover retry behaviour.
+

@@ -28,6 +28,7 @@ from core.tool_base import tool
 import importlib.util
 import os
 import sys
+import logging
 
 
 
@@ -170,26 +171,35 @@ class ToolRegistry:
                 if filename.endswith(".py") and filename != "__init__.py":
                     module_name = filename[:-3]
                     file_path = os.path.join(root, filename)
+                    file_path = os.path.join(root, filename)
+                    # Build a stable module name based on the plugin path to avoid
+                    # clobbering top-level module names in sys.modules.
+                    rel_path = os.path.relpath(file_path, plugin_dir)
+                    mod_path = rel_path[:-3].replace(os.path.sep, ".")
+                    full_mod_name = f"tools.plugins.{mod_path}"
 
                     try:
                         spec = importlib.util.spec_from_file_location(
-                            module_name, file_path
+                            full_mod_name, file_path
                         )
                         if spec and spec.loader:
                             module = importlib.util.module_from_spec(spec)
-                            sys.modules[module_name] = module
+                            sys.modules[full_mod_name] = module
                             spec.loader.exec_module(module)
+                            # Register any decorated @tool functions found in the module
+                            self._register_module_tools(module)
+                    except Exception:
+                        logging.exception("[PLUGIN ERROR] Failed to load %s", file_path)
 
-                            # Find all decorated functions
-                            for attr_name in dir(module):
-                                attr = getattr(module, attr_name)
-                                if callable(attr) and hasattr(attr, "_is_tool"):
-                                    name = getattr(attr, "_tool_name")
-                                    desc = getattr(attr, "_tool_desc")
-                                    category = getattr(attr, "_tool_category", "Plugins")
-                                    self._reg(name, attr, desc, category=category)
-                    except Exception as e:
-                        print(f"  [PLUGIN ERROR] Failed to load {filename}: {e}")
+    def _register_module_tools(self, module, default_category="Plugins"):
+        """Register all decorated @tool callables found in a module."""
+        for attr_name in dir(module):
+            attr = getattr(module, attr_name)
+            if callable(attr) and hasattr(attr, "_is_tool"):
+                name = getattr(attr, "_tool_name")
+                desc = getattr(attr, "_tool_desc", "")
+                category = getattr(attr, "_tool_category", default_category)
+                self._reg(name, attr, desc, category=category)
 
     def _reg(self, name, fn, desc, category="General"):
         """Register a tool, skipping duplicates silently (first registration wins)."""

@@ -7,6 +7,20 @@ environment variables that control where cache files get written.
 from __future__ import annotations
 
 import os
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except Exception:
+    # Fallback: manually load .env into os.environ if python-dotenv isn't available.
+    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    if os.path.exists(env_path):
+        with open(env_path, encoding="utf-8") as handle:
+            for line in handle:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, value = line.split("=", 1)
+                    os.environ.setdefault(key.strip(), value.strip())
 
 
 def _load_cache_root() -> str:

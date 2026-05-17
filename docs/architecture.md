@@ -123,7 +123,7 @@ The architecture enforces a "Zero Trust" model for the local system.
 
 ##  Lifecycle of a Task
 
-1.  **Initialize**: `main.py` loads `config.yaml` and starts the `Runtime`.
+1.  **Initialize**: `main.py` loads the `.env` file and `config.yaml`, then starts the `Runtime`.
 2.  **Objective**: User provides a prompt; Agent breaks it into a 5-10 step `PLAN`.
 3.  **Iterate**: Agent executes tools one by one, updating the `CURRENT_STEP`.
 4.  **Verify**: Agent calls `file_exists` or `read_file` to confirm the task is done.

@@ -68,6 +68,7 @@ AgenticOS is a high-performance autonomous tool. Its best results are achieved t
 Following a massive 96-item stress test, AgenticOS v2.0.0 has been hardened for real-world production environments. It solves the core bottlenecks of traditional agents:
 -   **No-Lag Terminal UI**: Block-level rendering removes the character-by-character "typewriter lag."
 -   **Rate-Limit Shield**: Built-in exponential backoff masks all `429 Too Many Requests` errors.
+-   **Rate-Limit Shield**: Built-in exponential backoff masks all `429 Too Many Requests` errors (implemented in `core/retry.py` as `retry_call()`).
 -   **Fast-Path IO**: Native PowerShell-optimized scanning is 20x faster than Python's `rglob`.
 -   **Zone-Based Security**: Hardware-level path guardrails protect critical system folders.
 -   **Environment Portability**: 100% configuration-driven logic with zero hardcoded paths or URLs.
@@ -139,7 +140,7 @@ playwright install chromium
 > **Note:** `.\setup.ps1` registers the `agent` command globally by adding `bin/` to your system PATH. You only need to run it once.
 
 ### 2. Configuration
-Edit `config/providers.yaml` to set your default provider (Ollama, Nvidia, Gemini, Groq). Add your API keys to a `.env` file.
+Edit `config/providers.yaml` to set your default provider (Ollama, Nvidia, Gemini, Groq). Add your API keys to a `.env` file in the repository root — `main.py` loads this file early at startup and it is the canonical source of credentials for the running agent.
 
 ### 3. Execution
 ```powershell

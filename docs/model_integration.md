@@ -26,21 +26,20 @@ AgenticOS natively supports the following providers through the `core/model_clie
 
 ## [SECURE] API Resilience & The 429 Shield
 
-In production, API rate limits are the most common cause of agent failure. AgenticOS v2.0.0 features a custom **Exponential Backoff & Retry** system built directly into the client layer.
+In production, API rate limits are a common cause of agent failure. AgenticOS centralizes exponential backoff and retry behavior in `core/retry.py` as `retry_call()`. Provider clients (for example, Nvidia and OpenAI-compatible adapters) call `retry_call()` to handle transient 429/RateLimit errors and apply jittered exponential backoff. If retries are exhausted the client will raise `RateLimitExhausted`, allowing the orchestrator to decide on fallbacks or recovery strategies.
 
 ### How it Works:
 If a provider returns a `429 Too Many Requests` (Rate Limit) error:
 1.  **Intercept**: The client catches the error before it reaches the main agent loop.
-2.  **Wait**: The system pauses for a calculated duration (starting at 1s).
-3.  **Backoff**: If it fails again, the wait time doubles (2s, 4s, 8s...).
-4.  **Max Retries**: The system attempts up to 5 retries by default before reporting a failure.
+2.  **Wait**: The system pauses for a calculated duration (configurable via `base_retry_delay`).
+3.  **Backoff**: If it fails again, the wait time increases exponentially with randomized jitter.
+4.  **Max Retries**: The system attempts up to `max_retries` times (configurable) before reporting a failure or raising `RateLimitExhausted`.
 
-### Configuration (`config.yaml`):
+### Configuration (runtime.yaml — `performance` section):
 ```yaml
-agent:
-  auto_retry: true
-  max_retries: 5
-  retry_delay: 2 # Initial delay in seconds
+performance:
+  max_retries: 5         # Number of retry attempts for transient errors
+  base_retry_delay: 5.0  # Initial backoff delay in seconds (float)
 ```
 
 ---

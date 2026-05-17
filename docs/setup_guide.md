@@ -66,6 +66,7 @@ OPENAI_API_KEY=your_openai_key
 
 *Note: Your `.env` file is automatically ignored by Git to prevent accidental leakage.*
 
+Important: AgenticOS loads the `.env` file early at startup via `main.py`. The `.env` file in the repository root is the canonical source of API keys for the running agent and is applied to the process environment before provider clients and plugins initialize. If you run modules directly (for debugging or tests), some modules include a local fallback that may re-load `.env`, but for normal operation keep your `.env` file in the repo root so credentials are discovered consistently.
 ---
 
 ## [CONFIG] Step 5: Runtime Configuration (`config/`)
@@ -100,7 +101,8 @@ agent
 ### The Startup Sequence:
 1.  **Banner**: You will see the AgenticOS ASCII art banner.
 2.  **Initialization**: The system loads the Tool Registry and checks for plugins.
-3.  **Hot-Reload**: The system monitors `config/` for changes.
+3.  **Environment**: `main.py` reads the `.env` file and sets environment variables before provider clients and plugins initialize.
+4.  **Hot-Reload**: The system monitors `config/` for changes.
 
 ---
 

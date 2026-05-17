@@ -3,6 +3,7 @@
 import os
 
 import yaml
+from core.config_types import ConfigDict  # typing helper
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -151,7 +152,7 @@ def _load_layered_config(root_path: str) -> tuple[dict, dict]:
     return cfg, raw_root
 
 
-def load_config(path: str = None) -> dict:
+def load_config(path: str = None) -> ConfigDict:
     if path is None:
         path = get_path("config.yaml")
 

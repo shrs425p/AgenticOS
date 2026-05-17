@@ -29,6 +29,13 @@ Controls the basic heuristics of the agent execution loop.
 - **`iteration_warning_threshold`**: Number of steps before warning the user.
 - **`max_observation_chars`**: Truncates massive tool outputs (default: 12,000) to save context.
 
+Additional `performance` settings are included in `runtime.yaml` to tune provider client behaviour and retry/backoff policies:
+
+- **`performance.max_retries`**: Number of retry attempts for transient provider errors (default: 5).
+- **`performance.base_retry_delay`**: Initial backoff delay in seconds (default: 5.0). These values are used by the centralized `retry_call()` helper in `core/retry.py`.
+
+For stronger typing and clearer developer ergonomics, `core/config_types.py` exposes a `ConfigDict` type and `core/runtime_config.py` returns a typed config object for use throughout the codebase.
+
 ### 2. `policy.yaml` (The "Shield")
 Defines the security posture of the OS.
 - **`redaction_patterns`**: Regex list for masking keys and tokens in all logs.

@@ -35,6 +35,8 @@ def get_weather(city: str, units: str = "metric"):
 
 Plugins are dynamic tools loaded from the `tools/plugins/` directory at runtime. This allows you to add new capabilities without modifying the core codebase.
 
+Important: Plugin modules are imported under the `tools.plugins.<module_name>` namespace to avoid `sys.modules` collisions. The `ToolRegistry` automatically scans those modules and registers any top-level callables decorated with `@tool`. To make your plugin easily testable and hot-reload friendly, keep tool functions defined at module scope (not inside other functions) and avoid side-effectful work at import time.
+
 ### Step 1: Create the Plugin File
 Create a new `.py` file in `c:\AgenticOs\tools\plugins\`. 
 
@@ -42,7 +44,7 @@ Create a new `.py` file in `c:\AgenticOs\tools\plugins\`.
 You can import any standard library or installed pip package.
 
 ### Step 3: Hot-Reloading
-AgenticOS supports **Hot-Reloading**. If `agent.hot_reload` is set to `true` in `config.yaml`, the agent will automatically detect and load your new plugin as soon as you save the file!
+AgenticOS supports **Hot-Reloading**. If `agent.hot_reload` is set to `true` in `config.yaml`, the agent will automatically detect and load your new plugin as soon as you save the file. The registry will re-import the module under `tools.plugins.<module_name>` and re-register newly decorated `@tool` functions; the first registration wins for duplicate tool names.
 
 ---
 

@@ -12,6 +12,7 @@ import requests
 from core.runtime_config import BASE_DIR
 from core.exceptions import RateLimitExhausted
 from core.runtime_ui import C, Spinner
+from core.retry import retry_call
 
 
 try:
@@ -27,6 +28,8 @@ except ImportError:
                 if line and not line.startswith("#") and "=" in line:
                     key, value = line.split("=", 1)
                     os.environ.setdefault(key.strip(), value.strip())
+
+# Environment variables (from .env) are loaded at startup in `main.py`.
 
 
 _RATE_LIMIT_HISTORY: dict[str, deque[float]] = defaultdict(deque)
@@ -97,6 +100,27 @@ def _unique_sorted_model_ids(model_ids) -> list:
     return sorted({model_id for model_id in model_ids if model_id})
 
 
+def _load_api_key(env_key: str, fallback_keys: list[str] | None = None) -> str:
+    value = os.environ.get(env_key, "").strip()
+    if value:
+        return value
+
+    env_path = os.path.join(BASE_DIR, ".env")
+    if not os.path.exists(env_path):
+        return ""
+
+    with open(env_path, encoding="utf-8") as handle:
+        for line in handle:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, raw = line.split("=", 1)
+            key = key.strip()
+            if key == env_key or (fallback_keys and key in fallback_keys):
+                return raw.strip().strip('"').strip("'")
+    return ""
+
+
 class OllamaClient:
     def __init__(self, cfg: dict):
         self.cfg = cfg
@@ -137,44 +161,62 @@ class OllamaClient:
         max_retries = int(performance.get("max_retries", 5))
         base_delay = float(performance.get("base_retry_delay", 5.0))
 
-        for attempt in range(max_retries):
-            try:
-                with requests.post(
-                    f"{self.base_url}/api/chat",
-                    json=payload,
-                    stream=self.stream,
-                    timeout=self.timeout,
-                ) as response:
-                    response.raise_for_status()
-                    if self.stream:
-                        print(f"{C.GREEN}", end="", flush=True)
-                        for line in response.iter_lines():
-                            if not line:
-                                continue
-                            chunk = json.loads(line)
-                            token = chunk.get("message", {}).get("content", "")
-                            full += token
-                            print(token, end="", flush=True)
-                        print(C.RESET)
-                    else:
-                        full = response.json().get("message", {}).get("content", "")
-                break
-            except requests.exceptions.ConnectionError as exc:
-                raise RuntimeError(
-                    f"Cannot reach Ollama at {self.base_url}. Is `ollama serve` running?"
-                ) from exc
-            except requests.exceptions.HTTPError as exc:
-                if exc.response is not None and exc.response.status_code == 429:
-                    if attempt < max_retries - 1:
-                        delay = base_delay * (2 ** attempt)
-                        delay += random.uniform(0, delay * 0.1)
-                        logging.warning(f"ollama rate limit hit (attempt {attempt + 1}). Waiting {delay:.2f}s")
-                        print(f"\n\033[93m⚠ Rate limit hit (429). Retrying in {delay:.2f} seconds...\033[0m")
-                        time.sleep(delay)
-                    else:
-                        raise RateLimitExhausted(f"Rate limit exhausted for ollama after {max_retries} retries") from exc
-                else:
-                    raise
+        def _do_post():
+            with requests.post(
+                f"{self.base_url}/api/chat",
+                json=payload,
+                stream=self.stream,
+                timeout=self.timeout,
+            ) as response:
+                # Let caller handle response streaming/consumption; raise for status here.
+                response.raise_for_status()
+                return response
+
+        def _retry_on_exc(exc: Exception) -> bool:
+            # Retry only on HTTP 429. Do not retry ConnectionError here.
+            if isinstance(exc, requests.exceptions.HTTPError):
+                code = getattr(exc.response, "status_code", None)
+                return code == 429
+            return False
+
+        def _on_retry(attempt: int, exc: Exception, delay: float):
+            logging.warning(
+                "ollama rate limit hit (attempt %d). Waiting %.2fs", attempt, delay
+            )
+            print(f"\n\033[93m⚠ Rate limit hit (429). Retrying in {delay:.2f} seconds...\033[0m")
+
+        try:
+            response = retry_call(
+                _do_post,
+                max_retries=max_retries,
+                base_delay=base_delay,
+                retry_on_exception=_retry_on_exc,
+                on_retry=_on_retry,
+            )
+        except requests.exceptions.ConnectionError as exc:
+            raise RuntimeError(
+                f"Cannot reach Ollama at {self.base_url}. Is `ollama serve` running?"
+            ) from exc
+        except requests.exceptions.HTTPError as exc:
+            # Convert exhausted 429s into a uniform RateLimitExhausted error for callers/tests.
+            code = getattr(exc.response, "status_code", None)
+            if code == 429:
+                raise RateLimitExhausted(f"Rate limit exhausted for ollama after {max_retries} retries") from exc
+            raise
+
+        # Consume response (streaming or not)
+        if self.stream:
+            print(f"{C.GREEN}", end="", flush=True)
+            for line in response.iter_lines():
+                if not line:
+                    continue
+                chunk = json.loads(line)
+                token = chunk.get("message", {}).get("content", "")
+                full += token
+                print(token, end="", flush=True)
+            print(C.RESET)
+        else:
+            full = response.json().get("message", {}).get("content", "")
 
         return full
 
@@ -193,19 +235,7 @@ class NvidiaClient:
         self.max_tokens = nvidia_cfg["max_tokens"]
         self.stream = cfg["agent"].get("stream", True)
         self.provider = "nvidia"
-        self.api_key = os.environ.get("NVIDIA_API_KEY", "").strip()
-
-        if not self.api_key:
-            env_path = os.path.join(BASE_DIR, ".env")
-            if os.path.exists(env_path):
-                with open(env_path, encoding="utf-8") as handle:
-                    for line in handle:
-                        line = line.strip()
-                        if line.startswith("NVIDIA_API_KEY"):
-                            self.api_key = (
-                                line.split("=", 1)[-1].strip().strip('"').strip("'")
-                            )
-                            break
+        self.api_key = _load_api_key("NVIDIA_API_KEY")
 
         if not self.api_key:
             raise RuntimeError(
@@ -283,54 +313,64 @@ class NvidiaClient:
         )
 
         def _request(extra_body: dict | None):
-            import time
             from openai import RateLimitError, APIError
-            
+
             performance = self.cfg.get("performance", {})
             max_retries = int(performance.get("max_retries", 5))
             base_delay = float(performance.get("base_retry_delay", 5.0))
-            
-            for attempt in range(max_retries):
-                try:
-                    with Spinner(f"Requesting {self.model}", cfg=self.cfg):
-                        # Defensive: never send invalid max_tokens to the API.
-                        mt = self.max_tokens
-                        try:
-                            mt = int(mt)
-                        except (ValueError, TypeError):
-                            mt = self.cfg.get("timeouts", {}).get("fallback_max_tokens", 1024)
-                        if mt < 1:
-                            mt = self.cfg.get("timeouts", {}).get("fallback_max_tokens", 1024)
-                        return self._client.chat.completions.create(
-                            model=self.model,
-                            messages=full_messages,
-                            temperature=self.temp,
-                            top_p=self.top_p,
-                            max_tokens=mt,
-                            extra_body=extra_body,
-                            stream=self.stream,
-                            timeout=self.timeout,
-                        )
-                except RateLimitError as e:
-                    if attempt < max_retries - 1:
-                        delay = base_delay * (2 ** attempt)
-                        delay += random.uniform(0, delay * 0.1)
-                        logging.warning(f"{self.provider} rate limit hit (attempt {attempt + 1}). Waiting {delay:.2f}s")
-                        print(f"\n\033[93m⚠ Rate limit hit (429). Retrying in {delay:.2f} seconds...\033[0m")
-                        time.sleep(delay)
-                    else:
-                        raise RateLimitExhausted(f"Rate limit exhausted for {self.provider} after {max_retries} retries") from e
-                except APIError as e:
-                    if "429" in str(e) and attempt < max_retries - 1:
-                        delay = base_delay * (2 ** attempt)
-                        delay += random.uniform(0, delay * 0.1)
-                        logging.warning(f"{self.provider} rate limit hit (attempt {attempt + 1}). Waiting {delay:.2f}s")
-                        print(f"\n\033[93m⚠ API Rate limit hit. Retrying in {delay:.2f} seconds...\033[0m")
-                        time.sleep(delay)
-                    else:
-                        if "429" in str(e):
-                            raise RateLimitExhausted(f"Rate limit exhausted for {self.provider} after {max_retries} retries") from e
-                        raise e
+
+            def _do_request():
+                with Spinner(f"Requesting {self.model}", cfg=self.cfg):
+                    # Defensive: never send invalid max_tokens to the API.
+                    mt = self.max_tokens
+                    try:
+                        mt = int(mt)
+                    except (ValueError, TypeError):
+                        mt = self.cfg.get("timeouts", {}).get("fallback_max_tokens", 1024)
+                    if mt < 1:
+                        mt = self.cfg.get("timeouts", {}).get("fallback_max_tokens", 1024)
+                    return self._client.chat.completions.create(
+                        model=self.model,
+                        messages=full_messages,
+                        temperature=self.temp,
+                        top_p=self.top_p,
+                        max_tokens=mt,
+                        extra_body=extra_body,
+                        stream=self.stream,
+                        timeout=self.timeout,
+                    )
+
+            def _retry_on_exc(exc: Exception) -> bool:
+                if isinstance(exc, RateLimitError):
+                    return True
+                if isinstance(exc, APIError) and "429" in str(exc):
+                    return True
+                return False
+
+            def _on_retry(attempt: int, exc: Exception, delay: float):
+                logging.warning(
+                    f"{self.provider} rate limit hit (attempt {attempt}). Waiting {delay:.2f}s"
+                )
+                print(f"\n\033[93m⚠ Rate limit hit (429). Retrying in {delay:.2f} seconds...\033[0m")
+
+            try:
+                return retry_call(
+                    _do_request,
+                    max_retries=max_retries,
+                    base_delay=base_delay,
+                    retry_on_exception=_retry_on_exc,
+                    on_retry=_on_retry,
+                )
+            except RateLimitError as e:
+                raise RateLimitExhausted(
+                    f"Rate limit exhausted for {self.provider} after {max_retries} retries"
+                ) from e
+            except APIError as e:
+                if "429" in str(e):
+                    raise RateLimitExhausted(
+                        f"Rate limit exhausted for {self.provider} after {max_retries} retries"
+                    ) from e
+                raise
 
         extra = None
         if supports_thinking:
@@ -419,19 +459,7 @@ class GeminiClient:
         self.provider = "gemini"
         self.last_list_error = ""
 
-        self.api_key = os.environ.get("GEMINI_API_KEY", "").strip()
-        if not self.api_key:
-            env_path = os.path.join(BASE_DIR, ".env")
-            if os.path.exists(env_path):
-                with open(env_path, encoding="utf-8") as handle:
-                    for line in handle:
-                        line = line.strip()
-                        if line.startswith("GEMINI_API_KEY"):
-                            self.api_key = (
-                                line.split("=", 1)[-1].strip().strip('"').strip("'")
-                            )
-                            break
-
+        self.api_key = _load_api_key("NVIDIA_API_KEY")
         if not self.api_key:
             raise RuntimeError(
                 "GEMINI_API_KEY is not set. Add it to .env or environment variables."
@@ -548,20 +576,7 @@ class GroqClient:
         self.provider = "groq"
         self.last_list_error = ""
 
-        self.api_key = os.environ.get("GROQ_API_KEY", "").strip()
-        if not self.api_key:
-            env_path = os.path.join(BASE_DIR, ".env")
-            if os.path.exists(env_path):
-                with open(env_path, encoding="utf-8") as handle:
-                    for line in handle:
-                        line = line.strip()
-                        # Fallback for misspelled qrok
-                        if line.startswith("GROQ_API_KEY") or line.startswith("QROK_API_KEY"):
-                            self.api_key = (
-                                line.split("=", 1)[-1].strip().strip('"').strip("'")
-                            )
-                            break
-
+        self.api_key = _load_api_key("GROQ_API_KEY", fallback_keys=["QROK_API_KEY"])
         if not self.api_key:
             raise RuntimeError(
                 "GROQ_API_KEY is not set. Add it to .env or environment variables."
@@ -643,17 +658,7 @@ class OpenAICompatibleClient:
         self.provider = provider
         self.last_list_error = ""
 
-        self.api_key = os.environ.get(env_key, "").strip()
-        if not self.api_key:
-            env_path = os.path.join(BASE_DIR, ".env")
-            if os.path.exists(env_path):
-                with open(env_path, encoding="utf-8") as handle:
-                    for line in handle:
-                        line = line.strip()
-                        if line.startswith(env_key):
-                            self.api_key = line.split("=", 1)[-1].strip().strip('"').strip("'")
-                            break
-
+        self.api_key = _load_api_key(env_key)
         if not self.api_key:
             raise RuntimeError(f"{env_key} is not set. Add it to .env or environment variables.")
 
@@ -693,19 +698,59 @@ class OpenAICompatibleClient:
 
         use_color = sys.stdout.isatty() and os.getenv("NO_COLOR") is None
         
-        with Spinner(f"Requesting {self.model}"):
-            # Handle o1/o3-mini which don't support system prompts or some parameters
-            kwargs = {
-                "model": self.model,
-                "messages": full_messages,
-                "stream": self.stream
-            }
-            if not self.model.startswith("o1") and not self.model.startswith("o3"):
-                kwargs["temperature"] = self.temp
-                kwargs["top_p"] = self.top_p
-                kwargs["max_tokens"] = self.max_tokens
+        performance = self.cfg.get("performance", {})
+        max_retries = int(performance.get("max_retries", 5))
+        base_delay = float(performance.get("base_retry_delay", 5.0))
 
-            completion = self._client.chat.completions.create(**kwargs)
+        # Prepare kwargs for the OpenAI-compatible create call
+        kwargs = {
+            "model": self.model,
+            "messages": full_messages,
+            "stream": self.stream,
+        }
+        if not self.model.startswith("o1") and not self.model.startswith("o3"):
+            kwargs["temperature"] = self.temp
+            kwargs["top_p"] = self.top_p
+            kwargs["max_tokens"] = self.max_tokens
+
+        def _do_create():
+            with Spinner(f"Requesting {self.model}"):
+                return self._client.chat.completions.create(**kwargs)
+
+        def _retry_on_exc(exc: Exception) -> bool:
+            try:
+                from openai import RateLimitError, APIError
+            except Exception:
+                return False
+            if isinstance(exc, RateLimitError):
+                return True
+            if isinstance(exc, APIError) and "429" in str(exc):
+                return True
+            return False
+
+        def _on_retry(attempt: int, exc: Exception, delay: float):
+            logging.warning(
+                "%s rate limit hit (attempt %d). Waiting %.2fs", self.provider, attempt, delay
+            )
+            print(f"\n\033[93m⚠ Rate limit hit (429). Retrying in {delay:.2f} seconds...\033[0m")
+
+        try:
+            completion = retry_call(
+                _do_create,
+                max_retries=max_retries,
+                base_delay=base_delay,
+                retry_on_exception=_retry_on_exc,
+                on_retry=_on_retry,
+            )
+        except Exception as e:
+            # Convert common rate-limit exceptions into RateLimitExhausted for callers/tests
+            try:
+                from openai import RateLimitError, APIError
+                if isinstance(e, RateLimitError) or (isinstance(e, APIError) and "429" in str(e)):
+                    raise RateLimitExhausted(f"Rate limit exhausted for {self.provider} after {max_retries} retries") from e
+            except Exception:
+                pass
+            raise
 
         full = ""
         if self.stream:

@@ -62,20 +62,18 @@ By moving from JSON to SQLite (`session_memory_sqlite.py`), the system can handl
 
 ## [SECURE] API Resilience & Backoff
 
-Network latency and rate limits (429s) can stall an agent. AgenticOS uses an **Exponential Backoff** strategy to ensure the agent keeps moving.
+Network latency and rate limits (429s) can stall an agent. AgenticOS centralizes retry/backoff logic in `core/retry.py` and exposes a `retry_call()` helper that provider clients use to handle transient failures. The helper implements exponential backoff with configurable jitter and a maximum retry limit. If retries are exhausted, clients raise `RateLimitExhausted` so the orchestrator can trigger fallbacks or user-facing errors.
 
-```python
-# Pseudo-code from model_clients.py
-for attempt in range(max_retries):
-    try:
-        return call_api()
-    except RateLimitError:
-        wait(2 ** attempt) # 2s, 4s, 8s, 16s...
-```
+Example behaviour (conceptual):
+
+1. Attempt the provider call.
+2. On transient `RateLimit`/`429` errors, wait `base_retry_delay` seconds (plus jitter).
+3. Retry with exponential backoff up to `max_retries` attempts.
+4. If still failing, raise `RateLimitExhausted` to the caller.
 
 **Benefits**:
--   Prevents agent crashes during high-concurrency tests.
--   Maximizes throughput on "Free Tier" API keys.
+- Prevents agent crashes during high-concurrency tests.
+- Provides consistent, configurable retry behaviour across provider clients.
 
 ---
 
@@ -96,6 +94,10 @@ performance:
   
   # Parallel tool execution (Experimental)
   parallel_execution: true
+
+  # Retry/backoff configuration for provider clients
+  max_retries: 5
+  base_retry_delay: 5.0
 ```
 
 ---

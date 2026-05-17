@@ -33,6 +33,13 @@ Our testing strategy follows the **"Isolated Simulation"** model:
 pytest
 ```
 
+### Run a single test file
+```powershell
+pytest tests/test_retry.py -q
+```
+
+Note: We added `tests/test_retry.py` to validate the centralized `retry_call()` helper behavior.
+
 ### Coverage Reporting
 To generate a detailed line-by-line coverage report:
 ```powershell

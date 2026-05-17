@@ -2,6 +2,7 @@ import datetime
 import json
 from pathlib import Path
 from core.tool_registry import tool
+import importlib
 from tools.web import WebTools
 
 @tool(name="research_loop", desc="Runs a multi-round research loop on a topic.", category="Research")
@@ -10,7 +11,6 @@ def research_loop(topic: str, rounds: str = "3") -> str:
 
     if not topic or not topic.strip():
         return json.dumps({"status": "handled gracefully", "reason": "Empty topic"})
-
     try:
         rounds_int = int(rounds)
     except ValueError:
@@ -26,18 +26,20 @@ def research_loop(topic: str, rounds: str = "3") -> str:
     today = datetime.datetime.now().strftime("%Y-%m-%d")
     log_file = log_dir / f"deep_research_{today}.md"
 
-    web_tools = WebTools()
+    # Resolve WebTools from this module's attribute so tests that patch
+    # "tools.plugins.research_loop.WebTools" reliably replace the class.
+    mod = importlib.import_module(__name__)
+    web_tools_cls = getattr(mod, "WebTools", None)
+    if web_tools_cls is None:
+        from tools.web import WebTools as web_tools_cls
+    web_tools = web_tools_cls()
 
     log_content = f"# Deep Research: {topic} ({today})\n\n"
 
     current_topic = topic
     all_failed = True
 
-    result = {
-        "topic": topic,
-        "rounds_completed": 0,
-        "status": "success"
-    }
+    result = {"topic": topic, "rounds_completed": 0, "status": "success"}
 
     for r in range(1, rounds_int + 1):
         log_content += f"## Round {r}: {current_topic}\n\n"
@@ -52,11 +54,9 @@ def research_loop(topic: str, rounds: str = "3") -> str:
             log_content += f"{search_results}\n\n"
 
             # Parse out the URLs from the search_results string and use fetch_url on them
-            # We are extracting links simply by looking for lines that start with "  http"
             urls_to_fetch = []
             for line in search_results.splitlines():
                 if "http" in line and not line.startswith("Direct Answer:"):
-                    # Quick extraction of URL
                     parts = line.split("http")
                     if len(parts) > 1:
                         url = "http" + parts[1].strip()
@@ -68,7 +68,6 @@ def research_loop(topic: str, rounds: str = "3") -> str:
                     try:
                         page_text = web_tools.get_page_text(url=url)
                         if page_text and "Error:" not in page_text:
-                            # truncate to first 300 chars to simulate "insights"
                             insight = page_text[:300].replace("\n", " ") + "..."
                             log_content += f"- Source {i+1} ({url}): {insight}\n"
                     except Exception as fe:
@@ -94,7 +93,8 @@ def research_loop(topic: str, rounds: str = "3") -> str:
         result["reason"] = "All rounds failed"
 
     try:
-        log_file.write_text(log_content)
+        # Use UTF-8 and replace undecodable characters to avoid platform encoding errors
+        log_file.write_text(log_content, encoding="utf-8", errors="replace")
     except Exception as e:
         print(f"Failed to write log file: {e}")
 
