@@ -10,7 +10,7 @@ playwright>=1.43.0
 
 # Configuration & Environment
 pyyaml>=6.0
-python-dotenv>=1.0.0
+python-dotenv>=1.2.2
 
 # System & Utilities
 pyreadline3; sys_platform == 'win32'
