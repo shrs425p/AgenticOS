@@ -1,8 +1,7 @@
-import os
 import json
 import pytest
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from core.memory_manager import (
     MemoryManager,
     initialize_memory_manager,
@@ -11,8 +10,7 @@ from core.memory_manager import (
     log_daily_event,
     get_memory_stats,
     consolidate_memory,
-    cleanup_old_memories,
-    _memory_manager
+    cleanup_old_memories
 )
 
 @pytest.fixture

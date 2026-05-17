@@ -1,4 +1,3 @@
-import pytest
 import json
 from pathlib import Path
 from tools.filesystem.structured import StructuredMixin

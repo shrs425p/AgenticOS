@@ -1,5 +1,3 @@
-import pytest
-import zipfile
 from pathlib import Path
 from tools.filesystem.archive import ArchiveMixin
 

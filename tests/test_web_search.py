@@ -1,6 +1,4 @@
-import pytest
 from unittest import mock
-from urllib.parse import urlparse
 from tools.web.search import SearchMixin
 
 class MockWebTools(SearchMixin):

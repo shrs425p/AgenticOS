@@ -1,12 +1,10 @@
 import os
 import json
-import pytest
 from core.audit_logger import (
     AuditLogger,
     _redact,
     _estimate_tokens,
-    infer_success,
-    _now_iso
+    infer_success
 )
 
 def test_redact():

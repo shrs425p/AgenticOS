@@ -1,6 +1,4 @@
 import os
-import shutil
-import pytest
 from pathlib import Path
 from tools.terminal.paths import PathsMixin
 

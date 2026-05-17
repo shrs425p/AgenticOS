@@ -309,7 +309,8 @@ def test_dotenv_parser_fallback():
     # Simulate importing without dotenv package using sys.modules mock
     with patch.dict("sys.modules", {"dotenv": None}):
         # Mock os.path.exists to return True for .env and builtins.open to read dummy env
-        mock_exists = lambda path: path.endswith(".env")
+        def mock_exists(path):
+            return path.endswith(".env")
         mock_open_content = mock_open(read_data="TEST_DOTENV_KEY = dotenv_value\n# Comment\nINVALID_LINE")
         
         with patch("os.path.exists", side_effect=mock_exists), \

@@ -108,7 +108,8 @@ def test_guardrails_ask_human(tmp_path):
     }
     
     # 1. Custom on_confirm handler
-    handler = lambda path, op: True
+    def handler(path, op):
+        return True
     guard = PathGuard(cfg, on_confirm=handler)
     assert guard.ask_human("path", "read") is True
     
