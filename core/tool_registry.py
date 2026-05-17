@@ -192,10 +192,9 @@ class ToolRegistry:
                         print(f"  [PLUGIN ERROR] Failed to load {filename}: {e}")
 
     def _reg(self, name, fn, desc, category="General"):
-        """Register a tool with collision detection."""
+        """Register a tool, skipping duplicates silently (first registration wins)."""
         if name in self.registry:
-            import logging
-            logging.warning(f"Tool '{name}' already registered; skipping duplicate (category: {category})")
+            # Silently skip duplicates - first registration (from @tool decorators) takes precedence
             return
         self.registry[name] = {"fn": fn, "desc": desc, "category": category}
 
