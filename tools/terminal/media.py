@@ -282,26 +282,50 @@ end tell"""
                 raw = int(lvl / 100 * 65535)
                 return self._run_nircmd("setsysvolume", str(raw))
 
-            # Simplest reliable approach without nircmd: use PowerShell + Windows.Media
+            # REQUIRED FIX
             ps_alt = f"""
-$vol = {lvl / 100.0}
+$lvl = {lvl}
+$code = @'
+using System;
+using System.Runtime.InteropServices;
+[Guid("5CDF2C82-841E-4546-9722-0CF74078229A"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+interface IAudioEndpointVolume {{
+    int NotImpl1(); int NotImpl2();
+    int GetMasterVolumeLevel(out float pfLevelDB);
+    int GetMasterVolumeLevelScalar(out float pfLevel);
+    int SetMasterVolumeLevel(float fLevelDB, ref Guid pguidEventContext);
+    int SetMasterVolumeLevelScalar(float fLevel, ref Guid pguidEventContext);
+}}
+[Guid("D666063F-1587-4E43-81F1-B948E807363F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+interface IMMDevice {{ int Activate(ref Guid id, int clsCtx, IntPtr pActivationParams, out IAudioEndpointVolume ppInterface); }}
+[Guid("A95664D2-9614-4F35-A746-DE8DB63617E6"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+interface IMMDeviceEnumerator {{
+    int NotImpl(); int GetDefaultAudioEndpoint(int dataFlow, int role, out IMMDevice ppDevice);
+}}
+[ComImport, Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")] class MMDeviceEnumeratorComObject {{}}
+public class VolSetter {{
+    public static void SetVolume(float level) {{
+        var de = new MMDeviceEnumeratorComObject() as IMMDeviceEnumerator;
+        IMMDevice dev; de.GetDefaultAudioEndpoint(0, 1, out dev);
+        var aevGuid = typeof(IAudioEndpointVolume).GUID;
+        IAudioEndpointVolume aev; dev.Activate(ref aevGuid, 23, IntPtr.Zero, out aev);
+        aev.SetMasterVolumeLevelScalar(level / 100f, Guid.Empty);
+    }}
+}}
+'@
 try {{
-    Add-Type -AssemblyName System.Runtime.WindowsRuntime -ErrorAction Stop | Out-Null
-    $null = [Windows.Media.Devices.MediaDevice, Windows.Media, ContentType=WindowsRuntime]
-    # Simpler: use nircmd equivalent via COM
-}} catch {{}}
-# Fallback: nircmd setsysvolume (if available in PATH)
-if (Get-Command nircmd -ErrorAction SilentlyContinue) {{
-    nircmd setsysvolume {int(lvl / 100 * 65535)}
-}} else {{
-    Write-Output "nircmd not in PATH; volume unchanged."
+    Add-Type -TypeDefinition $code -ErrorAction Stop | Out-Null
+    [VolSetter]::SetVolume($lvl)
+    "Volume set to $lvl%"
+}} catch {{
+    "Unable to change volume: $_"
 }}
 """
             result = subprocess.run(
                 ["powershell", "-NoProfile", "-NonInteractive", "-Command", ps_alt],
                 capture_output=True,
                 text=True,
-                timeout=10,
+                timeout=12,
             )
             return result.stdout.strip() or f"Volume set to {lvl}%"
 

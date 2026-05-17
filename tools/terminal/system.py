@@ -32,24 +32,21 @@ class SystemMixin:
     def cpu_usage(self) -> str:
         t = self.cfg.get("timeouts", {}).get("system_admin", 10)
         if self.system == "Windows":
-            return self._run("wmic cpu get loadpercentage", timeout=t)
+            return self.run_powershell("Get-CimInstance Win32_Processor | Measure-Object -Property LoadPercentage -Average | Select-Object -ExpandProperty Average", timeout=t)
         return self._run("top -bn1 | head -n 5", timeout=t)
 
     @tool(name="memory_usage", desc="Memory usage.", category="Terminal")
     def memory_usage(self) -> str:
         t = self.cfg.get("timeouts", {}).get("system_admin", 10)
         if self.system == "Windows":
-            return self._run(
-                "wmic OS get FreePhysicalMemory,TotalVisibleMemorySize /Value",
-                timeout=t,
-            )
+            return self.run_powershell("Get-CimInstance Win32_OperatingSystem | Select-Object FreePhysicalMemory, TotalVisibleMemorySize | Format-List", timeout=t)
         return self._run("free -h", timeout=t)
 
     @tool(name="uptime", desc="System uptime.", category="Terminal")
     def uptime(self) -> str:
         t = self.cfg.get("timeouts", {}).get("system_admin", 10)
         if self.system == "Windows":
-            return self._run("wmic os get lastbootuptime", timeout=t)
+            return self.run_powershell("Get-CimInstance Win32_OperatingSystem | Select-Object -ExpandProperty LastBootUpTime", timeout=t)
         return self._run("uptime", timeout=t)
 
     @tool(name="system_health", desc="Detailed report on system CPU, Memory, and Disk health, including agent process stats.", category="Terminal")

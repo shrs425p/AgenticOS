@@ -97,14 +97,17 @@ $g.Dispose(); $bmp.Dispose();
 
         else:
             # Linux
-            if shutil.which("scrot"):
+            available_tools = [t for t in ["scrot", "gnome-screenshot", "import"] if shutil.which(t)]
+            if not available_tools:
+                return "Error: Missing screen capture tools. Please run: install_system_package('scrot')"
+            
+            tool_to_use = available_tools[0]
+            if tool_to_use == "scrot":
                 return self._run(["scrot", path])
-            elif shutil.which("gnome-screenshot"):
+            elif tool_to_use == "gnome-screenshot":
                 return self._run(["gnome-screenshot", "-f", path])
-            elif shutil.which("import"):  # ImageMagick
-                return self._run(["import", "-window", "root", path])
             else:
-                return "Error: No screenshot tool found. Install scrot: sudo apt install scrot"
+                return self._run(["import", "-window", "root", path])
 
     # ── Window management ─────────────────────────────────────────────────────
     @tool(name="minimize_all", desc="Minimize all windows.", category="General")

@@ -35,18 +35,41 @@ def _get_active_windows_windows() -> list:
 
 def _get_active_windows_unix() -> list:
     """Fallback active process/window listing for macOS/Linux."""
+    sys_name = platform.system()
     try:
-        # Basic ps listing of active processes running in terminal shells
-        cmd = ["ps", "-eo", "comm,args"]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=5.0)
-        apps = []
-        if result.returncode == 0:
-            for line in result.stdout.splitlines()[1:]:
-                parts = line.strip().split(None, 1)
-                if parts:
-                    comm = parts[0]
-                    apps.append({"process": comm, "window_title": parts[1] if len(parts) > 1 else "Active Background Process"})
-        return apps[:15]  # Limit to top 15 processes
+        # macOS Darwin GUI Window Auditing
+        if sys_name == "Darwin":
+            cmd = ["osascript", "-e", 'tell application "System Events" to get name of every process whose visible is true']
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=5.0)
+            if result.returncode == 0:
+                apps = [a.strip() for a in result.stdout.strip().split(",")]
+                return [{"process": app, "window_title": "Visible Desktop Application"} for app in apps if app]
+
+        # Linux X11 GUI Window Auditing
+        elif shutil.which("xdotool"):
+            cmd = ["xdotool", "search", "--onlyvisible", "--class", ""]
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=5.0)
+            windows = []
+            if result.returncode == 0:
+                for line in result.stdout.splitlines():
+                    wid = line.strip()
+                    if not wid:
+                        continue
+                    # Retrieve the window name
+                    name_cmd = ["xdotool", "getwindowname", wid]
+                    name_res = subprocess.run(name_cmd, capture_output=True, text=True, timeout=2.0)
+                    # Retrieve the window class/process name
+                    class_cmd = ["xdotool", "getwindowclassname", wid]
+                    class_res = subprocess.run(class_cmd, capture_output=True, text=True, timeout=2.0)
+                    
+                    if name_res.returncode == 0:
+                        wname = name_res.stdout.strip()
+                        cname = class_res.stdout.strip() if class_res.returncode == 0 else "Unknown Process"
+                        windows.append({"process": cname, "window_title": wname})
+                return windows[:15]
+
+        # Standard Fallback
+        return []
     except Exception:
         return []
 

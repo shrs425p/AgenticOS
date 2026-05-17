@@ -34,17 +34,48 @@ def test_get_active_windows_windows(mock_run):
     assert windows[0]["window_title"] == "Google Chrome"
 
 
+@patch("platform.system")
 @patch("subprocess.run")
-def test_get_active_windows_unix(mock_run):
-    """Verify fallback process listing on Unix platforms."""
+def test_get_active_windows_unix_darwin(mock_run, mock_system):
+    """Verify Darwin active application window query via AppleScript."""
+    mock_system.return_value = "Darwin"
     mock_response = MagicMock()
     mock_response.returncode = 0
-    mock_response.stdout = "PID COMMAND\n100 bash --login\n200 python main.py\n"
+    mock_response.stdout = "Spotify, Finder, Terminal"
     mock_run.return_value = mock_response
 
     apps = _get_active_windows_unix()
-    assert len(apps) >= 1
-    assert apps[0]["process"] == "100"
+    assert len(apps) == 3
+    assert apps[0]["process"] == "Spotify"
+    assert apps[0]["window_title"] == "Visible Desktop Application"
+
+
+@patch("platform.system")
+@patch("shutil.which")
+@patch("subprocess.run")
+def test_get_active_windows_unix_linux(mock_run, mock_which, mock_system):
+    """Verify Linux active application window query via xdotool."""
+    mock_system.return_value = "Linux"
+    mock_which.return_value = "/usr/bin/xdotool"
+
+    mock_search = MagicMock()
+    mock_search.returncode = 0
+    mock_search.stdout = "12345\n"
+
+    mock_name = MagicMock()
+    mock_name.returncode = 0
+    mock_name.stdout = "My Window Title"
+
+    mock_class = MagicMock()
+    mock_class.returncode = 0
+    mock_class.stdout = "MyClassName"
+
+    mock_run.side_effect = [mock_search, mock_name, mock_class]
+
+    apps = _get_active_windows_unix()
+    assert len(apps) == 1
+    assert apps[0]["process"] == "MyClassName"
+    assert apps[0]["window_title"] == "My Window Title"
 
 
 @patch("platform.system")
