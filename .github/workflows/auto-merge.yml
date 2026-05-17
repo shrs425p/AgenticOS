@@ -1,4 +1,4 @@
-name: Auto-Merge Bot
+name: CI
 
 on:
   push:
@@ -6,37 +6,65 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, edited]
   pull_request_review:
-    types: [submitted]
+    types: [submitted, edited]
   workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+
+permissions:
+  contents: read
 
 jobs:
-  auto-merge:
-    runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'pull_request' &&
-      (github.actor == 'google-labs-jules' || github.actor == 'shrs425p')
-    permissions:
-      pull-requests: write
-      contents: write
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+        python-version: ["3.10", "3.12"]
 
     steps:
-      - name: Validate PR number
-        env:
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
-            echo "Invalid PR number: $PR_NUMBER"
-            exit 1
-          fi
+      - uses: actions/checkout@v4
 
-      - name: Enable auto-merge
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          REPO: ${{ github.repository }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
         run: |
-          gh pr merge "$PR_NUMBER" \
-            --repo "$REPO" \
-            --auto \
-            --squash \
-            --delete-branch
+          pip install --upgrade pip
+          pip install ruff pytest pytest-cov playwright
+          pip install -r requirements.txt
+
+      - name: Playwright Install (Linux)
+        if: runner.os == 'Linux'
+        run: playwright install chromium --with-deps
+
+      - name: Playwright Install (Windows)
+        if: runner.os == 'Windows'
+        run: playwright install chromium
+
+      - name: Lint (Ruff)
+        run: ruff check .
+
+      - name: Run Tests
+        env:
+          PYTHONPATH: .
+        run: pytest tests/ --cov=core --cov=tools --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
+        uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4
+        with:
+          files: coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload coverage report
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+          retention-days: 7
