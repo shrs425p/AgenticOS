@@ -158,6 +158,6 @@ python main.py
 ---
 
 ## [DOC] License
-Distributed under the MIT License.
+Distributed under the Apache-2.0 License.
 
 *AgenticOS: Hardened. Autonomous. Ready.*
