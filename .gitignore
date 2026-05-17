@@ -63,4 +63,4 @@ tools/nircmd/
 # Temporary and Backup files
 *.tmp
 *.bak
-~*
+~*docs/daily_logs/
