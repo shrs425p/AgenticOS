@@ -17,7 +17,7 @@ jobs:
     # Dependency review requires a PR context to diff dependencies.
     # On plain pushes we run pip-audit as a fallback full scan instead.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Dependency Review (PR only)
         if: github.event_name == 'pull_request'
