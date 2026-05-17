@@ -73,6 +73,26 @@ The agent extracted hundreds of rules, filtered them for ports like `8080`, `330
 
 ---
 
+## Case Study 5: Dynamic Code Auditing and Self-Healing Packages (Task 68)
+
+### The Challenge:
+Audit the cyclomatic complexity of all functions and classes in `core/tool_registry.py` without pre-installed linting software or system dependencies.
+
+### The "Crucible" Evolution:
+-   **Initial Check**: The agent checked system package managers (`check_package_managers`) and discovered `winget` active on Windows.
+-   **Self-Healing**: Triggered a dynamic, background package resolver `install_system_package` (along with `pip` installers) to silently compile and provision `radon` on-the-fly.
+-   **Parsing & Analysis**: Using Abstract Syntax Tree (AST) node parsing, traversed `tool_registry.py` to evaluate complex blocks, outputting a beautiful cyclomatic report graded `A` to `F` in **under 20 seconds**.
+
+### Verified Output:
+> **Report Excerpt (`workspace/tool_registry_complexity.md`):**
+> | Block Type | Name | Complexity Score | Grade | Recommendation |
+> | :--- | :--- | :---: | :---: | :--- |
+> | Class | `ToolRegistry` | 1 | **A** | Excellent (Low risk) |
+> | Method | `ToolRegistry.register` | 4 | **A** | Excellent (Simple, low risk block) |
+> | Method | `ToolRegistry.load_plugins` | 12 | **C** | Moderate (Review carefully) |
+
+---
+
 ## Summary of Evaluation Performance
 
 | Task Category | Success Rate | Avg. Time to Complete | Key Tools Used |
