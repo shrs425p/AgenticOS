@@ -1,6 +1,6 @@
 # Core Web & AI
 requests>=2.31.0
-httpx>=0.25.0
+httpx>=0.28.1
 beautifulsoup4>=4.12.0
 lxml>=4.9.0
 openai>=2.37.0
