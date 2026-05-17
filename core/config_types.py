@@ -4,7 +4,7 @@ These types are intentionally lightweight and `total=False` so they can be
 used as hints without enforcing strict runtime checks. They improve IDE
 completion and serve as a single place to document common config keys.
 """
-from typing import TypedDict, Dict, Any, Optional
+from typing import TypedDict, Dict, Any
 
 
 class NvidiaConfig(TypedDict, total=False):

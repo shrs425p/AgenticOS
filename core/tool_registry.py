@@ -169,8 +169,6 @@ class ToolRegistry:
         for root, _, files in os.walk(plugin_dir):
             for filename in files:
                 if filename.endswith(".py") and filename != "__init__.py":
-                    module_name = filename[:-3]
-                    file_path = os.path.join(root, filename)
                     file_path = os.path.join(root, filename)
                     # Build a stable module name based on the plugin path to avoid
                     # clobbering top-level module names in sys.modules.

@@ -1,3 +1,4 @@
+"""Module for validate_config_tool.py"""
 import yaml
 import datetime
 import logging

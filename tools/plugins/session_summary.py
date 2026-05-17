@@ -1,3 +1,4 @@
+"""Module for session_summary.py"""
 import sqlite3
 import datetime
 import logging

@@ -181,7 +181,7 @@ def mock_external_calls(monkeypatch):
     monkeypatch.setattr(os, "remove", MagicMock())
     monkeypatch.setattr(os, "makedirs", MagicMock())
 """
-        with open(test_file_path, "w") as f:
+        with open(test_file_path, "w", encoding="utf-8") as f:
             f.write(existing_tests)
 
     append_tests = ""
@@ -270,7 +270,7 @@ def mock_external_calls(monkeypatch):
 - Tool registry health: {health}
 """
 
-    with open(f"workspace/daily_logs/tool_audit_{today}.md", "w") as f:
+    with open(f"workspace/daily_logs/tool_audit_{today}.md", "w", encoding="utf-8") as f:
         f.write(report)
 
 if __name__ == "__main__":

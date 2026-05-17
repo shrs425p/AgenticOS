@@ -1,3 +1,4 @@
+"""Module for competitive_intel.py"""
 from datetime import datetime
 import logging
 import re
@@ -66,7 +67,7 @@ def competitive_intel(competitors: list = None) -> str:
 
     import os
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    with open(output_path, "w") as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         f.write(content)
 
     return f"Wrote competitive matrix to {output_path}"

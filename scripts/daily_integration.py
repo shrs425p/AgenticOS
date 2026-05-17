@@ -289,7 +289,7 @@ def main():
     today_str = datetime.date.today().strftime('%Y-%m-%d')
     report_path = f"docs/daily_logs/integration_test_{today_str}.md"
 
-    with open(report_path, "w") as f:
+    with open(report_path, "w", encoding="utf-8") as f:
         f.write(report_content)
 
     print(f"Report written to {report_path}")

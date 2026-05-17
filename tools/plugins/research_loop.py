@@ -1,3 +1,4 @@
+"""Module for research_loop.py"""
 import datetime
 import json
 from pathlib import Path

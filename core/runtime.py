@@ -25,7 +25,7 @@ from typing import Dict, Optional, Callable
 from core.memory_manager import initialize_memory_manager, log_task_completion
 from core.session_memory_sqlite import SqliteSessionMemory
 from core.audit_logger import AuditLogger, infer_success
-from core.model_clients import GeminiClient, NvidiaClient, OllamaClient, GroqClient, OpenAIClient, OpenRouterClient, GithubClient, DeepseekClient, TieredClient
+from core.model_clients import GeminiClient, NvidiaClient, OllamaClient, GroqClient, OpenAIClient, OpenRouterClient, GithubClient, DeepseekClient, TieredClient  # noqa: F401
 from core.runtime_config import BASE_DIR, DEFAULT_WORKSPACE, load_config
 from core.task_tracker import TaskTracker
 from core.runtime_ui import (

@@ -1149,3 +1149,23 @@ def test_greet_user_auto(registry, monkeypatch):
 def test_create_plugin_auto(registry, monkeypatch):
     res = registry.call('create_plugin', ["test", "test", "test"])
     assert res is not None
+def test_active_ports_list_auto(registry, monkeypatch):
+    res = registry.call('active_ports_list', [])
+    assert res is not None
+
+def test_eventlog_query_auto(registry, monkeypatch):
+    res = registry.call('eventlog_query', ["dummy", "dummy", "dummy"])
+    assert res is not None
+
+def test_firewall_rules_list_auto(registry, monkeypatch):
+    res = registry.call('firewall_rules_list', ["dummy"])
+    assert res is not None
+
+def test_scheduled_task_create_daily_auto(registry, monkeypatch):
+    res = registry.call('scheduled_task_create_daily', ["dummy", "dummy", "dummy"])
+    assert res is not None
+
+def test_competitive_intel_auto(registry, monkeypatch):
+    res = registry.call('competitive_intel', [[]])
+    assert res is not None
+
