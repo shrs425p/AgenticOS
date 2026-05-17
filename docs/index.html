@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgenticOS — High-Performance Autonomous Control Center</title>
+  
+  <!-- Premium Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Glassmorphism & Cyberpunk Design Theme -->
+  <style>
+    :root {
+      --bg-dark: #05070f;
+      --panel-bg: rgba(10, 15, 30, 0.65);
+      --panel-border: rgba(255, 255, 255, 0.06);
+      --cyan: #00f2fe;
+      --violet: #7f00ff;
+      --emerald: #00f5a0;
+      --crimson: #ff0844;
+      --yellow: #ffd200;
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      overflow-x: hidden;
+      line-height: 1.5;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(127, 0, 255, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(0, 242, 254, 0.08) 0%, transparent 40%);
+      background-attachment: fixed;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--cyan);
+    }
+
+    /* Container */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* Glassmorphic Navbar */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--panel-border);
+      background: rgba(5, 7, 15, 0.8);
+      padding: 1rem 0;
+    }
+
+    .nav-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      background: linear-gradient(to right, var(--cyan), var(--violet));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-transform: uppercase;
+    }
+
+    .logo i {
+      -webkit-text-fill-color: initial;
+      color: var(--cyan);
+      filter: drop-shadow(0 0 8px rgba(0, 242, 254, 0.6));
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--cyan);
+      text-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 4rem 0 2rem 0;
+      text-align: center;
+      position: relative;
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(0, 242, 254, 0.1);
+      border: 1px solid rgba(0, 242, 254, 0.2);
+      color: var(--cyan);
+      padding: 0.4rem 1.2rem;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.05);
+    }
+
+    .badge-status span {
+      width: 8px;
+      height: 8px;
+      background: var(--emerald);
+      border-radius: 50%;
+      display: inline-block;
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.9); opacity: 0.6; }
+      50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 8px var(--emerald); }
+      100% { transform: scale(0.9); opacity: 0.6; }
+    }
+
+    .hero h1 {
+      font-size: 3.5rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+      letter-spacing: -0.5px;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--cyan) 0%, var(--violet) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 750px;
+      margin: 0 auto 2.5rem auto;
+    }
+
+    /* Live HUD Dashboard */
+    .dashboard-hud {
+      display: grid;
+      grid-template-columns: 320px 1fr 340px;
+      gap: 1.5rem;
+      margin-bottom: 4rem;
+    }
+
+    @media (max-width: 1100px) {
+      .dashboard-hud {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .hud-panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      backdrop-filter: blur(16px);
+      padding: 1.5rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .hud-panel::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(to right, var(--cyan), var(--violet));
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 0.75rem;
+    }
+
+    .panel-header h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .panel-header span.pill {
+      font-size: 0.75rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--panel-border);
+      padding: 0.2rem 0.6rem;
+      border-radius: 50px;
+      color: var(--text-muted);
+    }
+
+    /* Telemetry HUD charts */
+    .telemetry-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .telemetry-stat {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .telemetry-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+    }
+
+    .telemetry-meta span.label {
+      color: var(--text-muted);
+    }
+
+    .telemetry-meta span.value {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: bold;
+      color: var(--cyan);
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 50px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(to right, var(--cyan), var(--emerald));
+      width: 45%;
+      border-radius: 50px;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .progress-bar.warning {
+      background: linear-gradient(to right, var(--yellow), var(--crimson));
+    }
+
+    /* Dynamic Canvas Chart */
+    .canvas-container {
+      position: relative;
+      height: 120px;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Thought & Reasoning Center */
+    .reasoning-panel {
+      min-height: 480px;
+    }
+
+    .interactive-triggers {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .trigger-btn {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 0.6rem 1.2rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .trigger-btn:hover {
+      background: rgba(0, 242, 254, 0.05);
+      border-color: var(--cyan);
+      color: var(--cyan);
+      box-shadow: 0 0 10px rgba(0, 242, 254, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .trigger-btn.active {
+      background: linear-gradient(135deg, rgba(0, 242, 254, 0.15) 0%, rgba(127, 0, 255, 0.15) 100%);
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    .cortex-monitor {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 1.25rem;
+      font-size: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      overflow-y: auto;
+      max-height: 380px;
+      position: relative;
+    }
+
+    .cortex-line {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      animation: fadeIn 0.4s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .cortex-line .tag {
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .cortex-line.thought .tag { color: var(--violet); }
+    .cortex-line.action .tag { color: var(--cyan); }
+    .cortex-line.observation .tag { color: var(--emerald); }
+
+    .cortex-line .body {
+      color: #cbd5e1;
+      word-break: break-word;
+      line-height: 1.4;
+    }
+
+    .cortex-line.action .body {
+      background: rgba(0, 242, 254, 0.05);
+      border-left: 2px solid var(--cyan);
+      padding: 0.5rem 0.75rem;
+      border-radius: 0 6px 6px 0;
+    }
+
+    /* Tool Gating Matrix */
+    .tool-matrix-panel {
+      gap: 1rem;
+    }
+
+    .search-box {
+      position: relative;
+      width: 100%;
+    }
+
+    .search-box i {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+
+    .search-box input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 0.6rem 1rem 0.6rem 2.5rem;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+
+    .search-box input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 10px rgba(0, 242, 254, 0.15);
+      outline: none;
+    }
+
+    .tool-scroller {
+      flex: 1;
+      overflow-y: auto;
+      max-height: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .tool-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+
+    .tool-card:hover {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: var(--panel-border);
+    }
+
+    .tool-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .tool-info h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: var(--text-main);
+    }
+
+    .tool-info span.desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .gate-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .gate-badge.green {
+      background: rgba(0, 245, 160, 0.1);
+      border: 1px solid rgba(0, 245, 160, 0.2);
+      color: var(--emerald);
+    }
+
+    .gate-badge.yellow {
+      background: rgba(255, 210, 0, 0.1);
+      border: 1px solid rgba(255, 210, 0, 0.2);
+      color: var(--yellow);
+    }
+
+    .gate-badge.red {
+      background: rgba(255, 8, 68, 0.1);
+      border: 1px solid rgba(255, 8, 68, 0.2);
+      color: var(--crimson);
+    }
+
+    /* Features Grid */
+    .features-section {
+      padding: 4rem 0;
+      background: rgba(10, 15, 30, 0.2);
+      border-top: 1px solid var(--panel-border);
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    .features-section h2 {
+      font-size: 2.2rem;
+      text-align: center;
+      margin-bottom: 3rem;
+      font-weight: 800;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+    }
+
+    .feature-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 2rem;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 242, 254, 0.05);
+      border-color: rgba(0, 242, 254, 0.2);
+    }
+
+    .feature-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(0, 242, 254, 0.1) 0%, rgba(127, 0, 255, 0.1) 100%);
+      border: 1px solid rgba(0, 242, 254, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: var(--cyan);
+      margin-bottom: 1.5rem;
+    }
+
+    .feature-card h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    /* Core Logs Console Section */
+    .console-section {
+      padding: 4rem 0;
+    }
+
+    .console-header {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .console-header h2 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    .console-header p {
+      color: var(--text-muted);
+    }
+
+    .terminal-container {
+      background: #020308;
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+    }
+
+    .terminal-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .window-dots {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .window-dots span {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .window-dots span.dot-red { background: #ff5f56; }
+    .window-dots span.dot-yellow { background: #ffbd2e; }
+    .window-dots span.dot-green { background: #27c93f; }
+
+    .terminal-title {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    .terminal-content {
+      height: 350px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .terminal-content .line {
+      line-height: 1.5;
+    }
+
+    .terminal-content .line span.path {
+      color: var(--cyan);
+    }
+
+    .terminal-content .line span.cmd {
+      color: var(--text-main);
+      font-weight: bold;
+    }
+
+    .terminal-content .line span.response {
+      color: #94a3b8;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--panel-border);
+      padding: 3rem 0;
+      background: rgba(5, 7, 15, 0.9);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    footer p {
+      margin-bottom: 1rem;
+    }
+
+    footer a {
+      color: var(--cyan);
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Premium Header -->
+  <header>
+    <div class="container nav-container">
+      <div class="logo">
+        <i class="fa-solid fa-microchip"></i> AgenticOS
+      </div>
+      <ul class="nav-links">
+        <li><a href="#" class="active"><i class="fa-solid fa-compass"></i> Overview</a></li>
+        <li><a href="https://github.com/shrs425p/AgenticOS/wiki"><i class="fa-solid fa-book"></i> Manual</a></li>
+        <li><a href="https://github.com/shrs425p/AgenticOS"><i class="fa-brands fa-github"></i> Repository</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Hero Intro -->
+  <section class="hero container">
+    <div class="badge-status">
+      <span></span> v2.1.0 — Production Hardened Stable Active
+    </div>
+    <h1>Unleash Extreme <span>Autonomous Operations</span></h1>
+    <p>A private, secure, and state-of-the-art superintelligence framework orchestrating low-level system automation across Windows, macOS, and Linux.</p>
+  </section>
+
+  <!-- Live Status Control Center HUD -->
+  <section class="container">
+    <div class="dashboard-hud">
+      
+      <!-- Telemetry Column -->
+      <div class="hud-panel">
+        <div class="panel-header">
+          <h3><i class="fa-solid fa-chart-line"></i> Host Telemetry</h3>
+          <span class="pill">Real-Time</span>
+        </div>
+        <div class="telemetry-grid">
+          
+          <div class="telemetry-stat">
+            <div class="telemetry-meta">
+              <span class="label">CPU Core Usage</span>
+              <span class="value" id="cpu-val">42%</span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar" id="cpu-bar" style="width: 42%;"></div>
+            </div>
+          </div>
+          
+          <div class="telemetry-stat">
+            <div class="telemetry-meta">
+              <span class="label">Virtual Session Memory</span>
+              <span class="value" id="mem-val">128 MB</span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar" id="mem-bar" style="width: 25%;"></div>
+            </div>
+          </div>
+
+          <div class="telemetry-stat">
+            <div class="telemetry-meta">
+              <span class="label">Disk IO Write Rates</span>
+              <span class="value">0.1 MB/s</span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar" style="width: 8%;"></div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="panel-header" style="border-top: 1px solid var(--panel-border); padding-top: 1rem;">
+          <h3><i class="fa-solid fa-heartbeat"></i> Performance wave</h3>
+        </div>
+        <div class="canvas-container">
+          <canvas id="telemetryCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Agent Thought & Cortex Simulator Column -->
+      <div class="hud-panel reasoning-panel">
+        <div class="panel-header">
+          <h3><i class="fa-solid fa-brain"></i> Agent Reasoning Simulator</h3>
+          <span class="pill" id="cortex-status">Idle</span>
+        </div>
+        
+        <div class="interactive-triggers">
+          <button class="trigger-btn" onclick="startSim('security')"><i class="fa-solid fa-shield-halved"></i> Audit Security</button>
+          <button class="trigger-btn" onclick="startSim('telemetry')"><i class="fa-solid fa-gauge-high"></i> Fetch Telemetry</button>
+          <button class="trigger-btn" onclick="startSim('macos')"><i class="fa-solid fa-desktop"></i> macOS AXWindow</button>
+        </div>
+
+        <div class="cortex-monitor" id="cortex-monitor">
+          <div class="cortex-line">
+            <span class="tag" style="color: var(--cyan);"><i class="fa-solid fa-info-circle"></i> System</span>
+            <span class="body">Awaiting simulated operational trigger. Click any button above to trace AgenticOS thought processes!</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Tool registry grid -->
+      <div class="hud-panel tool-matrix-panel">
+        <div class="panel-header">
+          <h3><i class="fa-solid fa-cubes"></i> Tool Matrix</h3>
+          <span class="pill">180+ Gated</span>
+        </div>
+        
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="toolSearch" onkeyup="filterTools()" placeholder="Search registry...">
+        </div>
+
+        <div class="tool-scroller" id="tool-scroller">
+          
+          <div class="tool-card" data-name="volume_set">
+            <div class="tool-info">
+              <h4>volume_set</h4>
+              <span class="desc">Set audio levels natively via C# COM APIs.</span>
+            </div>
+            <span class="gate-badge yellow">Yellow</span>
+          </div>
+
+          <div class="tool-card" data-name="system_health">
+            <div class="tool-info">
+              <h4>system_health</h4>
+              <span class="desc">High-fidelity CIM diagnostic reports.</span>
+            </div>
+            <span class="gate-badge green">Green</span>
+          </div>
+
+          <div class="tool-card" data-name="take_screenshot">
+            <div class="tool-info">
+              <h4>take_screenshot</h4>
+              <span class="desc">Captures high-res screen with tool checkguards.</span>
+            </div>
+            <span class="gate-badge yellow">Yellow</span>
+          </div>
+
+          <div class="tool-card" data-name="list_windows">
+            <div class="tool-info">
+              <h4>list_windows</h4>
+              <span class="desc">Recursive AppleScript active titles query.</span>
+            </div>
+            <span class="gate-badge green">Green</span>
+          </div>
+
+          <div class="tool-card" data-name="set_wallpaper">
+            <div class="tool-info">
+              <h4>set_wallpaper</h4>
+              <span class="desc">GNOME dual Light/Dark picture-uri wallpaper.</span>
+            </div>
+            <span class="gate-badge green">Green</span>
+          </div>
+
+          <div class="tool-card" data-name="kill_process">
+            <div class="tool-info">
+              <h4>kill_process</h4>
+              <span class="desc">Terminates a process safely under core guards.</span>
+            </div>
+            <span class="gate-badge red">Red Gated</span>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Key v2.1.0 Features grid -->
+  <section class="features-section">
+    <div class="container">
+      <h2>Bulletproof Production Hardening</h2>
+      <div class="features-grid">
+        
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa-solid fa-volume-high"></i></div>
+          <h3>Native COM Audio</h3>
+          <p>Windows volume controller compiled dynamically to C# via PowerShell. Eliminates third-party helpers and runs natively on host memory blocks.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
+          <h3>Early Schema Validation</h3>
+          <p>Real-time diagnostics check configurations early at boot, emitting detailed warning trees and preventing pipeline exceptions before they reach execution.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa-solid fa-desktop"></i></div>
+          <h3>OS Accessibility Hooks</h3>
+          <p>Harnesses native System Events and AX accessibility attributes (AXMinimized / AXZoomed) on macOS, letting you control non-scriptable web/Electron apps easily.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa-solid fa-file-contract"></i></div>
+          <h3>Centralized Logging</h3>
+          <p>Uniform formatted streaming and unified operational file storage in <code>agenticos.log</code>, keeping audits fully standardized across all test scenarios.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Live Terminal Console Logs Section -->
+  <section class="container console-section">
+    <div class="console-header">
+      <h2>Interactive Live Logs Console</h2>
+      <p>Demonstrating startup config verification, C# COM loads, and successful test-suite sweeps</p>
+    </div>
+    
+    <div class="terminal-container">
+      <div class="terminal-top-bar">
+        <div class="window-dots">
+          <span class="dot-red"></span>
+          <span class="dot-yellow"></span>
+          <span class="dot-green"></span>
+        </div>
+        <div class="terminal-title">agenticos@terminal: ~/root</div>
+        <div><i class="fa-solid fa-cog"></i></div>
+      </div>
+      
+      <div class="terminal-content">
+        <div class="line">
+          <span class="path">c:\AgenticOs&gt;</span> <span class="cmd">agent</span>
+        </div>
+        <div class="line">
+          <span class="response">── Config Validation ────────────────────────────────────</span>
+        </div>
+        <div class="line">
+          <span class="response" style="color: var(--cyan);">ℹ agent.provider set to Ollama - localhost binding active</span>
+        </div>
+        <div class="line">
+          <span class="response" style="color: var(--cyan);">ℹ memory.backend loaded successfully via SQLite SQLite3</span>
+        </div>
+        <div class="line">
+          <span class="response">─────────────────────────────────────────────────────────</span>
+        </div>
+        <div class="line">
+          <span class="response" style="color: var(--emerald);">[2026-05-18 00:46:12] [INFO] [startup] Centralized logger factory operational.</span>
+        </div>
+        <div class="line">
+          <span class="response">[2026-05-18 00:46:13] [INFO] [startup] CoreAudio master COM volumes enumerating.</span>
+        </div>
+        <div class="line">
+          <span class="response" style="color: var(--yellow);">[2026-05-18 00:46:14] [WARNING] [context_engine] Early config checked. 576 test suites verified green!</span>
+        </div>
+        <div class="line">
+          <span class="path">c:\AgenticOs&gt;</span> <span class="cmd">pytest -o addopts=""</span>
+        </div>
+        <div class="line">
+          <span class="response" style="color: var(--emerald);">============================ 576 passed in 43.97s =============================</span>
+        </div>
+        <div class="line">
+          <span class="path">c:\AgenticOs&gt;</span> <span class="cmd"><span style="animation: pulse 1s infinite;">_</span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>AgenticOS is private, sovereign, and resilient superintelligence.</p>
+    <p>Distributed under the Apache-2.0 License. Powered by <a href="https://github.com/shrs425p/AgenticOS">@shrs425p</a>.</p>
+  </footer>
+
+  <!-- Simulation & Live Telemetry Logic -->
+  <script>
+    // Telemetry Canvas Chart Drawer
+    const canvas = document.getElementById('telemetryCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    let telemetryData = Array(50).fill(10);
+    
+    function drawTelemetry() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw grid lines
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < canvas.height; i += 30) {
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(canvas.width, i);
+        ctx.stroke();
+      }
+      
+      // Draw telemetry lines
+      ctx.strokeStyle = 'rgba(0, 242, 254, 0.7)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      
+      const step = canvas.width / (telemetryData.length - 1);
+      
+      for (let i = 0; i < telemetryData.length; i++) {
+        const x = i * step;
+        // Map 0-100 values to canvas coordinates
+        const y = canvas.height - (telemetryData[i] / 100) * (canvas.height - 10) - 5;
+        
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      }
+      
+      ctx.stroke();
+      
+      // Add glowing fill
+      ctx.lineTo(canvas.width, canvas.height);
+      ctx.lineTo(0, canvas.height);
+      ctx.closePath();
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, 'rgba(0, 242, 254, 0.15)');
+      gradient.addColorStop(1, 'rgba(127, 0, 255, 0)');
+      ctx.fillStyle = gradient;
+      ctx.fill();
+    }
+    
+    // Fit canvas dynamically
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+      drawTelemetry();
+    }
+    window.addEventListener('resize', resizeCanvas);
+    setTimeout(resizeCanvas, 100);
+
+    // Live telemetry update loop
+    let activeSpike = false;
+    setInterval(() => {
+      let targetBase = activeSpike ? 65 : 30;
+      let nextVal = targetBase + (Math.random() - 0.5) * 15;
+      nextVal = Math.max(5, Math.min(95, nextVal));
+      
+      telemetryData.shift();
+      telemetryData.push(nextVal);
+      
+      // Update UI displays
+      document.getElementById('cpu-val').innerText = `${Math.round(nextVal)}%`;
+      document.getElementById('cpu-bar').style.width = `${nextVal}%`;
+      
+      let memVal = activeSpike ? 245 : 128;
+      document.getElementById('mem-val').innerText = `${memVal} MB`;
+      document.getElementById('mem-bar').style.width = activeSpike ? '55%' : '25%';
+      
+      drawTelemetry();
+    }, 300);
+
+    // Interactive Cortex Simulator
+    const monitor = document.getElementById('cortex-monitor');
+    const statusPill = document.getElementById('cortex-status');
+
+    const simulations = {
+      security: [
+        { type: 'thought', text: 'Prompt received: "Verify network firewall and port configurations". Checking environment registry...' },
+        { type: 'action', text: 'Executing: run_powershell("Get-NetFirewallRule | Where-Object { $_.Enabled -eq $true }")' },
+        { type: 'observation', text: 'Active Firewall rules found: 18. Port 22 blocked, Port 8080 open (HITM Yellow Gated). Submitting report!' }
+      ],
+      telemetry: [
+        { type: 'thought', text: 'System diagnostics requested. Triggering low-level OS telemetry modules...' },
+        { type: 'action', text: 'Executing: get_system_telemetry()' },
+        { type: 'observation', text: 'CIM Instance successfully returned. CPU: 42%, Available Memory: 16238 MB, Session Storage: 92% available.' }
+      ],
+      macos: [
+        { type: 'thought', text: 'Minimizing non-scriptable window matched via title pattern matching...' },
+        { type: 'action', text: 'Executing: minimize_app("Google Chrome")' },
+        { type: 'observation', text: 'AppleScript command executed successfully. AXMinimized set to true via OS System Events.' }
+      ]
+    };
+
+    function startSim(key) {
+      // Toggle button states
+      document.querySelectorAll('.trigger-btn').forEach(btn => btn.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      
+      // Clear monitor
+      monitor.innerHTML = '';
+      statusPill.innerText = 'Thinking...';
+      statusPill.style.background = 'rgba(127, 0, 255, 0.1)';
+      statusPill.style.color = 'var(--violet)';
+      
+      activeSpike = true;
+      
+      let step = 0;
+      const data = simulations[key];
+      
+      function printStep() {
+        if (step >= data.length) {
+          statusPill.innerText = 'Completed';
+          statusPill.style.background = 'rgba(0, 245, 160, 0.1)';
+          statusPill.style.color = 'var(--emerald)';
+          activeSpike = false;
+          return;
+        }
+        
+        const line = data[step];
+        const lineDiv = document.createElement('div');
+        lineDiv.className = `cortex-line ${line.type}`;
+        
+        let tagIcon = 'fa-brain';
+        if (line.type === 'action') tagIcon = 'fa-terminal';
+        if (line.type === 'observation') tagIcon = 'fa-check-circle';
+        
+        lineDiv.innerHTML = `
+          <span class="tag"><i class="fa-solid ${tagIcon}"></i> ${line.type}</span>
+          <span class="body">${line.text}</span>
+        `;
+        
+        monitor.appendChild(lineDiv);
+        monitor.scrollTop = monitor.scrollHeight;
+        
+        step++;
+        setTimeout(printStep, 1500);
+      }
+      
+      setTimeout(printStep, 600);
+    }
+
+    // Interactive Tool registry Filtering
+    function filterTools() {
+      const input = document.getElementById('toolSearch');
+      const filter = input.value.toLowerCase();
+      const scroller = document.getElementById('tool-scroller');
+      const cards = scroller.getElementsByClassName('tool-card');
+      
+      for (let i = 0; i < cards.length; i++) {
+        const name = cards[i].getAttribute('data-name');
+        if (name.toLowerCase().indexOf(filter) > -1) {
+          cards[i].style.display = "";
+        } else {
+          cards[i].style.display = "none";
+        }
+      }
+    }
+  </script>
+</body>
+</html>
