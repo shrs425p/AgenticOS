@@ -458,7 +458,7 @@ class GeminiClient:
         self.provider = "gemini"
         self.last_list_error = ""
 
-        self.api_key = _load_api_key("NVIDIA_API_KEY")
+        self.api_key = _load_api_key("GEMINI_API_KEY")
         if not self.api_key:
             raise RuntimeError(
                 "GEMINI_API_KEY is not set. Add it to .env or environment variables."
