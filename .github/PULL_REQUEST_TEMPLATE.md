@@ -1,31 +1,38 @@
-## Description
-Please include a summary of the change and which issue is fixed. Please also include relevant motivation and context.
+## ⫸ Description
+Please include a summary of the changes, the motivation behind them, and link the relevant issue being addressed.
 
 Fixes # (issue)
 
-## Type of change
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Documentation update
-- [ ] Refactor (code cleanup or optimization)
+---
 
-## How Has This Been Tested?
-Please describe the tests that you ran to verify your changes.
+## ⫸ Type of Change
+- [ ] **Bug Fix**: Non-breaking change that resolves a bug/issue.
+- [ ] **New Feature**: Non-breaking change adding new autonomous tools or core agent functionality.
+- [ ] **Breaking Change**: A modification that would break existing compatibility, workflows, or APIs.
+- [ ] **Code Refactor**: Code cleanup, optimization, or structured improvements with no functionality changes.
+- [ ] **Documentation**: Updates to READMEs, system designs, or technical guides.
 
-- [ ] **Unit Tests**: Ran `pytest tests/` and all passed.
-- [ ] **Coverage**: Ensured coverage did not decrease (run `pytest --cov`).
-- [ ] **Manual Verification**: Verified on local machine (Windows).
+---
 
-## Portability and Hardening
-- [ ] **No Hardcoded Paths**: Confirmed no absolute paths (C:\, etc.) are in code.
-- [ ] **No Hardcoded URLs**: Confirmed all URLs are in `config/endpoints.yaml`.
-- [ ] **Secrets Redacted**: Verified no API keys or tokens are in logs or code.
+## ⫸ Autonomous Tool & System Safety Check
+- [ ] **Tool Registry Integration**: If new tools were added, they have been properly registered in `core/tool_registry.py`.
+- [ ] **Shadow Mode Validation**: Ran `tests/test_all_tools_shadow.py` successfully and verified all tools pass dry-run/shadow checks with zero failures.
+- [ ] **Execution Guardrails**: Confirmed that any shell execution or OS command tool has strict validation to prevent malicious payload or command injection.
+- [ ] **Cross-Platform Fallbacks**: If utilizing platform-specific features (e.g., Windows CoreAudio/PowerShell or Linux packages), verified correct OS fallback/compatibility checks.
 
-## Checklist:
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] Any dependent changes have been merged and published in downstream modules
+---
+
+## ⫸ Code Hardening & Portability
+- [ ] **No Hardcoded Paths**: Dynamic path resolution is used everywhere (no hardcoded absolute directories like `C:\AgenticOs`).
+- [ ] **Config-Driven Endpoints**: All external URLs or dynamic constants are placed inside centralized configuration YAMLs.
+- [ ] **Secrets Redacted**: Audited code, scripts, and logs to ensure no private keys, OpenAI/Ollama keys, or tokens are exposed.
+- [ ] **Output Telemetry**: Verified that output outputs/logs are informative but not verbose enough to block or spam core console channels.
+
+---
+
+## ⫸ QA & Verification Checklist
+- [ ] **Unit Tests**: Executed `pytest tests/` and confirmed 100% test pass rate.
+- [ ] **Coverage Rate**: Ensured test coverage did not decrease (run `pytest --cov`).
+- [ ] **Developer Self-Review**: Performed a thorough line-by-line self-audit of all modifications.
+- [ ] **Code Comments**: Added clear docstrings and comments for non-obvious helper logic and regex functions.
+- [ ] **Linter Approved**: Ran `ruff check .` with zero errors or warnings remaining.
