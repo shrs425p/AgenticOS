@@ -55,6 +55,12 @@ class WindowsWindowsMixin:
         script = "Get-Clipboard"
         return self._ps_encoded(script, timeout=10)
 
+    def focus_app(self, app_name: str) -> str:
+        """Bring a matching application window to the foreground."""
+        if platform.system() == "Windows":
+            return self.window_focus(app_name)
+        return f"focus_app is not supported on {platform.system()}."
+
     # ------------------------------------------------------------------
     # Window management
     # ------------------------------------------------------------------
