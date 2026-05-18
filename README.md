@@ -9,7 +9,7 @@
 
   <p>
     <a href="https://github.com/shrs425p/AgenticOS/discussions">Discussions</a> | 
-    <a href="https://github.com/shrs425p/AgenticOS/wiki">Docs</a> | 
+    <a href="docs/CATALOG.md">Docs Catalog</a> | 
     <a href="https://github.com/shrs425p/AgenticOS">Follow @shrs425p (Creator)</a>
   </p>
 
@@ -82,6 +82,8 @@ Following a massive 96-item stress test, AgenticOS v2.1.0 has been hardened for 
 ## Documentation Center
 
 Explore the full AgenticOS manual for deep technical insights:
+
+*   [**Documentation Catalog**](docs/CATALOG.md): Canonical index of all Markdown docs in this repository.
 
 ### Getting Started and Architecture
 *   [**Setup Guide**](docs/setup_guide.md): Step-by-step instructions for new users.

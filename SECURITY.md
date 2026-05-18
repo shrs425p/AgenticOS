@@ -59,4 +59,14 @@ We encourage responsible security research. We ask that researchers:
 - Avoid performing any destructive actions on the host machine.
 - Provide a clear Proof-of-Concept (PoC) to help us understand the impact.
 
+---
+
+## Security Documentation Catalog
+
+For implementation details and operator safety practices, review:
+- [Security Guardrails Manual](docs/security_guardrails.md)
+- [Safety Guide](docs/safety_guide.md)
+- [Privacy & Data Policy](docs/privacy_data_policy.md)
+- [Documentation Catalog](docs/CATALOG.md)
+
 Thank you for helping us keep the future of autonomous agents safe and secure!

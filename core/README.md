@@ -56,14 +56,14 @@ Maintains agent state across tasks and system reboots:
 
 | Module Name | High-Level Responsibility | Category |
 | :--- | :--- | :--- |
-| [runtime.py](file:///c:/AgenticOs/core/runtime.py) | Coordinates the main execution loop and schedules task resolution. | Loop |
-| [model_clients.py](file:///c:/AgenticOs/core/model_clients.py) | Abstraction layer for Gemini, Groq, Nvidia, and OpenAI API calls. | Model |
-| [guardrails.py](file:///c:/AgenticOs/core/guardrails.py) | Implements PathGuard rules and active command blacklists. | Security |
-| [session_memory_sqlite.py](file:///c:/AgenticOs/core/session_memory_sqlite.py) | Persists tool invocation history and agent thoughts to SQLite. | Memory |
-| [tool_registry.py](file:///c:/AgenticOs/core/tool_registry.py) | Discovers, imports, and exposes standard modules and dynamic plugins. | Extensibility |
-| [retry.py](file:///c:/AgenticOs/core/retry.py) | Provides centralized exponential backoff and jittered retries. | Network |
-| [config_validator.py](file:///c:/AgenticOs/core/config_validator.py) | Ensures the integrity of YAML files and system credentials. | Config |
-| [runtime_ui.py](file:///c:/AgenticOs/core/runtime_ui.py) | Manages terminal output formatting and typewriter printing. | Interface |
+| [runtime.py](runtime.py) | Coordinates the main execution loop and schedules task resolution. | Loop |
+| [model_clients.py](model_clients.py) | Abstraction layer for Gemini, Groq, Nvidia, and OpenAI API calls. | Model |
+| [guardrails.py](guardrails.py) | Implements PathGuard rules and active command blacklists. | Security |
+| [session_memory_sqlite.py](session_memory_sqlite.py) | Persists tool invocation history and agent thoughts to SQLite. | Memory |
+| [tool_registry.py](tool_registry.py) | Discovers, imports, and exposes standard modules and dynamic plugins. | Extensibility |
+| [retry.py](retry.py) | Provides centralized exponential backoff and jittered retries. | Network |
+| [config_validator.py](config_validator.py) | Ensures the integrity of YAML files and system credentials. | Config |
+| [runtime_ui.py](runtime_ui.py) | Manages terminal output formatting and typewriter printing. | Interface |
 
 ---
 
