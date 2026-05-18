@@ -23,7 +23,7 @@ Fixes # (issue)
 ---
 
 ## ⫸ Code Hardening & Portability
-- [ ] **No Hardcoded Paths**: Dynamic path resolution is used everywhere (no hardcoded absolute directories like `/path/to/AgenticOs`).
+- [ ] **No Hardcoded Paths**: Dynamic path resolution is used everywhere (no hardcoded absolute directories like `<REPO_ROOT>`).
 - [ ] **Config-Driven Endpoints**: All external URLs or dynamic constants are placed inside centralized configuration YAMLs.
 - [ ] **Secrets Redacted**: Audited code, scripts, and logs to ensure no private keys, OpenAI/Ollama keys, or tokens are exposed.
 - [ ] **Output Telemetry**: Verified that output outputs/logs are informative but not verbose enough to block or spam core console channels.
