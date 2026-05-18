@@ -22,6 +22,14 @@ foreach ($Dir in $Dirs) {
     }
 }
 
+# 2b. Auto-generate workspace README.md if missing
+$WorkspaceReadme = Join-Path $ProjectRoot "workspace\README.md"
+$ReadmeTemplate = Join-Path $ProjectRoot "config\workspace_readme_template.md"
+if (-not (Test-Path $WorkspaceReadme) -and (Test-Path $ReadmeTemplate)) {
+    Copy-Item -Path $ReadmeTemplate -Destination $WorkspaceReadme -Force
+    Write-Host "[INFO] Automatically generated workspace README.md from template." -ForegroundColor Gray
+}
+
 # 3. Set AGENTICOS_HOME (User Level)
 Write-Host "[INFO] Setting AGENTICOS_HOME to $ProjectRoot..." -ForegroundColor White
 [Environment]::SetEnvironmentVariable("AGENTICOS_HOME", $ProjectRoot, "User")

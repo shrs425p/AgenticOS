@@ -33,6 +33,14 @@ for dir in "${DIRS[@]}"; do
     fi
 done
 
+# 2b. Auto-generate workspace README.md if missing
+WORKSPACE_README="$PROJECT_ROOT/workspace/README.md"
+README_TEMPLATE="$PROJECT_ROOT/config/workspace_readme_template.md"
+if [ ! -f "$WORKSPACE_README" ] && [ -f "$README_TEMPLATE" ]; then
+    cp "$README_TEMPLATE" "$WORKSPACE_README"
+    echo -e "${GRAY}[INFO] Automatically generated workspace README.md from template.${NC}"
+fi
+
 # 3. Ensure launcher script is executable
 BIN_PATH="$PROJECT_ROOT/bin"
 LAUNCHER="$BIN_PATH/agent"
