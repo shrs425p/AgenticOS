@@ -33,7 +33,6 @@ This catalog is the canonical index for all maintained Markdown documentation in
 - [Tool Development](tool_development.md)
 - [API Reference](api_reference.md)
 - [Testing Guide](testing_guide.md)
-- [GitHub Workflows Reference](workflows.md)
 
 ### Security, Safety, and Privacy
 - [Security Guardrails](security_guardrails.md)
