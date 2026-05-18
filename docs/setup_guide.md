@@ -22,6 +22,13 @@ For maximum stability and performance, we recommend cloning the project into a r
 
 Once cloned and in the project directory, run the setup script. You can execute this natively via your code editor (e.g., VS Code) or the terminal:
 
+#### Windows:
+1. Clone the repository and navigate into it:
+```powershell
+git clone https://github.com/shrs425p/AgenticOS.git C:\AgenticOs
+cd C:\AgenticOs
+```
+
 ### Method A: Via VS Code Task (Recommended)
 1. Open the project folder in VS Code.
 2. Press `Ctrl+Shift+B` (or select **Terminal** -> **Run Build Task** from the Command Palette).
@@ -34,7 +41,14 @@ Once cloned and in the project directory, run the setup script. You can execute 
 powershell -ExecutionPolicy Bypass -File .\setup.ps1
 ```
 
-#### macOS / Linux:
+#### macOS / Linux Setup:
+1. Clone the repository and navigate into it:
+```bash
+git clone https://github.com/shrs425p/AgenticOS.git ~/AgenticOs
+cd ~/AgenticOs
+```
+2. Run the automated setup script:
+
 ```bash
 ./setup.sh
 ```
