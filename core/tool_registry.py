@@ -531,7 +531,7 @@ class ToolRegistry:
                     importlib.invalidate_caches()
                     mod_name = fn.__module__
                     new_fn = fn
-                    if mod_name in sys.modules and mod_name.startswith("tools.plugins."):
+                    if mod_name and mod_name in sys.modules and mod_name.startswith("tools.plugins."):
                         try:
                             importlib.reload(sys.modules[mod_name])
                             new_fn = getattr(sys.modules[mod_name], fn.__name__)
