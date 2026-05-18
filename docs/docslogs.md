@@ -1,12 +1,13 @@
 # Documentation Maintenance Logs
 
 ## 2026-05-18
+- Updated documentation to v2.1.1, removing hardcoded C:\AgenticOs paths.
 - Added `docs/CATALOG.md` as the canonical documentation index for all Markdown docs.
 - Updated `README.md` to point to `docs/CATALOG.md` from the top navigation and Documentation Center.
 - Fixed broken local Markdown links in `core/README.md` by replacing `file:///c:/...` paths with repository-relative links.
 - Fixed broken local Markdown links in `docs/ultimate_pc_control.md` by replacing `file:///c:/...` paths with repository-relative links.
 - Updated `SECURITY.md` with a "Security Documentation Catalog" section linking to security and safety docs.
-- Updated `docs/visual_index.md` summary to v2.1.0 and linked it to `docs/CATALOG.md`.
+- Updated `docs/visual_index.md` summary to v2.1.1 and linked it to `docs/CATALOG.md`.
 - Updated `task.md` task references from Windows-specific `C:\\AgenticOs` paths to `<REPO_ROOT>` and replaced `tools_list` with `/tools`.
 
 ## 2026-05-17

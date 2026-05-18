@@ -6,10 +6,10 @@ This document tracks the technical evolution of AgenticOS from its initial proto
 
 ---
 
-## v2.1.0 - The "Bulletproof Cross-Platform Hardened" Edition (Current)
+## v2.1.1 - The "Bulletproof Cross-Platform Hardened" Edition (Current)
 *Release Date: 2026-05-18*
 
-The v2.1.0 release establishes seamless, robust, low-level OS integrations across Windows 11, macOS Darwin, and modern Linux GNOME environments.
+The v2.1.1 release establishes seamless, robust, low-level OS integrations across Windows 11, macOS Darwin, and modern Linux GNOME environments.
 
 ### Key Innovations:
 1.  **C# Native Audio Endpoint COM Interoperability (Windows)**: Replaced external nircmd helpers inside `volume_set` with direct C# COM interfaces (`IAudioEndpointVolume`, `IMMDevice`, `IMMDeviceEnumerator`) dynamically compiled via PowerShell.

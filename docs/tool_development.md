@@ -38,7 +38,7 @@ Plugins are dynamic tools loaded from the `tools/plugins/` directory at runtime.
 Important: Plugin modules are imported under the `tools.plugins.<module_name>` namespace to avoid `sys.modules` collisions. The `ToolRegistry` automatically scans those modules and registers any top-level callables decorated with `@tool`. To make your plugin easily testable and hot-reload friendly, keep tool functions defined at module scope (not inside other functions) and avoid side-effectful work at import time.
 
 ### Step 1: Create the Plugin File
-Create a new `.py` file in `c:\AgenticOs\tools\plugins\`. 
+Create a new `.py` file in `<REPO_ROOT>\tools\plugins\`.
 
 ### Step 2: Write the Tool Logic
 You can import any standard library or installed pip package.
