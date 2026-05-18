@@ -122,6 +122,7 @@ def url_safety_check(url: str) -> str:
     if parsed.scheme == "https":
         try:
             context = ssl.create_default_context()
+            context.minimum_version = ssl.TLSVersion.TLSv1_2
             conn = context.wrap_socket(
                 socket.socket(socket.AF_INET),
                 server_hostname=hostname,
