@@ -1,5 +1,4 @@
 import os
-import sys
 import inspect
 import json
 from datetime import datetime
@@ -8,6 +7,7 @@ from contextlib import ExitStack
 
 # 1. Add C:\AgenticOs to sys.path first (tests/ is 1 level below root)
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+import sys
 sys.path.insert(0, root_dir)
 
 import subprocess  # noqa: E402
