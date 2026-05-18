@@ -35,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install ruff pytest pytest-cov playwright
+          pip install "ruff==0.15.12" pytest pytest-cov playwright
           pip install -r requirements.txt || echo "requirements.txt not found"
 
       - name: Playwright Install (Linux)
