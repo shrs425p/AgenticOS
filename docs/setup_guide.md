@@ -10,8 +10,9 @@ Before you begin, ensure your machine meets the [System Requirements](system_req
 
 1.  **Python 3.12+**: Download from [python.org](https://www.python.org/downloads/).
 2.  **Git**: For cloning the repository.
-3.  **Terminal**: Windows Terminal, PowerShell, or CMD.
-4.  **Environment Sync**: Run `.\setup.ps1` once to add `bin/` to your system PATH. This permanently registers the `agent` command so you can launch AgenticOS from any terminal without specifying the full path.
+3.  **Terminal**: Windows Terminal, PowerShell, or CMD (Windows); Bash, Zsh, or equivalent (macOS/Linux).
+4.  **Environment Sync**: Run the configuration script for your platform—`.\setup.ps1` on Windows or `./setup.sh` on macOS/Linux—once to sync the environment and add `bin/` to your system PATH. This permanently registers the `agent` command so you can launch AgenticOS from any terminal without specifying the full path.
+
 
 ---
 
@@ -19,24 +20,21 @@ Before you begin, ensure your machine meets the [System Requirements](system_req
 
 For maximum stability and performance, we recommend cloning the project into a root-level or simple home directory path without spaces (e.g., `C:\AgenticOs` on Windows, or `~/AgenticOs` on macOS/Linux). This ensures that path utilities, Fast-Path optimizations, and terminal commands execute with 100% reliability.
 
-#### Windows:
-1. Clone the repository and navigate into it:
+Once cloned and in the project directory, run the setup script. You can execute this natively via your code editor (e.g., VS Code) or the terminal:
+
+### Method A: Via VS Code Task (Recommended)
+1. Open the project folder in VS Code.
+2. Press `Ctrl+Shift+B` (or select **Terminal** -> **Run Build Task** from the Command Palette).
+3. The editor will automatically run the correct setup script for your platform, bypassing all Windows execution policy restrictions!
+
+### Method B: Via Terminal
+
+#### Windows (PowerShell or CMD):
 ```powershell
-git clone https://github.com/shrs425p/AgenticOS.git C:\AgenticOs
-cd C:\AgenticOs
-```
-2. Run the automated setup script:
-```powershell
-.\setup.ps1
+powershell -ExecutionPolicy Bypass -File .\setup.ps1
 ```
 
-#### macOS / Linux Setup:
-1. Clone the repository and navigate into it:
-```bash
-git clone https://github.com/shrs425p/AgenticOS.git ~/AgenticOs
-cd ~/AgenticOs
-```
-2. Run the automated setup script:
+#### macOS / Linux:
 ```bash
 ./setup.sh
 ```

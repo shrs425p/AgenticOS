@@ -136,14 +136,23 @@ Explore the full AgenticOS manual for deep technical insights:
 ## Quick Start
 
 ### 1. Installation
-Run the environment setup script (this automatically initializes the virtual environment, installs dependencies, downloads Playwright chromium, registers the `agent` command globally, and sets up your credentials template):
+Run the environment setup script (this automatically initializes the virtual environment, installs dependencies, downloads Playwright chromium, registers the `agent` command globally, and sets up your credentials template).
 
-#### Windows:
+You can run this using your code editor (e.g., VS Code) or the terminal:
+
+#### Method A: Via VS Code Task (Recommended)
+1. Open the project folder in VS Code.
+2. Press `Ctrl+Shift+B` (or select **Terminal** -> **Run Build Task** / **Tasks: Run Build Task** from the Command Palette).
+3. The editor will automatically run the correct setup script for your platform, bypassing all Windows execution policy restrictions!
+
+#### Method B: Via Terminal
+
+##### Windows (PowerShell or CMD):
 ```powershell
-.\setup.ps1
+powershell -ExecutionPolicy Bypass -File .\setup.ps1
 ```
 
-#### macOS / Linux:
+##### macOS / Linux:
 ```bash
 ./setup.sh
 ```
