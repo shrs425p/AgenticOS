@@ -8,10 +8,9 @@ on:
 
 jobs:
   tag-jules:
-    # Trigger if the comment/review comes from Gemini OR you
+    # Use github.actor to simplify the check
     if: |
-      (github.event.sender.login == 'gemini-code-assist[bot]' || 
-       github.event.sender.login == 'shrs425p') && 
+      (github.actor == 'gemini-code-assist[bot]' || github.actor == 'shrs425p') && 
       (github.event.issue.pull_request || github.event.pull_request)
     
     runs-on: ubuntu-latest
@@ -21,21 +20,20 @@ jobs:
         with:
           github-token: ${{ secrets.HUMAN_PROXY_PAT }}
           script: |
-            // Get the body from either a standard comment or a formal review
-            const body = (context.payload.comment ? context.payload.comment.body : context.payload.review.body).toLowerCase();
-            const issueNumber = context.issue.number || context.payload.pull_request.number;
+            const payload = context.payload;
+            const body = (payload.comment ? payload.comment.body : payload.review.body).toLowerCase();
+            const issueNumber = context.issue.number || payload.pull_request.number;
 
-            // 1. Safety Check: If it's a glowing review, don't ping Jules
-            if (body.includes("lgtm") || body.includes("looks good") || body.includes("no changes needed")) {
-              console.log("Positive review detected. No action needed.");
+            // Stop if it's an approval
+            if (body.includes("lgtm") || body.includes("looks good") || body.includes("approved")) {
+              console.log("Approval detected. Standing down.");
               return;
             }
 
-            // 2. Logic: If Gemini found issues OR you manually asked for a review
-            console.log("Triggering Jules for implementation...");
+            // Ping Jules
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issueNumber,
-              body: "@google-labs-jules, please review the latest feedback/review from @gemini-code-assist and implement the requested fixes. Push the changes when ready."
+              body: "@google-labs-jules, please implement the latest feedback from @gemini-code-assist. Push your fixes when done."
             });
