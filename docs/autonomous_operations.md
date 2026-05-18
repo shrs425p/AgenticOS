@@ -42,7 +42,7 @@ The level of autonomy is controlled by the `autonomy` section in `config.yaml`.
 Unlike simple scripts, AgenticOS maintains its state across restarts. If the system crashes or is interrupted, it can pick up right where it left off.
 
 ### State Persistence:
--   **SQLite Database**: Every tool call and its result is stored in `data/memory.sqlite3`.
+-   **SQLite Database**: Every tool call and its result is stored in the configured `memory.sqlite3`. Long-term task insights are consolidated to `workspace/MEMORY.md`.
 -   **Workspace Sync**: The agent frequently checks for files it created (e.g., `vulnerability_audit.md`) to verify its own progress.
 -   **Resumption Keywords**: If you restart the agent and say "Continue," it will query its own memory to reconstruct its plan.
 

@@ -61,7 +61,7 @@ AgenticOS is a complex system interacting with multiple APIs and the local opera
 ### 1. "The agent is ignoring my instructions."
 -   **Cause**: System prompt fatigue or context window saturation.
 -   **Fix**: 
-    -   Clear the `data/memory.sqlite3` file to start a fresh session.
+    -   Clear the `memory.sqlite3` file (in `data/` or `workspace/`) to start a fresh session.
     -   Use a more powerful model (e.g., `gpt-oss-120b` or `gemini-1.5-pro`) for complex tasks.
 
 ### 2. "The agent generates invalid JSON actions."
@@ -110,7 +110,7 @@ AgenticOS includes several built-in tools to help you diagnose its health:
 ## Still Having Issues?
 
 1.  **Check the Logs**: Open `agent.log` and search for `ERROR`.
-2.  **Audit the SQLite DB**: Use a tool like SQLite Browser to view the `tool_events` table in `data/memory.sqlite3`.
+2.  **Audit the SQLite DB**: Use a tool like SQLite Browser to view the `tool_events` table in `memory.sqlite3`.
 3.  **Reset Config**: Delete `config.yaml` and restart; the system will generate a fresh copy with safe defaults.
 
 ---

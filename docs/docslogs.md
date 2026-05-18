@@ -1,6 +1,8 @@
 # Documentation Maintenance Logs
 
 ## 2026-05-18
+- Updated documentation across README.md, architecture.md, privacy_data_policy.md, troubleshooting.md, autonomous_operations.md, and security_guardrails.md to reflect recent architectural changes to memory management (ContextEngine, MemoryManager, MEMORY.md), ToolRegistry self-healing, and dynamic plugin loading.
+- Generalized references to data/memory.sqlite3 and data/logs to support workspace-relative paths.
 - Updated documentation to v2.1.1, removing hardcoded C:\AgenticOs paths.
 - Added `docs/CATALOG.md` as the canonical documentation index for all Markdown docs.
 - Updated `README.md` to point to `docs/CATALOG.md` from the top navigation and Documentation Center.
