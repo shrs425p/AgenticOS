@@ -77,4 +77,3 @@ tools/nircmd/
 *.tmp
 *.bak
 ~*docs/daily_logs/
-.github_ci_venv
