@@ -1,0 +1,33 @@
+name: AI Middleman (Gemini to Jules)
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  tag-jules:
+    # ONLY run if the comment was made by Gemini AND it's on a Pull Request
+    if: github.event.comment.user.login == 'gemini-code-assist[bot]' && github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Jules
+        uses: actions/github-script@v7
+        with:
+          # Use your human token to bypass the bot filter
+          github-token: ${{ secrets.HUMAN_PROXY_PAT }}
+          script: |
+            // Optional: Basic logic to prevent tagging Jules if Gemini says "LGTM"
+            const commentBody = context.payload.comment.body.toLowerCase();
+            if (commentBody.includes("lgtm") || commentBody.includes("looks good")) {
+              console.log("Gemini approved the code. Loop broken. Halting.");
+              return;
+            }
+
+            // Otherwise, ping Jules to fix the code
+            console.log("Gemini requested changes. Waking up Jules...");
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "@google-labs-jules, please review the feedback from Gemini above and push the requested fixes."
+            });
