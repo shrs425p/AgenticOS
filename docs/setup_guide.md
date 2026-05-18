@@ -15,21 +15,19 @@ Before you begin, ensure your machine meets the [System Requirements](system_req
 
 ---
 
-## Step 2: Clone and Environment Setup
+## Step 2: Running the Automated Setup Script
 
-### Recommended Path: Root-Level Directory
 For maximum stability and performance, we recommend cloning the project into a root-level or simple home directory path without spaces (e.g., `C:\AgenticOs` on Windows, or `~/AgenticOs` on macOS/Linux). This ensures that path utilities, Fast-Path optimizations, and terminal commands execute with 100% reliability.
 
-#### Windows Setup:
+#### Windows:
 1. Clone the repository and navigate into it:
 ```powershell
 git clone https://github.com/shrs425p/AgenticOS.git C:\AgenticOs
 cd C:\AgenticOs
 ```
-2. Create and activate a virtual environment:
+2. Run the automated setup script:
 ```powershell
-python -m venv venv
-.\venv\Scripts\activate
+.\setup.ps1
 ```
 
 #### macOS / Linux Setup:
@@ -38,41 +36,24 @@ python -m venv venv
 git clone https://github.com/shrs425p/AgenticOS.git ~/AgenticOs
 cd ~/AgenticOs
 ```
-2. Create and activate a virtual environment:
+2. Run the automated setup script:
 ```bash
-python3 -m venv venv
-source venv/bin/activate
+./setup.sh
 ```
+
+### What the Setup Script Automates:
+* **Directory Structure**: Generates all standard folders (`workspace`, `data/logs`, `bin`) if missing.
+* **Virtual Environment**: Creates a standard `venv/` environment using Python 3.12+.
+* **Pip Packages**: Automatically upgrades pip and installs all Python dependencies in [requirements.txt](../requirements.txt) and [requirements-dev.txt](../requirements-dev.txt).
+* **Playwright Browsers**: Downloads and registers the Playwright Chromium browser binary automatically.
+* **Environment Credentials**: Creates your `.env` template from [.env.example](../.env.example) and prompts/opens it for keys configuration.
+* **PATH Registration**: Registers the global `agent` command to launch the system from any directory.
 
 ---
 
-## Step 3: Install Dependencies
+## Step 3: Configure Credentials (.env)
 
-Install the core Python packages and initialize the Playwright browser engine along with any required system-level browser libraries:
-
-#### Windows:
-```powershell
-pip install -r requirements.txt
-playwright install chromium
-```
-
-#### macOS / Linux:
-```bash
-pip install -r requirements.txt
-playwright install --with-deps chromium
-```
-
----
-
-## Step 4: Configure Credentials (.env)
-
-AgenticOS needs API keys to talk to cloud providers. Create a file named `.env` in the root directory:
-
-```powershell
-notepad .env
-```
-
-Add your keys in the following format:
+The setup script automatically copied [.env.example](../.env.example) to `.env` and opened it in your text editor. Add your keys in the following format:
 
 ```env
 NVIDIA_API_KEY=your_nvidia_nim_key
@@ -83,10 +64,11 @@ OPENAI_API_KEY=your_openai_key
 
 *Note: Your `.env` file is automatically ignored by Git to prevent accidental leakage.*
 
-Important: AgenticOS loads the `.env` file early at startup via `main.py`. The `.env` file in the repository root is the canonical source of API keys for the running agent and is applied to the process environment before provider clients and plugins initialize. If you run modules directly (for debugging or tests), some modules include a local fallback that may re-load `.env`, but for normal operation keep your `.env` file in the repo root so credentials are discovered consistently.
+Important: AgenticOS loads the `.env` file early at startup via `main.py`. The `.env` file in the repository root is the canonical source of API keys for the running agent and is applied to the process environment before provider clients and plugins initialize.
+
 ---
 
-## Step 5: Runtime Configuration (`config/`)
+## Step 4: Runtime Configuration (`config/`)
 
 AgenticOS uses a layered configuration system located in the `config/` directory.
 
@@ -105,7 +87,7 @@ Review `config/policy.yaml` to ensure the **Secret Redaction Engine** and **Path
 
 ---
 
-## Step 6: Launching AgenticOS
+## Step 5: Launching AgenticOS
 
 Once everything is configured, start the agent from any terminal:
 
@@ -113,14 +95,13 @@ Once everything is configured, start the agent from any terminal:
 ```powershell
 agent
 ```
-> **Prerequisite:** You must run `.\setup.ps1` once (Step 1) so the `bin/agent.bat` launcher is registered on your PATH.
+> **Prerequisite:** You must restart your active terminal once after running `.\setup.ps1` so the newly registered `agent` PATH changes take effect.
 
 #### macOS / Linux:
 ```bash
-# Set execution permission and run the launch script
-chmod +x bin/agent
-./bin/agent
+agent
 ```
+> **Prerequisite:** Ensure you have added the `bin/` directory to your shell configuration (`.zshrc` / `.bashrc`) as prompted at the end of `./setup.sh`.
 
 ### The Startup Sequence:
 1.  **Banner**: You will see the AgenticOS ASCII art banner.
@@ -130,7 +111,7 @@ chmod +x bin/agent
 
 ---
 
-## Step 7: Your First Task
+## Step 6: Your First Task
 
 Try giving the agent a simple system-level task to verify it has the correct permissions:
 
@@ -144,7 +125,7 @@ The agent should:
 
 ---
 
-## Step 8: Safety Guide
+## Step 7: Safety Guide
 
 By default, AgenticOS is in **Secure Mode**.
 -   **Security**: It will ask for permission before writing to any folder outside `workspace/`.
@@ -165,15 +146,13 @@ By default, AgenticOS is in **Secure Mode**.
 
 ## Troubleshooting the Setup
 
--   **ModuleNotFoundError**: Ensure you are inside the `venv` (`.\venv\Scripts\activate`).
+-   **ModuleNotFoundError**: Ensure you are running inside the activated environment or using the global `agent` wrapper which activates it automatically.
 -   **API Key Error**: Double-check that your `.env` variables are correctly named and have no extra spaces.
 -   **Browser Error**: If Playwright fails, run `playwright install --with-deps chromium`.
 
 ---
 
----
-
-## Step 9: Running the Test Suite (Optional)
+## Step 8: Running the Test Suite (Optional)
 
 To verify your installation is 100% stable:
 
@@ -195,3 +174,4 @@ This will run the automated suite to ensure core components, filesystem tools, a
 
 *Last Updated: 2026-05-18*
 *Status: Verified on Windows, macOS, and Linux*
+

@@ -136,18 +136,23 @@ Explore the full AgenticOS manual for deep technical insights:
 ## Quick Start
 
 ### 1. Installation
+Run the environment setup script (this automatically initializes the virtual environment, installs dependencies, downloads Playwright chromium, registers the `agent` command globally, and sets up your credentials template):
+
+#### Windows:
 ```powershell
-pip install -r requirements.txt
-playwright install chromium
 .\setup.ps1
 ```
 
-> **Note:** `.\setup.ps1` registers the `agent` command globally by adding `bin/` to your system PATH. You only need to run it once.
+#### macOS / Linux:
+```bash
+./setup.sh
+```
 
 ### 2. Configuration
-Edit `config/providers.yaml` to set your default provider (Ollama, Nvidia, Gemini, Groq). Add your API keys to a `.env` file in the repository root — `main.py` loads this file early at startup and it is the canonical source of credentials for the running agent.
+Open the newly created `.env` file in the project root and configure your API keys (e.g., `NVIDIA_API_KEY`, `GOOGLE_API_KEY`).
 
 ### 3. Execution
+Restart your terminal and start the agent from any directory:
 ```powershell
 agent
 ```
