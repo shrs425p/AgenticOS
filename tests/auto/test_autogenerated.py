@@ -1,11 +1,27 @@
 import pytest
 import inspect
 from core.tool_registry import ToolRegistry
+from unittest.mock import MagicMock
+import os
+import subprocess
+import requests
+import webbrowser
+import shutil
 
 @pytest.fixture
 def registry():
     cfg = {'agent': {'workspace': 'workspace'}, 'rules': {}}
     return ToolRegistry(cfg=cfg)
+
+@pytest.fixture(autouse=True)
+def mock_external_calls(monkeypatch):
+    monkeypatch.setattr(os, 'system', MagicMock(return_value=0))
+    monkeypatch.setattr(subprocess, 'run', MagicMock())
+    monkeypatch.setattr(subprocess, 'Popen', MagicMock())
+    monkeypatch.setattr(requests, 'get', MagicMock())
+    monkeypatch.setattr(requests, 'post', MagicMock())
+    monkeypatch.setattr(webbrowser, 'open', MagicMock())
+    monkeypatch.setattr(shutil, 'which', MagicMock(return_value='/usr/bin/mock'))
 
 def test_count_lines(registry):
     tool_info = registry.registry.get('count_lines')
@@ -233,13 +249,13 @@ def test_browser_close(registry):
     tool_info = registry.registry.get('browser_close')
     assert tool_info is not None
     func = tool_info['fn']
-    func(mgr="mock")
+    func()
 
 def test_browser_new_tab(registry):
     tool_info = registry.registry.get('browser_new_tab')
     assert tool_info is not None
     func = tool_info['fn']
-    func(mgr="mock", url="mock")
+    func(url="mock")
 
 def test_check_url(registry):
     tool_info = registry.registry.get('check_url')
