@@ -31,13 +31,25 @@ def test_self_provision_command_existing():
 @patch("os.makedirs")
 def test_self_provision_command_missing_success(mock_makedirs, mock_open, mock_exists, mock_which, mock_install):
     # Simulate first shutil.which returns None (not found), then after install returns path (installed!)
-    mock_which.side_effect = [None, "/usr/bin/missing_cmd"]
+    state = {"is_installed": False}
+
+    def which_side_effect(cmd):
+        if state["is_installed"]:
+            return "/usr/bin/missing_cmd"
+        return None
+
+    def install_side_effect(cmd):
+        state["is_installed"] = True
+        return "Success: Installs 'missing_cmd' successfully using Winget."
+
+    mock_which.side_effect = which_side_effect
+    mock_install.side_effect = install_side_effect
     mock_install.return_value = "Success: Installs 'missing_cmd' successfully using Winget."
 
     assert self_provision_command("missing_cmd") is True
     mock_install.assert_called_once_with("missing_cmd")
     mock_makedirs.assert_called_once()
-    mock_open.assert_called_once()
+    assert any('auto_missing_cmd.py' in str(call) for call in mock_open.mock_calls)
 
 @patch("tools.plugins.sys_package_installer.install_system_package")
 @patch("shutil.which", return_value=None)

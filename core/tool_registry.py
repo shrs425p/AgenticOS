@@ -470,57 +470,91 @@ class ToolRegistry:
                 if param.kind in (param.POSITIONAL_OR_KEYWORD, param.POSITIONAL_ONLY)
             ]
 
-            # JSON/dict args (ACTION: {"tool": "...", "args": {...}})
-            if isinstance(args, dict):
-                kwargs = {}
-                for p in params:
-                    if p.name in args:
-                        kwargs[p.name] = args[p.name]
-                out = str(fn(**kwargs))
+            destructive_tools = {"delete_file", "delete_dir", "write_file", "write_json", "write_csv"}
+
+            def _invoke(func):
+                if isinstance(args, dict):
+                    kwargs = {}
+                    for p in params:
+                        if p.name in args:
+                            kwargs[p.name] = args[p.name]
+                    out = str(func(**kwargs))
+                    note = ""
+                    if self.cfg.get("autonomy", {}).get("validate_results", True):
+                        note = validate_tool(name, args, out, workspace_root=self._workspace_root)
+                    return f"{out}\n{note}".strip() if note else out
+
+                clean_args = [arg for arg in (args or []) if (isinstance(arg, str) and arg.strip()) or not isinstance(arg, str)]
+                param_count = len(params)
+                if len(clean_args) > param_count > 0:
+                    joined = "|".join(str(arg) for arg in clean_args[param_count - 1 :])
+                    clean_args = clean_args[: param_count - 1] + [joined]
+
+                converted = []
+                for arg in clean_args:
+                    if not isinstance(arg, str):
+                        converted.append(arg)
+                        continue
+                    stripped = arg.strip()
+                    if stripped.lstrip("-").isdigit():
+                        converted.append(int(stripped))
+                    elif stripped.replace(".", "", 1).lstrip("-").isdigit() and stripped.count(".") == 1:
+                        converted.append(float(stripped))
+                    else:
+                        converted.append(stripped)
+
+                out = str(func(*converted)) if converted else str(func())
+                if getattr(self, "sentinel", None):
+                    self.sentinel.log_action(name, args, out)
                 note = ""
                 if self.cfg.get("autonomy", {}).get("validate_results", True):
-                    note = validate_tool(
-                        name, args, out, workspace_root=self._workspace_root
-                    )
+                    note = validate_tool(name, converted, out, workspace_root=self._workspace_root)
                 return f"{out}\n{note}".strip() if note else out
 
-            clean_args = [
-                arg
-                for arg in (args or [])
-                if (isinstance(arg, str) and arg.strip()) or not isinstance(arg, str)
-            ]
-            param_count = len(params)
+            try:
+                return _invoke(fn)
+            except (ModuleNotFoundError, ImportError) as exc:
+                if name in destructive_tools:
+                    raise
+                module_name = getattr(exc, "name", None)
+                if not module_name:
+                    import re
+                    match = re.search(r"No module named '([^']+)'", str(exc))
+                    if match:
+                        module_name = match.group(1)
+                if module_name:
+                    logging.info(f"Self-healing: Missing module '{module_name}' detected. Attempting to install...")
+                    try:
+                        self.term.pip_install(module_name)
+                    except Exception:
+                        import subprocess
+                        subprocess.run([sys.executable, "-m", "pip", "install", module_name], capture_output=True)
 
-            if len(clean_args) > param_count > 0:
-                joined = "|".join(str(arg) for arg in clean_args[param_count - 1 :])
-                clean_args = clean_args[: param_count - 1] + [joined]
-
-            converted = []
-            for arg in clean_args:
-                if not isinstance(arg, str):
-                    converted.append(arg)
-                    continue
-                stripped = arg.strip()
-                if stripped.lstrip("-").isdigit():
-                    converted.append(int(stripped))
-                elif (
-                    stripped.replace(".", "", 1).lstrip("-").isdigit()
-                    and stripped.count(".") == 1
-                ):
-                    converted.append(float(stripped))
-                else:
-                    converted.append(stripped)
-
-            out = str(fn(*converted)) if converted else str(fn())
-            # Sentinel post‑logging
-            if getattr(self, "sentinel", None):
-                self.sentinel.log_action(name, args, out)
-            note = ""
-            if self.cfg.get("autonomy", {}).get("validate_results", True):
-                note = validate_tool(
-                    name, converted, out, workspace_root=self._workspace_root
-                )
-            return f"{out}\n{note}".strip() if note else out
+                    importlib.invalidate_caches()
+                    mod_name = fn.__module__
+                    new_fn = fn
+                    if mod_name in sys.modules and mod_name.startswith("tools.plugins."):
+                        try:
+                            importlib.reload(sys.modules[mod_name])
+                            new_fn = getattr(sys.modules[mod_name], fn.__name__)
+                            self.registry[name]["fn"] = new_fn
+                        except Exception as e:
+                            logging.warning(f"Self-healing: Could not reload module {mod_name}: {e}")
+                    return _invoke(new_fn)
+                raise
+            except FileNotFoundError as exc:
+                if name in destructive_tools:
+                    raise
+                filename = getattr(exc, "filename", None)
+                if filename:
+                    parent_dir = os.path.dirname(filename)
+                    if parent_dir and not os.path.exists(parent_dir):
+                        allowed, msg = self.guard.check_path(parent_dir, operation="write")
+                        if allowed:
+                            logging.info(f"Self-healing: Missing parent directory '{parent_dir}'. Creating...")
+                            os.makedirs(parent_dir, exist_ok=True)
+                            return _invoke(fn)
+                raise
         except TypeError as exc:
             return f"Tool argument error ({name}): {exc}\n  Expected: {self._get_signature(name)}"
         except PermissionError as exc:
