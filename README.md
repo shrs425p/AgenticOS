@@ -68,7 +68,7 @@ AgenticOS is a high-performance autonomous tool. Its best results are achieved t
 Following a massive 96-item stress test, AgenticOS v2.1.1 has been hardened for real-world production environments. It solves the core bottlenecks of traditional agents:
 -   **No-Lag Terminal UI**: Block-level rendering removes the character-by-character "typewriter lag."
 -   **Rate-Limit Shield**: Built-in exponential backoff masks all `429 Too Many Requests` errors (implemented in `core/retry.py` as `retry_call()`).
--   **Centralized Logging**: Consistent, structured stream formatting and persistent storage (`data/logs/agenticos.log`) with a unified logger factory.
+-   **Centralized Logging**: Consistent, structured stream formatting and persistent storage (`workspace/logs/agenticos.log` or `data/logs/agenticos.log`) with a unified logger factory.
 -   **Early Schema Validation**: Real-time boot diagnostics verify `config.yaml` layers and halt early if critical sections are missing.
 -   **Native Windows COM Audio**: C# code dynamically compiled via PowerShell provides native, dependency-free volume controls.
 -   **Fast-Path IO & Checkguards**: Native PowerShell scanning is 20x faster than Python's `rglob`, wrapped in strict tool checkguards (e.g. `shutil.which` warnings) on Linux.
@@ -175,7 +175,7 @@ agent
 - `tests/`: Automated test suite for core logic and filesystem tools.
 - `docs/`: Comprehensive technical documentation (20+ detailed guides).
 - `workspace/`: Designated environment for task artifacts and reports.
-- `data/`: Persistent session memory (SQLite) and audit logs.
+- `data/`: Configured location for SQLite databases and JSONL audit logs. (Can also be stored in `workspace/`).
 
 ---
 

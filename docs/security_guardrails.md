@@ -91,7 +91,7 @@ The `run_command` and `run_powershell` tools are the most powerful and dangerous
 
 ## Audit Logging and Forensic Traceability
 
-Every action taken by the agent is logged in `data/logs/audit.jsonl`. This file is separate from the chat logs and is intended for forensic review.
+Every action taken by the agent is logged in the `audit.jsonl` log file. This file is separate from the chat logs and is intended for forensic review.
 
 ### What is logged:
 -   **Timestamp**: Precise ISO8601 time.

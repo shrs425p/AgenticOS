@@ -9,8 +9,8 @@ AgenticOS is built on a "Privacy-First" architecture. Unlike centralized AI assi
 The core design of AgenticOS prioritizes local execution. All system interactions, file reads, and OS-level commands happen natively on your machine. No raw file contents or system logs are ever transmitted to a third party unless you explicitly choose a cloud-based model provider.
 
 ### Data Residency:
--   **Conversation History**: Stored in a local SQLite database (`data/memory.sqlite3`).
--   **Audit Logs**: Stored in local JSONL files (`data/logs/`).
+-   **Conversation History**: Stored in a local SQLite database (typically `data/memory.sqlite3` or `workspace/memory.sqlite3`) and consolidated into `workspace/MEMORY.md`.
+-   **Audit Logs**: Stored in local JSONL files (typically `data/logs/` or `workspace/logs/`).
 -   **Task Artifacts**: Saved exclusively in your local `workspace/` folder.
 -   **Model Weights**: If using Ollama, model weights are stored on your local disk and never leave your network.
 
@@ -58,7 +58,7 @@ The following paths are blocked by default to prevent accidental data leakage:
 
 ##  Persistent Memory Privacy
 
-The SQLite database (`data/memory.sqlite3`) contains a record of your interactions. To ensure this data remains secure:
+The SQLite database (e.g., `data/memory.sqlite3`) contains a record of your interactions. To ensure this data remains secure:
 1.  **Local Encryption**: We recommend running AgenticOS on an encrypted drive (e.g., BitLocker or FileVault).
 2.  **Manual Purge**: You can delete the `data/` folder at any time to "factory reset" the agent's memory.
 3.  **Audit Logs**: Audit logs do **not** contain the text of your conversations; they only record "What tool was used" and "When," making them safe for administrative review.

@@ -65,26 +65,28 @@ When the model generates an `ACTION` block, the `ToolRegistry` intercepts it.
 ### 4. Observation and Self-Healing
 The tool output (the `OBSERVATION`) is fed back into the model. If a tool fails (e.g., "File not found"), the `Self-Healing` logic kicks in:
 -   **Auto-Correction**: The agent identifies the error and attempts a different approach (e.g., searching for the file instead of guessing the path).
+-   **Auto-Installation**: If a tool fails due to a missing Python module, the registry autonomously calls `pip install` and hot-reloads the module.
 -   **Fallback Models**: If the primary model generates invalid JSON, the orchestrator can transparently retry with a secondary, more structured model.
 
 ---
 
 ## Memory Management (Long-Term and Short-Term)
 
-### SQLite Backend
-Unlike standard chatbots, AgenticOS uses a persistent SQLite database (`data/memory.sqlite3`) to track:
--   **Tool Events**: A full audit log of every tool called and its result.
--   **Artifact Tracking**: A registry of every file created or modified by the agent.
--   **Preference Learning**: User habits and frequent paths are extracted and stored for future runs.
+### Context Engine and SQLite Backend
+Unlike standard chatbots, AgenticOS utilizes a persistent SQLite database (e.g., `memory.sqlite3`) to track tool events, artifacts, and preferences. In tandem, the **Context Engine** (`core/context_engine.py`) and **Memory Manager** (`core/memory_manager.py`) enhance short and long-term recall:
+-   **Active Recall**: Retrieves relevant context dynamically based on user prompts.
+-   **Commitments**: Tracks follow-up actions and reminders.
+-   **Dynamic File Injection**: Automatically injects small workspace `.md` files into the context window.
+-   **Long-Term Memory**: Consolidates completed tasks into `workspace/MEMORY.md` and generates daily logs in `workspace/memory/`.
 
-### Summarization Logic
-To prevent context window bloat, the agent automatically summarizes the history every 200 messages. This "Compression" ensures that the agent retains critical goal-oriented context while discarding low-value intermediate steps.
+### Summarization and Compaction Logic
+To prevent context window bloat, the agent automatically compresses history when it exceeds a defined threshold (e.g., 40 messages). This LLM-powered compaction distills old messages into a highly dense context block while preserving semantic meaning, ensuring the agent retains critical goal-oriented context while discarding low-value intermediate steps.
 
 ---
 
 ## Tool Registry and Plugin Architecture
 
-The registry (`core/tool_registry.py`) is the brain of the agent's capabilities. It manages over 180+ tools across several categories.
+The registry (`core/tool_registry.py`) is the brain of the agent's capabilities. It manages over 180+ tools across several categories and automatically loads dynamic plugins from the `tools/plugins/` directory.
 
 ### Category Breakdown
 | Category | Primary Tools | Implementation Type |
