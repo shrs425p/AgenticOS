@@ -1,15 +1,15 @@
 # Core Web & AI
 requests==2.34.2
 httpx==0.28.1
-beautifulsoup4==4.12.3
+beautifulsoup4==4.14.3
 lxml==6.1.0
-openai==2.3.0
+openai==2.37.0
 google-genai==2.4.0
 groq==1.2.0
-playwright==1.45.0
+playwright==1.60.0
 
 # Configuration & Environment
-pyyaml==6.0.1
+pyyaml==6.0.3
 python-dotenv==1.2.2
 
 # System & Utilities
@@ -18,7 +18,7 @@ pyautogui==0.9.54
 psutil==5.9.8
 Pillow==12.2.0
 numpy==1.26.4
-matplotlib==3.8.4
+matplotlib==3.10.9
 pandas==2.2.2
 python-whois==0.9.6
 python-dateutil==2.9.0.post0
