@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ "**" ]
+    branches: ["**"]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, edited]
   pull_request_review:
@@ -24,25 +24,25 @@ jobs:
         python-version: ["3.10", "3.12"]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
       - name: Install dependencies
         run: |
-          pip install --upgrade pip
-          pip install "ruff==0.15.12" pytest pytest-cov playwright
-          pip install -r requirements.txt || echo "requirements.txt not found"
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
 
-      - name: Playwright Install (Linux)
+      - name: Install Playwright browsers (Linux)
         if: runner.os == 'Linux'
         run: playwright install chromium --with-deps
 
-      - name: Playwright Install (Windows)
+      - name: Install Playwright browsers (Windows)
         if: runner.os == 'Windows'
         run: playwright install chromium
 
@@ -56,15 +56,14 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
-        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
-
+        uses: codecov/codecov-action@v4
         with:
           files: coverage.xml
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload coverage report
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage.xml
