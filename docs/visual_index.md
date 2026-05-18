@@ -114,7 +114,7 @@ graph TD
 ---
 
 ## Summary
-These diagrams represent the "Hardened" v2.1.0 architecture. For deeper technical details, use the [Documentation Catalog](CATALOG.md) or the links in the [README](../README.md).
+These diagrams represent the "Hardened" v2.1.1 architecture. For deeper technical details, use the [Documentation Catalog](CATALOG.md) or the links in the [README](../README.md).
 
 ---
 

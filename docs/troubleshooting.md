@@ -95,7 +95,7 @@ AgenticOS includes several built-in tools to help you diagnose its health:
 
 ### 3. "Wallpaper changes fail silently on Linux."
 -   **Cause**: Modern GNOME ignores standard `picture-uri` modifications if System Dark Mode is active.
--   **Fix**: AgenticOS automatically sets both the `picture-uri` and `picture-uri-dark` keys in v2.1.0 to ensure comprehensive compatibility.
+-   **Fix**: AgenticOS automatically sets both the `picture-uri` and `picture-uri-dark` keys in v2.1.1 to ensure comprehensive compatibility.
 
 ### 4. "AppleScript compilation syntax error during keyboard actions on macOS."
 -   **Cause**: Triggering special keys that are missing in the hardcoded mapping.

@@ -113,7 +113,7 @@ To prevent sensitive information from leaking into session logs or persistent me
 
 ---
 
-## Next-Generation Threat Intel & Auditing Plugins (New in v2.1.0)
+## Next-Generation Threat Intel & Auditing Plugins (New in v2.1.1)
 
 To achieve maximum protection when interacting with foreign codebases or untrusted remote endpoints, AgenticOS integrates two core security and sandbox audit systems:
 
