@@ -32,18 +32,20 @@ def _load_cache_root() -> str:
     base_dir = os.path.dirname(os.path.abspath(__file__))
     cfg_path = os.path.join(base_dir, "config.yaml")
 
-    # Keep startup resilient: if YAML is broken, just fall back to defaults.
+    cfg = {}
     try:
         import yaml  # type: ignore
 
-        with open(cfg_path, "r", encoding="utf-8") as handle:
-            cfg = yaml.safe_load(handle) or {}
-    except (ImportError, OSError, yaml.YAMLError) as e:
-        from core.logger import get_logger
-        get_logger("startup").warning(
-            "Failed to parse config.yaml, falling back to cache defaults: %s", e
-        )
-        cfg = {}
+        try:
+            with open(cfg_path, "r", encoding="utf-8") as handle:
+                cfg = yaml.safe_load(handle) or {}
+        except (OSError, yaml.YAMLError) as e:
+            from core.logger import get_logger
+            get_logger("startup").warning(
+                "Failed to parse config.yaml, falling back to cache defaults: %s", e
+            )
+    except ImportError:
+        pass
 
     cache_cfg = (cfg.get("cache") or {}) if isinstance(cfg, dict) else {}
     root = (cache_cfg.get("root_dir") or "data/cache").strip()

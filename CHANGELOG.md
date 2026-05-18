@@ -10,6 +10,9 @@
 - **AI Summary Formatting**: Updated Issue/PR summarization headers from `🤖 AI Summary` to `⫸ AI Summary` in `summary.yml`.
 - **CodeQL Alert Mitigation**: Resolved CodeQL Medium CWE-829 (unpinned-tag) alert by pinning `codecov/codecov-action` inside `ci.yml` to its immutable full-length commit SHA (`57e3a136b779b570ffcdbf80b3bdc90e7fab3de2`).
 
+### Bug Fixes
+- **Resilient Cache Loader**: Fixed `UnboundLocalError` in `main.py` cache root resolver where a missing `PyYAML` package in clean/isolated Python environments crashed the startup loader instead of gracefully falling back to defaults.
+
 ### Documentation and QA
 - **Upgraded PR Template**: Re-engineered [.github/PULL_REQUEST_TEMPLATE.md](file:///.github/PULL_REQUEST_TEMPLATE.md) to integrate customized checks for AgenticOS tool registry, shadow testing (`test_all_tools_shadow.py`), command execution safety, and dynamic path portability checks.
 
