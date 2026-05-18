@@ -10,7 +10,7 @@ This document outlines the standard 72 autonomous tasks utilized during Crucible
 2. Get all startup programs (registry + startup folder), search the web for each executable name, flag any unknown or suspicious ones, write a startup_audit.md
 3. Query Windows firewall rules, identify any rules that allow inbound traffic on non-standard ports, search the web for what services typically use those ports, write a firewall_audit.md
 4. Enumerate all user accounts on the machine, check last login times, flag any accounts not used in 90+ days, write a user_account_audit.md
-5. Scan C:\AgenticOs entirely - count Python LOC, JS LOC, YAML/JSON config size, find the deepest nested directory, find the largest single file - write a full codebase_metrics.md
+5. Scan `<REPO_ROOT>` entirely - count Python LOC, JS LOC, YAML/JSON config size, find the deepest nested directory, find the largest single file - write a full codebase_metrics.md
 6. Run a memory pressure test: write Python that allocates and releases 500MB in chunks, measures actual available RAM before/after each allocation step, log results and plot
 7. Pull Windows Update history via PowerShell, find the last 10 updates installed, search the web for what each KB article fixed, write an update_history.md
 
@@ -66,10 +66,10 @@ This document outlines the standard 72 autonomous tasks utilized during Crucible
 43. Full competitive intelligence run: search for AgenticOS competitors (AutoGPT, CrewAI, LangGraph, Agno, OpenDevin), for each visit GitHub + official site, extract stars/last commit/core feature claim, write a competitor_matrix.md with a comparison table
 44. Self-healing test: attempt to read a file that doesn't exist, catch the error, create it with placeholder content, verify it exists, then summarize what recovery steps were taken
 45. Build a personal news briefing: fetch top 5 from HN, top 5 from r/MachineLearning, top 3 AI arxiv papers today - deduplicate, rank by relevance to "local AI / agentic systems", write morning_briefing.md
-46. Dependency audit: read all .py files in C:\AgenticOs\core, extract every import statement, check each against pip list to see if it's installed, flag any that are missing or version-mismatched
+46. Dependency audit: read all `.py` files in `<REPO_ROOT>/core`, extract every import statement, check each against `pip list` to see if it's installed, flag any that are missing or version-mismatched
 47. Write a Python script that watches a directory for new files (polling every 5s for 60s), when it detects a new file it logs the filename + timestamp to a watcher_log.txt - test it by writing a file mid-run
 48. Generate a full AgenticOS health dashboard: system stats, top 5 processes, disk usage, public IP, last 5 Windows errors, tools count, memory usage - write as a styled HTML file to workspace
-49. Run a full API surface test: call tools_list, then for each tool category (Files/Terminal/Web/Browser) pick one tool and call it with a valid argument - log pass/fail for each, write tool_smoke_test.md
+49. Run a full API surface test: call `/tools`, then for each tool category (Files/Terminal/Web/Browser) pick one tool and call it with a valid argument - log pass/fail for each, write tool_smoke_test.md
 50. Screenshot the desktop, analyze what applications are visible in the taskbar and open windows, write a desktop_state.md describing the current state of the machine
 51. Fetch real-time data from 3 different public REST APIs (your choice), join the datasets by a common field or theme, produce a cross_api_synthesis.md
 52. Perform a latency benchmark: ping 10 different global servers (US, EU, Asia, India), record RTT for each, plot a latency map bar chart, write a global_latency.md
@@ -94,7 +94,7 @@ This document outlines the standard 72 autonomous tasks utilized during Crucible
 66. [x] Write a plugin called "diff_summarizer" that takes two text strings and returns a human-readable plain-English summary of what changed - using difflib - save, reload, test
 67. [x] Write a plugin called "url_safety_check" that takes a URL, checks SSL validity, WHOIS age, presence in common blocklists (via web search), and returns a risk score - save, reload, test on 3 URLs
 68. [x] Write a plugin called "code_complexity" that takes a Python file path, uses radon (install if needed) to compute cyclomatic complexity per function, returns a complexity report - test on tool_registry.py
-69. Auto-generate a CHANGELOG.md for AgenticOS by reading git log of C:\AgenticOs, grouping commits by week, summarizing each week's changes in plain English
+69. Auto-generate a CHANGELOG.md for AgenticOS by reading git log of `<REPO_ROOT>`, grouping commits by week, summarizing each week's changes in plain English
 70. Write a plugin called "auto_summarize_file" that reads any text file and returns a 3-sentence summary using the Ollama API (qwen2.5:7b) - save, reload, test on competitor_analysis.md
-71. Perform a self-audit: call tools_list, identify any tool whose description is missing or just says "No description provided", write tool_desc_audit.md listing gaps
+71. Perform a self-audit: call `/tools`, identify any tool whose description is missing or just says "No description provided", write tool_desc_audit.md listing gaps
 72. Write a meta-task planner plugin: given a high-level goal string, it calls Ollama to break it into 5 sub-tasks and returns them as a numbered list - save, reload, test with "build a data pipeline"

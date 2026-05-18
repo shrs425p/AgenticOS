@@ -165,6 +165,7 @@ redaction:
 1.  **Always use `_resolve()`**: When writing new tools, always resolve paths through the `FileManager` to ensure they are checked against the guardrails.
 2.  **Avoid Shell=True**: Use subprocess lists instead of raw strings to prevent shell injection.
 3.  **Fail Safely**: If a security check fails, return a clear `PermissionError` so the agent can understand it was a policy block, not a technical bug.
+4.  **Use the docs catalog**: Keep security updates synced in [CATALOG.md](CATALOG.md) and [SECURITY.md](../SECURITY.md) so operators can find current guidance quickly.
 
 ---
 

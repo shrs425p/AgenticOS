@@ -25,7 +25,7 @@ Implement a local vision pipeline that feeds desktop screenshots into a speciali
 ```
 
 ### Proposed Changes:
-#### [NEW] [vision_coordinator.py](file:///c:/AgenticOs/tools/plugins/vision_coordinator.py)
+#### [NEW] [vision_coordinator.py](../tools/plugins/vision_coordinator.py)
 - **`click_element_by_name(label)`**: Captures the screen, feeds it to the local VLM with the prompt `<CAPTION_TO_LOCALIZATION>`, extracts bounding boxes matching the label, computes the center coordinate, and commands the mouse to click.
 - **`drag_and_drop_visual(source, destination)`**: Computes visual paths between two desktop components and performs a smooth mouse drag.
 
@@ -45,7 +45,7 @@ Implement platform-specific elevated daemons running with system privileges that
 ```
 
 ### Proposed Changes:
-#### [MODIFY] [keyboard.py](file:///c:/AgenticOs/tools/terminal/keyboard.py)
+#### [MODIFY] [keyboard.py](../tools/terminal/keyboard.py)
 - Refactor the input emulations to channel all keystrokes and button clicks directly through the high-privilege IPC daemon, guaranteeing that the agent remains functional even when administrative prompts are displayed on the screen.
 
 ---
@@ -85,7 +85,7 @@ Inject Hot-Reloaded @tool class <--- Compile Wrapper <--- Silent-Install CLI Too
 ```
 
 ### Proposed Changes:
-#### [NEW] [self_provisioner.py](file:///c:/AgenticOs/core/self_provisioner.py)
+#### [NEW] [self_provisioner.py](../core/self_provisioner.py)
 - Detects standard CLI errors (e.g. `FileNotFoundError` or command not in path).
 - Automatically queries the correct platform package manager:
   - **Windows**: `winget install <package> --silent` or `choco install <package> -y`
@@ -118,7 +118,7 @@ Introduce an **Asynchronous Hardware Event Bus** that listens to background oper
 ```
 
 ### Proposed Changes:
-#### [NEW] [event_bus.py](file:///c:/AgenticOs/core/event_bus.py)
+#### [NEW] [event_bus.py](../core/event_bus.py)
 - Runs a background thread monitoring battery status, network connectivity, process counts, and CPU temperatures.
 - Dispatches autonomic interrupt events into the agent's short-term reasoning chain, prompting the agent to launch stabilizing procedures before a system crash occurs.
 
@@ -160,4 +160,3 @@ If the structural crawler fails (e.g., in Blender or a graphic game engine), the
                              v
                  [ Return Click Coordinates ]
 ```
-
