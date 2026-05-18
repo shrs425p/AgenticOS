@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Truncate issue content for AI prompt
         id: truncate-issue
@@ -62,7 +62,7 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           AI_SUMMARY: ${{ steps.inference.outputs.response }}
         run: |
-          gh issue comment "$ISSUE_NUMBER" --body "**🤖 AI Summary**
+          gh issue comment "$ISSUE_NUMBER" --body "**⫸ AI Summary**
 
           $AI_SUMMARY
 
@@ -79,7 +79,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Truncate PR content for AI prompt
         id: truncate-pr
@@ -123,7 +123,7 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           AI_SUMMARY: ${{ steps.inference.outputs.response }}
         run: |
-          gh pr comment "$PR_NUMBER" --body "**🤖 AI Summary**
+          gh pr comment "$PR_NUMBER" --body "**⫸ AI Summary**
 
           $AI_SUMMARY
 
