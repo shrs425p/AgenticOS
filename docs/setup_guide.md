@@ -18,7 +18,7 @@ Before you begin, ensure your machine meets the [System Requirements](system_req
 
 ## Step 2: Running the Automated Setup Script
 
-For maximum stability and performance, we recommend cloning the project into a root-level or simple home directory path without spaces (e.g., `<REPO_ROOT>` on Windows, or `~/AgenticOs` on macOS/Linux). This ensures that path utilities, Fast-Path optimizations, and terminal commands execute with 100% reliability.
+For maximum stability and performance, we recommend cloning the project into a root-level or simple home directory path without spaces (e.g., `AgenticOS` or `~/AgenticOs`). This ensures that path utilities, Fast-Path optimizations, and terminal commands execute with 100% reliability.
 
 Once cloned and in the project directory, run the setup script. You can execute this natively via your code editor (e.g., VS Code) or the terminal:
 
