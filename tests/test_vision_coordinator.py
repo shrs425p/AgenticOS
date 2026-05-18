@@ -1,8 +1,5 @@
 """Unit tests for the Multi-Modal Visual Coordinate Mapping Engine."""
-import os
-import unittest
 from unittest.mock import MagicMock, patch
-import pytest
 
 from tools.plugins.vision_coordinator import _extract_word_boxes, _find_phrase_coords, click_element_by_name, drag_and_drop_visual
 

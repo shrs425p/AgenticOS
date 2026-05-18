@@ -2,7 +2,6 @@ import os
 import sys
 import inspect
 import json
-import urllib.parse
 from datetime import datetime
 from unittest.mock import MagicMock
 
@@ -11,9 +10,9 @@ root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, root_dir)
 
 # 2. Mock subprocess, requests, webbrowser, and os.system globally for 100% safety & speed
-import subprocess
-import requests
-import webbrowser
+import subprocess  # noqa: E402
+import requests  # noqa: E402
+import webbrowser  # noqa: E402
 
 def mock_run(*args, **kwargs):
     mock_res = MagicMock()
@@ -100,15 +99,15 @@ def run_shadow_tests():
                 
                 # Type-based defaults
                 anno = param.annotation
-                if anno == int:
+                if anno is int:
                     args[p_name] = 1
-                elif anno == float:
+                elif anno is float:
                     args[p_name] = 1.0
-                elif anno == bool:
+                elif anno is bool:
                     args[p_name] = True
-                elif anno == list or 'list' in str(anno).lower():
+                elif anno is list or 'list' in str(anno).lower():
                     args[p_name] = ["test"]
-                elif anno == dict or 'dict' in str(anno).lower():
+                elif anno is dict or 'dict' in str(anno).lower():
                     args[p_name] = {"test_key": "test_val"}
                 else:
                     # Heuristic names
@@ -191,7 +190,7 @@ def run_shadow_tests():
         print(f"Report saved to workspace location: {report_path}")
         return success_count, failure_count
 
-    except Exception as e:
+    except Exception:
         import traceback
         traceback.print_exc()
         return 0, 1

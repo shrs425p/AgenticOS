@@ -1,9 +1,5 @@
 """Unit tests for the Dynamic Self-Provisioning and Auto-Compiler Engine."""
-import os
-import shutil
-import unittest
-from unittest.mock import MagicMock, AsyncMock, patch
-import pytest
+from unittest.mock import MagicMock, patch
 
 from core.self_provisioner import self_provision_command, refresh_path
 from tools.terminal.runner import RunnerMixin

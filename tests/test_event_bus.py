@@ -1,9 +1,6 @@
 """Unit tests for the Asynchronous OS Hardware Event Bus."""
-import os
 import time
-import unittest
 from unittest.mock import MagicMock, patch
-import pytest
 
 from core.event_bus import OSEventBus
 

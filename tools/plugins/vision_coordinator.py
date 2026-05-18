@@ -1,6 +1,5 @@
 """Plugin module for unified multi-modal visual coordinate mapping and hardware actions."""
 import os
-import sys
 import logging
 import platform
 import subprocess
