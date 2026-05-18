@@ -1,9 +1,14 @@
+import sys
 import os
 import ast
 import datetime
 import inspect
 import re
+
+# Adjust Python path to load core
+sys.path.insert(0, os.path.abspath("."))
 from core.tool_registry import ToolRegistry
+
 
 def check_file(file_path):
     with open(file_path, "r") as f:
@@ -29,12 +34,13 @@ def check_file(file_path):
     for node in ast.walk(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             for dec in node.decorator_list:
-                if isinstance(dec, ast.Call) and getattr(dec.func, 'id', '') == 'tool':
+                if isinstance(dec, ast.Call) and getattr(dec.func, "id", "") == "tool":
                     for kw in dec.keywords:
-                        if kw.arg == 'name' and isinstance(kw.value, ast.Constant):
+                        if kw.arg == "name" and isinstance(kw.value, ast.Constant):
                             ast_tools.append(kw.value.value)
 
     return passes_syntax, has_docstring, has_callable, ast_tools
+
 
 def get_tool_params(func):
     try:
@@ -71,9 +77,15 @@ def find_test(tool_name):
             if f.endswith(".py"):
                 with open(os.path.join(root, f), "r") as tf:
                     content = tf.read()
-                    if f"def test_{tool_name}" in content or f"'{tool_name}'" in content or f'"{tool_name}"' in content or f"{tool_name}(" in content:
+                    if (
+                        f"def test_{tool_name}" in content
+                        or f"'{tool_name}'" in content
+                        or f'"{tool_name}"' in content
+                        or f"{tool_name}(" in content
+                    ):
                         return True
     return False
+
 
 def check_ghost_registrations(registry):
     ghost_regs = []
@@ -91,6 +103,7 @@ def check_ghost_registrations(registry):
             pass
     return ghost_regs
 
+
 def fix_description_in_file(func, tool_name):
     try:
         source_file = inspect.getsourcefile(func)
@@ -104,20 +117,23 @@ def fix_description_in_file(func, tool_name):
         pattern = r'(@tool\([^)]*name=[\'"]' + re.escape(tool_name) + r'[\'"][^)]*)(\))'
 
         # Check if desc is missing
-        if re.search(r'@tool\([^)]*name=[\'"]' + re.escape(tool_name) + r'[\'"][^)]*desc=', content):
+        if re.search(
+            r'@tool\([^)]*name=[\'"]' + re.escape(tool_name) + r'[\'"][^)]*desc=',
+            content,
+        ):
             # Desc already exists, perhaps we replace it? Or it was "None"?
             # Let's replace desc=None or desc="No description provided"
             content = re.sub(
-                r'(@tool\([^)]*name=[\'"]' + re.escape(tool_name) + r'[\'"][^)]*)desc=([\'"]None[\'"]|None|[\'"]No description provided[\'"])([^)]*\))',
+                r'(@tool\([^)]*name=[\'"]'
+                + re.escape(tool_name)
+                + r'[\'"][^)]*)desc=([\'"]None[\'"]|None|[\'"]No description provided[\'"])([^)]*\))',
                 r'\1desc="Auto-generated description"\3',
-                content
+                content,
             )
         else:
             # Inject desc
             content = re.sub(
-                pattern,
-                r'\1, desc="Auto-generated description"\2',
-                content
+                pattern, r'\1, desc="Auto-generated description"\2', content
             )
 
         with open(source_file, "w", encoding="utf-8") as f:
@@ -125,6 +141,7 @@ def fix_description_in_file(func, tool_name):
         return True
     except Exception:
         return False
+
 
 def scan_tool_files(registry_obj):
     tools_dir = "tools"
@@ -148,9 +165,10 @@ def scan_tool_files(registry_obj):
             "syntax": passes_syntax,
             "docstring": has_docstring,
             "callable": has_callable,
-            "unregistered_tools": unregistered
+            "unregistered_tools": unregistered,
         }
     return file_results
+
 
 cfg = {
     "agent": {"workspace": "workspace"},
@@ -171,15 +189,20 @@ for root, _, files in os.walk(tools_dir):
     for f in files:
         if f.endswith(".py"):
             filepath = os.path.join(root, f)
-            with open(filepath, 'r') as file:
+            with open(filepath, "r") as file:
                 try:
                     tree = ast.parse(file.read())
                     for node in ast.walk(tree):
                         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                             for dec in node.decorator_list:
-                                if isinstance(dec, ast.Call) and getattr(dec.func, 'id', '') == 'tool':
+                                if (
+                                    isinstance(dec, ast.Call)
+                                    and getattr(dec.func, "id", "") == "tool"
+                                ):
                                     for kw in dec.keywords:
-                                        if kw.arg == 'name' and isinstance(kw.value, ast.Constant):
+                                        if kw.arg == "name" and isinstance(
+                                            kw.value, ast.Constant
+                                        ):
                                             ast_tools.append(kw.value.value)
                 except SyntaxError:
                     pass
@@ -218,11 +241,11 @@ with open("tests/auto/test_autogenerated.py", "w", encoding="utf-8") as f:
         f.write("    assert tool_info is not None\n")
         f.write("    func = tool_info['fn']\n")
         if info["fn"].__name__ == "<lambda>" and ("open_" in name or "search_" in name):
-             f.write("    # Lambda wrapper or preset tool\n")
-             f.write("    if 'value' in inspect.signature(func).parameters:\n")
-             f.write("        func(value='mock')\n")
-             f.write("    else:\n")
-             f.write("        func()\n")
+            f.write("    # Lambda wrapper or preset tool\n")
+            f.write("    if 'value' in inspect.signature(func).parameters:\n")
+            f.write("        func(value='mock')\n")
+            f.write("    else:\n")
+            f.write("        func()\n")
         else:
             f.write(f"    func({args_str})\n")
         f.write("\n")
@@ -254,3 +277,11 @@ with open(f"workspace/daily_logs/tool_audit_{date_str}.md", "w", encoding="utf-8
         f.write(f"- Has module-level docstring: {res['docstring']}\n")
         f.write(f"- Has at least one callable: {res['callable']}\n")
         f.write(f"- Unregistered tools found: {res['unregistered_tools']}\n\n")
+
+print("Tool registry audit completed successfully!")
+print(f"- Total tools scanned: {len(registry_obj.registry)}")
+print(f"- Missing descriptions: {len(missing_desc)}")
+print(f"- Missing tests: {len(missing_tests_names)}")
+print(f"- Ghost registrations: {len(ghost_regs)}")
+print(f"- Duplicate tool names: {', '.join(duplicate_tools) if duplicate_tools else 'None'}")
+print(f"- Scorecard generated: workspace/daily_logs/tool_audit_{date_str}.md")

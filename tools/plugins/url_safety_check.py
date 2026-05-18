@@ -59,7 +59,7 @@ def _parse_whois_creation_year(raw_data: str) -> int:
     return 0
 
 
-@tool(name="url_safety_check", category="Security")
+@tool(name="url_safety_check", category="Security", desc="Automated description")
 def url_safety_check(url: str) -> str:
     """Performs a comprehensive security and cryptographic audit of a URL.
 

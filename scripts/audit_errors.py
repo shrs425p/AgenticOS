@@ -4,12 +4,13 @@ import datetime
 import subprocess
 from collections import Counter
 
+
 def get_commit_age(filepath, lineno):
     try:
         res = subprocess.check_output(
             ["git", "blame", "-L", f"{lineno},{lineno}", "--line-porcelain", filepath],
             universal_newlines=True,
-            stderr=subprocess.DEVNULL
+            stderr=subprocess.DEVNULL,
         )
         for line in res.split("\n"):
             if line.startswith("committer-time "):
@@ -19,6 +20,7 @@ def get_commit_age(filepath, lineno):
     except Exception:
         return 0
     return 0
+
 
 def get_yesterday_stats(yesterday_file):
     bare_count = 0
@@ -34,6 +36,7 @@ def get_yesterday_stats(yesterday_file):
                 elif line.startswith("- ") and " - `" in line and ":" in line:
                     vague_lines.add(line.strip())
     return bare_count, vague_lines
+
 
 def main():
     target_dirs = ["core", "tools"]
@@ -56,13 +59,14 @@ def main():
         with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
             content = f.read()
 
-        lines = content.split('\n')
+        lines = content.split("\n")
         for i, line in enumerate(lines):
             if "#" in line:
-                comment_part = line[line.find("#"):]
+                comment_part = line[line.find("#") :]
                 upper_comment = comment_part.upper()
-                if any(x in upper_comment for x in ["TODO", "FIXME", "HACK", "XXX"]):  # devskim: ignore DS176209
-
+                if any(
+                    x in upper_comment for x in ["TODO", "FIXME", "HACK", "XXX"]
+                ):  # devskim: ignore DS176209
                     age = get_commit_age(filepath, i + 1)
                     todos.append((filepath, i + 1, comment_part, age))
 
@@ -84,7 +88,6 @@ def main():
             if isinstance(node, ast.Call):
                 is_error_call = False
 
-
                 if isinstance(node.func, ast.Name):
                     if node.func.id in ["print_error"]:
                         is_error_call = True
@@ -96,18 +99,31 @@ def main():
                 if is_error_call and node.args:
                     arg_idx = 0
                     # For self.audit.error(self.session_id, "where", "msg") it's index 2
-                    if isinstance(node.func, ast.Attribute) and node.func.attr == "error" and len(node.args) >= 3:
-                        if isinstance(node.func.value, ast.Attribute) and node.func.value.attr == "audit":
+                    if (
+                        isinstance(node.func, ast.Attribute)
+                        and node.func.attr == "error"
+                        and len(node.args) >= 3
+                    ):
+                        if (
+                            isinstance(node.func.value, ast.Attribute)
+                            and node.func.value.attr == "audit"
+                        ):
                             arg_idx = 2
 
-                    arg = node.args[arg_idx] if arg_idx < len(node.args) else node.args[-1]
+                    arg = (
+                        node.args[arg_idx]
+                        if arg_idx < len(node.args)
+                        else node.args[-1]
+                    )
                     msg = None
                     if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
                         msg = arg.value
                     elif isinstance(arg, ast.JoinedStr):
                         msg_parts = []
                         for val in arg.values:
-                            if isinstance(val, ast.Constant) and isinstance(val.value, str):
+                            if isinstance(val, ast.Constant) and isinstance(
+                                val.value, str
+                            ):
                                 msg_parts.append(val.value)
                             elif isinstance(val, ast.FormattedValue):
                                 msg_parts.append("{var}")
@@ -121,12 +137,16 @@ def main():
                         word_count = len(cleaned_msg.split())
 
                         # Vague if less than 5 words OR exactly "error" or "failed" ignoring case
-                        if word_count < 5 or cleaned_msg.strip().lower() in ["error", "failed", "error: {var}", "failed: {var}"]:
+                        if word_count < 5 or cleaned_msg.strip().lower() in [
+                            "error",
+                            "failed",
+                            "error: {var}",
+                            "failed: {var}",
+                        ]:
                             vague_messages.append((filepath, node.lineno, cleaned_msg))
 
                         if any(word in cleaned_msg.lower() for word in SENSITIVE_WORDS):
                             sensitive_messages.append((filepath, node.lineno))
-
 
     for d in target_dirs:
         if not os.path.isdir(d):
@@ -140,7 +160,9 @@ def main():
     top_patterns = patterns.most_common(5)
 
     # Check yesterday's report
-    yesterday_date_str = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+    yesterday_date_str = (
+        datetime.datetime.now() - datetime.timedelta(days=1)
+    ).strftime("%Y-%m-%d")
     yesterday_file = f"docs/daily_logs/error_patterns_{yesterday_date_str}.md"
 
     yesterday_bare, yesterday_vague_lines = get_yesterday_stats(yesterday_file)
@@ -149,9 +171,13 @@ def main():
 
     if os.path.exists(yesterday_file):
         if bare_count > yesterday_bare:
-            flagged_messages.append(f"NEW bare except block introduced today (from {yesterday_bare} to {bare_count})")
+            flagged_messages.append(
+                f"NEW bare except block introduced today (from {yesterday_bare} to {bare_count})"
+            )
 
-        current_vague_lines = set([f"- {fp}:{ln} - `{msg}`" for fp, ln, msg in vague_messages])
+        current_vague_lines = set(
+            [f"- {fp}:{ln} - `{msg}`" for fp, ln, msg in vague_messages]
+        )
         new_vague_lines = current_vague_lines - yesterday_vague_lines
         if new_vague_lines:
             flagged_messages.append("NEW vague error messages introduced today:")
@@ -204,6 +230,7 @@ def main():
                 f.write(f"- {msg}\n")
 
     print(f"Generated {out_file}")
+
 
 if __name__ == "__main__":
     main()

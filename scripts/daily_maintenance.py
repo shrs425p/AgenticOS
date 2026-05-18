@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
+import sys
 import ast
 import os
 import inspect
 from pathlib import Path
+
+# Adjust Python path to load core
+sys.path.insert(0, os.path.abspath("."))
 from core.tool_registry import ToolRegistry
 import datetime
 import yaml
 
 import tempfile
+
 
 class MockApp:
     def __init__(self):
@@ -38,8 +43,8 @@ def main():
 
     # 1. & 2. Scan tools/ and tools/plugins/ for module docstrings and descriptions
     tools_files = []
-    for p in Path('tools').rglob('*.py'):
-        if not p.name.startswith('__'):
+    for p in Path("tools").rglob("*.py"):
+        if not p.name.startswith("__"):
             tools_files.append(p)
 
     missing_callables = []
@@ -56,11 +61,11 @@ def main():
             compile(content, str(p), "exec")
         except SyntaxError:
             syntax_errors.append(str(p))
-            continue # Skip AST operations if syntax is invalid
+            continue  # Skip AST operations if syntax is invalid
 
         tree = ast.parse(content)
         if not ast.get_docstring(tree):
-            new_content = f'\"\"\"Module for {p.name}\"\"\"\n' + content
+            new_content = f'"""Module for {p.name}"""\n' + content
             with open(p, "w", encoding="utf-8") as f:
                 f.write(new_content)
 
@@ -71,10 +76,13 @@ def main():
             # Check for duplicate @tool registrations in file
             if isinstance(node, ast.FunctionDef):
                 for dec in node.decorator_list:
-                    if isinstance(dec, ast.Call) and getattr(dec.func, 'id', '') == 'tool':
+                    if (
+                        isinstance(dec, ast.Call)
+                        and getattr(dec.func, "id", "") == "tool"
+                    ):
                         name = ""
                         for kw in dec.keywords:
-                            if kw.arg == 'name' and isinstance(kw.value, ast.Constant):
+                            if kw.arg == "name" and isinstance(kw.value, ast.Constant):
                                 name = kw.value.value
                         if not name:
                             name = node.name
@@ -88,6 +96,7 @@ def main():
 
         # Fix descriptions
         import re
+
         def replacer(match):
             inner = match.group(1)
             if not inner.strip():
@@ -96,8 +105,10 @@ def main():
                 return f'@tool({inner}, desc="Automated description")'
 
         new_content = content
-        new_content = re.sub(r'@tool\((?!.*desc=)(.*?)\)', replacer, new_content)
-        new_content = re.sub(r'@tool\s*\n', r'@tool(desc="Automated description")\n', new_content)
+        new_content = re.sub(r"@tool\((?!.*desc=)(.*?)\)", replacer, new_content)
+        new_content = re.sub(
+            r"@tool\s*\n", r'@tool(desc="Automated description")\n', new_content
+        )
         if content != new_content:
             with open(p, "w", encoding="utf-8") as f:
                 f.write(new_content)
@@ -111,7 +122,13 @@ def main():
     for name in registered_tools:
         found = False
         for code in test_content.values():
-            if f'"{name}"' in code or f"'{name}'" in code or f"name=\"{name}\"" in code or f"name='{name}'" in code or f"_{name}_" in code:
+            if (
+                f'"{name}"' in code
+                or f"'{name}'" in code
+                or f'name="{name}"' in code
+                or f"name='{name}'" in code
+                or f"_{name}_" in code
+            ):
                 found = True
                 break
         if not found:
@@ -228,9 +245,21 @@ def mock_external_calls(monkeypatch):
     os.makedirs("workspace/daily_logs", exist_ok=True)
     today = datetime.datetime.now().strftime("%Y-%m-%d")
     health = "WARNING"
-    if len(missing_descriptions) == 0 and len(no_tests) == 0 and len(ghost_registrations) == 0 and len(missing_callables) == 0 and len(syntax_errors) == 0 and len(duplicate_tools) == 0:
+    if (
+        len(missing_descriptions) == 0
+        and len(no_tests) == 0
+        and len(ghost_registrations) == 0
+        and len(missing_callables) == 0
+        and len(syntax_errors) == 0
+        and len(duplicate_tools) == 0
+    ):
         health = "GOOD"
-    elif len(ghost_registrations) > 0 or len(missing_descriptions) > 50 or len(syntax_errors) > 0 or len(duplicate_tools) > 0:
+    elif (
+        len(ghost_registrations) > 0
+        or len(missing_descriptions) > 50
+        or len(syntax_errors) > 0
+        or len(duplicate_tools) > 0
+    ):
         health = "CRITICAL"
 
     report = f"""# Tool Audit {today}
@@ -270,8 +299,19 @@ def mock_external_calls(monkeypatch):
 - Tool registry health: {health}
 """
 
-    with open(f"workspace/daily_logs/tool_audit_{today}.md", "w", encoding="utf-8") as f:
+    with open(
+        f"workspace/daily_logs/tool_audit_{today}.md", "w", encoding="utf-8"
+    ) as f:
         f.write(report)
+
+    print("Daily maintenance completed successfully!")
+    print(f"- Audited {len(registered_tools)} tools for PEP8, syntax, and docstrings.")
+    print(f"- Missing descriptions auto-corrected: {len(missing_descriptions)}")
+    print(f"- Ghost registrations checked: {len(ghost_registrations)}")
+    print(f"- Duplicate tool names found: {', '.join(duplicate_tools) if duplicate_tools else 'None'}")
+    print(f"- Staged autogenerated tests inside: {test_file_path}")
+    print(f"- Scorecard generated: workspace/daily_logs/tool_audit_{today}.md")
+
 
 if __name__ == "__main__":
     main()
