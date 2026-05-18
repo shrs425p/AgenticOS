@@ -470,8 +470,6 @@ class ToolRegistry:
                 if param.kind in (param.POSITIONAL_OR_KEYWORD, param.POSITIONAL_ONLY)
             ]
 
-            destructive_tools = {"delete_file", "delete_dir", "write_file", "write_json", "write_csv"}
-
             def _invoke(func):
                 if isinstance(args, dict):
                     kwargs = {}
@@ -514,7 +512,7 @@ class ToolRegistry:
             try:
                 return _invoke(fn)
             except (ModuleNotFoundError, ImportError) as exc:
-                if name in destructive_tools:
+                if name in write_tools:
                     raise
                 module_name = getattr(exc, "name", None)
                 if not module_name:
@@ -543,8 +541,13 @@ class ToolRegistry:
                     return _invoke(new_fn)
                 raise
             except FileNotFoundError as exc:
-                if name in destructive_tools:
+                if name in write_tools and name not in {"write_file", "write_json", "write_csv", "append_file"}:
                     raise
+
+                # Exclude purely read operations from creating parent directories
+                if name in read_only_tools:
+                    raise
+
                 filename = getattr(exc, "filename", None)
                 if filename:
                     parent_dir = os.path.dirname(filename)
