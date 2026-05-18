@@ -7,7 +7,7 @@ from contextlib import ExitStack
 
 # 1. Add C:\AgenticOs to sys.path first (tests/ is 1 level below root)
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-import sys
+import sys  # noqa: E402
 sys.path.insert(0, root_dir)
 
 import subprocess  # noqa: E402
@@ -77,6 +77,10 @@ def run_shadow_tests():
         stack.enter_context(patch.object(requests, "post", mock_post))
         stack.enter_context(patch.object(requests, "put", mock_put))
         stack.enter_context(patch.object(requests, "delete", mock_delete))
+        stack.enter_context(patch.object(requests.Session, "get", mock_get))
+        stack.enter_context(patch.object(requests.Session, "post", mock_post))
+        stack.enter_context(patch.object(requests.Session, "put", mock_put))
+        stack.enter_context(patch.object(requests.Session, "delete", mock_delete))
         stack.enter_context(patch.object(webbrowser, "open", lambda *a, **k: True))
         stack.enter_context(patch.object(os, "system", lambda *a, **k: 0))
 
