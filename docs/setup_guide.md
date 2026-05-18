@@ -54,11 +54,11 @@ cd ~/AgenticOs
 ```
 
 ### What the Setup Script Automates:
-* **Directory Structure**: Generates all standard folders (`workspace`, `data/logs`, `bin`) if missing.
-* **Virtual Environment**: Creates a standard `venv/` environment using Python 3.12+.
-* **Pip Packages**: Automatically upgrades pip and installs all Python dependencies in [requirements.txt](../requirements.txt) and [requirements-dev.txt](../requirements-dev.txt).
+* **Python Auto-Install Option**: If Python 3.12+ is missing or outdated, the script prompts you and handles downloading and installing it automatically via `winget` or direct installer (Windows), Homebrew (macOS), or `apt` (Linux).
+* **Hot-Reload Environment PATH**: Instantly refreshes PATH variables in the active PowerShell session, allowing the script to proceed seamlessly to `venv` and package setup without requiring a restart mid-run.
 * **Playwright Browsers**: Downloads and registers the Playwright Chromium browser binary automatically.
 * **Environment Credentials**: Creates your `.env` template from [.env.example](../.env.example) and prompts/opens it for keys configuration.
+* **System Diagnostics & Health Check**: Runs automated checks on network connectivity, `.env` file credentials (to flag empty or placeholder keys), and environment executables before completing the setup.
 * **PATH Registration**: Registers the global `agent` command to launch the system from any directory.
 
 ---
