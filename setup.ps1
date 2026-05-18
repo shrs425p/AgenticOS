@@ -47,12 +47,85 @@ if ($CurrentPath -notlike "*$BinPath*") {
 
 # 5. Verify Python Installation
 Write-Host "[INFO] Verifying Python installation..." -ForegroundColor White
+$PythonInstalled = $false
 try {
     $PythonVer = & python --version 2>&1
-    Write-Host "[INFO] Detected Python: $PythonVer" -ForegroundColor Gray
+    if ($PythonVer -is [System.Management.Automation.ErrorRecord]) {
+        throw "Python not found"
+    }
+    
+    # Check if Python version is 3.12+
+    $Null = & python -c "import sys; sys.exit(0 if sys.version_info >= (3, 12) else 1)" 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[WARNING] Detected Python version is older than 3.12. Detected version: $PythonVer" -ForegroundColor Yellow
+    } else {
+        $PythonInstalled = $true
+        Write-Host "[INFO] Detected Python: $PythonVer" -ForegroundColor Gray
+        Write-Host "[SUCCESS] Python version requirement (3.12+) met." -ForegroundColor Green
+    }
 } catch {
-    Write-Host "[ERROR] Python was not found on your system. Please install Python 3.12+ first." -ForegroundColor Red
-    exit 1
+    # Python is not installed or not in PATH
+}
+
+if (-not $PythonInstalled) {
+    Write-Host "[WARNING] Python 3.12+ was not found on your system." -ForegroundColor Yellow
+    $Choice = Read-Host "Do you want to download and install Python 3.12 automatically? (Y/N)"
+    if ($Choice -eq 'Y' -or $Choice -eq 'y') {
+        Write-Host "[INFO] Attempting to install Python 3.12 via winget..." -ForegroundColor Cyan
+        $InstallSuccess = $false
+        try {
+            winget install --id Python.Python.3.12 --exact --silent --accept-package-agreements --accept-source-agreements --scope user
+            if ($LASTEXITCODE -eq 0) {
+                Write-Host "[SUCCESS] Python 3.12 installed successfully via winget." -ForegroundColor Green
+                $InstallSuccess = $true
+            } else {
+                throw "winget returned non-zero exit code"
+            }
+        } catch {
+            Write-Host "[INFO] winget installation failed or is unavailable. Downloading installer directly..." -ForegroundColor Cyan
+            try {
+                $InstallerUrl = "https://www.python.org/ftp/python/3.12.3/python-3.12.3-amd64.exe"
+                $InstallerPath = Join-Path $env:TEMP "python-installer.exe"
+                Write-Host "[INFO] Downloading Python installer from $InstallerUrl ..." -ForegroundColor Gray
+                Invoke-WebRequest -Uri $InstallerUrl -OutFile $InstallerPath
+                Write-Host "[INFO] Running Python installer silently (Adding Python to PATH)..." -ForegroundColor Gray
+                $InstallProcess = Start-Process -FilePath $InstallerPath -ArgumentList "/quiet InstallAllUsers=0 PrependPath=1 Include_test=0" -PassThru -Wait
+                if ($InstallProcess.ExitCode -eq 0) {
+                    Write-Host "[SUCCESS] Python 3.12 installed successfully." -ForegroundColor Green
+                    $InstallSuccess = $true
+                } else {
+                    Write-Host "[ERROR] Python installation failed with exit code $($InstallProcess.ExitCode). Please install Python 3.12+ manually." -ForegroundColor Red
+                    exit 1
+                }
+            } catch {
+                Write-Host "[ERROR] Failed to download or execute Python installer: $_. Please install Python 3.12+ manually." -ForegroundColor Red
+                exit 1
+            }
+        }
+
+        if ($InstallSuccess) {
+            # Hot-reload environment variables in the active session
+            Write-Host "[INFO] Refreshing environment PATH for the current session..." -ForegroundColor Cyan
+            $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "User") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "Machine")
+            
+            # Re-verify Python in active session
+            try {
+                $PythonVer = & python --version 2>&1
+                if ($PythonVer -isnot [System.Management.Automation.ErrorRecord]) {
+                    Write-Host "[SUCCESS] Python is now active in this session. Continuing setup..." -ForegroundColor Green
+                } else {
+                    throw "Python still not found in active session PATH"
+                }
+            } catch {
+                Write-Host "[IMPORTANT] Python was installed, but we could not hot-reload it into the active terminal process." -ForegroundColor Yellow
+                Write-Host "[IMPORTANT] Please restart your terminal/IDE and run the setup script again to complete the configuration." -ForegroundColor Cyan
+                exit 0
+            }
+        }
+    } else {
+        Write-Host "[INFO] Installation cancelled. Please install Python 3.12+ manually to continue." -ForegroundColor Yellow
+        exit 1
+    }
 }
 
 # 6. Initialize Virtual Environment
@@ -121,6 +194,61 @@ if (-not (Test-Path $EnvFile)) {
     Write-Host "[INFO] .env file is already configured." -ForegroundColor Gray
 }
 
-Write-Host "[SUCCESS] Environment configured successfully! Please restart your terminal for changes to take effect." -ForegroundColor Green
+# 10. Perform System Diagnostic & Health Summary
+Write-Host "`n[INFO] Running System Diagnostics & Health Checks..." -ForegroundColor Cyan
+
+$DiagnosticPassed = $true
+
+# check Internet
+try {
+    $Ping = Test-Connection -ComputerName google.com -Count 1 -ErrorAction SilentlyContinue
+    if ($Ping) {
+        Write-Host "[SUCCESS] Network Connection: Online" -ForegroundColor Green
+    } else {
+        Write-Host "[WARNING] Network Connection: Offline or slow" -ForegroundColor Yellow
+        $DiagnosticPassed = $false
+    }
+} catch {
+    Write-Host "[WARNING] Network Connection: Offline or slow" -ForegroundColor Yellow
+    $DiagnosticPassed = $false
+}
+
+# check .env API keys
+$PlaceholdersFound = @()
+if (Test-Path $EnvFile) {
+    $EnvContent = Get-Content $EnvFile
+    foreach ($Line in $EnvContent) {
+        if ($Line -match "^\s*([A-Za-z0-9_]+)\s*=\s*(.*)$") {
+            $Key = $Matches[1]
+            $Val = $Matches[2].Trim()
+            if ($Val -eq "" -or $Val -like "your_*") {
+                $PlaceholdersFound += $Key
+            }
+        }
+    }
+}
+if ($PlaceholdersFound.Count -gt 0) {
+    Write-Host "[WARNING] Credentials Config: Missing / Placeholder keys found ($($PlaceholdersFound -join ', '))" -ForegroundColor Yellow
+    $DiagnosticPassed = $false
+} else {
+    Write-Host "[SUCCESS] Credentials Config: Configured" -ForegroundColor Green
+}
+
+# check Python & venv executables
+if ((Test-Path $PythonExePath) -and (Test-Path $PipPath)) {
+    Write-Host "[SUCCESS] Virtual Environment: Configured and healthy" -ForegroundColor Green
+} else {
+    Write-Host "[ERROR] Virtual Environment: Missing or corrupted executables" -ForegroundColor Red
+    $DiagnosticPassed = $false
+}
+
+Write-Host ""
+if ($DiagnosticPassed) {
+    Write-Host "[SUCCESS] System Health: Perfect! AgenticOS is ready for launch." -ForegroundColor Green
+} else {
+    Write-Host "[WARNING] System Health: Configuration is incomplete. Please see warnings above." -ForegroundColor Yellow
+}
+
+Write-Host "`n[SUCCESS] Environment configured successfully! Please restart your terminal for changes to take effect." -ForegroundColor Green
 Write-Host "[TIP] You can now run 'agent' from any directory." -ForegroundColor Yellow
 
