@@ -1,3 +1,18 @@
+## [2.1.1] - 2026-05-18
+
+### CI/CD and Workflow Hardening
+- **Deleted Duplicate Workflows**: Removed [.github/workflows/auto-merge.yml](file:///.github/workflows/auto-merge.yml) to eliminate double runner execution and optimize GitHub billing/minutes.
+- **Concurrency Controls**: Added concurrency groups across all active GitHub Workflows (`ci.yml`, `bandit.yml`, `codeql.yml`, `dependency-review.yml`) to automatically cancel redundant builds on subsequent pushes.
+- **Fixed Hallucinated Action Versions**:
+  - Corrected broken `actions/upload-artifact@v7` (non-existent) references to `@v4` in `ci.yml` and `dependency-review.yml`.
+  - Corrected broken `actions/checkout@v6` (non-existent) references to `@v4` across `bandit.yml`, `codeql.yml`, `dependency-review.yml`, and `summary.yml`.
+- **Protected Security Auditing Rules**: Safeguarded essential Bandit scan command skips (`B101,B603,B602,B605,B607,B404`) and folder exclusions (`tools/terminal`) to prevent false-positive command execution alerts on agent terminal tools.
+- **AI Summary Formatting**: Updated Issue/PR summarization headers from `🤖 AI Summary` to `⫸ AI Summary` in `summary.yml`.
+
+### Documentation and QA
+- **New Workflows Reference**: Created [docs/workflows.md](file:///docs/workflows.md) serving as the canonical catalog for all active repository GitHub workflows.
+- **Upgraded PR Template**: Re-engineered [.github/PULL_REQUEST_TEMPLATE.md](file:///.github/PULL_REQUEST_TEMPLATE.md) to integrate customized checks for AgenticOS tool registry, shadow testing (`test_all_tools_shadow.py`), command execution safety, and dynamic path portability checks.
+
 ## [2.1.0] - 2026-05-17
 
 ### New Features
