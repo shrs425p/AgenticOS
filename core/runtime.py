@@ -494,7 +494,12 @@ class Agent:
         no_action_count = 0
         minimal_clarifications = self.autonomy_cfg.get("minimal_clarifications", True)
 
-        for iteration in range(1, self.max_iter + 1):
+        limitless = self.max_iter <= 0
+        iteration = 0
+        while True:
+            iteration += 1
+            if not limitless and iteration > self.max_iter:
+                break
             self.check_reload()
             
             # Active Recall & Commitments (Phase 2 Proactive Architecture)
@@ -512,15 +517,16 @@ class Agent:
                     f"{C.YELLOW}⚠  Repetition detected. Suggesting alternative approach.{C.RESET}"
                 )
 
-            # Warn if iterations getting high
+            # Warn if iterations getting high (skip if warning_threshold is <= 0)
             warning_threshold = self.heuristics.get("iteration_warning_threshold", 20)
-            if iteration > warning_threshold and iteration % 10 == 0:
+            if warning_threshold > 0 and iteration > warning_threshold and iteration % 10 == 0:
                 print(
                     f"{C.YELLOW}⚠  High iteration count ({iteration}). Consider FINAL ANSWER.{C.RESET}"
                 )
 
             pulse_line(60)
-            print(f"{C.DIM}Iteration {iteration}/{self.max_iter}{C.RESET}")
+            iter_label = f"{iteration}/∞" if limitless else f"{iteration}/{self.max_iter}"
+            print(f"{C.DIM}Iteration {iter_label}{C.RESET}")
 
             try:
                 response = self.client.chat(messages, system=system)

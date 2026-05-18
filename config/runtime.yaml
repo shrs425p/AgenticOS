@@ -3,7 +3,7 @@
 
 agent:
   provider: nvidia
-  max_iterations: 1000
+  max_iterations: 0 # Set to <= 0 for limitless executions (displays Iteration X/∞)
   think_before_act: false
   verbose_thinking: false
   auto_confirm: true
@@ -41,7 +41,7 @@ heuristics:
   prose_vs_tool_threshold: 120
   hot_reload_throttle: 2.0
   max_dots_in_response: 50
-  iteration_warning_threshold: 20
+  iteration_warning_threshold: 0 # Set to <= 0 to completely disable high iteration console warnings
   new_task_min_chars: 10
   direct_response_max_chars: 6000
   direct_response_max_words: 900
