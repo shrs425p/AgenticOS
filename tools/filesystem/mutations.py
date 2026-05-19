@@ -6,6 +6,7 @@ from core.tool_base import tool
 class MutationsMixin:
     @tool(name="delete_file", desc="Delete a file. Args: path", category="Files")
     def delete_file(self, path: str) -> str:
+        """delete_file function."""
         import os
 
         p = self._resolve(path)
@@ -21,6 +22,7 @@ class MutationsMixin:
 
     @tool(name="delete_dir", desc="Delete directory recursively. Args: path", category="Files")
     def delete_dir(self, path: str) -> str:
+        """delete_dir function."""
         import shutil
 
         p = self._resolve(path)
@@ -36,6 +38,7 @@ class MutationsMixin:
 
     @tool(name="copy_file", desc="Copy file. Args: src, dst", category="Files")
     def copy_file(self, src: str, dst: str) -> str:
+        """copy_file function."""
         import shutil
 
         s = self._resolve(src)
@@ -51,6 +54,7 @@ class MutationsMixin:
 
     @tool(name="move_file", desc="Move/rename file. Args: src, dst", category="Files")
     def move_file(self, src: str, dst: str) -> str:
+        """move_file function."""
         import shutil
 
         s = self._resolve(src)
@@ -66,6 +70,7 @@ class MutationsMixin:
 
     @tool(name="create_dir", desc="Create directory. Args: path", category="Files")
     def create_dir(self, path: str) -> str:
+        """create_dir function."""
         p = self._resolve(path)
         self._deny_file_modify()
         self._deny_internal_writes(p)
@@ -77,6 +82,7 @@ class MutationsMixin:
 
     @tool(name="touch", desc="Create empty file or update timestamps. Args: path", category="Files")
     def touch(self, path: str) -> str:
+        """touch function."""
         p = self._resolve(path)
         self._deny_file_modify()
         self._deny_internal_writes(p)

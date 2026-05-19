@@ -132,6 +132,7 @@ class OllamaClient:
         self.provider = "ollama"
 
     def list_models(self) -> list:
+        """list_models function."""
         self.last_list_error = ""
         try:
             list_timeout = self.cfg.get("timeouts", {}).get("list_models", 10)
@@ -145,6 +146,7 @@ class OllamaClient:
             return []
 
     def chat(self, messages: list, system: str = "") -> str:
+        """chat function."""
         _wait_for_rate_limit(self.cfg, self.provider, self.model)
         full_messages = [{"role": "system", "content": system}] if system else []
         full_messages.extend(messages)
@@ -251,6 +253,7 @@ class NvidiaClient:
         self.last_list_error = ""
 
     def list_models(self) -> list:
+        """list_models function."""
         self.last_list_error = ""
         if not self._client:
             self.last_list_error = (
@@ -265,6 +268,7 @@ class NvidiaClient:
             return [self.model]
 
     def chat(self, messages: list, system: str = None) -> str:
+        """chat function."""
         if not self.api_key:
             return "FINAL ANSWER: NVIDIA_API_KEY is not set. Add it to .env or switch the provider to Ollama in config.yaml."
         _wait_for_rate_limit(self.cfg, self.provider, self.model)
@@ -477,6 +481,7 @@ class GeminiClient:
             self._genai = None
 
     def list_models(self) -> list:
+        """list_models function."""
         self.last_list_error = ""
         if not self._client:
             self.last_list_error = "google-genai package not installed."
@@ -494,6 +499,7 @@ class GeminiClient:
             return [self.model]
 
     def chat(self, messages: list, system: str = "") -> str:
+        """chat function."""
         if not self._client:
             return "FINAL ANSWER: google-genai is not installed. Run: pip install google-genai"
         _wait_for_rate_limit(self.cfg, self.provider, self.model)
@@ -589,6 +595,7 @@ class GroqClient:
             self._client = None
 
     def list_models(self) -> list:
+        """list_models function."""
         self.last_list_error = ""
         if not self._client:
             self.last_list_error = "groq package not installed."
@@ -601,6 +608,7 @@ class GroqClient:
             return [self.model]
 
     def chat(self, messages: list, system: str = "") -> str:
+        """chat function."""
         if not self._client:
             return "FINAL ANSWER: groq is not installed. Run: pip install groq"
         _wait_for_rate_limit(self.cfg, self.provider, self.model)
@@ -672,6 +680,7 @@ class OpenAICompatibleClient:
             self._client = None
 
     def list_models(self) -> list:
+        """list_models function."""
         self.last_list_error = ""
         if not self._client:
             self.last_list_error = "openai package not installed."
@@ -686,6 +695,7 @@ class OpenAICompatibleClient:
             return getattr(self, "_cached_models", [self.model])
 
     def chat(self, messages: list, system: str = "") -> str:
+        """chat function."""
         if not self._client:
             return "FINAL ANSWER: openai is not installed. Run: pip install openai"
         _wait_for_rate_limit(self.cfg, self.provider, self.model)
@@ -813,25 +823,31 @@ class TieredClient:
     # ── Proxy properties (delegate to active client) ──
     @property
     def provider(self):
+        """provider function."""
         return self._active.provider
 
     @property
     def model(self):
+        """model function."""
         return self._active.model
 
     @model.setter
     def model(self, value):
+        """model function."""
         self._active.model = value
 
     @property
     def last_list_error(self):
+        """last_list_error function."""
         return getattr(self._active, "last_list_error", "")
 
     @last_list_error.setter
     def last_list_error(self, value):
+        """last_list_error function."""
         self._active.last_list_error = value
 
     def list_models(self) -> list:
+        """list_models function."""
         return self._active.list_models()
 
     def chat(self, messages: list, system: str = "") -> str:

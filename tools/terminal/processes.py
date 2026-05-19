@@ -49,6 +49,7 @@ class ProcessesMixin:
 
     @tool(name="process_list", desc="List running processes. Args: filter_str (optional)", category="Terminal")
     def process_list(self, filter_str: str = "") -> str:
+        """process_list function."""
         flt = (filter_str or "").lower().strip()
         cmd = "tasklist" if self.system == "Windows" else "ps aux"
         out = self._run(cmd, timeout=30)
@@ -83,6 +84,7 @@ class ProcessesMixin:
 
     @tool(name="kill_process", desc="Kill process by PID. Args: pid", category="Terminal")
     def kill_process(self, pid: str, signal_name: str = "TERM") -> str:
+        """kill_process function."""
         if not self.rules.get("allow_process_control", True):
             return "Error: process control is disabled by rules."
         try:
@@ -114,6 +116,7 @@ class ProcessesMixin:
 
     @tool(name="start_background", desc="Start command in background. Args: command", category="Terminal")
     def start_background(self, command: str) -> str:
+        """start_background function."""
         if not self.rules.get("allow_shell_exec", True):
             return "Error: shell execution is disabled"
         blocked_reason = self._blocked_command_reason(command)

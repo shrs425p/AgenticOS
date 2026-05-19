@@ -45,6 +45,7 @@ class Spinner:
 
 def typewriter_print(text: str, delay: float = 0.002, color: str = ""):
     # Optimized for IDEs: Print all at once to prevent IPC flooding and lag
+    """typewriter_print function."""
     sys.stdout.write(color + text + C.RESET + "\n")
     sys.stdout.flush()
 
@@ -76,10 +77,12 @@ class C:
     @staticmethod
     def strip(text: str) -> str:
 
+        """strip function."""
         return re.sub(r"\033\[[0-9;]*m", "", text)
 
 
 def banner(cfg: dict = None):
+    """banner function."""
     cfg = cfg or {}
     subtitle = cfg.get("prompts", {}).get("ui_labels", {}).get("banner_subtitle", "Autonomous CLI Agent  •  Ollama / Nvidia NIM  •  Session Memory")
     print(
@@ -319,10 +322,12 @@ def parse_action(text: str) -> Optional[tuple]:
 
 
 def has_final_answer(text: str) -> bool:
+    """has_final_answer function."""
     return "FINAL ANSWER:" in text.upper()
 
 
 def print_section(label: str, content: str, color: str = C.CYAN, max_len: int = 1000):
+    """print_section function."""
     print(f"\n{color}{C.BOLD}-- {label} {'-' * (50 - len(label))}{C.RESET}")
     if content:
         typewriter_print(
@@ -331,6 +336,7 @@ def print_section(label: str, content: str, color: str = C.CYAN, max_len: int = 
 
 
 def print_action(tool: str, args, symbol: str = "[*]"):
+    """print_action function."""
     if isinstance(args, dict):
         arg_str = " | ".join(f"{k}={v}" for k, v in args.items())
     else:
@@ -341,6 +347,7 @@ def print_action(tool: str, args, symbol: str = "[*]"):
 
 
 def print_observation(result: str, max_len: int = 600):
+    """print_observation function."""
     preview = (
         result
         if len(result) < max_len
@@ -351,18 +358,22 @@ def print_observation(result: str, max_len: int = 600):
 
 
 def print_error(msg: str):
+    """print_error function."""
     print(f"\n{C.RED}{C.BOLD}ERROR:{C.RESET} {C.RED}{msg}{C.RESET}")
 
 
 def print_warning(msg: str):
+    """print_warning function."""
     print(f"\n{C.YELLOW}{C.BOLD}WARNING:{C.RESET} {C.YELLOW}{msg}{C.RESET}")
 
 
 def print_info(msg: str):
+    """print_info function."""
     print(f"{C.BLUE}INFO: {msg}{C.RESET}")
 
 
 
 
 def print_success(msg: str):
+    """print_success function."""
     print(f"{C.GREEN}OK: {msg}{C.RESET}")

@@ -10,11 +10,13 @@ from core.tool_base import tool
 class PathsMixin:
     @tool(name="which", desc="Find executable path. Args: name", category="Terminal")
     def which(self, name: str) -> str:
+        """which function."""
         p = shutil.which(name)
         return p or ""
 
     @tool(name="special_paths", desc="List common user/system paths.", category="Terminal")
     def special_paths(self) -> str:
+        """special_paths function."""
         keys = [
             "USERPROFILE",
             "HOMEDRIVE",
@@ -30,6 +32,7 @@ class PathsMixin:
 
     @tool(name="locate_path", desc="Search common locations for a file or directory. Args: name, roots (optional)", category="Terminal")
     def locate_path(self, name: str, roots: str | list = "") -> str:
+        """locate_path function."""
         target = (name or "").strip()
         if not target:
             return "Error: name required."

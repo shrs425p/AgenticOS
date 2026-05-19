@@ -67,6 +67,7 @@ class WindowsWindowsMixin:
 
     @tool(name="window_list", desc="List windows with titles (Windows). Args: filter_str(optional)", category="Terminal")
     def window_list(self, filter_str: str = "") -> str:
+        """window_list function."""
         if platform.system() != "Windows":
             return "Error: window_list is only supported on Windows."
         flt = (filter_str or "").strip()

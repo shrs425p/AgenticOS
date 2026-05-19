@@ -6,6 +6,7 @@ from core.tool_base import tool
 class ReadWriteMixin:
     @tool(name="read_file", desc="Read file. Args: path, start_line (optional), num_lines (optional)", category="Files")
     def read_file(self, path: str, start_line: int = 0, num_lines: int = 0) -> str:
+        """read_file function."""
         p = self._resolve(path)
         try:
             with open(p, "r", encoding="utf-8", errors="replace") as f:
@@ -20,6 +21,7 @@ class ReadWriteMixin:
 
     @tool(name="write_file", desc="Write/overwrite a file. Args: path, content", category="Files")
     def write_file(self, path: str, content: str) -> str:
+        """write_file function."""
         import os
 
         p = self._resolve(path)
@@ -37,6 +39,7 @@ class ReadWriteMixin:
 
     @tool(name="append_file", desc="Append to a file. Args: path, content", category="Files")
     def append_file(self, path: str, content: str, encoding: str = "utf-8") -> str:
+        """append_file function."""
         p = self._resolve(path)
         self._deny_file_modify()
         self._deny_internal_writes(p)
@@ -49,6 +52,7 @@ class ReadWriteMixin:
             return f"Error appending: {e}"
 
     def read_head(self, path: str, n: str = "10") -> str:
+        """read_head function."""
         try:
             count = max(0, int(n))
             return self.read_file(path, 0, count)
@@ -56,6 +60,7 @@ class ReadWriteMixin:
             return f"Error: {e}"
 
     def read_tail(self, path: str, n: str = "10") -> str:
+        """read_tail function."""
         p = self._resolve(path)
         try:
             count = max(0, int(n))

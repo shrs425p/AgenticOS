@@ -238,6 +238,7 @@ class Agent:
         return mtimes
 
     def check_reload(self):
+        """check_reload function."""
         if not self.hot_reload_enabled:
             return
 
@@ -417,6 +418,7 @@ class Agent:
         return True
 
     def run(self, user_input: str):
+        """run function."""
         run_started_ts = time.time()
         original_user_input = user_input
         if self.memory.turn_count == 0:
@@ -1110,6 +1112,7 @@ class CLI:
             return False
 
     def select_provider(self, force: bool = False):
+        """select_provider function."""
         providers = ["ollama", "nvidia", "gemini", "groq", "openai", "openrouter", "github", "deepseek"]
         current = (self.cfg.get("agent", {}).get("provider") or "ollama").lower()
 
@@ -1147,6 +1150,7 @@ class CLI:
             print_error("Invalid selection.")
 
     def select_model(self, force=False):
+        """select_model function."""
         models = self.agent.client.list_models()
         if not models:
             provider_name = self.agent.client.provider.capitalize()
@@ -1219,6 +1223,7 @@ class CLI:
             print_error("Invalid selection.")
 
     def handle_command(self, cmd: str):
+        """handle_command function."""
         parts = cmd.strip().split(None, 1)
         base = parts[0].lower()
 
@@ -1420,6 +1425,7 @@ class CLI:
             print_error(f"Unknown command: {base}. Type /help.")
 
     def run(self):
+        """run function."""
         banner(cfg=self.cfg)
 
         autonomy_cfg = self.cfg.get("autonomy", {})
@@ -1489,6 +1495,7 @@ class CLI:
 
 
 def main():
+    """main function."""
     try:
         CLI().run()
     except RuntimeError as e:

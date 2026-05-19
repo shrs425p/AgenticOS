@@ -185,6 +185,7 @@ class SqliteSessionMemory:
 
     @property
     def turn_count(self) -> int:
+        """turn_count function."""
         cur = self._conn.execute(
             "SELECT COUNT(*) FROM messages WHERE session_id=? AND role='user'",
             (self.session_id,),
@@ -192,6 +193,7 @@ class SqliteSessionMemory:
         return int(cur.fetchone()[0])
 
     def add(self, role: str, content: str):
+        """add function."""
         role = (role or "").strip()
         if role not in ("user", "assistant", "system"):
             role = "user"
@@ -249,6 +251,7 @@ class SqliteSessionMemory:
                 self._conn.commit()
 
     def get_messages(self) -> list[dict]:
+        """get_messages function."""
         cur = self._conn.execute(
             "SELECT role, content, created_at FROM messages WHERE session_id=? ORDER BY id ASC",
             (self.session_id,),
@@ -284,6 +287,7 @@ class SqliteSessionMemory:
     def record_tool_event(
         self, tool_name: str, tool_args: str = "", observation: str = ""
     ):
+        """record_tool_event function."""
         now = _now_iso()
         self._conn.execute(
             "INSERT INTO tool_events(session_id, tool_name, tool_args, observation, created_at) VALUES(?,?,?,?,?)",
@@ -302,6 +306,7 @@ class SqliteSessionMemory:
         self._conn.commit()
 
     def record_artifact(self, value: str, action: str = "", kind: str = "path"):
+        """record_artifact function."""
         if not value:
             return
         now = _now_iso()
@@ -316,6 +321,7 @@ class SqliteSessionMemory:
         self._conn.commit()
 
     def set_outcome(self, final_answer: str = "", next_steps: str = ""):
+        """set_outcome function."""
         now = _now_iso()
         self._conn.execute(
             "INSERT OR REPLACE INTO outcomes(session_id, final_answer, next_steps, updated_at) VALUES(?,?,?,?)",
@@ -328,6 +334,7 @@ class SqliteSessionMemory:
         self._conn.commit()
 
     def start_task(self, task_id: str, goal: str):
+        """start_task function."""
         if not task_id:
             return
         now = _now_iso()
@@ -351,6 +358,7 @@ class SqliteSessionMemory:
         self._conn.commit()
 
     def update_task(self, task_id: str, status: str | None = None):
+        """update_task function."""
         if not task_id:
             return
         now = _now_iso()
@@ -372,6 +380,7 @@ class SqliteSessionMemory:
         next_steps: str = "",
         summary: str = "",
     ):
+        """complete_task function."""
         if not task_id:
             return
         now = _now_iso()
@@ -393,6 +402,7 @@ class SqliteSessionMemory:
         self._conn.commit()
 
     def set_preference(self, key: str, value: str):
+        """set_preference function."""
         k = (key or "").strip()
         if not k:
             return
@@ -404,6 +414,7 @@ class SqliteSessionMemory:
         self._conn.commit()
 
     def get_preferences(self) -> dict:
+        """get_preferences function."""
         cur = self._conn.execute("SELECT key, value FROM preferences ORDER BY key ASC")
         out = {}
         for k, v in cur.fetchall():
@@ -411,6 +422,7 @@ class SqliteSessionMemory:
         return out
 
     def set_summary(self, text: str):
+        """set_summary function."""
         now = _now_iso()
         self._conn.execute(
             "UPDATE sessions SET summary=?, updated_at=? WHERE session_id=?",
@@ -419,6 +431,7 @@ class SqliteSessionMemory:
         self._conn.commit()
 
     def summary(self) -> str:
+        """summary function."""
         cur = self._conn.execute(
             "SELECT summary FROM sessions WHERE session_id=?", (self.session_id,)
         )
@@ -426,6 +439,7 @@ class SqliteSessionMemory:
         return (row[0] if row else "") or ""
 
     def clear(self):
+        """clear function."""
         self._conn.execute(
             "DELETE FROM messages WHERE session_id=?", (self.session_id,)
         )
@@ -436,6 +450,7 @@ class SqliteSessionMemory:
         self._conn.commit()
 
     def close(self):
+        """close function."""
         try:
             self._conn.close()
         except Exception:
