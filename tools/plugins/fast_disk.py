@@ -9,7 +9,7 @@ from core.runtime_ui import C
     desc="Optimized disk analysis using native PowerShell. Finds large files, duplicates, and old files in seconds.",
     category="Files"
 )
-def fast_disk_audit(path: str = None, top_n: int = 20, min_mb: int = 100, mode: str = "all"):
+def fast_disk_audit(path: str = None, top_n: int = 20, min_mb: int = 100, mode: str = "all") -> str:
     """
     Performs a high-speed disk audit using PowerShell.
     Modes: 'large' (top files), 'duplicates' (duplicate filenames), 'old' (not accessed in 180d), 'all'.
