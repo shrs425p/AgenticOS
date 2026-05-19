@@ -10,9 +10,9 @@ PLUGINS_DIR = os.path.join(BASE_DIR, "tools", "plugins")
 def refresh_path() -> None:
     """Dynamically refreshes the active os.environ['PATH'] with package manager links."""
     if platform.system() == "Windows":
-        user_profile = os.environ.get("USERPROFILE", "C:\\Users\\shrs")
+        user_profile = os.environ.get("USERPROFILE", os.path.expanduser("~"))
         winget_links = os.path.join(user_profile, "AppData", "Local", "Microsoft", "WinGet", "Links")
-        choco_links = "C:\\ProgramData\\chocolatey\\bin"
+        choco_links = os.path.join(os.environ.get("ProgramData", os.environ.get("SystemDrive", "C:") + "\\ProgramData"), "chocolatey", "bin")
         
         paths = os.environ.get("PATH", "").split(os.pathsep)
         updated = False
