@@ -670,9 +670,10 @@ class OpenAICompatibleClient:
             kwargs = {"api_key": self.api_key}
 
             base_url = provider_cfg.get("base_url")
-            if not base_url:
+            if base_url:
+                kwargs["base_url"] = base_url
+            elif provider != "openai":
                 raise RuntimeError(f"Missing 'base_url' configuration for {provider} in config/providers.yaml")
-            kwargs["base_url"] = base_url
 
             self._client = OpenAI(**kwargs)
         except ImportError:
