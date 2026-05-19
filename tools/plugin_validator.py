@@ -2,7 +2,7 @@ import os
 import sys
 import inspect
 import importlib.util
-from typing import get_type_hints, Callable
+from typing import get_type_hints
 
 def validate_plugins(plugin_dir: str):
     """
@@ -43,8 +43,6 @@ def validate_plugins(plugin_dir: str):
                     for attr_name in dir(module):
                         attr = getattr(module, attr_name)
                         if callable(attr) and getattr(attr, "_is_tool", False):
-                            if getattr(attr, "__module__", None) != full_mod_name:
-                                continue
                             found_tool = True
 
                             # 1. Must have a name
@@ -69,7 +67,7 @@ def validate_plugins(plugin_dir: str):
                                     sig = inspect.signature(attr)
                                     if sig.return_annotation is inspect.Signature.empty:
                                         errors.append(f"{file_path} - {attr_name}: Missing return type annotation.")
-                            except Exception as e:
+                            except Exception:
                                 # Sometimes get_type_hints fails on complex types without globals
                                 sig = inspect.signature(attr)
                                 if sig.return_annotation is inspect.Signature.empty:
@@ -91,8 +89,5 @@ def validate_plugins(plugin_dir: str):
         sys.exit(0)
 
 if __name__ == "__main__":
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    if project_root not in sys.path:
-        sys.path.insert(0, project_root)
-    plugin_dir = os.path.join(project_root, "tools", "plugins")
+    plugin_dir = os.path.join(os.path.dirname(__file__), "plugins")
     validate_plugins(plugin_dir)
