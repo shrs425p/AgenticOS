@@ -3,6 +3,7 @@ import subprocess
 import os
 from core.tool_registry import tool
 from core.runtime_ui import C
+from core.platform_api import PlatformAPI
 
 @tool(
     name="fast_disk_audit",
@@ -37,8 +38,8 @@ def fast_disk_audit(path: str = None, top_n: int = 20, min_mb: int = 100, mode: 
     
     def run_ps(cmd):
         try:
-            res = subprocess.check_output(
-                ["powershell", "-NoProfile", "-NonInteractive", "-Command", cmd],
+            res = PlatformAPI.check_output_powershell(
+                cmd,
                 shell=False,
                 stderr=subprocess.STDOUT,
                 text=True,

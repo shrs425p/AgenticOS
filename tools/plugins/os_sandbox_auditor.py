@@ -3,6 +3,7 @@ import platform
 import subprocess
 import shutil
 from core.tool_registry import tool
+from core.platform_api import PlatformAPI
 
 
 def _detect_runtime_path(binary_name: str) -> str:
@@ -15,13 +16,8 @@ def _get_active_windows_windows() -> list:
     """Retrieves active desktop window titles on Windows via native PowerShell."""
     try:
         # PowerShell query for processes with visible main window titles
-        cmd = [
-            "powershell",
-            "-NoProfile",
-            "-Command",
-            "Get-Process | Where-Object {$_.MainWindowTitle} | ForEach-Object { \"$($_.ProcessName)::$($_.MainWindowTitle)\" }"
-        ]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=5.0)
+        cmd = "Get-Process | Where-Object {$_.MainWindowTitle} | ForEach-Object { \"$($_.ProcessName)::$($_.MainWindowTitle)\" }"
+        result = PlatformAPI.run_powershell(cmd, capture_output=True, text=True, timeout=5.0)
         windows = []
         if result.returncode == 0:
             for line in result.stdout.splitlines():
