@@ -1,7 +1,3 @@
-import os
-import json
-import uuid
-from datetime import datetime, timezone
 """
 Enhanced memory management system for AgenticOs.
 Provides long-term memory consolidation, daily logging, and knowledge retention.
@@ -10,7 +6,9 @@ Provides long-term memory consolidation, daily logging, and knowledge retention.
 import json
 import logging
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+import uuid
+import os
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 import threading
