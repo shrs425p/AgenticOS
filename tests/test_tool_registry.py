@@ -251,7 +251,7 @@ def test_tool_registry_run_tool_exceptions_more(mock_config):
         def missing_mod(self): raise ModuleNotFoundError("No module named 'fake_module_123'")
     registry._register_subsystem(MissingModTool())
 
-    with patch("subprocess.run") as mock_run:
+    with patch("subprocess.run"):
         res = registry.call("missing_mod", {})
         assert "Tool error" in res or "No module named" in res
 
@@ -263,7 +263,7 @@ def test_tool_registry_run_tool_validation(mock_config):
     registry._register_subsystem(ValidTool())
 
     with patch("core.tool_registry.validate_tool", return_value="Note: validated"):
-        res = registry.call("valid", {})
+        registry.call("valid", {})
         # validate tool might be disabled by config
         pass
 

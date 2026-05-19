@@ -194,7 +194,7 @@ def test_guardrails_workspace_green_zone_exception(tmp_path):
 
     try:
         # Construct the throwing path by overriding the target
-        target = ThrowingPath("some/path")
+        ThrowingPath("some/path")
     except Exception:
         pass
 
