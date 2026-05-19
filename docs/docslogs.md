@@ -1,5 +1,8 @@
 # Documentation Maintenance Logs
 
+## 2026-05-19
+- Removed hardcoded C:\AgenticOs paths from core/memory_manager.py, config/prompts.yaml, and tests/test_all_tools_shadow.py.
+
 ## 2026-05-18
 - Updated documentation across README.md, architecture.md, privacy_data_policy.md, troubleshooting.md, autonomous_operations.md, and security_guardrails.md to reflect recent architectural changes to memory management (ContextEngine, MemoryManager, MEMORY.md), ToolRegistry self-healing, and dynamic plugin loading.
 - Generalized references to data/memory.sqlite3 and data/logs to support workspace-relative paths.

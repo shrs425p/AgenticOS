@@ -353,7 +353,7 @@ class MemoryManager:
                             re.escape(str(self.workspace_root)).replace("\\\\", r"[/\\]") + r"[/\\]?",
                             "", pattern
                         )
-                        # Replace project root paths (e.g. C:\AgenticOs\MEMORY.md -> MEMORY.md)
+                        # Replace project root paths (e.g. <REPO_ROOT>\MEMORY.md -> MEMORY.md)
                         pattern = re.sub(
                             re.escape(str(self.workspace_root.parent)).replace("\\\\", r"[/\\]") + r"[/\\]?",
                             "", pattern
