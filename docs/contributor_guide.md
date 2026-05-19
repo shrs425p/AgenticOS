@@ -24,8 +24,13 @@ Welcome to the AgenticOS project! We appreciate your interest in contributing. T
         ```
 
 3.  **Install Development Dependencies**
-    If you are planning to contribute, ensure you install the development dependencies manually if the setup script does not do it:
+    If you are planning to contribute, ensure you activate your virtual environment and then install the development dependencies manually if the setup script does not do it:
     ```bash
+    # Windows
+    .\\venv\\Scripts\\activate
+    # macOS/Linux
+    source venv/bin/activate
+
     pip install -r requirements.txt
     pip install -r requirements-dev.txt
     ```
