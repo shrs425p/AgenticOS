@@ -1,3 +1,11 @@
+import sys
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+import sys
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 """Model client adapters for Ollama and Nvidia NIM."""
 
 import json
@@ -83,7 +91,7 @@ def _wait_for_rate_limit(cfg: dict, provider: str, model: str) -> None:
     if len(history) >= max_requests:
         sleep_for = window - (now - history[0])
         if sleep_for > 0:
-            print(
+            logger.info(
                 f"\n{C.YELLOW}Rate limit pacing {key}: sleeping {sleep_for:.1f}s "
                 f"({rpm:.1f} effective RPM).{C.RESET}"
             )
@@ -182,7 +190,7 @@ class OllamaClient:
             logging.warning(
                 "ollama rate limit hit (attempt %d). Waiting %.2fs", attempt, delay
             )
-            print(f"\n\033[93m⚠ Rate limit hit (429). Retrying in {delay:.2f} seconds...\033[0m")
+            logger.info(f"\n\033[93m⚠ Rate limit hit (429). Retrying in {delay:.2f} seconds...\033[0m")
 
         try:
             response = retry_call(
@@ -205,15 +213,15 @@ class OllamaClient:
 
         # Consume response (streaming or not)
         if self.stream:
-            print(f"{C.GREEN}", end="", flush=True)
+            logger.info(f"{C.GREEN}")
             for line in response.iter_lines():
                 if not line:
                     continue
                 chunk = json.loads(line)
                 token = chunk.get("message", {}).get("content", "")
                 full += token
-                print(token, end="", flush=True)
-            print(C.RESET)
+                logger.info(token)
+            logger.info(C.RESET)
         else:
             full = response.json().get("message", {}).get("content", "")
 
@@ -245,7 +253,7 @@ class NvidiaClient:
 
             self._client = OpenAI(base_url=self.base_url, api_key=self.api_key)
         except ImportError:
-            print("Error: openai library not installed. Run: pip install openai")
+            logger.info("Error: openai library not installed. Run: pip install openai")
             self._client = None
 
         self.last_list_error = ""
@@ -350,7 +358,7 @@ class NvidiaClient:
                 logging.warning(
                     f"{self.provider} rate limit hit (attempt {attempt}). Waiting {delay:.2f}s"
                 )
-                print(f"\n\033[93m⚠ Rate limit hit (429). Retrying in {delay:.2f} seconds...\033[0m")
+                logger.info(f"\n\033[93m⚠ Rate limit hit (429). Retrying in {delay:.2f} seconds...\033[0m")
 
             try:
                 return retry_call(
@@ -392,22 +400,22 @@ class NvidiaClient:
                 if reasoning:
                     reasoning_text += reasoning
                     if not in_think:
-                        print(f"{reasoning_color}~  ", end="", flush=True)
+                        logger.info(f"{reasoning_color}~  ")
                         in_think = True
-                    print(reasoning, end="", flush=True)
+                    logger.info(reasoning)
                 content = getattr(delta, "content", None)
                 if content:
                     if in_think:
-                        print(f"{reset}", end="", flush=True)
+                        logger.info(f"{reset}")
                         in_think = False
-                    print(content, end="", flush=True)
+                    logger.info(content)
                     full += content
-            print()
+            logger.info()
         else:
             message = completion.choices[0].message
             reasoning = getattr(message, "reasoning_content", "")
             if reasoning:
-                print(f"{reasoning_color}{reasoning}{reset}")
+                logger.info(f"{reasoning_color}{reasoning}{reset}")
                 reasoning_text = reasoning_text + reasoning
             full = message.content or ""
 
@@ -430,9 +438,9 @@ class NvidiaClient:
                         delta = chunk.choices[0].delta
                         content = getattr(delta, "content", None)
                         if content:
-                            print(content, end="", flush=True)
+                            logger.info(content)
                             full2 += content
-                    print()
+                    logger.info()
                 else:
                     msg2 = completion2.choices[0].message
                     full2 = msg2.content or ""
@@ -469,7 +477,7 @@ class GeminiClient:
             self._client = genai.Client(api_key=self.api_key)
             self._genai = genai
         except ImportError:
-            print(
+            logger.info(
                 "Error: google-genai not installed. "
                 "Run: pip install google-genai"
             )
@@ -536,7 +544,7 @@ class GeminiClient:
 
         if self.stream:
             if use_color:
-                print("\033[92m", end="", flush=True)
+                logger.info("\033[92m")
             for chunk in self._client.models.generate_content_stream(
                 model=self.model,
                 contents=contents,
@@ -545,11 +553,11 @@ class GeminiClient:
                 token = chunk.text if hasattr(chunk, "text") and chunk.text else ""
                 if token:
                     full += token
-                    print(token, end="", flush=True)
+                    logger.info(token)
             if use_color:
-                print("\033[0m")
+                logger.info("\033[0m")
             else:
-                print()
+                logger.info()
         else:
             response = self._client.models.generate_content(
                 model=self.model,
@@ -585,7 +593,7 @@ class GroqClient:
             from groq import Groq
             self._client = Groq(api_key=self.api_key)
         except ImportError:
-            print("Error: groq library not installed. Run: pip install groq")
+            logger.info("Error: groq library not installed. Run: pip install groq")
             self._client = None
 
     def list_models(self) -> list:
@@ -626,18 +634,18 @@ class GroqClient:
         full = ""
         if self.stream:
             if use_color:
-                print("\033[92m", end="", flush=True)
+                logger.info("\033[92m")
             for chunk in completion:
                 if not getattr(chunk, "choices", None) or not chunk.choices:
                     continue
                 content = getattr(chunk.choices[0].delta, "content", None)
                 if content:
-                    print(content, end="", flush=True)
+                    logger.info(content)
                     full += content
             if use_color:
-                print("\033[0m")
+                logger.info("\033[0m")
             else:
-                print()
+                logger.info()
         else:
             full = completion.choices[0].message.content or ""
 
@@ -668,7 +676,7 @@ class OpenAICompatibleClient:
                 kwargs["base_url"] = base_url
             self._client = OpenAI(**kwargs)
         except ImportError:
-            print("Error: openai library not installed. Run: pip install openai")
+            logger.info("Error: openai library not installed. Run: pip install openai")
             self._client = None
 
     def list_models(self) -> list:
@@ -731,7 +739,7 @@ class OpenAICompatibleClient:
             logging.warning(
                 "%s rate limit hit (attempt %d). Waiting %.2fs", self.provider, attempt, delay
             )
-            print(f"\n\033[93m⚠ Rate limit hit (429). Retrying in {delay:.2f} seconds...\033[0m")
+            logger.info(f"\n\033[93m⚠ Rate limit hit (429). Retrying in {delay:.2f} seconds...\033[0m")
 
         try:
             completion = retry_call(
@@ -754,18 +762,18 @@ class OpenAICompatibleClient:
         full = ""
         if self.stream:
             if use_color:
-                print("\033[92m", end="", flush=True)
+                logger.info("\033[92m")
             for chunk in completion:
                 if not getattr(chunk, "choices", None) or not chunk.choices:
                     continue
                 content = getattr(chunk.choices[0].delta, "content", None)
                 if content:
-                    print(content, end="", flush=True)
+                    logger.info(content)
                     full += content
             if use_color:
-                print("\033[0m")
+                logger.info("\033[0m")
             else:
-                print()
+                logger.info()
         else:
             full = completion.choices[0].message.content or ""
 
@@ -847,7 +855,7 @@ class TieredClient:
                 # Success: reset failure count and promote this client
                 self._failure_count[client.provider] = 0
                 if client is not self._active:
-                    print(
+                    logger.info(
                         f"{C.YELLOW}-> Failover succeeded. Now using: "
                         f"{client.provider}/{client.model}{C.RESET}"
                     )
@@ -857,7 +865,7 @@ class TieredClient:
                 self._failure_count[client.provider] = (
                     self._failure_count.get(client.provider, 0) + 1
                 )
-                print(
+                logger.info(
                     f"{C.RED}[TieredClient] {client.provider}/{client.model} "
                     f"failed ({e}). Trying next...{C.RESET}"
                 )

@@ -1,3 +1,11 @@
+import sys
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+import sys
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 """UI helpers and response parsing for the AgenticOs runtime."""
 
 import sys
@@ -57,7 +65,7 @@ def pulse_line(length: int = 60, char: str = "="):
             sys.stdout.write(f"\r{col}{char * length}{C.RESET}")
             sys.stdout.flush()
             time.sleep(0.05)
-    print()
+    sys.stdout.write("\n")
 
 
 class C:
@@ -82,7 +90,7 @@ class C:
 def banner(cfg: dict = None):
     cfg = cfg or {}
     subtitle = cfg.get("prompts", {}).get("ui_labels", {}).get("banner_subtitle", "Autonomous CLI Agent  •  Ollama / Nvidia NIM  •  Session Memory")
-    print(
+    logger.info(
         f"""
 {C.CYAN}{C.BOLD}
   █████╗  ██████╗ ███████╗███╗   ██╗████████╗██╗ ██████╗  ██████╗ ███████╗
@@ -323,7 +331,7 @@ def has_final_answer(text: str) -> bool:
 
 
 def print_section(label: str, content: str, color: str = C.CYAN, max_len: int = 1000):
-    print(f"\n{color}{C.BOLD}-- {label} {'-' * (50 - len(label))}{C.RESET}")
+    logger.info(f"\n{color}{C.BOLD}-- {label} {'-' * (50 - len(label))}{C.RESET}")
     if content:
         typewriter_print(
             content[:max_len] if len(content) > max_len else content, color=C.DIM
@@ -335,7 +343,7 @@ def print_action(tool: str, args, symbol: str = "[*]"):
         arg_str = " | ".join(f"{k}={v}" for k, v in args.items())
     else:
         arg_str = " | ".join(str(a) for a in (args or []))
-    print(
+    logger.info(
         f"\n{C.YELLOW}{C.BOLD}{symbol}  ACTION:{C.RESET} {C.YELLOW}{tool}{C.RESET} {C.DIM}< {arg_str} >{C.RESET}"
     )
 
@@ -346,23 +354,23 @@ def print_observation(result: str, max_len: int = 600):
         if len(result) < max_len
         else result[:max_len] + f"\n{C.GRAY}... (truncated){C.RESET}"
     )
-    print(f"{C.MAGENTA}{C.BOLD}OBSERVATION:{C.RESET}")
+    logger.info(f"{C.MAGENTA}{C.BOLD}OBSERVATION:{C.RESET}")
     typewriter_print(preview, color=C.GRAY, delay=0.001)
 
 
 def print_error(msg: str):
-    print(f"\n{C.RED}{C.BOLD}ERROR:{C.RESET} {C.RED}{msg}{C.RESET}")
+    logger.info(f"\n{C.RED}{C.BOLD}ERROR:{C.RESET} {C.RED}{msg}{C.RESET}")
 
 
 def print_warning(msg: str):
-    print(f"\n{C.YELLOW}{C.BOLD}WARNING:{C.RESET} {C.YELLOW}{msg}{C.RESET}")
+    logger.info(f"\n{C.YELLOW}{C.BOLD}WARNING:{C.RESET} {C.YELLOW}{msg}{C.RESET}")
 
 
 def print_info(msg: str):
-    print(f"{C.BLUE}INFO: {msg}{C.RESET}")
+    logger.info(f"{C.BLUE}INFO: {msg}{C.RESET}")
 
 
 
 
 def print_success(msg: str):
-    print(f"{C.GREEN}OK: {msg}{C.RESET}")
+    logger.info(f"{C.GREEN}OK: {msg}{C.RESET}")

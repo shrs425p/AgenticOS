@@ -1,3 +1,11 @@
+import sys
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+import sys
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 """
 Self-Improvement ("Dreaming") module for AgenticOs.
 
@@ -70,7 +78,7 @@ class SelfImprovementDaemon:
                     tracking = json.load(f)
                 tasks = tracking.get("completed_tasks", [])
             except Exception as e:
-                print(f"Warning: Error reading task history: {e}")
+                logger.info(f"Warning: Error reading task history: {e}")
 
         # Focus on failures and slow tasks
         failures = [t for t in tasks if not t.get("success", True)]
@@ -169,7 +177,7 @@ class SelfImprovementDaemon:
             with open(daily_log_path, "w", encoding="utf-8") as f:
                 f.write(block)
         except Exception as e:
-            print(f"Warning: Failed to write daily dream log: {e}")
+            logger.info(f"Warning: Failed to write daily dream log: {e}")
 
     def _generate_reflections(self, tasks: List[Dict]) -> List[str]:
         """Use LLM to reflect on past task performance."""
@@ -217,7 +225,7 @@ class SelfImprovementDaemon:
                     ]
                     return lines[:5]
             except Exception as e:
-                print(f"Warning: LLM reflection failed: {e}")
+                logger.info(f"Warning: LLM reflection failed: {e}")
 
         # Fallback: simple heuristic-based reflections
         lessons = []
@@ -265,7 +273,7 @@ class SelfImprovementDaemon:
             with open(self.memory_file, "a", encoding="utf-8") as f:
                 f.write(block)
         except Exception as e:
-            print(f"Warning: Failed to write dream lessons: {e}")
+            logger.info(f"Warning: Failed to write dream lessons: {e}")
 
 
 def run_dream_cycle(workspace_root: str, llm_client=None, force: bool = False, cfg: Optional[Dict] = None) -> str:
