@@ -184,7 +184,8 @@ def main() -> None:
 
     from core.runtime import main as _runtime_main
 
-    _runtime_main()
+    dry_run = "--dry-run" in sys.argv
+    _runtime_main(dry_run=dry_run)
 
 
 if __name__ == "__main__":
