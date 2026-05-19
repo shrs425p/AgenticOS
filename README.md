@@ -99,6 +99,7 @@ Explore the full AgenticOS manual for deep technical insights:
 
 ### Developer and Tooling
 *   [**Developer Onboarding**](docs/developer_onboarding.md): Guide for contributing to the core engine.
+*   [**Contributor Guide**](docs/contributor_guide.md): Comprehensive guide on setting up, coding standards, and testing.
 *   [**Tool Development Guide**](docs/tool_development.md): Write your own plugins and optimize performance.
 *   [**API & Tool Reference**](docs/api_reference.md): Overview of the 180 tools in the registry.
 *   [**Autonomous Operations**](docs/autonomous_operations.md): How the "Agent Brain" plans and self-heals.

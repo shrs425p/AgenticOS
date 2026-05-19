@@ -30,6 +30,7 @@ This catalog is the canonical index for all maintained Markdown documentation in
 
 ### Development and Testing
 - [Developer Onboarding](developer_onboarding.md)
+- [Contributor Guide](contributor_guide.md)
 - [Tool Development](tool_development.md)
 - [API Reference](api_reference.md)
 - [Testing Guide](testing_guide.md)
