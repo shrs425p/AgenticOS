@@ -91,5 +91,8 @@ def validate_plugins(plugin_dir: str):
         sys.exit(0)
 
 if __name__ == "__main__":
-    plugin_dir = os.path.join(os.path.dirname(__file__), "plugins")
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+    plugin_dir = os.path.join(project_root, "tools", "plugins")
     validate_plugins(plugin_dir)
