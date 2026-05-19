@@ -114,7 +114,7 @@ AgenticOS relies on a comprehensive `pytest` suite to ensure stability.
 2.  **Generating Coverage Reports**
     To generate JSON test coverage reports, run:
     ```bash
-    PYTHONPATH=. python -m pytest --cov --cov-report=json tests/
+    python -m pytest --cov --cov-report=json tests/
     ```
 
 3.  **Writing Tests**
