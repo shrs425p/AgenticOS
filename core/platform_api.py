@@ -2,7 +2,7 @@ import platform
 import subprocess
 import os
 import shutil
-from typing import Any, List, Optional, Union
+from typing import Any, Optional
 
 class PlatformAPI:
     """Platform abstraction layer for OS-specific calls."""
