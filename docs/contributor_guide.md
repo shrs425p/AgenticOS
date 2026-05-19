@@ -108,7 +108,7 @@ AgenticOS relies on a comprehensive `pytest` suite to ensure stability.
 1.  **Test Execution Command**
     Always run tests using the following command to ensure the correct Python environment and local modules are resolved correctly:
     ```bash
-    PYTHONPATH=. python -m pytest tests/
+    python -m pytest tests/
     ```
 
 2.  **Generating Coverage Reports**
