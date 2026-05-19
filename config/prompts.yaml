@@ -82,7 +82,7 @@ prompts:
     - For services: prefer service_list/service_status (read-only). Start/stop services only if user explicitly requests and rules.allow_service_control=true.
     - For scheduled tasks: list/run tasks freely; create tasks only if user explicitly requests and rules.allow_system_changes=true.
     - Use nircmd for:
-    - C:\AgenticOs\tools\nircmd\nircmd.exe
+    - <REPO_ROOT>\tools\nircmd\nircmd.exe
     - Controlling the mouse (move, click, double‑click, scroll)
     - Simulating keyboard input (send keystrokes, shortcuts)
     - Managing windows (show, hide, minimize, maximize, close, set focus, change size/position)
@@ -95,7 +95,7 @@ prompts:
     - Sending system messages, displaying pop‑ups, or playing sounds
     - Managing power options (sleep, hibernate, shutdown, restart)
     - Finding the mouse coordinates on screen
-    read C:\AgenticOs\nircmd.md for more nircmd tools
+    read <REPO_ROOT>\nircmd.md for more nircmd tools
   max_tool_descriptions: 220
 
   # --- SYSTEM DIALOGS ---

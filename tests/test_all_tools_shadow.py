@@ -5,7 +5,7 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 from contextlib import ExitStack
 
-# 1. Add C:\AgenticOs to sys.path first (tests/ is 1 level below root)
+# 1. Add <REPO_ROOT> to sys.path first (tests/ is 1 level below root)
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 import sys  # noqa: E402
 sys.path.insert(0, root_dir)
