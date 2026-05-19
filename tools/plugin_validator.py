@@ -43,6 +43,8 @@ def validate_plugins(plugin_dir: str):
                     for attr_name in dir(module):
                         attr = getattr(module, attr_name)
                         if callable(attr) and getattr(attr, "_is_tool", False):
+                            if getattr(attr, "__module__", None) != full_mod_name:
+                                continue
                             found_tool = True
 
                             # 1. Must have a name
