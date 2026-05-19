@@ -13,19 +13,15 @@ Design goals
 
 from __future__ import annotations
 
-import sys
-from core.logger import get_logger
-logger = get_logger(__name__)
 
 
-import sys
-from core.logger import get_logger
-logger = get_logger(__name__)
 
 
 import os
 from dataclasses import dataclass, field
 from typing import Any, List, Optional
+from core.logger import get_logger
+logger = get_logger(__name__)
 
 # ---------------------------------------------------------------------------
 # Provider → expected env-var mappings.
