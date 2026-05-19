@@ -120,7 +120,7 @@ AgenticOS relies on a comprehensive `pytest` suite to ensure stability.
 3.  **Writing Tests**
     *   **Coverage:** When writing new tests, explicitly target the happy path, at least one error path, and at least one edge case.
     *   **Mocking:** When generating automated tests for tools, underlying functions with side effects must be mocked out to prevent accidental execution of actual tool commands during testing.
-    *   **Bug Reporting:** If a bug is discovered while writing tests, do not fix it in production code; report the bug detailing the function, expected vs. actual behavior, and a suggested fix.
+    *   **Bug Reporting:** If a bug is discovered while writing tests, it is highly encouraged to fix it in the same PR or report it as a separate issue with a suggested fix and a reproduction test case.
     *   **No Artifacts:** Do not commit local test output logs or generated build/test artifacts (e.g., `pytest_output.txt`, `coverage.json`). Avoid creating extraneous log files in the working directory during testing.
 
 Thank you for contributing to AgenticOS!
