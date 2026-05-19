@@ -823,17 +823,14 @@ class TieredClient:
     # ── Proxy properties (delegate to active client) ──
     @property
     def provider(self):
-        """provider function."""
         return self._active.provider
 
     @property
     def model(self):
-        """model function."""
         return self._active.model
 
     @model.setter
     def model(self, value):
-        """model function."""
         self._active.model = value
 
     @property

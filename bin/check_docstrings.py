@@ -14,6 +14,10 @@ def get_public_functions_missing_docstrings(directory):
                         for node in ast.walk(tree):
                             if isinstance(node, ast.FunctionDef):
                                 if not node.name.startswith('_'): # public
+                                    is_prop = any(isinstance(dec, ast.Name) and dec.id == 'property' for dec in node.decorator_list)
+                                    is_setter = any(isinstance(dec, ast.Attribute) and dec.attr == 'setter' for dec in node.decorator_list)
+                                    if is_prop or is_setter:
+                                        continue
                                     if not ast.get_docstring(node):
                                         missing.append((path, node.name))
                     except Exception as e:

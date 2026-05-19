@@ -661,39 +661,6 @@ Usage:
     client = TieredClient(primary, fallbacks)
     response = client.chat(messages, system="...")
 
-<a id="core.model_clients.TieredClient.provider"></a>
-
-#### provider
-
-```python
-@property
-def provider()
-```
-
-provider function.
-
-<a id="core.model_clients.TieredClient.model"></a>
-
-#### model
-
-```python
-@property
-def model()
-```
-
-model function.
-
-<a id="core.model_clients.TieredClient.model"></a>
-
-#### model
-
-```python
-@model.setter
-def model(value)
-```
-
-model function.
-
 <a id="core.model_clients.TieredClient.last_list_error"></a>
 
 #### last\_list\_error
