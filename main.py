@@ -125,14 +125,14 @@ def run_health_check() -> None:
     print("  [Config] Validating config.yaml")
     try:
         from core.runtime_config import load_config
+        from core.config_validator import warn_config_issues
         cfg = load_config()
-        required_keys = ['agent', 'cloud', 'autonomy', 'tools', 'heuristics']
-        missing_keys = [k for k in required_keys if k not in cfg]
-        if missing_keys:
-            print(f"    ✗ Missing root keys: {', '.join(missing_keys)}")
+        result = warn_config_issues(cfg, quiet=True)
+        if result.has_errors:
+            print("    ✗ Critical configuration errors detected")
             passed = False
         else:
-            print("    ✓ All required root config keys present")
+            print("    ✓ Configuration is valid")
     except Exception as e:
         print(f"    ✗ Config load failed: {e}")
         passed = False
