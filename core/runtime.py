@@ -1094,7 +1094,7 @@ class CLI:
         self.running = True
         if dry_run:
             self.agent.tools.shadow_mode = True
-            print("\n\033[33mShadow Mode (Dry Run) is ON\033[0m")
+            print(f"\n{C.YELLOW}Shadow Mode (Dry Run) is ON{C.RESET}")
 
     def handle_security_confirmation(self, path: str, operation: str) -> bool:
         """Confirm action with user (CLI implementation)."""
