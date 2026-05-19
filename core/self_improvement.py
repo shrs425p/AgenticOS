@@ -1,10 +1,3 @@
-import sys
-from core.logger import get_logger
-logger = get_logger(__name__)
-
-import sys
-from core.logger import get_logger
-logger = get_logger(__name__)
 
 """
 Self-Improvement ("Dreaming") module for AgenticOs.
@@ -18,6 +11,10 @@ import json
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
 
 
 class SelfImprovementDaemon:

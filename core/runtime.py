@@ -1,10 +1,3 @@
-import sys
-from core.logger import get_logger
-logger = get_logger(__name__)
-
-import sys
-from core.logger import get_logger
-logger = get_logger(__name__)
 
 """AgenticOs runtime orchestration."""
 
@@ -52,6 +45,10 @@ from core.runtime_ui import (
 )
 from core.tool_registry import ToolRegistry
 from core.context_engine import ContextEngine
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
 
 PROVIDER_CLIENT_MAP = {
     "ollama": "OllamaClient",

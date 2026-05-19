@@ -1,10 +1,3 @@
-import sys
-from core.logger import get_logger
-logger = get_logger(__name__)
-
-import sys
-from core.logger import get_logger
-logger = get_logger(__name__)
 
 """Model client adapters for Ollama and Nvidia NIM."""
 
@@ -20,6 +13,10 @@ from core.runtime_config import BASE_DIR
 from core.exceptions import RateLimitExhausted
 from core.runtime_ui import C, Spinner
 from core.retry import retry_call
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
 
 
 try:

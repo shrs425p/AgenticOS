@@ -1,10 +1,3 @@
-import sys
-from core.logger import get_logger
-logger = get_logger(__name__)
-
-import sys
-from core.logger import get_logger
-logger = get_logger(__name__)
 
 """
 Enhanced memory management system for AgenticOs.
@@ -18,6 +11,10 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 import threading
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
 
 logger = logging.getLogger(__name__)
 
