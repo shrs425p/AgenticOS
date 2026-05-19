@@ -1110,7 +1110,7 @@ class CLI:
             return False
 
     def select_provider(self, force: bool = False):
-        providers = ["ollama", "nvidia", "gemini", "groq", "openai", "openrouter", "github", "deepseek"]
+        providers = ["ollama"] + list(self.cfg.get("cloud", {}).keys())
         current = (self.cfg.get("agent", {}).get("provider") or "ollama").lower()
 
         print(f"\n{C.CYAN}{C.BOLD}Providers:{C.RESET}")

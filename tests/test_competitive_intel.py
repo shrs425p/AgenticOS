@@ -17,8 +17,10 @@ class TestCompetitiveIntel:
 
         result = competitive_intel(["AutoGPT"])
 
+        from core.runtime_config import DEFAULT_WORKSPACE
+        from pathlib import Path
         today = datetime.now().strftime("%Y-%m-%d")
-        expected_path = f"workspace/daily_logs/competitor_matrix_{today}.md"
+        expected_path = str(Path(DEFAULT_WORKSPACE) / f"daily_logs/competitor_matrix_{today}.md")
         assert result == f"Wrote competitive matrix to {expected_path}"
         assert os.path.exists(expected_path)
 
@@ -39,8 +41,10 @@ class TestCompetitiveIntel:
 
         result = competitive_intel(["CrewAI"])
 
+        from core.runtime_config import DEFAULT_WORKSPACE
+        from pathlib import Path
         today = datetime.now().strftime("%Y-%m-%d")
-        expected_path = f"workspace/daily_logs/competitor_matrix_{today}.md"
+        expected_path = str(Path(DEFAULT_WORKSPACE) / f"daily_logs/competitor_matrix_{today}.md")
         assert result == f"Wrote competitive matrix to {expected_path}"
 
         with open(expected_path, "r") as f:

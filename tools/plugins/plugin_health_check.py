@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Dict
 
 from core.tool_registry import tool
+from core.runtime_config import DEFAULT_WORKSPACE
 
 
 @tool(
@@ -63,7 +64,7 @@ def plugin_health_check() -> Dict[str, str]:
 
     # Write log file
     today_str = datetime.now().strftime("%Y-%m-%d")
-    daily_logs_dir = Path("workspace/daily_logs")
+    daily_logs_dir = Path(DEFAULT_WORKSPACE) / "daily_logs"
     daily_logs_dir.mkdir(parents=True, exist_ok=True)
     log_path = daily_logs_dir / f"plugin_health_{today_str}.md"
 

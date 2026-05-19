@@ -5,6 +5,7 @@ import logging
 import re
 from pathlib import Path
 from core.tool_registry import tool
+from core.runtime_config import DEFAULT_WORKSPACE
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ def generate_session_summary():
     identifies the longest-running task, and writes the summary to workspace/daily_logs/."""
 
     data_dir = Path("data")
-    workspace_dir = Path("workspace/daily_logs")
+    workspace_dir = Path(DEFAULT_WORKSPACE) / "daily_logs"
 
     eval_txt_path = data_dir / "evaluation_output.txt"
     sqlite_files = list(data_dir.glob("*.db")) + list(data_dir.glob("*.sqlite*"))

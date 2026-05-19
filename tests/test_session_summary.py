@@ -21,9 +21,15 @@ def mock_dirs(tmp_path, monkeypatch):
                 return original_path(str(data_dir))
             elif args and str(args[0]) == "workspace/daily_logs":
                 return original_path(str(workspace_dir))
+            elif args and "daily_logs" in str(args[0]):
+                # If they pass DEFAULT_WORKSPACE / "daily_logs"
+                return original_path(str(workspace_dir))
             return original_path(*args, **kwargs)
 
     monkeypatch.setattr("tools.plugins.session_summary.Path", MockPath)
+
+    import tools.plugins.session_summary
+    monkeypatch.setattr(tools.plugins.session_summary, "DEFAULT_WORKSPACE", str(tmp_path / "workspace"))
 
     return data_dir, workspace_dir
 

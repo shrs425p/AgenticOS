@@ -450,7 +450,7 @@ class GeminiClient:
     def __init__(self, cfg: dict):
         self.cfg = cfg
         gemini_cfg = cfg.get("cloud", {}).get("gemini", {})
-        self.model = gemini_cfg.get("model", cfg.get("agent", {}).get("default_model", "gemini-2.0-flash"))
+        self.model = gemini_cfg.get("model")
         self.temp = gemini_cfg.get("temperature", 1.0)
         self.max_tokens = gemini_cfg.get("max_tokens", 8192)
         self.top_p = gemini_cfg.get("top_p", 0.95)
@@ -646,10 +646,14 @@ class GroqClient:
 
 class OpenAICompatibleClient:
     """Base class for OpenAI, OpenRouter, and GitHub Models."""
-    def __init__(self, cfg: dict, provider: str, env_key: str, default_model: str, base_url: str = None):
+    def __init__(self, cfg: dict, provider: str, env_key: str):
         self.cfg = cfg
         provider_cfg = cfg.get("cloud", {}).get(provider, {})
-        self.model = provider_cfg.get("model", default_model)
+
+        self.model = provider_cfg.get("model")
+        if not self.model:
+            raise RuntimeError(f"Missing 'model' configuration for {provider} in config/providers.yaml")
+
         self.temp = provider_cfg.get("temperature", 1.0)
         self.max_tokens = provider_cfg.get("max_tokens", 8192)
         self.top_p = provider_cfg.get("top_p", 1.0)
@@ -664,8 +668,12 @@ class OpenAICompatibleClient:
         try:
             from openai import OpenAI
             kwargs = {"api_key": self.api_key}
-            if base_url:
-                kwargs["base_url"] = base_url
+
+            base_url = provider_cfg.get("base_url")
+            if not base_url:
+                raise RuntimeError(f"Missing 'base_url' configuration for {provider} in config/providers.yaml")
+            kwargs["base_url"] = base_url
+
             self._client = OpenAI(**kwargs)
         except ImportError:
             print("Error: openai library not installed. Run: pip install openai")
@@ -774,20 +782,20 @@ class OpenAICompatibleClient:
 
 class OpenAIClient(OpenAICompatibleClient):
     def __init__(self, cfg: dict):
-        super().__init__(cfg, "openai", "OPENAI_API_KEY", cfg.get("agent", {}).get("default_model", "gpt-4o-mini"))
+        super().__init__(cfg, "openai", "OPENAI_API_KEY")
 
 class OpenRouterClient(OpenAICompatibleClient):
     def __init__(self, cfg: dict):
-        super().__init__(cfg, "openrouter", "OPENROUTER_API_KEY", cfg.get("agent", {}).get("default_model", "google/gemma-2-9b-it:free"), "https://openrouter.ai/api/v1")
+        super().__init__(cfg, "openrouter", "OPENROUTER_API_KEY")
 
 class GithubClient(OpenAICompatibleClient):
     def __init__(self, cfg: dict):
-        super().__init__(cfg, "github", "GITHUB_TOKEN", cfg.get("agent", {}).get("default_model", "gpt-4o-mini"), "https://models.inference.ai.azure.com")
+        super().__init__(cfg, "github", "GITHUB_TOKEN")
 
 
 class DeepseekClient(OpenAICompatibleClient):
     def __init__(self, cfg: dict):
-        super().__init__(cfg, "deepseek", "DEEPSEEK_API_KEY", cfg.get("agent", {}).get("default_model", "deepseek-chat"), "https://api.deepseek.com")
+        super().__init__(cfg, "deepseek", "DEEPSEEK_API_KEY")
 
 
 class TieredClient:
