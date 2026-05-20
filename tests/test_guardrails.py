@@ -123,3 +123,91 @@ def test_guardrails_ask_human(tmp_path):
     with patch("builtins.input", return_value="n"):
         assert guard_cli.ask_human("path", "read") is False
 
+
+def test_guardrails_invalid_path(tmp_path):
+    from core.guardrails import PathGuard
+    ws = tmp_path / "workspace"
+    ws.mkdir()
+    cfg = {"agent": {"workspace": str(ws)}}
+    guard = PathGuard(cfg)
+
+    # Passing an invalid path representation (e.g. integer)
+    # to hit the exception block in check_path
+    allowed, msg = guard.check_path(123, "read")
+    assert not allowed
+    assert "Invalid path" in msg
+
+def test_guardrails_ask_human_exceptions(tmp_path):
+    from core.guardrails import PathGuard
+    cfg = {"agent": {"workspace": str(tmp_path)}}
+    guard = PathGuard(cfg)
+    from unittest.mock import patch
+
+    with patch("builtins.input", side_effect=KeyboardInterrupt):
+        assert guard.ask_human("path", "write") is False
+
+    with patch("builtins.input", side_effect=EOFError):
+        assert guard.ask_human("path", "write") is False
+
+def test_guardrails_workspace_exception_mock(tmp_path):
+    from core.guardrails import PathGuard
+    ws = tmp_path / "workspace"
+    ws.mkdir()
+    guard = PathGuard({"agent": {"workspace": str(ws)}})
+
+    from unittest.mock import MagicMock
+    mock_root = MagicMock()
+    mock_root.__eq__.side_effect = Exception("Mocked Exception")
+    guard.workspace_root = mock_root
+
+    assert guard.check_path("test.txt", "read")[0] is True
+
+def test_guardrails_blocked_exception_mock(tmp_path):
+    from core.guardrails import PathGuard
+    ws = tmp_path / "workspace"
+    ws.mkdir()
+    guard = PathGuard({"agent": {"workspace": str(ws)}})
+
+    from unittest.mock import MagicMock
+    mock_blocked = MagicMock()
+    mock_blocked.__eq__.side_effect = Exception("Mocked Exception")
+    guard.blocked_paths = [mock_blocked]
+
+    assert guard.check_path("test.txt", "read")[0] is True
+
+def test_guardrails_workspace_green_zone_exception(tmp_path):
+    from core.guardrails import PathGuard
+    ws = tmp_path / "workspace"
+    ws.mkdir()
+    guard = PathGuard({"agent": {"workspace": str(ws)}})
+
+    from unittest.mock import MagicMock
+    import pathlib
+
+    class ThrowingPath(type(pathlib.Path())):
+        def __eq__(self, other):
+            raise Exception("Force exception in green zone")
+
+        @property
+        def parents(self):
+            raise Exception("Force exception in green zone")
+
+    try:
+        # Construct the throwing path by overriding the target
+        ThrowingPath("some/path")
+    except Exception:
+        pass
+
+    from unittest.mock import patch
+    with patch("core.guardrails.Path") as mock_path:
+        mock_instance = MagicMock()
+        mock_instance.resolve.return_value = mock_instance
+        mock_instance.is_absolute.return_value = True
+
+        mock_instance.__eq__.side_effect = Exception("Mocked Eq")
+        type(mock_instance).parents = property(lambda self: (_ for _ in ()).throw(Exception("Mocked Parents")))
+
+        mock_path.return_value = mock_instance
+
+        # It should fall back to YELLOW zone
+        assert guard.check_path("test", "read")[0] is True

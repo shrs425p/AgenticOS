@@ -2,7 +2,9 @@
 from datetime import datetime
 import logging
 import re
+from pathlib import Path
 from core.tool_registry import tool
+from core.runtime_config import DEFAULT_WORKSPACE
 from tools.web import WebTools
 
 @tool(
@@ -63,7 +65,7 @@ def competitive_intel(competitors: list = None) -> str:
 
     content = "\n".join(matrix_rows)
     today = datetime.now().strftime("%Y-%m-%d")
-    output_path = f"workspace/daily_logs/competitor_matrix_{today}.md"
+    output_path = str(Path(DEFAULT_WORKSPACE) / f"daily_logs/competitor_matrix_{today}.md")
 
     import os
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
