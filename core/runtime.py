@@ -1108,10 +1108,13 @@ class CLI:
         "/exit": "Exit AgenticOs",
     }
 
-    def __init__(self):
+    def __init__(self, dry_run: bool = False):
         self.cfg = load_config()
         self.agent = Agent(self.cfg, confirm_handler=self.handle_security_confirmation)
         self.running = True
+        if dry_run:
+            self.agent.tools.shadow_mode = True
+            print(f"\n{C.YELLOW}Shadow Mode (Dry Run) is ON{C.RESET}")
 
     def handle_security_confirmation(self, path: str, operation: str) -> bool:
         """Confirm action with user (CLI implementation)."""
@@ -1508,9 +1511,11 @@ class CLI:
                     traceback.print_exc()
 
 
-def main():
+def main(dry_run: bool = False):
+    if not dry_run and "--dry-run" in sys.argv:
+        dry_run = True
     try:
-        CLI().run()
+        CLI(dry_run=dry_run).run()
     except RuntimeError as e:
         print(f"\n\033[91mError: {e}\033[0m")
         print("\033[33mAdd the missing key to your .env file and restart.\033[0m\n")
