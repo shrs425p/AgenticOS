@@ -9,7 +9,7 @@ from core.tool_registry import tool
 logger = logging.getLogger(__name__)
 
 @tool(category="System", desc="Generates a daily session summary from logs and evaluation output")
-def generate_session_summary():
+def generate_session_summary() -> str:
     """Reads evaluation_output.txt and SQLite audit logs from data/ (if they exist),
     counts total tools called, unique tools used, errors logged, warnings logged,
     identifies the longest-running task, and writes the summary to workspace/daily_logs/."""

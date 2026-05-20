@@ -19,7 +19,7 @@ def deep_merge(source, destination):
     return destination
 
 @tool(category="System", desc="Validates the AgenticOs configuration and generates an audit report")
-def validate_config():
+def validate_config() -> str:
     """Reads config.yaml and layered files in config/, validates specific fields and their types,
     checks if the workspace is writable, and generates an audit report in workspace/daily_logs/."""
 
