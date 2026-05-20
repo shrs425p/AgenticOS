@@ -9,12 +9,14 @@ from core.tool_base import tool
 class NetworkMixin:
     @tool(name="network_interfaces", desc="List network interfaces.", category="Terminal")
     def network_interfaces(self) -> str:
+        """network_interfaces function."""
         if self.system == "Windows":
             return self._run("ipconfig /all", timeout=30)
         return self._run("ifconfig || ip a", timeout=30)
 
     @tool(name="ping", desc="Ping a host. Args: host, count (optional)", category="Terminal")
     def ping(self, host: str, count: str = "3") -> str:
+        """ping function."""
         c = int(count) if str(count).isdigit() else 3
         if self.system == "Windows":
             return self._run(f"ping -n {c} {host}", timeout=30)
@@ -22,12 +24,14 @@ class NetworkMixin:
 
     @tool(name="traceroute", desc="Traceroute to host. Args: host", category="Terminal")
     def traceroute(self, host: str) -> str:
+        """traceroute function."""
         if self.system == "Windows":
             return self._run(f"tracert {host}", timeout=60)
         return self._run(f"traceroute {host}", timeout=60)
 
     @tool(name="netstat", desc="Show active network connections.", category="Terminal")
     def netstat(self) -> str:
+        """netstat function."""
         if self.system == "Windows":
             return self._run("netstat -ano", timeout=30)
         return self._run("netstat -anp", timeout=30)
@@ -38,6 +42,7 @@ class NetworkMixin:
 
 
 
+        """wait_for_port function."""
         try:
             p = int(port)
             t = float(timeout)

@@ -76,13 +76,16 @@ class ValidationResult:
 
     @property
     def has_errors(self) -> bool:
+        """has_errors function."""
         return any(i.level == "ERROR" for i in self.issues)
 
     @property
     def has_warnings(self) -> bool:
+        """has_warnings function."""
         return any(i.level in ("ERROR", "WARNING") for i in self.issues)
 
     def add(self, level: str, message: str, hint: str = "") -> None:
+        """add function."""
         self.issues.append(ConfigIssue(level, message, hint or None))
 
 

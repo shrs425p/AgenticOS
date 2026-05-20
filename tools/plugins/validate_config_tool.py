@@ -56,6 +56,7 @@ def validate_config() -> str:
 
     # Helper to get nested keys
     def get_nested(config, keys_str):
+        """get_nested function."""
         keys = keys_str.split('.')
         current = config
         for key in keys:

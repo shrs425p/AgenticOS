@@ -34,9 +34,11 @@ def fast_disk_audit(path: str = None, top_n: int = 20, min_mb: int = 100, mode: 
     results = []
 
     def ps_literal(value: str) -> str:
+        """ps_literal function."""
         return "'" + str(value).replace("'", "''") + "'"
     
     def run_ps(cmd):
+        """run_ps function."""
         try:
             res = PlatformAPI.check_output_powershell(
                 cmd,

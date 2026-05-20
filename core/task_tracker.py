@@ -43,6 +43,7 @@ class TaskTracker:
                 self.current = None
 
     def start(self, goal: str, provider: str, model: str):
+        """start function."""
         task_id = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.current = {
             "task_id": task_id,
@@ -73,6 +74,7 @@ class TaskTracker:
         self._persist()
 
     def update_from_response(self, response: str, iteration: int):
+        """update_from_response function."""
         if not self.current:
             return
         self.current["iteration"] = iteration
@@ -92,6 +94,7 @@ class TaskTracker:
         self._persist()
 
     def record_action(self, tool_name: str, args: list[str]):
+        """record_action function."""
         if not self.current:
             return
         arg_text = " | ".join(str(arg) for arg in args)
@@ -102,6 +105,7 @@ class TaskTracker:
         self._persist()
 
     def record_observation(self, observation: str):
+        """record_observation function."""
         if not self.current:
             return
         self.current["last_observation"] = observation.strip()
@@ -109,6 +113,7 @@ class TaskTracker:
         self._persist()
 
     def note_stall(self, message: str):
+        """note_stall function."""
         if not self.current:
             return
         self.current["stall_count"] = int(self.current.get("stall_count", 0)) + 1
@@ -117,6 +122,7 @@ class TaskTracker:
         self._persist()
 
     def planner_hint(self) -> str:
+        """planner_hint function."""
         if not self.current:
             return ""
         return self.cfg.get("prompts", {}).get("planner_hints", {}).get("standard", (
@@ -125,6 +131,7 @@ class TaskTracker:
         ))
 
     def complete(self, final_answer: str):
+        """complete function."""
         if not self.current:
             return
         self.current["status"] = "completed"
@@ -133,6 +140,7 @@ class TaskTracker:
         self._persist()
 
     def fail(self, message: str):
+        """fail function."""
         if not self.current:
             return
         self.current["status"] = "failed"

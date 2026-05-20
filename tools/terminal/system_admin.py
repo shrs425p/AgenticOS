@@ -51,6 +51,7 @@ class SystemAdminMixin:
     # ---- Installed Apps (Windows) ----
     @tool(name="installed_apps", desc="List installed apps (Windows). Args: filter_str(optional)", category="Terminal")
     def installed_apps(self, filter_str: str = "") -> str:
+        """installed_apps function."""
         if self.system != "Windows":
             return "Error: installed_apps is Windows-only."
         flt = (filter_str or "").strip().replace('"', "'")
@@ -70,6 +71,7 @@ class SystemAdminMixin:
     # ---- Services (guarded) ----
     @tool(name="service_list", desc="List services. Args: filter_str(optional)", category="Terminal")
     def service_list(self, filter_str: str = "") -> str:
+        """service_list function."""
         if self.system != "Windows":
             return self._run(
                 "systemctl list-units --type=service --no-pager", timeout=self._get_timeout("service_control", 30)
@@ -83,6 +85,7 @@ class SystemAdminMixin:
 
     @tool(name="service_status", desc="Service status. Args: name", category="Terminal")
     def service_status(self, name: str) -> str:
+        """service_status function."""
         svc = (name or "").strip()
         if not svc:
             return "Error: name required."
@@ -98,6 +101,7 @@ class SystemAdminMixin:
 
     @tool(name="service_start", desc="Start service (guarded). Args: name", category="Terminal")
     def service_start(self, name: str) -> str:
+        """service_start function."""
         if not self.rules.get("allow_service_control", False):
             return "Error: service control is disabled by rules (rules.allow_service_control=false)."
         svc = (name or "").strip()
@@ -111,6 +115,7 @@ class SystemAdminMixin:
 
     @tool(name="service_stop", desc="Stop service (guarded). Args: name", category="Terminal")
     def service_stop(self, name: str) -> str:
+        """service_stop function."""
         if not self.rules.get("allow_service_control", False):
             return "Error: service control is disabled by rules (rules.allow_service_control=false)."
         svc = (name or "").strip()
@@ -125,6 +130,7 @@ class SystemAdminMixin:
     # ---- Scheduled Tasks (guarded for create) ----
     @tool(name="scheduled_tasks_list", desc="List scheduled tasks (Windows). Args: filter_str(optional)", category="Terminal")
     def scheduled_tasks_list(self, filter_str: str = "") -> str:
+        """scheduled_tasks_list function."""
         if self.system != "Windows":
             return "Error: scheduled_tasks_list is Windows-only."
         flt = (filter_str or "").strip()
@@ -137,6 +143,7 @@ class SystemAdminMixin:
 
     @tool(name="scheduled_task_run", desc="Run scheduled task (Windows). Args: task_name", category="Terminal")
     def scheduled_task_run(self, task_name: str) -> str:
+        """scheduled_task_run function."""
         if self.system != "Windows":
             return "Error: scheduled_task_run is Windows-only."
         name = (task_name or "").strip().replace('"', "")
@@ -151,6 +158,7 @@ class SystemAdminMixin:
     def scheduled_task_create_daily(
         self, task_name: str, command: str, time_hhmm: str = "09:00"
     ) -> str:
+        """scheduled_task_create_daily function."""
         if not self.rules.get("allow_system_changes", False):
             return "Error: task creation is disabled by rules (rules.allow_system_changes=false)."
         if self.system != "Windows":

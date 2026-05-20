@@ -12,6 +12,7 @@ def tool(
     """Decorator to mark a function as a tool for AgenticOs."""
 
     def decorator(func):
+        """decorator function."""
         func._is_tool = True
         func._tool_name = name or func.__name__
         doc = func.__doc__ or "No description provided."

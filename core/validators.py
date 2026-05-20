@@ -23,6 +23,7 @@ def _resolve_path(path_str: str, workspace_root: Path) -> Path:
 
 
 def validate_tool(tool_name: str, args, result: str, *, workspace_root: Path) -> str:
+    """validate_tool function."""
     name = (tool_name or "").strip()
     if not name:
         return ""

@@ -4,12 +4,14 @@ from __future__ import annotations
 
 
 def requests_module():
+    """requests_module function."""
     import requests
 
     return requests
 
 
 def bs4_beautifulsoup():
+    """bs4_beautifulsoup function."""
     try:
         from bs4 import BeautifulSoup
 
@@ -19,6 +21,7 @@ def bs4_beautifulsoup():
 
 
 def build_default_session(existing_session=None):
+    """build_default_session function."""
     r = requests_module()
     sess = existing_session or r.Session()
     sess.headers.update(
@@ -44,6 +47,7 @@ def build_default_session(existing_session=None):
 
 
 def parse_headers_json(headers: str) -> dict:
+    """parse_headers_json function."""
     if not headers:
         return {}
     try:

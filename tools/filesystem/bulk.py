@@ -8,6 +8,7 @@ from core.tool_base import tool
 class BulkMixin:
     @tool(name="find_large_files", desc="Find large files. Args: path, min_mb (optional)", category="Files")
     def find_large_files(self, path: str, min_mb: str = "10") -> str:
+        """find_large_files function."""
         root = self._resolve(path)
         try:
             if (
@@ -39,6 +40,7 @@ class BulkMixin:
     def replace_in_dir(
         self, path: str, pattern: str, old_text: str, new_text: str
     ) -> str:
+        """replace_in_dir function."""
         root = self._resolve(path)
         self._deny_file_modify()
         self._deny_internal_writes(root)

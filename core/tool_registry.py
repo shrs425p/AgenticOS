@@ -233,6 +233,7 @@ class ToolRegistry:
         }
 
         def evaluate(node):
+            """evaluate function."""
             if isinstance(node, ast.Expression):
                 return evaluate(node.body)
             if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
@@ -405,6 +406,7 @@ class ToolRegistry:
             return f"Error: download failed after {attempts}: {type(e).__name__}: {e}"
 
     def call(self, name: str, args) -> str:
+        """call function."""
         if name not in self.registry:
             available = ", ".join(list(self.registry.keys())[:15])
             return f"Unknown tool: '{name}'. Available: {available}..."
@@ -576,6 +578,7 @@ class ToolRegistry:
         return "unknown"
 
     def get_symbol(self, name: str) -> str:
+        """get_symbol function."""
         name = name.lower()
         symbols = self.cfg.get("ui", {}).get("category_symbols", {
             "files": {"tokens": ["file", "read", "write", "dir", "delete", "path", "move"], "symbol": "[F]"},
@@ -596,6 +599,7 @@ class ToolRegistry:
         return "[*]"
 
     def tool_descriptions(self) -> str:
+        """tool_descriptions function."""
         max_lines = int(self.cfg.get("prompts", {}).get("max_tool_descriptions", 140))
         
         # Group tools by category

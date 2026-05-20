@@ -9,6 +9,7 @@ from core.tool_base import tool
 class StructuredMixin:
     @tool(name="read_json", desc="Read and parse JSON file. Args: path", category="Files")
     def read_json(self, path: str) -> str:
+        """read_json function."""
         p = self._resolve(path)
         try:
             data = json.loads(p.read_text(encoding="utf-8", errors="replace"))
@@ -18,6 +19,7 @@ class StructuredMixin:
 
     @tool(name="write_json", desc="Write JSON file. Args: path, data (JSON string)", category="Files")
     def write_json(self, path: str, data: str) -> str:
+        """write_json function."""
         p = self._resolve(path)
         self._deny_file_modify()
         self._deny_internal_writes(p)
@@ -31,6 +33,7 @@ class StructuredMixin:
 
     @tool(name="read_csv", desc="Read CSV as text table. Args: path", category="Files")
     def read_csv(self, path: str, max_rows: str = "50") -> str:
+        """read_csv function."""
         p = self._resolve(path)
         try:
             limit = max(1, int(max_rows))
@@ -47,6 +50,7 @@ class StructuredMixin:
 
     @tool(name="write_csv", desc="Write CSV (JSON array of arrays). Args: path, data", category="Files")
     def write_csv(self, path: str, data: str) -> str:
+        """write_csv function."""
         p = self._resolve(path)
         self._deny_file_modify()
         self._deny_internal_writes(p)

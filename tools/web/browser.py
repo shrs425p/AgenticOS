@@ -48,6 +48,7 @@ class BrowserManager:
         self._started = False
 
     def start(self):
+        """start function."""
         if self._started:
             return
         self.thread = threading.Thread(
@@ -64,6 +65,7 @@ class BrowserManager:
         self.loop.run_forever()
 
     def run_coro(self, coro):
+        """run_coro function."""
         future = asyncio.run_coroutine_threadsafe(coro, self.loop)
         return future.result()
 
@@ -104,6 +106,7 @@ def _ensure_browser(fn):
     @functools.wraps(fn)
     def wrapper(self, *args, **kwargs):
         # Retrieve mgr from the host instance (e.g., WebTools)
+        """wrapper function."""
         mgr = getattr(self, "browser_mgr", None)
         if mgr is None:
             return "Error: BrowserManager not initialized on tool host."
