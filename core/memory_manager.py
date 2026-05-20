@@ -1,3 +1,4 @@
+
 """
 Enhanced memory management system for AgenticOs.
 Provides long-term memory consolidation, daily logging, and knowledge retention.
@@ -12,6 +13,10 @@ import os
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 import threading
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -298,7 +303,7 @@ class MemoryManager:
                 
         except Exception as e:
             # Don't let memory errors break the system
-            print(f"Warning: Memory consolidation check failed: {e}")
+            logger.info(f"Warning: Memory consolidation check failed: {e}")
     
     def consolidate_long_term_memory(self):
         """Consolidate recent task experiences into long-term memory."""
@@ -326,10 +331,10 @@ class MemoryManager:
             with open(tracking_file, "w", encoding="utf-8") as f:
                 json.dump(tracking_data, f, indent=2)
                 
-            print(f"✓ Memory consolidation completed. Processed {len(completed_tasks[-10:])} recent tasks.")
+            logger.info(f"✓ Memory consolidation completed. Processed {len(completed_tasks[-10:])} recent tasks.")
             
         except Exception as e:
-            print(f"Warning: Memory consolidation failed: {e}")
+            logger.info(f"Warning: Memory consolidation failed: {e}")
     
     def _generate_insights_from_tasks(self, tasks: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Generate insights from a set of completed tasks using the LLM if available."""
@@ -401,7 +406,7 @@ class MemoryManager:
 
 
             except Exception as e:
-                print(f"Warning: LLM memory consolidation failed: {e}")
+                logger.info(f"Warning: LLM memory consolidation failed: {e}")
                 
         # Fallback to old string-matching logic if LLM fails or is missing
         if not semantic_patterns:

@@ -13,9 +13,15 @@ Design goals
 
 from __future__ import annotations
 
+
+
+
+
 import os
 from dataclasses import dataclass, field
 from typing import Any, List, Optional
+from core.logger import get_logger
+logger = get_logger(__name__)
 
 # ---------------------------------------------------------------------------
 # Provider → expected env-var mappings.
@@ -37,6 +43,8 @@ _KNOWN_PROVIDERS = {"ollama", *_PROVIDER_ENV_KEYS.keys()}
 # Keys recognised at the *root* of config.yaml that override layered values.
 # Any key in the user's root file that isn't in this set gets a typo warning.
 _KNOWN_ROOT_KEYS = {
+    "log_level",
+    "log_level",
     "agent", "cloud", "autonomy", "ollama", "memory", "cache",
     "logging", "rules", "security", "performance", "heuristics",
     "prompts", "policy", "tools", "terminal", "browser", "media",
@@ -369,20 +377,20 @@ def warn_config_issues(
         _info = print_info
     except Exception:
         def _warn(msg: str) -> None:  # type: ignore[misc]
-            print(f"  ⚠  {msg}")
+            logger.info(f"  ⚠  {msg}")
 
         def _err(msg: str) -> None:  # type: ignore[misc]
-            print(f"  ✗  {msg}")
+            logger.info(f"  ✗  {msg}")
 
         def _info(msg: str) -> None:  # type: ignore[misc]
-            print(f"  ℹ  {msg}")
+            logger.info(f"  ℹ  {msg}")
 
     printed_header = False
     for issue in result.issues:
         if quiet and issue.level == "INFO":
             continue
         if not printed_header:
-            print("  ── Config Validation ────────────────────────────────────")
+            logger.info("  ── Config Validation ────────────────────────────────────")
             printed_header = True
 
         body = issue.message
@@ -397,6 +405,6 @@ def warn_config_issues(
             _info(body)
 
     if printed_header:
-        print("  ─────────────────────────────────────────────────────────")
+        logger.info("  ─────────────────────────────────────────────────────────")
 
     return result

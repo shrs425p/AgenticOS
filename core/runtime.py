@@ -1,3 +1,4 @@
+
 """AgenticOs runtime orchestration."""
 
 import os
@@ -44,6 +45,10 @@ from core.runtime_ui import (
 )
 from core.tool_registry import ToolRegistry
 from core.context_engine import ContextEngine
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
 
 PROVIDER_CLIENT_MAP = {
     "ollama": "OllamaClient",
@@ -265,7 +270,7 @@ class Agent:
             py_changed = any(f.endswith(".py") for f in changed_files)
 
             if config_changed:
-                print(
+                logger.info(
                     f"{C.YELLOW}↻  Config changed: config.yaml. Refreshing settings...{C.RESET}"
                 )
                 self._reload_config()
@@ -293,7 +298,7 @@ class Agent:
                     if f.endswith(".py"):
                         mod_name = os.path.splitext(f)[0].replace(os.sep, ".")
                         if mod_name in sys.modules:
-                            print(
+                            logger.info(
                                 f"{C.YELLOW}↻  File changed: {f}. Reloading module...{C.RESET}"
                             )
                             importlib.reload(sys.modules[mod_name])
@@ -513,20 +518,20 @@ class Agent:
                 repetition_count = 0
                 reminder = self.cfg.get("prompts", {}).get("nudges", {}).get("repetition", "You're repeating the same approach. Try a COMPLETELY DIFFERENT strategy.")
                 messages.append({"role": "user", "content": reminder})
-                print(
+                logger.info(
                     f"{C.YELLOW}⚠  Repetition detected. Suggesting alternative approach.{C.RESET}"
                 )
 
             # Warn if iterations getting high (skip if warning_threshold is <= 0)
             warning_threshold = self.heuristics.get("iteration_warning_threshold", 20)
             if warning_threshold > 0 and iteration > warning_threshold and iteration % 10 == 0:
-                print(
+                logger.info(
                     f"{C.YELLOW}⚠  High iteration count ({iteration}). Consider FINAL ANSWER.{C.RESET}"
                 )
 
             pulse_line(60)
             iter_label = f"{iteration}/∞" if limitless else f"{iteration}/{self.max_iter}"
-            print(f"{C.DIM}Iteration {iter_label}{C.RESET}")
+            logger.info(f"{C.DIM}Iteration {iter_label}{C.RESET}")
 
             try:
                 response = self.client.chat(messages, system=system)
@@ -563,7 +568,7 @@ class Agent:
                     # Filter out current model
                     others = [m for m in models if m != self.client.model]
                     new_model = random.choice(others)
-                    print(
+                    logger.info(
                         f"{C.YELLOW}⚠  Attempting auto-fallback to: {new_model}{C.RESET}"
                     )
                     self.client.model = new_model
@@ -593,7 +598,7 @@ class Agent:
                         others = [m for m in models if m != self.client.model]
                         if others:
                             new_model = random.choice(others)
-                            print(
+                            logger.info(
                                 f"{C.YELLOW}⚠  Empty-loop fallback to: {new_model}{C.RESET}"
                             )
                             self.client.model = new_model
@@ -805,9 +810,9 @@ class Agent:
                         # Disabled heuristic: Was forcing write_file for long responses, but wastes API quota.
                         pass
 
-                print(f"\n{C.GREEN}{C.BOLD}{'═' * 60}")
-                print("  FINAL ANSWER")
-                print(f"{'═' * 60}{C.RESET}")
+                logger.info(f"\n{C.GREEN}{C.BOLD}{'═' * 60}")
+                logger.info("  FINAL ANSWER")
+                logger.info(f"{'═' * 60}{C.RESET}")
 
                 final_ans = ""
                 idx = response.upper().find("FINAL ANSWER:")
@@ -1118,12 +1123,12 @@ class CLI:
 
     def handle_security_confirmation(self, path: str, operation: str) -> bool:
         """Confirm action with user (CLI implementation)."""
-        print("\n\033[91m⚠ STOP — SECURITY GUARDRAIL\033[0m")
-        print(
+        logger.info("\n\033[91m⚠ STOP — SECURITY GUARDRAIL\033[0m")
+        logger.info(
             f"The agent is attempting a \033[1m{operation.upper()}\033[0m action outside the workspace."
         )
-        print(f"Target Path: \033[36m{path}\033[0m")
-        print(
+        logger.info(f"Target Path: \033[36m{path}\033[0m")
+        logger.info(
             "\033[90m(You can allow this once, or modify config.yaml to change security rules)\033[0m"
         )
         try:
@@ -1136,12 +1141,12 @@ class CLI:
         providers = ["ollama", "nvidia", "gemini", "groq", "openai", "openrouter", "github", "deepseek"]
         current = (self.cfg.get("agent", {}).get("provider") or "ollama").lower()
 
-        print(f"\n{C.CYAN}{C.BOLD}Providers:{C.RESET}")
+        logger.info(f"\n{C.CYAN}{C.BOLD}Providers:{C.RESET}")
         for i, p in enumerate(providers, 1):
             marker = f" {C.GREEN}◀ current{C.RESET}" if p == current else ""
-            print(f"  {C.BOLD}{i}.{C.RESET} {p}{marker}")
+            logger.info(f"  {C.BOLD}{i}.{C.RESET} {p}{marker}")
         if not force:
-            print(f"\n  {C.BOLD}0.{C.RESET} Keep current ({current})")
+            logger.info(f"\n  {C.BOLD}0.{C.RESET} Keep current ({current})")
 
         while True:
             try:
@@ -1182,17 +1187,17 @@ class CLI:
                 f"Could not fully list Nvidia models ({err}). Showing fallback list."
             )
 
-        print(
+        logger.info(
             f"\n{C.CYAN}{C.BOLD}Available {self.agent.client.provider.capitalize()} Models:{C.RESET}"
         )
         for i, m in enumerate(models, 1):
             marker = (
                 f" {C.GREEN}◀ current{C.RESET}" if m == self.agent.client.model else ""
             )
-            print(f"  {C.BOLD}{i}.{C.RESET} {m}{marker}")
+            logger.info(f"  {C.BOLD}{i}.{C.RESET} {m}{marker}")
 
         if not force:
-            print(f"\n  {C.BOLD}0.{C.RESET} Keep current ({self.agent.client.model})")
+            logger.info(f"\n  {C.BOLD}0.{C.RESET} Keep current ({self.agent.client.model})")
 
         # Always show locally installed Ollama models (read-only) for convenience.
         try:
@@ -1209,11 +1214,11 @@ class CLI:
                     if m.get("name")
                 ]
                 if ollama_models:
-                    print(f"\n{C.DIM}Installed Ollama Models (local):{C.RESET}")
+                    logger.info(f"\n{C.DIM}Installed Ollama Models (local):{C.RESET}")
                     for m in ollama_models[:60]:
-                        print(f"  {m}")
+                        logger.info(f"  {m}")
                     if len(ollama_models) > 60:
-                        print(f"  {C.DIM}... ({len(ollama_models) - 60} more){C.RESET}")
+                        logger.info(f"  {C.DIM}... ({len(ollama_models) - 60} more){C.RESET}")
         except (RuntimeError, OSError) as e:
             print_warning(f"Warning: Failed to list models: {e}")
 
@@ -1246,9 +1251,9 @@ class CLI:
         base = parts[0].lower()
 
         if base == "/help":
-            print(f"\n{C.CYAN}{C.BOLD}AgenticOs Commands:{C.RESET}")
+            logger.info(f"\n{C.CYAN}{C.BOLD}AgenticOs Commands:{C.RESET}")
             for c, d in self.COMMANDS.items():
-                print(f"  {C.YELLOW}{c:<12}{C.RESET} {d}")
+                logger.info(f"  {C.YELLOW}{c:<12}{C.RESET} {d}")
 
         elif base == "/model":
             self.select_model()
@@ -1259,14 +1264,14 @@ class CLI:
         elif base == "/models":
             models = self.agent.client.list_models()
             if models:
-                print(f"\n{C.CYAN}Available models:{C.RESET}")
+                logger.info(f"\n{C.CYAN}Available models:{C.RESET}")
                 for m in models:
                     active = (
                         f" {C.GREEN}◀ active{C.RESET}"
                         if m == self.agent.client.model
                         else ""
                     )
-                    print(f"  {m}{active}")
+                    logger.info(f"  {m}{active}")
             else:
                 err = getattr(self.agent.client, "last_list_error", "")
                 if err:
@@ -1275,11 +1280,11 @@ class CLI:
                     print_error("No models found.")
 
         elif base == "/tools":
-            print(
+            logger.info(
                 f"\n{C.CYAN}{C.BOLD}Available Tools ({len(self.agent.tools.registry)}):{C.RESET}"
             )
             for name, info in self.agent.tools.registry.items():
-                print(f"  {C.YELLOW}{name:<25}{C.RESET} {C.DIM}{info['desc']}{C.RESET}")
+                logger.info(f"  {C.YELLOW}{name:<25}{C.RESET} {C.DIM}{info['desc']}{C.RESET}")
 
         elif base == "/tool_report":
             # Authoritative: read directly from the registry, not from the truncated prompt.
@@ -1330,14 +1335,14 @@ class CLI:
                 print_error(f"Failed to write tools_reference.md: {e}")
 
         elif base == "/doctor":
-            print(f"\n{C.CYAN}{C.BOLD}Doctor Checks:{C.RESET}")
+            logger.info(f"\n{C.CYAN}{C.BOLD}Doctor Checks:{C.RESET}")
             # 1) Config parse already succeeded if we got here.
             print_success("config.yaml: OK (parsed)")
             # 2) Memory backend writable?
             try:
                 mem = self.agent.memory
                 if hasattr(mem, "healthcheck"):
-                    print(mem.healthcheck())
+                    logger.info(mem.healthcheck())
                 else:
                     print_success("memory: OK")
             except Exception as e:
@@ -1377,7 +1382,7 @@ class CLI:
                 print_error(f"provider check: Error: {e}")
 
         elif base == "/memory":
-            print(f"\n{C.CYAN}Session Memory:{C.RESET}\n{self.agent.memory.summary()}")
+            logger.info(f"\n{C.CYAN}Session Memory:{C.RESET}\n{self.agent.memory.summary()}")
 
         elif base == "/clear":
             self.agent.memory.clear()
@@ -1397,39 +1402,39 @@ class CLI:
             self.agent.check_reload()
 
         elif base == "/config":
-            print(f"\n{C.CYAN}Current Config:{C.RESET}")
-            print(yaml.dump(self.cfg, default_flow_style=False))
+            logger.info(f"\n{C.CYAN}Current Config:{C.RESET}")
+            logger.info(yaml.dump(self.cfg, default_flow_style=False))
 
         elif base == "/history":
             msgs = self.agent.memory.get_messages()
-            print(f"\n{C.CYAN}Conversation History ({len(msgs)} messages):{C.RESET}")
+            logger.info(f"\n{C.CYAN}Conversation History ({len(msgs)} messages):{C.RESET}")
             for msg in msgs[-20:]:
                 role = msg["role"].upper()
                 color = C.BLUE if role == "USER" else C.GREEN
                 preview = msg["content"][:200].replace("\n", " ")
-                print(f"  {color}{C.BOLD}{role:<12}{C.RESET} {C.DIM}{preview}{C.RESET}")
+                logger.info(f"  {color}{C.BOLD}{role:<12}{C.RESET} {C.DIM}{preview}{C.RESET}")
 
         elif base == "/version":
             provider = self.agent.client.provider
-            print(f"\n{C.CYAN}AgenticOs v1.1.0{C.RESET}")
-            print(f"  Provider : {provider}")
-            print(f"  Model    : {self.agent.client.model}")
+            logger.info(f"\n{C.CYAN}AgenticOs v1.1.0{C.RESET}")
+            logger.info(f"  Provider : {provider}")
+            logger.info(f"  Model    : {self.agent.client.model}")
             if hasattr(self.agent.client, "base_url"):
-                print(f"  Endpoint : {self.agent.client.base_url}")
-            print(f"  Tools    : {len(self.agent.tools.registry)}")
-            print(f"  Session  : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                logger.info(f"  Endpoint : {self.agent.client.base_url}")
+            logger.info(f"  Tools    : {len(self.agent.tools.registry)}")
+            logger.info(f"  Session  : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
         elif base in ("/exit", "/quit", "/q"):
             try:
                 # Do NOT wipe persistent memory on exit. Use /clear for that.
                 if not bool(self.cfg.get("memory", {}).get("enable_persistence", True)):
                     self.agent.memory.clear()
-                    print(f"\n{C.CYAN}Goodbye. Session memory wiped.{C.RESET}")
+                    logger.info(f"\n{C.CYAN}Goodbye. Session memory wiped.{C.RESET}")
                 else:
-                    print(f"\n{C.CYAN}Goodbye.{C.RESET}")
+                    logger.info(f"\n{C.CYAN}Goodbye.{C.RESET}")
             except (IOError, OSError, ValueError) as e:
                 print_warning(f"Warning: Error during exit cleanup: {e}")
-                print(f"\n{C.CYAN}Goodbye.{C.RESET}")
+                logger.info(f"\n{C.CYAN}Goodbye.{C.RESET}")
             try:
                 if hasattr(self.agent, "audit"):
                     self.agent.audit.session_end(
@@ -1477,7 +1482,7 @@ class CLI:
         print_success(
             f"Tools loaded: {len(self.agent.tools.registry)} tools available."
         )
-        print(
+        logger.info(
             f"\n{C.DIM}Type your task, or /help for commands. Ctrl+C or /exit to quit.{C.RESET}\n"
         )
 
@@ -1490,7 +1495,7 @@ class CLI:
             try:
                 raw = input(f"{C.BOLD}AgenticOs{C.RESET} {C.CYAN}❯{C.RESET} ").strip()
             except KeyboardInterrupt:
-                print(f"\n{C.CYAN}Interrupted. Type /exit to quit.{C.RESET}")
+                logger.info(f"\n{C.CYAN}Interrupted. Type /exit to quit.{C.RESET}")
                 continue
             except EOFError:
                 self.handle_command("/exit")
@@ -1505,7 +1510,7 @@ class CLI:
                 try:
                     self.agent.run(raw)
                 except KeyboardInterrupt:
-                    print(f"\n{C.YELLOW}Task interrupted.{C.RESET}")
+                    logger.info(f"\n{C.YELLOW}Task interrupted.{C.RESET}")
                 except Exception as e:
                     print_error(f"Unexpected error: {e}")
                     traceback.print_exc()
@@ -1517,8 +1522,8 @@ def main(dry_run: bool = False):
     try:
         CLI(dry_run=dry_run).run()
     except RuntimeError as e:
-        print(f"\n\033[91mError: {e}\033[0m")
-        print("\033[33mAdd the missing key to your .env file and restart.\033[0m\n")
+        logger.info(f"\n\033[91mError: {e}\033[0m")
+        logger.info("\033[33mAdd the missing key to your .env file and restart.\033[0m\n")
         raise SystemExit(1)
 
 
