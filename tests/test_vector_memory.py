@@ -3,7 +3,7 @@
 import os
 import json
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from tools.plugins.vector_memory import (
     vector_memory_store,

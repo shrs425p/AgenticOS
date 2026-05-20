@@ -6,7 +6,6 @@ import os
 import sqlite3
 import json
 from contextlib import closing
-from typing import Any, Dict, List
 
 from core.tool_registry import tool
 
