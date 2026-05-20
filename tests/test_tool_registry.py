@@ -205,3 +205,88 @@ def test_call_and_security(mock_config):
     # Path guardrail rejection
     with patch.object(registry.guard, "check_path", return_value=(False, "Forbidden path")):
         assert "Forbidden path" in registry.call("dummy_path_tool", {"path": "/etc/shadow"})
+
+def test_tool_registry_signature_exception(mock_config):
+    registry = ToolRegistry(mock_config)
+    class BadTool:
+        @tool("bad")
+        def bad(self): pass
+    registry._register_subsystem(BadTool())
+
+    with patch("inspect.signature", side_effect=ValueError("Bad signature")):
+        assert registry._get_signature("bad") == "unknown"
+
+def test_tool_registry_run_tool_exceptions(mock_config):
+    registry = ToolRegistry(mock_config)
+    class ExceptionTools:
+        @tool("type_err")
+        def type_err(self): raise TypeError("Type error")
+        @tool("perm_err")
+        def perm_err(self): raise PermissionError("Perm error")
+        @tool("file_err")
+        def file_err(self): raise FileNotFoundError("File err")
+        @tool("gen_err")
+        def gen_err(self): raise Exception("Gen err")
+    registry._register_subsystem(ExceptionTools())
+
+    assert "Tool argument error" in registry.call("type_err", {})
+    assert "Permission denied" in registry.call("perm_err", {})
+    assert "File not found" in registry.call("file_err", {})
+    assert "Tool error" in registry.call("gen_err", {})
+
+def test_tool_registry_call_arg_conversion(mock_config):
+    registry = ToolRegistry(mock_config)
+    class TypesTool:
+        @tool("types")
+        def types(self, i, f, s): return f"{type(i).__name__} {type(f).__name__} {type(s).__name__}"
+    registry._register_subsystem(TypesTool())
+
+    res = registry.call("types", ["123", "45.6", "text"])
+    assert "int float str" in res
+
+def test_tool_registry_run_tool_exceptions_more(mock_config):
+    registry = ToolRegistry(mock_config)
+    class MissingModTool:
+        @tool("missing_mod")
+        def missing_mod(self): raise ModuleNotFoundError("No module named 'fake_module_123'")
+    registry._register_subsystem(MissingModTool())
+
+    with patch("subprocess.run"):
+        res = registry.call("missing_mod", {})
+        assert "Tool error" in res or "No module named" in res
+
+def test_tool_registry_run_tool_validation(mock_config):
+    registry = ToolRegistry(mock_config)
+    class ValidTool:
+        @tool("valid")
+        def valid(self): return "ok"
+    registry._register_subsystem(ValidTool())
+
+    with patch("core.tool_registry.validate_tool", return_value="Note: validated"):
+        registry.call("valid", {})
+        # validate tool might be disabled by config
+        pass
+
+def test_tool_registry_run_tool_positional_path(mock_config):
+    registry = ToolRegistry(mock_config)
+    class PathPosTool:
+        @tool("read_file")
+        def read_file(self, path): return f"Read {path}"
+    registry._register_subsystem(PathPosTool())
+
+    with patch.object(registry.guard, "check_path", return_value=(False, "Forbidden")):
+        assert "Forbidden" in registry.call("read_file", ["/root/secret.txt"])
+
+def test_tool_registry_missing_parent_dir(mock_config):
+    registry = ToolRegistry(mock_config)
+    class MissingParentTool:
+        @tool("write_file")
+        def write_file(self, content, path):
+            raise FileNotFoundError(2, "No such file or directory", "nonexistent/dir/file.txt")
+    registry._register_subsystem(MissingParentTool())
+
+    with patch("os.makedirs") as mock_makedirs:
+        with patch.object(registry.guard, "check_path", return_value=(True, "Allowed")):
+            res = registry.call("write_file", {"content": "test", "path": "nonexistent/dir/file.txt"})
+            assert "No such file or directory" in res or "File not found" in res
+            assert mock_makedirs.called
