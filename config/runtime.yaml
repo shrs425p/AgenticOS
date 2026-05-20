@@ -3,7 +3,7 @@
 
 agent:
   provider: nvidia
-  max_iterations: 0 # Set to <= 0 for limitless executions (displays Iteration X/∞)
+  max_iterations: 100 # Set to <= 0 for limitless executions (displays Iteration X/∞)
   think_before_act: false
   verbose_thinking: false
   auto_confirm: true
