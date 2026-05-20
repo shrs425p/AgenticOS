@@ -9,6 +9,9 @@ def test_self_healing_test_happy_path(tmp_path, monkeypatch):
     workspace = tmp_path / "workspace"
     workspace.mkdir()
 
+    import tools.plugins.self_healing_test
+    monkeypatch.setattr(tools.plugins.self_healing_test, "DEFAULT_WORKSPACE", str(workspace))
+
     # Run the test
     res_str = self_healing_test()
     result = json.loads(res_str)
@@ -51,6 +54,9 @@ def test_self_healing_test_log_file_write_fail(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     workspace = tmp_path / "workspace"
     workspace.mkdir()
+
+    import tools.plugins.self_healing_test
+    monkeypatch.setattr(tools.plugins.self_healing_test, "DEFAULT_WORKSPACE", str(workspace))
 
     # Mock the log file writing to raise an exception
     with patch("pathlib.Path.write_text"):

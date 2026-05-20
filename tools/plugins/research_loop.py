@@ -3,6 +3,7 @@ import datetime
 import json
 from pathlib import Path
 from core.tool_registry import tool
+from core.runtime_config import DEFAULT_WORKSPACE
 from tools.web import WebTools  # noqa: F401
 
 @tool(name="research_loop", desc="Runs a multi-round research loop on a topic.", category="Research")
@@ -21,7 +22,7 @@ def research_loop(topic: str, rounds: str = "3") -> str:
 
     rounds_int = min(rounds_int, 5)
 
-    log_dir = Path("workspace/daily_logs")
+    log_dir = Path(DEFAULT_WORKSPACE) / "daily_logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     today = datetime.datetime.now().strftime("%Y-%m-%d")
     log_file = log_dir / f"deep_research_{today}.md"

@@ -154,6 +154,8 @@ def test_validate_config_non_writable_workspace(mock_fs, monkeypatch):
     with open(root_dir / "config.yaml", "w") as f:
         yaml.dump(config_yaml, f)
 
+    original_path = Path
+
     # Define a custom Path object instead of modifying __class__ on PosixPath
     class FailingPath(type(Path())):
         def touch(self, *args, **kwargs):
@@ -161,7 +163,12 @@ def test_validate_config_non_writable_workspace(mock_fs, monkeypatch):
                 raise PermissionError("Permission denied")
             super().touch(*args, **kwargs)
 
-    original_path = Path
+        def mkdir(self, *args, **kwargs):
+            if "forbidden" in str(self).replace("\\", "/"):
+                # Simulate mkdir working but touch failing for the inner test
+                pass
+            else:
+                super().mkdir(*args, **kwargs)
 
     class MockPathWriteFail(type(Path())):
         def __new__(cls, *args, **kwargs):
@@ -174,6 +181,8 @@ def test_validate_config_non_writable_workspace(mock_fs, monkeypatch):
             elif args and str(args[0]) == "config.yaml":
                  return original_path(str(root_dir / "config.yaml"))
             elif args and str(args[0]) == "workspace/daily_logs":
+                 return original_path(str(logs_dir))
+            elif args and "/root/forbidden/path/daily_logs" in str(args[0]).replace("\\", "/"):
                  return original_path(str(logs_dir))
             return original_path(*args, **kwargs)
 

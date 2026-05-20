@@ -71,7 +71,7 @@ def validate_config() -> str:
     provider = get_nested(merged_config, "agent.provider")
     if provider is None:
         validation_results["agent.provider"] = "missing"
-    elif not isinstance(provider, str) or provider not in ["nvidia", "ollama", "gemini"]:
+    elif not isinstance(provider, str) or provider not in (["ollama"] + list(merged_config.get("cloud", {}).keys())):
         validation_results["agent.provider"] = "invalid_value"
     else:
         validation_results["agent.provider"] = "ok"
@@ -125,7 +125,7 @@ def validate_config() -> str:
 
     # Write audit report
     today = datetime.date.today().isoformat()
-    logs_dir = Path("workspace/daily_logs")
+    logs_dir = Path(workspace or "workspace") / "daily_logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
     out_file = logs_dir / f"config_audit_{today}.md"
 

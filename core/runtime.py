@@ -1141,7 +1141,7 @@ class CLI:
 
     def select_provider(self, force: bool = False):
         """select_provider function."""
-        providers = ["ollama", "nvidia", "gemini", "groq", "openai", "openrouter", "github", "deepseek"]
+        providers = ["ollama"] + list(self.cfg.get("cloud", {}).keys())
         current = (self.cfg.get("agent", {}).get("provider") or "ollama").lower()
 
         logger.info(f"\n{C.CYAN}{C.BOLD}Providers:{C.RESET}")

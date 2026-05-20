@@ -9,6 +9,9 @@ def test_research_loop_happy_path(mock_web_tools, tmp_path, monkeypatch):
     workspace = tmp_path / "workspace"
     workspace.mkdir()
 
+    import tools.plugins.research_loop
+    monkeypatch.setattr(tools.plugins.research_loop, "DEFAULT_WORKSPACE", str(workspace))
+
     # Setup mock WebTools
     mock_instance = MagicMock()
     mock_web_tools.return_value = mock_instance
@@ -49,6 +52,9 @@ def test_research_loop_round_2_fails(mock_web_tools, tmp_path, monkeypatch):
     workspace = tmp_path / "workspace"
     workspace.mkdir()
 
+    import tools.plugins.research_loop
+    monkeypatch.setattr(tools.plugins.research_loop, "DEFAULT_WORKSPACE", str(workspace))
+
     # Setup mock WebTools
     mock_instance = MagicMock()
     mock_web_tools.return_value = mock_instance
@@ -80,6 +86,9 @@ def test_research_loop_all_rounds_fail(mock_web_tools, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     workspace = tmp_path / "workspace"
     workspace.mkdir()
+
+    import tools.plugins.research_loop
+    monkeypatch.setattr(tools.plugins.research_loop, "DEFAULT_WORKSPACE", str(workspace))
 
     # Setup mock WebTools
     mock_instance = MagicMock()

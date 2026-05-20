@@ -3,12 +3,13 @@ import datetime
 import json
 from pathlib import Path
 from core.tool_registry import tool
+from core.runtime_config import DEFAULT_WORKSPACE
 
 @tool(name="self_healing_test", desc="Runs daily self-healing tests, validating recovery logic.", category="System")
 def self_healing_test() -> str:
     """Runs daily self-healing tests, validating recovery logic."""
-    target_file = Path("workspace/healing_test_target.txt")
-    log_dir = Path("workspace/daily_logs")
+    target_file = Path(DEFAULT_WORKSPACE) / "healing_test_target.txt"
+    log_dir = Path(DEFAULT_WORKSPACE) / "daily_logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     today = datetime.datetime.now().strftime("%Y-%m-%d")
     log_file = log_dir / f"self_healing_{today}.md"

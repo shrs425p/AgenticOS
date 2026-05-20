@@ -12,7 +12,12 @@ class TestModelClientsRateLimiting:
             "performance": {"max_retries": 3, "base_retry_delay": 0.01},
             "agent": {"stream": False, "default_model": "test"},
             "ollama": {"base_url": "http://localhost:11434", "default_model": "llama2", "timeout": 10, "temperature": 0.7, "num_ctx": 4096},  # DevSkim: ignore
-            "cloud": {"nvidia": {"base_url": "https://api.nvidia.com", "model": "nemotron", "timeout": 10, "temperature": 0.7, "top_p": 1.0, "max_tokens": 1000}}
+            "cloud": {"nvidia": {"base_url": "https://api.nvidia.com", "model": "nemotron", "timeout": 10, "temperature": 0.7, "top_p": 1.0, "max_tokens": 1000},
+                      "openai": {"model": "gpt-4", "base_url": "https://api.openai.com/v1"},
+                      "openrouter": {"model": "gemma", "base_url": "https://openrouter.ai/api/v1"},
+                      "github": {"model": "gpt-4", "base_url": "https://gh"},
+                      "deepseek": {"model": "ds", "base_url": "https://ds"},
+                      "gemini": {"model": "gemini"}}
         }
 
     @patch('core.model_clients.requests.post')
@@ -108,10 +113,10 @@ class TestAdditionalModelClients:
             "cloud": {
                 "gemini": {"model": "gemini-flash"},
                 "groq": {"model": "llama-3"},
-                "openai": {"model": "gpt-4"},
-                "openrouter": {"model": "router-model"},
-                "github": {"model": "gh-model"},
-                "deepseek": {"model": "ds-model"}
+                "openai": {"model": "gpt-4", "base_url": "https://api.openai.com"},
+                "openrouter": {"model": "router-model", "base_url": "https://openrouter"},
+                "github": {"model": "gh-model", "base_url": "https://gh"},
+                "deepseek": {"model": "ds-model", "base_url": "https://ds"}
             }
         }
 
