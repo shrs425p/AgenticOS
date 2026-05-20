@@ -149,3 +149,29 @@ def test_compact_history_llm_failure_fallback():
     assert len(compacted) == 11
     assert "pruned" in compacted[0]["content"]
     assert "20 messages" in compacted[0]["content"]
+
+
+def test_compact_history_preserves_system_messages():
+    agent = MockAgent()
+    agent.client.chat.return_value = "summarized context"
+    ce = ContextEngine(agent)
+    
+    # Message list with a system prompt at the front
+    messages = [
+        {"role": "system", "content": "You are AgenticOs directives..."},
+        *([{"role": "user", "content": f"msg {i}"} for i in range(30)])
+    ]
+    
+    compacted = ce.compact_history(messages, max_messages=20)
+    
+    # We expect the system message to be fully preserved at index 0
+    assert compacted[0]["role"] == "system"
+    assert "directives" in compacted[0]["content"]
+    
+    # The compacted message should be at index 1
+    assert compacted[1]["role"] == "user"
+    assert "[COMPACTED CONTEXT]" in compacted[1]["content"]
+    assert "summarized context" in compacted[1]["content"]
+    
+    # Recent chat messages should follow
+    assert compacted[2]["content"] == "msg 20"

@@ -30,6 +30,7 @@ class TestModelClientsRateLimiting:
         mock_error.response = mock_response
 
         mock_context = MagicMock()
+        mock_context.raise_for_status.side_effect = mock_error
         mock_context.__enter__.return_value.raise_for_status.side_effect = mock_error
         mock_post.return_value = mock_context
 
@@ -54,6 +55,7 @@ class TestModelClientsRateLimiting:
         mock_error.response = mock_response
 
         mock_context = MagicMock()
+        mock_context.raise_for_status.side_effect = mock_error
         mock_context.__enter__.return_value.raise_for_status.side_effect = mock_error
         mock_post.return_value = mock_context
 

@@ -104,10 +104,11 @@ One of the most advanced components of the architecture is the **Fast-Path** opt
 
 ## Security and PathGuard
 
-The architecture enforces a "Zero Trust" model for the local system.
--   **Green Zone (Workspace)**: Full autonomous access for read/write/delete.
--   **Yellow Zone (User Folders)**: Read-only access allowed; Write/Delete requires a **Human-In-The-Middle (HITM)** confirmation.
--   **Red Zone (System)**: Access to critical paths like `C:\Windows` or `C:\Program Files` is strictly blocked by the hardware-level guardrails.
+The architecture enforces a "Zero Trust" model for the local system using four security zones that can be dynamically switched at runtime via the `/zone` CLI command:
+-   **Green Zone (Workspace isolation)**: Full autonomous access inside `workspace/`; write/delete outside workspace requires a **Human-In-The-Middle (HITM)** confirmation.
+-   **Yellow Zone (System-wide write access)**: PathGuard is active, but outside-workspace writes are allowed autonomously without human approval.
+-   **Red Zone (Protected Assets)**: PathGuard is completely disabled; the agent has unrestricted filesystem access.
+-   **Blue Zone (Read-Only / Audit)**: All write and delete operations are blocked system-wide. The agent has read-only access.
 -   **Redaction Engine**: Automatically masks API keys, tokens, and sensitive PII in all logs and memory stores based on regex patterns in `policy.yaml`.
 
 ---

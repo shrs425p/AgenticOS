@@ -35,6 +35,10 @@ class RunnerMixin:
         if env_extra:
             env.update(env_extra)
 
+        # Force UTF-8 I/O for Python and subprocesses
+        env.setdefault("PYTHONIOENCODING", "utf-8")
+        env.setdefault("PYTHONUTF8", "1")
+
         blocked_reason = self._blocked_command_reason(command)
         if blocked_reason:
             return f"Error: {blocked_reason}"
@@ -50,7 +54,8 @@ class RunnerMixin:
             result = subprocess.run(
                 command,
                 capture_output=True,
-                text=True,
+                encoding="utf-8",
+                errors="replace",
                 timeout=timeout,
                 cwd=cwd,
                 input=input_data,

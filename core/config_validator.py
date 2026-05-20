@@ -44,7 +44,6 @@ _KNOWN_PROVIDERS = {"ollama", *_PROVIDER_ENV_KEYS.keys()}
 # Any key in the user's root file that isn't in this set gets a typo warning.
 _KNOWN_ROOT_KEYS = {
     "log_level",
-    "log_level",
     "agent", "cloud", "autonomy", "ollama", "memory", "cache",
     "logging", "rules", "security", "performance", "heuristics",
     "prompts", "policy", "tools", "terminal", "browser", "media",
@@ -380,13 +379,13 @@ def warn_config_issues(
         _info = print_info
     except Exception:
         def _warn(msg: str) -> None:  # type: ignore[misc]
-            logger.info(f"  ⚠  {msg}")
+            logger.info(f"  ▲  {msg}")
 
         def _err(msg: str) -> None:  # type: ignore[misc]
             logger.info(f"  ✗  {msg}")
 
         def _info(msg: str) -> None:  # type: ignore[misc]
-            logger.info(f"  ℹ  {msg}")
+            logger.info(f"  ◆  {msg}")
 
     printed_header = False
     for issue in result.issues:

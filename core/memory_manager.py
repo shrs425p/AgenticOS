@@ -17,10 +17,6 @@ from core.logger import get_logger
 logger = get_logger(__name__)
 
 
-
-logger = logging.getLogger(__name__)
-
-
 class MemoryManager:
     """Manages long-term memory consolidation and daily logging for AgenticOs."""
     

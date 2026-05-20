@@ -15,21 +15,21 @@ logger = get_logger(__name__)
 
 
 class Spinner:
-    def __init__(self, message=None, delay=0.1, cfg: dict = None):
+    def __init__(self, message=None, delay=0.08, cfg: dict = None):
         self.cfg = cfg or {}
         prompts = self.cfg.get("prompts", {})
         ui_labels = prompts.get("ui_labels", {})
         
         self.message = message or ui_labels.get("spinner_message", "Thinking")
         self.delay = delay
-        self.spinner = itertools.cycle(["|", "/", "-", "\\"])
+        self.spinner = itertools.cycle(["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"])
         self.running = False
         self.thread = None
 
     def _spin(self):
         while self.running:
             sys.stdout.write(
-                f"\r{C.CYAN}{next(self.spinner)}{C.RESET} {C.DIM}{self.message}...{C.RESET} "
+                f"\r{C.TEAL}{next(self.spinner)}{C.RESET} {C.SLATE}{self.message}...{C.RESET} "
             )
             sys.stdout.flush()
             time.sleep(self.delay)
@@ -55,14 +55,14 @@ def typewriter_print(text: str, delay: float = 0.002, color: str = ""):
     sys.stdout.flush()
 
 
-def pulse_line(length: int = 60, char: str = "="):
+def pulse_line(length: int = 60, char: str = "─"):
     """Animate a line with a breathing color effect."""
-    colors = [C.GRAY, C.DIM, C.CYAN, C.BOLD + C.CYAN, C.CYAN, C.DIM, C.GRAY]
-    for _ in range(2):
+    colors = [C.SLATE, C.DIM + C.SLATE, C.TEAL, C.BOLD + C.TEAL, C.TEAL, C.DIM + C.SLATE, C.SLATE]
+    for _ in range(1):
         for col in colors:
             sys.stdout.write(f"\r{col}{char * length}{C.RESET}")
             sys.stdout.flush()
-            time.sleep(0.05)
+            time.sleep(0.04)
     sys.stdout.write("\n")
 
 
@@ -70,18 +70,28 @@ class C:
     RESET = "\033[0m"
     BOLD = "\033[1m"
     DIM = "\033[2m"
-    RED = "\033[91m"
-    GREEN = "\033[92m"
-    YELLOW = "\033[93m"
-    BLUE = "\033[94m"
-    MAGENTA = "\033[95m"
-    CYAN = "\033[96m"
-    WHITE = "\033[97m"
-    GRAY = "\033[90m"
+    
+    # Premium Light & Soft 256-Color Palette
+    TEAL = "\033[38;5;152m"     # Soft Pastel Sage/Teal
+    SLATE = "\033[38;5;246m"    # Soft Light Slate Gray
+    PURPLE = "\033[38;5;182m"   # Soft Pastel Lavender
+    AMBER = "\033[38;5;223m"    # Soft Pale Amber/Peach
+    EMERALD = "\033[38;5;151m"  # Soft Pastel Sage/Mint Green
+    ROSE = "\033[38;5;217m"     # Soft Pastel Rose
+    BLUE = "\033[38;5;153m"     # Soft Pastel Ice Blue
+    WHITE = "\033[38;5;253m"    # Soft Light Off-White
+
+    # Standard Fallback Aliases
+    RED = ROSE
+    GREEN = EMERALD
+    YELLOW = AMBER
+    BLUE_STD = BLUE
+    MAGENTA = PURPLE
+    CYAN = TEAL
+    GRAY = SLATE
 
     @staticmethod
     def strip(text: str) -> str:
-
         """strip function."""
         return re.sub(r"\033\[[0-9;]*m", "", text)
 
@@ -92,15 +102,10 @@ def banner(cfg: dict = None):
     subtitle = cfg.get("prompts", {}).get("ui_labels", {}).get("banner_subtitle", "Autonomous CLI Agent  •  Ollama / Nvidia NIM  •  Session Memory")
     logger.info(
         f"""
-{C.CYAN}{C.BOLD}
-  █████╗  ██████╗ ███████╗███╗   ██╗████████╗██╗ ██████╗  ██████╗ ███████╗
- ██╔══██╗██╔════╝ ██╔════╝████╗  ██║╚══██╔══╝██║██╔════╝ ██╔═══██╗██╔════╝
- ███████║██║  ███╗█████╗  ██╔██╗ ██║   ██║   ██║██║      ██║   ██║███████╗
- ██╔══██║██║   ██║██╔══╝  ██║╚██╗██║   ██║   ██║██║      ██║   ██║╚════██║
- ██║  ██║╚██████╔╝███████╗██║ ╚████║   ██║   ██║╚██████╗ ╚██████╔╝███████║
- ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝   ╚═╝   ╚═╝ ╚═════╝  ╚═════╝ ╚══════╝
-{C.RESET}{C.GRAY}  {subtitle}
-{C.RESET}"""
+  {C.TEAL}{C.BOLD}▲  A G E N T I C   O S{C.RESET}  {C.SLATE}•  Workspace Intelligence{C.RESET}
+  {C.SLATE}──────────────────────────────────────────────────────────────────────{C.RESET}
+  {C.SLATE}{subtitle}{C.RESET}
+"""
     )
 
 
@@ -204,7 +209,7 @@ def parse_actions(text: str) -> list[tuple]:
         json_blob = _extract_first_json_object(content)
         if json_blob:
             try:
-                obj = json.loads(json_blob)
+                obj = json.loads(json_blob, strict=False)
                 if isinstance(obj, dict):
                     if "tool" in obj:
                         tool = str(obj.get("tool", "")).strip()
@@ -331,23 +336,23 @@ def has_final_answer(text: str) -> bool:
     return "FINAL ANSWER:" in text.upper()
 
 
-def print_section(label: str, content: str, color: str = C.CYAN, max_len: int = 1000):
+def print_section(label: str, content: str, color: str = C.TEAL, max_len: int = 1000):
     """print_section function."""
-    logger.info(f"\n{color}{C.BOLD}-- {label} {'-' * (50 - len(label))}{C.RESET}")
+    logger.info(f"\n{color}{C.BOLD}❯ {label}{C.RESET}")
     if content:
         typewriter_print(
-            content[:max_len] if len(content) > max_len else content, color=C.DIM
+            content[:max_len] if len(content) > max_len else content, color=C.SLATE
         )
 
 
-def print_action(tool: str, args, symbol: str = "[*]"):
+def print_action(tool: str, args, symbol: str = "❯"):
     """print_action function."""
     if isinstance(args, dict):
-        arg_str = " | ".join(f"{k}={v}" for k, v in args.items())
+        arg_str = ", ".join(f"{C.SLATE}{k}={C.RESET}{v}" for k, v in args.items())
     else:
-        arg_str = " | ".join(str(a) for a in (args or []))
+        arg_str = ", ".join(str(a) for a in (args or []))
     logger.info(
-        f"\n{C.YELLOW}{C.BOLD}{symbol}  ACTION:{C.RESET} {C.YELLOW}{tool}{C.RESET} {C.DIM}< {arg_str} >{C.RESET}"
+        f"\n{C.SLATE}❯ {C.EMERALD}call: {C.WHITE}{tool}{C.RESET}({arg_str})"
     )
 
 
@@ -356,29 +361,34 @@ def print_observation(result: str, max_len: int = 600):
     preview = (
         result
         if len(result) < max_len
-        else result[:max_len] + f"\n{C.GRAY}... (truncated){C.RESET}"
+        else result[:max_len] + f"\n{C.SLATE}... (truncated){C.RESET}"
     )
-    logger.info(f"{C.MAGENTA}{C.BOLD}OBSERVATION:{C.RESET}")
-    typewriter_print(preview, color=C.GRAY, delay=0.001)
+    
+    # Blockquote formatting with vertical slate lines
+    lines = preview.splitlines()
+    formatted_lines = [f"{C.SLATE}│{C.RESET} {line}" for line in lines]
+    formatted_text = "\n".join(formatted_lines)
+    
+    logger.info(f"{C.SLATE}❯ {C.PURPLE}obs:{C.RESET}")
+    sys.stdout.write(C.SLATE + formatted_text + C.RESET + "\n")
+    sys.stdout.flush()
 
 
 def print_error(msg: str):
     """print_error function."""
-    logger.info(f"\n{C.RED}{C.BOLD}ERROR:{C.RESET} {C.RED}{msg}{C.RESET}")
+    logger.info(f"\n{C.ROSE}✗ {msg}{C.RESET}")
 
 
 def print_warning(msg: str):
     """print_warning function."""
-    logger.info(f"\n{C.YELLOW}{C.BOLD}WARNING:{C.RESET} {C.YELLOW}{msg}{C.RESET}")
+    logger.info(f"\n{C.AMBER}▲ {msg}{C.RESET}")
 
 
 def print_info(msg: str):
     """print_info function."""
-    logger.info(f"{C.BLUE}INFO: {msg}{C.RESET}")
-
-
+    logger.info(f"{C.BLUE}◆ {C.SLATE}{msg}{C.RESET}")
 
 
 def print_success(msg: str):
     """print_success function."""
-    logger.info(f"{C.GREEN}OK: {msg}{C.RESET}")
+    logger.info(f"{C.EMERALD}✓ {msg}{C.RESET}")

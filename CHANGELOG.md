@@ -7,7 +7,7 @@
   - Corrected broken `actions/upload-artifact@v7` (non-existent) references to `@v4` in `ci.yml` and `dependency-review.yml`.
   - Corrected broken `actions/checkout@v6` (non-existent) references to `@v4` across `bandit.yml`, `codeql.yml`, `dependency-review.yml`, and `summary.yml`.
 - **Protected Security Auditing Rules**: Safeguarded essential Bandit scan command skips (`B101,B603,B602,B605,B607,B404`) and folder exclusions (`tools/terminal`) to prevent false-positive command execution alerts on agent terminal tools.
-- **AI Summary Formatting**: Updated Issue/PR summarization headers from `🤖 AI Summary` to `⫸ AI Summary` in `summary.yml`.
+- **AI Summary Formatting**: Updated Issue/PR summarization headers from a robot prefix (representing a robot icon) to `⫸ AI Summary` in `summary.yml`.
 - **CodeQL Alert Mitigation**: Resolved CodeQL Medium CWE-829 (unpinned-tag) alert by pinning `codecov/codecov-action` inside `ci.yml` to its immutable full-length commit SHA (`57e3a136b779b570ffcdbf80b3bdc90e7fab3de2`).
 
 ### Bug Fixes

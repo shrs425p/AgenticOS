@@ -75,7 +75,7 @@ AgenticOS boasts a robust ToolRegistry that dynamically loads tools and plugins.
 To ensure a high-quality codebase, please adhere to the following standards:
 
 ### 1. No Emojis in Source Code
-Do not use emojis in `.py` files to prevent encoding and formatting issues on Windows terminals. Instead, use standard terminal UI symbols and typography characters (e.g., box drawing characters, ✓, ✗, ⚠).
+Do not use emojis in `.py` files to prevent encoding and formatting issues on Windows terminals. Instead, use standard terminal UI symbols and typography characters (e.g., box drawing characters, ✓, ✗, ▲, ◆).
 
 ### 2. File Paths
 Avoid using hardcoded absolute directories (like `C:\AgenticOs`) in code, documentation, and templates. Use dynamic path resolution placeholders like `<REPO_ROOT>` or rely on the workspace relative paths managed by the system. The `workspace/` directory is meant for task artifacts.

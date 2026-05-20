@@ -3,7 +3,7 @@
 import time
 import random
 import logging
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 
 def retry_call(
@@ -12,7 +12,7 @@ def retry_call(
     base_delay: float = 5.0,
     retry_on_exception: Optional[Callable[[Exception], bool]] = None,
     on_retry: Optional[Callable[[int, Exception, float], None]] = None,
-) -> object:
+) -> Any:
     """Call `fn()` with exponential backoff.
 
     - `retry_on_exception(exc)` returns True to retry, False to re-raise immediately.

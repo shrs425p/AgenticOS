@@ -1,6 +1,11 @@
 # AgenticOS: Environment Configuration Script
 # This script sets AGENTICOS_HOME and adds the project directory to your PATH.
 
+param (
+    [switch]$Yes = $false,
+    [string]$PythonVersion = "3.12.8"
+)
+
 $ProjectRoot = $PSScriptRoot
 
 Write-Host "[INFO] Configuring AgenticOS environment..." -ForegroundColor Cyan
@@ -41,6 +46,7 @@ if ($CurrentPath -notlike "*$BinPath*") {
     Write-Host "[INFO] Adding $BinPath to your PATH..." -ForegroundColor White
     $NewPath = "$CurrentPath;$BinPath"
     [Environment]::SetEnvironmentVariable("Path", $NewPath, "User")
+    $env:Path = "$env:Path;$BinPath" # Update active process PATH
 } else {
     Write-Host "[INFO] $BinPath is already in your PATH." -ForegroundColor Green
 }
@@ -69,14 +75,24 @@ try {
 
 if (-not $PythonInstalled) {
     Write-Host "[WARNING] Python 3.12+ was not found on your system." -ForegroundColor Yellow
-    $Choice = Read-Host "Do you want to download and install Python 3.12 automatically? (Y/N)"
+    $Choice = 'N'
+    if ($Yes) {
+        Write-Host "[INFO] Non-interactive mode active. Auto-approving Python installation." -ForegroundColor Cyan
+        $Choice = 'Y'
+    } else {
+        $Choice = Read-Host "Do you want to download and install Python $PythonVersion automatically? (Y/N)"
+    }
     if ($Choice -eq 'Y' -or $Choice -eq 'y') {
-        Write-Host "[INFO] Attempting to install Python 3.12 via winget..." -ForegroundColor Cyan
+        Write-Host "[INFO] Attempting to install Python via winget..." -ForegroundColor Cyan
         $InstallSuccess = $false
         try {
-            winget install --id Python.Python.3.12 --exact --silent --accept-package-agreements --accept-source-agreements --scope user
+            $WingetId = "Python.Python.3.12"
+            if ($PythonVersion -like "3.13*") {
+                $WingetId = "Python.Python.3.13"
+            }
+            winget install --id $WingetId --exact --silent --accept-package-agreements --accept-source-agreements --scope user
             if ($LASTEXITCODE -eq 0) {
-                Write-Host "[SUCCESS] Python 3.12 installed successfully via winget." -ForegroundColor Green
+                Write-Host "[SUCCESS] Python installed successfully via winget." -ForegroundColor Green
                 $InstallSuccess = $true
             } else {
                 throw "winget returned non-zero exit code"
@@ -84,14 +100,18 @@ if (-not $PythonInstalled) {
         } catch {
             Write-Host "[INFO] winget installation failed or is unavailable. Downloading installer directly..." -ForegroundColor Cyan
             try {
-                $InstallerUrl = "https://www.python.org/ftp/python/3.12.3/python-3.12.3-amd64.exe"
+                $Arch = "amd64"
+                if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
+                    $Arch = "arm64"
+                }
+                $InstallerUrl = "https://www.python.org/ftp/python/$PythonVersion/python-$PythonVersion-$Arch.exe"
                 $InstallerPath = Join-Path $env:TEMP "python-installer.exe"
                 Write-Host "[INFO] Downloading Python installer from $InstallerUrl ..." -ForegroundColor Gray
                 Invoke-WebRequest -Uri $InstallerUrl -OutFile $InstallerPath
                 Write-Host "[INFO] Running Python installer silently (Adding Python to PATH)..." -ForegroundColor Gray
                 $InstallProcess = Start-Process -FilePath $InstallerPath -ArgumentList "/quiet InstallAllUsers=0 PrependPath=1 Include_test=0" -PassThru -Wait
                 if ($InstallProcess.ExitCode -eq 0) {
-                    Write-Host "[SUCCESS] Python 3.12 installed successfully." -ForegroundColor Green
+                    Write-Host "[SUCCESS] Python $PythonVersion installed successfully." -ForegroundColor Green
                     $InstallSuccess = $true
                 } else {
                     Write-Host "[ERROR] Python installation failed with exit code $($InstallProcess.ExitCode). Please install Python 3.12+ manually." -ForegroundColor Red
@@ -183,7 +203,9 @@ if (-not (Test-Path $EnvFile)) {
         Copy-Item -Path $EnvExample -Destination $EnvFile -Force
         Write-Host "[SUCCESS] Automatically generated .env file from template." -ForegroundColor Green
         
-        if (Get-Process -Name "explorer" -ErrorAction SilentlyContinue) {
+        if ($Yes) {
+            Write-Host "[INFO] Non-interactive mode active. Skipping .env file auto-launch." -ForegroundColor Cyan
+        } elseif (Get-Process -Name "explorer" -ErrorAction SilentlyContinue) {
             Write-Host "[INFO] Opening .env file in Notepad. Please edit it to configure your API keys." -ForegroundColor Cyan
             Start-Process notepad.exe -ArgumentList $EnvFile
         } else {

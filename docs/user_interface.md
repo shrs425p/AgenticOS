@@ -6,14 +6,16 @@ AgenticOS is designed to feel like a living part of the operating system. While 
 
 ## Aesthetic Philosophy
 
-AgenticOS uses a "Premium Terminal" aesthetic. It avoids plain, monochromatic text in favor of a curated, harmonious color palette that helps users distinguish between the agent's thoughts, its actions, and the system's responses.
+AgenticOS uses a "Premium Terminal" aesthetic. It avoids plain, monochromatic text in favor of a curated, harmonious, and soft pastel 256-color palette that helps users distinguish between the agent's thoughts, its actions, and the system's responses without causing visual fatigue.
 
 ### Color Mapping:
--   **CYAN**: The agent's Internal Monologue (Thoughts, Objectives).
--   **GREEN**: Successful tool execution and final answers.
--   **YELLOW**: Warnings, rate-limit retries, and security guardrails.
--   **RED**: Errors, security blocks, and critical failures.
--   **MAGENTA**: Tool names and specific JSON parameters.
+-   **TEAL / CYAN (Soft Sage Teal)**: The agent's Internal Monologue (Thoughts, Objectives).
+-   **GREEN / EMERALD (Sage Mint Green)**: Successful tool execution, successes (`✓`), and the Final Answer thin rule header.
+-   **YELLOW / AMBER (Muted Pale Peach)**: Warnings (`▲`), rate-limit retries, and fallback messages.
+-   **RED / ROSE (Soft Pastel Rose)**: Errors (`✗`), security blocks, and critical guardrails.
+-   **MAGENTA / PURPLE (Soft Pastel Lavender)**: Tool parameters, keys, and observation highlights (`obs:`).
+-   **BLUE (Soft Ice Blue)**: Diagnostic information (`◆`) and execution metadata.
+-   **GRAY / SLATE (Soft Light Slate Gray)**: Observational content blocks (prefixed with `│`) and horizontal dividers (`─`).
 
 ---
 
@@ -23,7 +25,7 @@ As of v2.0.0, AgenticOS features a highly optimized terminal rendering engine. W
 
 ### Optimization Highlights:
 -   **Block Flushing**: Text is rendered in semantic chunks rather than raw bytes.
--   **UTF-8 Enforcement**: The UI automatically reconfigures the Windows console to handle complex emojis and special characters without crashing.
+-   **Typography & Symbol Enforcement**: The UI actively avoids noisy, colored graphical emojis that disrupt readability on Windows and modern term systems. It enforces clean, high-contrast, soft-colored geometric unicode typographic symbols (`▲`, `◆`, `✗`, `✓`, `❯`).
 -   **Stream Buffering**: During high-volume outputs (e.g., long file reads), the UI dynamically adjusts the printing speed to remain readable without overwhelming the user.
 
 ---
@@ -98,7 +100,7 @@ python scripts/test_ui.py
 ```
 This will test:
 1.  **Color support** (ANSI escape codes).
-2.  **Emoji rendering** (UTF-8).
+2.  **Unicode typographic symbol rendering** (UTF-8).
 3.  **Blinking and bold text**.
 4.  **Character-per-second throughput**.
 

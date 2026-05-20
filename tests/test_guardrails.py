@@ -211,3 +211,117 @@ def test_guardrails_workspace_green_zone_exception(tmp_path):
 
         # It should fall back to YELLOW zone
         assert guard.check_path("test", "read")[0] is True
+
+
+# ── Blue Zone (read_only) tests ────────────────────────────────────────────────
+
+def test_blue_zone_blocks_workspace_write(tmp_path):
+    """read_only=True blocks writes even inside the workspace."""
+    ws = tmp_path / "workspace"
+    ws.mkdir()
+    cfg = {
+        "security": {"read_only_mode": True},
+        "agent": {"workspace": str(ws)},
+    }
+    guard = PathGuard(cfg)
+    assert guard.read_only is True
+
+    allowed, msg = guard.check_path(str(ws / "file.txt"), "write")
+    assert not allowed
+    assert "READ_ONLY_MODE" in msg
+
+
+def test_blue_zone_allows_workspace_read(tmp_path):
+    """read_only=True must NOT block reads inside workspace."""
+    ws = tmp_path / "workspace"
+    ws.mkdir()
+    cfg = {
+        "security": {"read_only_mode": True},
+        "agent": {"workspace": str(ws)},
+    }
+    guard = PathGuard(cfg)
+
+    allowed, _ = guard.check_path(str(ws / "file.txt"), "read")
+    assert allowed
+
+
+def test_blue_zone_allows_outside_read(tmp_path):
+    """read_only=True must NOT block reads outside workspace."""
+    ws = tmp_path / "workspace"
+    ws.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    cfg = {
+        "security": {"read_only_mode": True},
+        "agent": {"workspace": str(ws)},
+    }
+    guard = PathGuard(cfg)
+
+    allowed, _ = guard.check_path(str(outside / "notes.txt"), "read")
+    assert allowed
+
+
+def test_blue_zone_blocks_outside_write(tmp_path):
+    """read_only=True blocks writes outside workspace too."""
+    ws = tmp_path / "workspace"
+    ws.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    cfg = {
+        "security": {"read_only_mode": True, "require_hitm_outside_workspace": False},
+        "agent": {"workspace": str(ws)},
+    }
+    guard = PathGuard(cfg)
+
+    allowed, msg = guard.check_path(str(outside / "notes.txt"), "write")
+    assert not allowed
+    assert "READ_ONLY_MODE" in msg
+
+
+def test_blue_zone_blocks_delete_operation(tmp_path):
+    """read_only=True treats 'delete' as a write op and blocks it."""
+    ws = tmp_path / "workspace"
+    ws.mkdir()
+    cfg = {
+        "security": {"read_only_mode": True},
+        "agent": {"workspace": str(ws)},
+    }
+    guard = PathGuard(cfg)
+
+    allowed, msg = guard.check_path(str(ws / "file.txt"), "delete")
+    assert not allowed
+    assert "READ_ONLY_MODE" in msg
+
+
+def test_blue_zone_disabled_by_default(tmp_path):
+    """read_only defaults to False when not set in config."""
+    ws = tmp_path / "workspace"
+    ws.mkdir()
+    cfg = {"agent": {"workspace": str(ws)}}
+    guard = PathGuard(cfg)
+
+    assert guard.read_only is False
+    # Workspace writes should still be allowed
+    allowed, _ = guard.check_path(str(ws / "file.txt"), "write")
+    assert allowed
+
+
+def test_blue_zone_blocked_paths_still_enforced(tmp_path):
+    """read_only mode must still respect blocked_paths for reads."""
+    ws = tmp_path / "workspace"
+    ws.mkdir()
+    blocked = tmp_path / "blocked"
+    blocked.mkdir()
+    cfg = {
+        "security": {
+            "read_only_mode": True,
+            "blocked_paths": [str(blocked)],
+        },
+        "agent": {"workspace": str(ws)},
+    }
+    guard = PathGuard(cfg)
+
+    # Blocked path read should still be denied (blocked_paths checked before read_only)
+    allowed, msg = guard.check_path(str(blocked / "secret.txt"), "read")
+    assert not allowed
+    assert "SECURITY POLICY" in msg

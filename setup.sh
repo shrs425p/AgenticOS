@@ -2,6 +2,18 @@
 # AgenticOS: Environment Configuration Script for Linux/macOS
 # This script initializes the project structure and prepares the global launcher.
 
+YES_MODE=false
+PYTHON_VERSION="3.12.8"
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -y|--yes|--non-interactive) YES_MODE=true ;;
+        --python-version) PYTHON_VERSION="$2"; shift ;;
+        *) echo "Unknown parameter: $1"; exit 1 ;;
+    esac
+    shift
+done
+
 # Bold colors for terminal output
 CYAN='\033[1;36m'
 WHITE='\033[1;37m'
@@ -76,23 +88,30 @@ fi
 
 if [ -z "$PYTHON_CMD" ]; then
     echo -e "${YELLOW}[WARNING] Python 3.12+ was not found on your system.${NC}"
-    read -p "Do you want to download and install Python 3.12 automatically? (y/n): " choice
+    choice="n"
+    if [ "$YES_MODE" = true ]; then
+        echo -e "${CYAN}[INFO] Non-interactive mode active. Auto-approving Python installation.${NC}"
+        choice="y"
+    else
+        read -p "Do you want to download and install Python $PYTHON_VERSION automatically? (y/n): " choice
+    fi
     case "$choice" in 
         [yY]|[yY][eE][sS])
+            MAJOR_MINOR=$(echo "$PYTHON_VERSION" | cut -d. -f1-2)
             if [[ "$OSTYPE" == "darwin"* ]]; then
                 if command -v brew > /dev/null; then
-                    echo -e "${CYAN}[INFO] Installing Python 3.12 via Homebrew...${NC}"
-                    brew install python@3.12
-                    PYTHON_CMD="python3"
+                    echo -e "${CYAN}[INFO] Installing Python $MAJOR_MINOR via Homebrew...${NC}"
+                    brew install python@$MAJOR_MINOR
+                    PYTHON_CMD="python$MAJOR_MINOR"
                 else
                     echo -e "${RED}[ERROR] Homebrew is not installed. Please install Homebrew or Python 3.12+ manually.${NC}"
                     exit 1
                 fi
             elif command -v apt-get > /dev/null; then
-                echo -e "${CYAN}[INFO] Installing Python 3.12 via apt...${NC}"
+                echo -e "${CYAN}[INFO] Installing Python $MAJOR_MINOR via apt...${NC}"
                 sudo apt-get update
-                sudo apt-get install -y python3.12 python3.12-venv python3-pip
-                PYTHON_CMD="python3"
+                sudo apt-get install -y python$MAJOR_MINOR python$MAJOR_MINOR-venv python3-pip
+                PYTHON_CMD="python$MAJOR_MINOR"
             else
                 echo -e "${RED}[ERROR] Automated installation is not supported on this platform. Please install Python 3.12+ manually.${NC}"
                 exit 1
@@ -168,7 +187,9 @@ if [ ! -f "$ENV_FILE" ]; then
         cp "$ENV_EXAMPLE" "$ENV_FILE"
         echo -e "${GREEN}[SUCCESS] Automatically generated .env file from template.${NC}"
         
-        if command -v xdg-open > /dev/null; then
+        if [ "$YES_MODE" = true ]; then
+            echo -e "${CYAN}[INFO] Non-interactive mode active. Skipping .env file auto-launch.${NC}"
+        elif command -v xdg-open > /dev/null; then
             echo -e "${CYAN}[INFO] Opening .env file in default GUI editor...${NC}"
             xdg-open "$ENV_FILE" &
         elif command -v open > /dev/null; then
@@ -178,6 +199,10 @@ if [ ! -f "$ENV_FILE" ]; then
             echo -e "${CYAN}[INFO] Please edit the newly created .env file to configure your API keys.${NC}"
         fi
     fi
+else
+    echo -e "${GRAY}[INFO] .env file is already configured.${NC}"
+fi
+
 # 9. Perform System Diagnostic & Health Summary
 echo -e "\n${CYAN}[INFO] Running System Diagnostics & Health Checks...${NC}"
 

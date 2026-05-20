@@ -1,6 +1,6 @@
 # AgenticOS Test Suite
 
-This directory contains the comprehensive, automated test suite for AgenticOS. It features over 575+ unit and integration tests covering the core loop, model clients, security guardrails, filesystem mixins, terminal utilities, and custom plugin architectures.
+This directory contains the comprehensive, automated test suite for AgenticOS. It features over 340+ unit and integration tests covering the core loop, model clients, security guardrails, filesystem mixins, terminal utilities, and custom plugin architectures.
 
 ---
 

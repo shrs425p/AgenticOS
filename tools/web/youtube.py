@@ -5,10 +5,88 @@ import re
 import urllib.parse
 
 from tools.web.session import requests_module
+from tools.web.browser import _ensure_browser, BrowserManager
 
 
 from core.tool_base import tool
 class YouTubeMixin:
+    @tool(name="youtube_play_next", desc="Skip to the next YouTube video in the active browser tab.", category="Web")
+    @_ensure_browser
+    async def youtube_play_next(self, mgr: BrowserManager) -> str:
+        """Skip to the next YouTube video.
+
+        Requires an active browser session showing a YouTube page.
+        """
+        if mgr.page is None:
+            return "Error: No browser session active."
+        url = mgr.page.url or ""
+        if "youtube.com" not in url:
+            return "Error: Active browser tab is not on YouTube."
+
+        try:
+            if "watch" not in url:
+                # If we are on search results, click the first video title instead
+                first_video = "ytd-video-renderer a#video-title, a#video-title"
+                await mgr.page.click(first_video, timeout=5000)
+                return "Clicked first video in search results."
+
+            # Click next button in player controls
+            next_btn = "button.ytp-next-button, a.ytp-next-button"
+            await mgr.page.click(next_btn, timeout=5000)
+            return "Clicked next video button in player controls."
+        except Exception as e:
+            # Fallback to keypress
+            try:
+                await mgr.page.keyboard.press("Shift+N")
+                return "Pressed Shift+N to play next video."
+            except Exception as e2:
+                return f"Error skipping video: {e} | {e2}"
+
+    @tool(name="youtube_play_pause", desc="Toggle play/pause of the YouTube video in the active browser tab.", category="Web")
+    @_ensure_browser
+    async def youtube_play_pause(self, mgr: BrowserManager) -> str:
+        """Toggle play/pause of the YouTube video."""
+        if mgr.page is None:
+            return "Error: No browser session active."
+        url = mgr.page.url or ""
+        if "youtube.com" not in url:
+            return "Error: Active browser tab is not on YouTube."
+
+        try:
+            await mgr.page.keyboard.press("k")
+            return "Toggled play/pause (pressed 'k')."
+        except Exception as e:
+            return f"Error toggling play/pause: {e}"
+
+    @tool(name="youtube_skip_ad", desc="Skip any active advertisement playing on YouTube.", category="Web")
+    @_ensure_browser
+    async def youtube_skip_ad(self, mgr: BrowserManager) -> str:
+        """Attempt to skip any playing advertisement."""
+        if mgr.page is None:
+            return "Error: No browser session active."
+        url = mgr.page.url or ""
+        if "youtube.com" not in url:
+            return "Error: Active browser tab is not on YouTube."
+
+        selectors = [
+            "button.ytp-skip-ad-button",
+            ".ytp-ad-skip-button",
+            ".ytp-ad-skip-button-text",
+            ".ytp-skip-ad-button-hover"
+        ]
+        try:
+            for selector in selectors:
+                try:
+                    el = await mgr.page.query_selector(selector)
+                    if el and await el.is_visible():
+                        await el.click()
+                        return f"Successfully clicked skip ad button: {selector}"
+                except Exception:
+                    pass
+            return "No visible skip ad button detected."
+        except Exception as e:
+            return f"Error checking/skipping ad: {e}"
+
     @tool(name="find_youtube_video", desc="Find YouTube video link. Args: query, channel (optional)", category="Web")
     def find_youtube_video(self, query: str, channel: str = "") -> str:
         """Best-effort: find a YouTube watch URL for a query.

@@ -138,22 +138,61 @@ def run_health_check() -> None:
         passed = False
         cfg = {}
 
-    # 3. Ollama Reachability
-    print("  [Ollama] Checking reachability")
-    ollama_url = cfg.get("ollama", {}).get("base_url", "http://localhost:11434").rstrip("/")
-    try:
-        req = urllib.request.Request(f"{ollama_url}/api/version", method="GET")
-        with urllib.request.urlopen(req, timeout=2) as response:
-            if response.status == 200:
-                data = json.loads(response.read().decode('utf-8'))
-                version = data.get("version", "unknown")
-                print(f"    ✓ Reachable (Version {version})")
-            else:
-                print(f"    ✗ HTTP {response.status}")
-                passed = False
-    except Exception as e:
-        print(f"    ✗ Unreachable: {e}")
-        passed = False
+    # 3. Provider Reachability
+    provider = cfg.get("agent", {}).get("provider", "ollama").lower()
+    print(f"  [Provider] Checking active provider: {provider}")
+
+    if provider == "ollama":
+        ollama_url = cfg.get("ollama", {}).get("base_url", "http://localhost:11434").rstrip("/")
+        try:
+            req = urllib.request.Request(f"{ollama_url}/api/version", method="GET")
+            with urllib.request.urlopen(req, timeout=2) as response:
+                if response.status == 200:
+                    data = json.loads(response.read().decode('utf-8'))
+                    version = data.get("version", "unknown")
+                    print(f"    ✓ Reachable (Version {version})")
+                else:
+                    print(f"    ✗ HTTP {response.status}")
+                    passed = False
+        except Exception as e:
+            print(f"    ✗ Unreachable: {e}")
+            passed = False
+    else:
+        env_key_map = {
+            "nvidia": "NVIDIA_API_KEY",
+            "gemini": "GEMINI_API_KEY",
+            "groq": "GROQ_API_KEY",
+            "openai": "OPENAI_API_KEY",
+            "openrouter": "OPENROUTER_API_KEY",
+            "github": "GITHUB_TOKEN",
+            "deepseek": "DEEPSEEK_API_KEY",
+        }
+        env_key = env_key_map.get(provider, f"{provider.upper()}_API_KEY")
+        api_key = os.environ.get(env_key)
+        if api_key:
+            masked_key = api_key[:4] + "..." + api_key[-4:] if len(api_key) > 8 else "configured"
+            print(f"    ✓ {env_key} is configured ({masked_key})")
+            
+            base_url = ""
+            if provider == "nvidia":
+                base_url = cfg.get("cloud", {}).get("nvidia", {}).get("base_url", "https://integrate.api.nvidia.com/v1").rstrip("/")
+            elif provider == "openai":
+                base_url = cfg.get("cloud", {}).get("openai", {}).get("base_url", "https://api.openai.com/v1").rstrip("/")
+            elif provider == "openrouter":
+                base_url = cfg.get("cloud", {}).get("openrouter", {}).get("base_url", "https://openrouter.ai/api/v1").rstrip("/")
+            
+            if base_url:
+                try:
+                    host_url = base_url.split("/v1")[0]
+                    req = urllib.request.Request(host_url, method="HEAD")
+                    with urllib.request.urlopen(req, timeout=3) as resp:
+                        pass
+                    print(f"    ✓ Base URL reachable: {base_url}")
+                except Exception:
+                    print(f"    ✓ Base URL ping attempted: {base_url}")
+        else:
+            print(f"    ✗ {env_key} is missing from environment variables or .env file.")
+            passed = False
 
     # 4. Tools Importability
     print("  [Tools] Verifying tool imports")

@@ -15,4 +15,3 @@ autonomy:
   startup_model_prompt: false
   power_mode: true
 log_level: INFO
-log_level: INFO

@@ -174,10 +174,10 @@ class ContextEngine:
     def compact_history(self, messages: List[Dict[str, str]], max_messages: int = 40) -> List[Dict[str, str]]:
         """Compress old messages into a high-density summary to preserve context.
         
-        When conversation history exceeds max_messages, the oldest messages 
-        (excluding the first system-level ones) are summarized into a single 
+        When conversation history exceeds max_messages, the oldest chat messages 
+        (excluding system-level directives) are summarized into a single 
         "compacted context" message. This preserves 100% of semantic meaning
-        while dramatically reducing token count.
+        while keeping system instructions intact and dramatically reducing token count.
         
         Args:
             messages: The full message list.
@@ -189,15 +189,27 @@ class ContextEngine:
         if len(messages) <= max_messages:
             return messages
 
-        # How many messages to compact (keep the most recent 20 intact)
-        keep_recent = min(20, max_messages // 2)
-        to_compact = messages[:-keep_recent]
-        to_keep = messages[-keep_recent:]
+        # Separate system instructions from interactive chat messages
+        system_msgs = [m for m in messages if m.get("role") == "system"]
+        chat_msgs = [m for m in messages if m.get("role") != "system"]
+
+        # If we don't have enough chat messages to warrant compaction, just return original messages
+        if len(chat_msgs) <= 10:
+            return messages
+
+        # Calculate how many recent chat messages to keep intact (at least 10 or half of max_messages)
+        keep_recent = max(10, min(20, (max_messages - len(system_msgs)) // 2))
+        if len(chat_msgs) <= keep_recent:
+            return messages
+
+        to_compact = chat_msgs[:-keep_recent]
+        to_keep = chat_msgs[-keep_recent:]
 
         # Try LLM-powered compaction
         llm = getattr(self.agent, "client", None)
         compact_cfg = self.cfg.get("prompts", {}).get("compaction", {})
         
+        compacted_msg = None
         if llm and hasattr(llm, "chat"):
             try:
                 # Build a transcript of the old messages
@@ -224,15 +236,16 @@ class ContextEngine:
                         "role": "user",
                         "content": f"{start_marker}{summary.strip()}{end_marker}",
                     }
-                    return [compacted_msg] + to_keep
             except Exception as e:
                 from core.logger import get_logger
                 get_logger("context_engine").warning("LLM context compaction failed, falling back to truncation: %s", e)
 
-        # Fallback: simple truncation with a marker
-        fallback_tmpl = compact_cfg.get("fallback_note", "[CONTEXT NOTE: {count} messages pruned]")
-        fallback_msg = {
-            "role": "user",
-            "content": fallback_tmpl.format(count=len(to_compact)),
-        }
-        return [fallback_msg] + to_keep
+        # Fallback to simple truncation if LLM compaction is unavailable or failed
+        if not compacted_msg:
+            fallback_tmpl = compact_cfg.get("fallback_note", "[CONTEXT NOTE: {count} messages pruned]")
+            compacted_msg = {
+                "role": "user",
+                "content": fallback_tmpl.format(count=len(to_compact)),
+            }
+
+        return system_msgs + [compacted_msg] + to_keep

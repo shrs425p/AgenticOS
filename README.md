@@ -18,7 +18,7 @@
     <img src="https://img.shields.io/badge/latest-v2.1.1-blue?style=flat-square" alt="Latest Version">
     <img src="https://img.shields.io/badge/license-Apache_2.0-red?style=flat-square" alt="License">
     <img src="https://img.shields.io/badge/tools-180-green?style=flat-square" alt="Tools">
-    <img src="https://img.shields.io/badge/tests-576_passed-brightgreen?style=flat-square" alt="Tests">
+    <img src="https://img.shields.io/badge/tests-347_passed-brightgreen?style=flat-square" alt="Tests">
     <a href="https://codecov.io/gh/shrs425p/AgenticOS"><img src="https://codecov.io/gh/shrs425p/AgenticOS/branch/main/graph/badge.svg" alt="Coverage"></a>
   </p>
   
@@ -75,7 +75,7 @@ Following a massive 96-item stress test, AgenticOS v2.1.1 has been hardened for 
 -   **OS-Level Desktop Accessibility**: AppleScript accessibility control (AXMinimized / AXZoomed) and recursive window queries for scriptable Cocoa & non-scriptable macOS applications.
 -   **Zone-Based Security**: Hardware-level path guardrails protect critical system folders.
 -   **Environment Portability**: 100% configuration-driven logic with zero hardcoded paths or URLs.
--   **Resilient Testing**: Comprehensive `pytest` suite with 576+ tests ensuring 100% deterministic tool behavior.
+-   **Resilient Testing**: Comprehensive `pytest` suite with 347 passed tests ensuring 100% deterministic tool behavior.
 
 ---
 
@@ -120,7 +120,7 @@ Explore the full AgenticOS manual for deep technical insights:
 
 ## Core Security Features
 
--   **Zone-Based Guardrails**: Restrict the agent to `workspace/` (Green Zone) while enforcing Human-in-the-Middle (HITM) for user folders (Yellow Zone) and blocking system paths (Red Zone).
+-   **Zone-Based Guardrails**: Four security zones (Green, Yellow, Red, Blue/Read-Only) that can be switched dynamically at runtime using the `/zone` command to balance safety and autonomy.
 -   **Command Validation**: Advanced regex blocking for dangerous patterns like `rm -rf`, `format`, or `net user`.
 -   **Audit Traceability**: Every thought, action, and tool output is mirrored in `evaluation_output.txt` and recorded in a persistent SQLite audit log.
 

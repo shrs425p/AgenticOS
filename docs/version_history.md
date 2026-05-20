@@ -24,22 +24,31 @@ The v2.1.1 release establishes seamless, robust, low-level OS integrations acros
 
 ---
 
-## v2.0.0 - The "Portable and Resilient" Edition
-*Release Date: 2026-05-15*
+## v2.1.0 - The "Portable and Resilient" Edition
+*Release Date: 2026-05-17*
 
 ### Key Innovations:
 1.  **Layered Configuration System**: Migrated from a single `config.yaml` to a multi-file configuration directory (`config/`). This enables clean separation of security policy, service endpoints, and system heuristics.
-2.  **Comprehensive Testing Suite**: Launched a `pytest`-based framework with 40+ unit tests covering core logic, filesystem tools, and security guardrails.
+2.  **Comprehensive Testing Suite**: Expanded the `pytest`-based framework with unit and integration tests covering core logic, filesystem tools, and security guardrails.
 3.  **Zero-Hardcoding Policy**: Fully refactored the codebase to eliminate absolute paths and hardcoded URLs, ensuring 100% environment portability.
 4.  **Secret Redaction Engine**: Implemented an automated regex-based masking system that protects API keys and PII in all logs and persistent memory.
 5.  **CI/CD Automation**: Integrated GitHub Actions to enforce testing and coverage standards on every code submission.
 
 ---
 
-## v2.0 - The "Hardened" Edition
+## v2.0.1 - The Maintenance and Daily Plugins Update
+*Release Date: 2026-05-16*
+
+### Key Innovations:
+1.  **Daily Maintenance Plugins**: Introduced the daily maintenance plugins framework for scheduled automated tasks and monitoring.
+2.  **Plugin Test Coverage**: Implemented comprehensive testing and lifecycle validation checks for scheduled tasks.
+
+---
+
+## v2.0.0 - The "Hardened" Edition
 *Release Date: 2026-05-14*
 
-The v2.0 release focuses on transforming AgenticOS into a resilient system capable of handling enterprise-scale tasks with minimal resource impact and maximum security.
+The v2.0.0 release focuses on transforming AgenticOS into a resilient system capable of handling enterprise-scale tasks with minimal resource impact and maximum security.
 
 ### Key Innovations:
 1.  **Fast-Path PowerShell Tooling**: Replaced inefficient Python-based recursive crawlers with native PowerShell pipelines. This reduced drive-audit times from 30+ minutes to <3 minutes.

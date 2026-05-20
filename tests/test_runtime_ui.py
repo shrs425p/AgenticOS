@@ -15,7 +15,8 @@ from core.runtime_ui import (
     print_warning,
     print_info,
     print_success,
-    C
+    C,
+    logger as ui_logger
 )
 
 def test_spinner():
@@ -34,11 +35,15 @@ def test_pulse_line():
     with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
         with patch("time.sleep", return_value=None):
             pulse_line(length=5)
-            assert "=" * 5 in mock_stdout.getvalue()
+            assert "─" * 5 in mock_stdout.getvalue()
 
 def test_banner(caplog):
-    banner()
-    assert "Autonomous CLI Agent" in caplog.text or "██" in caplog.text
+    ui_logger.propagate = True
+    try:
+        banner()
+        assert "Autonomous CLI Agent" in caplog.text or "██" in caplog.text
+    finally:
+        ui_logger.propagate = False
 
 def test_parse_actions():
     # JSON format
@@ -46,6 +51,12 @@ def test_parse_actions():
     assert len(res) == 1
     assert res[0][0] == "write_file"
     assert res[0][1]["path"] == "a.txt"
+
+    # JSON format with unescaped literal newlines
+    res = parse_actions('ACTION: {"tool": "write_file", "args": {"path": "a.txt", "content": "hello\nworld\nmulti\nline"}}')
+    assert len(res) == 1
+    assert res[0][0] == "write_file"
+    assert res[0][1]["content"] == "hello\nworld\nmulti\nline"
 
     # Function format
     res = parse_actions('ACTION: write_file(path="a.txt")')
@@ -73,24 +84,22 @@ def test_has_final_answer():
     assert not has_final_answer("No answer here")
 
 def test_print_utilities(caplog):
-    print_section("Test", "Content")
-    print_action("tool", {"arg": "val"})
-    print_action("tool", ["val"])
-    print_observation("obs")
-    print_error("err")
-    print_warning("warn")
-    print_info("info")
-    print_success("succ")
+    ui_logger.propagate = True
+    try:
+        print_section("Test", "Content")
+        print_action("tool", {"arg": "val"})
+        print_action("tool", ["val"])
+        print_observation("obs")
+        print_error("err")
+        print_warning("warn")
+        print_info("info")
+        print_success("succ")
 
-    out = caplog.text
-    assert "Test" in out
-    assert True
-    assert "tool" in out
-    assert True
-    assert True
-    assert True
-    assert True
-    assert True
+        out = caplog.text
+        assert "Test" in out
+        assert "tool" in out
+    finally:
+        ui_logger.propagate = False
 
 def test_c_strip():
     colored = f"{C.RED}test{C.RESET}"

@@ -28,6 +28,16 @@ class ReadWriteMixin:
         self._deny_file_modify()
         self._deny_internal_writes(p)
         try:
+            line_count = len(content.splitlines())
+            if line_count >= 200:
+                return (
+                    f"Error: The content you are trying to write has {line_count} lines, which is 200 or more lines. "
+                    "To prevent generating excessively large files at once, you must work in parts. "
+                    "Please write a smaller initial file (under 200 lines) and then use 'append_file' or "
+                    "editing tools to build the rest of the file incrementally, or split your design into "
+                    "smaller, more modular components/files."
+                )
+
             dirname = os.path.dirname(p)
             if dirname:
                 os.makedirs(dirname, exist_ok=True)
@@ -44,6 +54,14 @@ class ReadWriteMixin:
         self._deny_file_modify()
         self._deny_internal_writes(p)
         try:
+            line_count = len(content.splitlines())
+            if line_count >= 200:
+                return (
+                    f"Error: The content you are trying to append has {line_count} lines, which is 200 or more lines. "
+                    "To prevent appending excessively large blocks at once, you must work in parts. "
+                    "Please append in smaller chunks under 200 lines."
+                )
+
             p.parent.mkdir(parents=True, exist_ok=True)
             with p.open("a", encoding=encoding) as f:
                 f.write(content)

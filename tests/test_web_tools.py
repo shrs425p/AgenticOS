@@ -108,3 +108,90 @@ def test_web_pick_best_link(mock_load_cfg, mock_req):
     args, kwargs = mock_req.get.call_args
     assert urlparse(args[0]).netloc == "mock.google.com"
 
+
+def test_youtube_play_next():
+    import asyncio
+    tool = MockWebTools()
+    mgr = mock.MagicMock()
+    page = mock.AsyncMock()
+    page.url = "https://www.youtube.com/watch?v=abcdef"
+    mgr.page = page
+    
+    tool.browser_mgr = mgr
+    mgr.run_coro = lambda coro: asyncio.run(coro)
+    
+    res = tool.youtube_play_next()
+    assert "Clicked next video" in res
+    page.click.assert_called_once_with("button.ytp-next-button, a.ytp-next-button", timeout=5000)
+
+
+def test_youtube_play_next_search_results():
+    import asyncio
+    tool = MockWebTools()
+    mgr = mock.MagicMock()
+    page = mock.AsyncMock()
+    page.url = "https://www.youtube.com/results?search_query=mrbeast"
+    mgr.page = page
+    
+    tool.browser_mgr = mgr
+    mgr.run_coro = lambda coro: asyncio.run(coro)
+    
+    res = tool.youtube_play_next()
+    assert "Clicked first video in search results" in res
+    page.click.assert_called_once_with("ytd-video-renderer a#video-title, a#video-title", timeout=5000)
+
+
+def test_youtube_play_next_error_fallback():
+    import asyncio
+    tool = MockWebTools()
+    mgr = mock.MagicMock()
+    page = mock.AsyncMock()
+    page.url = "https://www.youtube.com/watch?v=abcdef"
+    page.click.side_effect = Exception("Click failed")
+    mgr.page = page
+    
+    tool.browser_mgr = mgr
+    mgr.run_coro = lambda coro: asyncio.run(coro)
+    
+    res = tool.youtube_play_next()
+    assert "Pressed Shift+N" in res
+    page.keyboard.press.assert_called_once_with("Shift+N")
+
+
+def test_youtube_play_pause():
+    import asyncio
+    tool = MockWebTools()
+    mgr = mock.MagicMock()
+    page = mock.AsyncMock()
+    page.url = "https://www.youtube.com/watch?v=abcdef"
+    mgr.page = page
+    
+    tool.browser_mgr = mgr
+    mgr.run_coro = lambda coro: asyncio.run(coro)
+    
+    res = tool.youtube_play_pause()
+    assert "Toggled play/pause" in res
+    page.keyboard.press.assert_called_once_with("k")
+
+
+def test_youtube_skip_ad():
+    import asyncio
+    tool = MockWebTools()
+    mgr = mock.MagicMock()
+    page = mock.AsyncMock()
+    page.url = "https://www.youtube.com/watch?v=abcdef"
+    mgr.page = page
+    
+    mock_el = mock.AsyncMock()
+    mock_el.is_visible.return_value = True
+    page.query_selector.return_value = mock_el
+    
+    tool.browser_mgr = mgr
+    mgr.run_coro = lambda coro: asyncio.run(coro)
+    
+    res = tool.youtube_skip_ad()
+    assert "Successfully clicked skip ad" in res
+    mock_el.click.assert_called_once()
+
+
+

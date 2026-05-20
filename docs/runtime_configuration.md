@@ -78,5 +78,11 @@ When a key is requested (e.g., `self.cfg.get("security")`), the `ConfigLoader`:
 
 ---
 
-*Last Updated: 2026-05-15*
+## Accessing Config via CLI
+
+You can easily locate and open the configuration folder using the **`/config`** command directly from the AgenticOS terminal. This command dynamically resolves the installed location of AgenticOS and opens the `config/` directory in the host machine's default file explorer (explorer.exe, open, or xdg-open) cross-platform.
+
+---
+
+*Last Updated: 2026-05-20*
 *Status: Architecture Hardened*

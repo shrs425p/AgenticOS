@@ -25,8 +25,15 @@ class StructuredMixin:
         self._deny_internal_writes(p)
         try:
             obj = json.loads(data) if data else {}
+            formatted = json.dumps(obj, indent=2)
+            line_count = len(formatted.splitlines())
+            if line_count >= 200:
+                return (
+                    f"Error: The JSON you are trying to write has {line_count} lines, which is 200 or more lines. "
+                    "To prevent generating excessively large files at once, you must work in parts."
+                )
             p.parent.mkdir(parents=True, exist_ok=True)
-            p.write_text(json.dumps(obj, indent=2), encoding="utf-8")
+            p.write_text(formatted, encoding="utf-8")
             return f"Wrote JSON to {path}"
         except Exception as e:
             return f"Error: {e}"
@@ -58,6 +65,12 @@ class StructuredMixin:
             rows = json.loads(data) if data else []
             if not isinstance(rows, list):
                 return "Error: data must be a JSON array."
+            line_count = len(rows)
+            if line_count >= 200:
+                return (
+                    f"Error: The CSV you are trying to write has {line_count} rows, which is 200 or more lines/rows. "
+                    "To prevent generating excessively large files at once, you must work in parts."
+                )
             p.parent.mkdir(parents=True, exist_ok=True)
             with open(p, "w", encoding="utf-8", newline="") as f:
                 w = csv.writer(f)

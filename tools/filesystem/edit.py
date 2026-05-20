@@ -11,6 +11,14 @@ class EditMixin:
         self._deny_file_modify()
         self._deny_internal_writes(p)
         try:
+            line_count = len(new_text.splitlines())
+            if line_count >= 200:
+                return (
+                    f"Error: The replacement text you are trying to write has {line_count} lines, which is 200 or more lines. "
+                    "To prevent writing excessively large blocks at once, you must work in parts. "
+                    "Please edit in smaller chunks under 200 lines."
+                )
+
             text = p.read_text(encoding="utf-8", errors="replace")
             if old_text not in text:
                 return "Old text not found in file."

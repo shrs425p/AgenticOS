@@ -314,3 +314,40 @@ def test_preferences_autoload(mock_init_mm, mock_ctx, mock_tools, mock_audit, mo
     assert "pref1=val1" in call_args[1]
     assert "Win10" in call_args[1]
 
+
+@patch("core.runtime.OllamaClient")
+@patch("core.runtime.SqliteSessionMemory")
+@patch("core.runtime.AuditLogger")
+@patch("core.runtime.ToolRegistry")
+@patch("core.runtime.ContextEngine")
+@patch("core.runtime.initialize_memory_manager")
+def test_failed_parse_guardrail(mock_init_mm, mock_ctx, mock_tools, mock_audit, mock_memory, mock_ollama, mock_config):
+    mock_memory.return_value.session_id = "test_session_failed_parse"
+    mock_ollama.return_value.provider = "ollama"
+    mock_ollama.return_value.model = "llama2"
+    agent = Agent(mock_config)
+    agent.memory.turn_count = 0
+    agent.memory.list_preferences = MagicMock(return_value={})
+    agent.memory.get_messages = MagicMock(return_value=[])
+    
+    agent.tools.term.system_info = MagicMock(return_value="Win10")
+    
+    # First response attempts malformed ACTION JSON, second response completes with FINAL ANSWER
+    agent.client.chat = MagicMock(side_effect=[
+        'ACTION: {"tool": "write_file", "args": {invalid_json_here}',
+        "FINAL ANSWER: Done"
+    ])
+    
+    agent.run("hi")
+    
+    # Verify we had 2 turns
+    assert agent.client.chat.call_count == 2
+    # Verify that the memory or history got the parsing failure nudge
+    nudge_added = False
+    for call in agent.memory.add.call_args_list:
+        role, content = call[0][0], call[0][1]
+        if role == "user" and "Tool parsing failed" in content:
+            nudge_added = True
+            break
+    assert nudge_added is True
+

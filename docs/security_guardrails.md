@@ -19,27 +19,28 @@ AgenticOS operates on a principle of least privilege. Even when running on a loc
 
 ## Zone-Based Security (PathGuard)
 
-The `PathGuard` system divides the host machine into three distinct security zones.
+The `PathGuard` system divides the host machine into four distinct security zones. These zones can be toggled dynamically at runtime without restarting the session by using the `/zone` CLI command (or `/zone 1`, `/zone 2`, `/zone 3`, `/zone 4`).
 
-### 1. The Green Zone (Workspace)
+### 1. The Green Zone (Workspace Isolation)
 -   **Definition**: The `workspace/` directory in the project root.
--   **Policy**: FULL AUTONOMY.
--   **Behavior**: The agent can read, write, and delete files here without any prompts. This is the "Sandbox" where the agent performs its work.
+-   **Configuration**: `guard.enabled = True`, `guard.require_hitm = True`, `guard.read_only = False`.
+-   **Behavior**: The agent can read, write, and delete files inside the workspace root without any prompts. Write or delete operations outside the workspace are blocked and require human verification (HITM).
 
-### 2. The Yellow Zone (Other User Paths)
--   **Definition**: Any path outside the workspace that is not a system path (e.g., `<USER_PROFILE>\Downloads` or `~/Downloads` / `~/Documents`).
--   **Policy**: READ-ONLY AUTONOMY / WRITE-BY-APPROVAL.
--   **Behavior**:
-    -   **Read**: The agent can read files (e.g., to analyze a document).
-    -   **Write/Delete**: The agent is **BLOCKED**. It must trigger a `HITM_REQUIRED` event, which prompts the user for a `y/N` confirmation in the terminal.
+### 2. The Yellow Zone (System-Wide Autonomy)
+-   **Definition**: The entire filesystem (excluding explicitly blocked paths in the Red Zone).
+-   **Configuration**: `guard.enabled = True`, `guard.require_hitm = False`, `guard.read_only = False`.
+-   **Behavior**: The agent can write and delete files outside the workspace autonomously without prompting the user. Explicitly blocked paths (e.g. `C:\Windows`) are still hard-blocked.
 
-### 3. The Red Zone (System Paths)
--   **Definition**: 
-    -   **Windows**: `<SYSTEM_ROOT>\Windows`, `<SYSTEM_DRIVE>\Program Files`, `<SYSTEM_DRIVE>\Program Files (x86)`.
-    -   **macOS (Darwin)**: `/System`, `/Library`, `/usr/bin`, `/etc`.
-    -   **Linux**: `/etc`, `/sbin`, `/usr/bin`, `/var/run`, `/proc`.
--   **Policy**: STRICTLY FORBIDDEN.
--   **Behavior**: Any attempt to access these paths (even for reading) is blocked at the code level with a `SECURITY ALERT`. The agent cannot bypass this even with "Power Mode" enabled.
+### 3. The Red Zone (PathGuard Disabled)
+-   **Definition**: Bypasses all workspace boundaries and path validation checks.
+-   **Configuration**: `guard.enabled = False`, `guard.require_hitm = False`, `guard.read_only = False`.
+-   **Behavior**: PathGuard is disabled entirely. The agent has unrestricted filesystem access and can read or write anywhere, including previously blocked system directories.
+
+### 4. The Blue Zone (Read-Only / Audit Mode)
+-   **Definition**: The entire filesystem is read-only (excluding blocked paths in the Red Zone).
+-   **Configuration**: `guard.enabled = True`, `guard.require_hitm = False`, `guard.read_only = True`.
+-   **Behavior**: All write and delete operations are blocked globally (both inside and outside the workspace). The agent can only read files, making it ideal for non-destructive auditing and code reviews.
+
 
 ---
 
@@ -117,13 +118,13 @@ To prevent sensitive information from leaking into session logs or persistent me
 
 To achieve maximum protection when interacting with foreign codebases or untrusted remote endpoints, AgenticOS integrates two core security and sandbox audit systems:
 
-### 🛡️ 1. Cryptographic SSL & WHOIS Threat Scorer (`url_safety_check`)
+### ◆ 1. Cryptographic SSL & WHOIS Threat Scorer (`url_safety_check`)
 Before communicating with external domains, the agent can trigger cryptographic and metadata heuristics:
 - **Peer Handshake Checking**: Probes the destination server to extract and verify the peer SSL certificate lifecycle, ensuring against expired or self-signed man-in-the-middle attacks.
 - **Port 43 WHOIS Registrar Audits**: Establishes raw socket connections to top-level domain registries to parse registration age and check for newly-registered domains (often indicative of high-risk phishing activity).
 - **Risk Grading Engine**: Computes a secure compound threat index (0 to 10) mapping certificate trust, domain age, and HTTPS protocols.
 
-### 💻 2. Dynamic Sandbox Auditing (`os_sandbox_auditor`)
+### ◆ 2. Dynamic Sandbox Auditing (`os_sandbox_auditor`)
 Ensures full visibility into local sandboxing barriers:
 - **Runtime Discovery**: Probes and lists compiler paths to ensure the environment is constrained.
 - **GUI Process Scanner**: Scans open GUI window handles to check for unauthorized administrative overlays or keyloggers on the desktop, returning process mappings cross-platform.

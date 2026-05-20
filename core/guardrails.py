@@ -17,6 +17,8 @@ class PathGuard:
             Path(p).resolve() for p in security.get("blocked_paths", [])
         ]
         self.require_hitm: bool = security.get("require_hitm_outside_workspace", True)
+        # Blue Zone: when True, all write/delete ops are blocked globally
+        self.read_only: bool = security.get("read_only_mode", False)
 
         # Workspace root
         workspace = cfg.get("agent", {}).get("workspace", "workspace")
@@ -52,14 +54,22 @@ class PathGuard:
             except Exception:
                 continue
 
-        # 3. Check GREEN ZONE (Workspace)
+        # 3. BLUE ZONE — read-only mode: block ALL write/delete ops globally
+        if self.read_only and operation != "read":
+            return (
+                False,
+                "READ_ONLY_MODE: Blue Zone is active — write and delete operations "
+                "are blocked system-wide. Switch zone to allow modifications.",
+            )
+
+        # 4. Check GREEN ZONE (Workspace)
         try:
             if target == self.workspace_root or self.workspace_root in target.parents:
                 return True, "Workspace access allowed."
         except Exception:
             pass
 
-        # 4. Check YELLOW ZONE (Other)
+        # 5. Check YELLOW ZONE (Other)
         if operation == "read":
             return True, "Read-only access allowed outside workspace."
 
@@ -74,12 +84,15 @@ class PathGuard:
 
     def ask_human(self, path: str, operation: str) -> bool:
         """Prompt the human for confirmation."""
+        if self.cfg.get("agent", {}).get("auto_confirm") is True:
+            logger.info(f"Auto-confirming action: {operation} on '{path}' (auto_confirm enabled)")
+            return True
         if self.on_confirm:
             return self.on_confirm(path, operation)
 
         # Default CLI implementation (blocking)
         from core.runtime_ui import C
-        logger.info(f"\n{C.RED}⚠ STOP — SECURITY GUARDRAIL{C.RESET}")
+        logger.info(f"\n{C.RED}▲ STOP — SECURITY GUARDRAIL{C.RESET}")
         logger.info(
             f"The agent is attempting a {C.BOLD}{operation.upper()}{C.RESET} action outside the workspace."
         )

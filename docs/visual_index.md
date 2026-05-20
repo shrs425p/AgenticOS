@@ -51,14 +51,14 @@ sequenceDiagram
 
 ## Zone-Based Security (PathGuard)
 
-How AgenticOS categorizes your filesystem and enforces safety.
+How AgenticOS categorizes your filesystem and enforces safety across all four security zones.
 
 ```mermaid
 graph LR
-    subgraph "Green Zone (Full Autonomy)"
+    subgraph "Green Zone (Workspace Isolation)"
         W[workspace/]
     end
-    subgraph "Yellow Zone (Read-Only / HITM)"
+    subgraph "Yellow Zone (System-Wide Autonomy)"
         U[Users/]
         D[Data/]
     end
@@ -66,10 +66,15 @@ graph LR
         Win[Windows/]
         PF[Program Files/]
     end
+    subgraph "Blue Zone (Read-Only / Audit)"
+        RO[Entire Filesystem]
+    end
     
     Agent -->|Free Access| W
-    Agent -->|HITM Prompt| U
+    Agent -->|HITM Prompt / Allowed| U
     Agent -->|BLOCKED| Win
+    Agent -->|Read-Only / Writes Blocked| RO
+```
 ```
 
 ---

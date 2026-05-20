@@ -21,7 +21,7 @@ except ImportError:
 import yaml
 import requests
 import re
-from typing import Dict, Optional, Callable
+from typing import Dict, Optional, Callable, Tuple
 
 from core.memory_manager import initialize_memory_manager, log_task_completion
 from core.session_memory_sqlite import SqliteSessionMemory
@@ -199,7 +199,7 @@ class Agent:
 
     def _reload_config(self) -> None:
         old_workspace = getattr(self, "workspace", None)
-        self.cfg = load_config()
+        self.cfg = load_config(force_reload=True)
         self._load_agent_settings()
         self._init_client()
 
@@ -318,7 +318,7 @@ class Agent:
             print_success("Environment reloaded successfully.")
 
         except Exception as e:
-            print_error(f"Failed to reload: {e}")
+            print_error(f"Reload failed: An error occurred while hot-reloading changed modules: {e}\n{traceback.format_exc()}")
             self.mtimes = new_mtimes or self._get_mtimes()
 
         # Add null check before calling build_system_prompt
@@ -327,7 +327,7 @@ class Agent:
             return ""
         return self.context_engine.build_system_prompt()
 
-    def verify_action(self, tool_name: str, args: Dict, context: str) -> (bool, str):
+    def verify_action(self, tool_name: str, args: Dict, context: str) -> Tuple[bool, str]:
         """
         Performs a 'mental simulation' to verify if the tool call is valid and necessary.
         """
@@ -455,13 +455,14 @@ class Agent:
                                 + user_input
                             )
             except Exception as e:
-                print_error(f"Failed to load preferences: {e}")
+                print_error(f"Failed to load preferences from memory: {e}. Check if the database connection or table schema is correct.")
 
         if self.autonomy_cfg.get("task_tracking", True):
             should_start_new = True
+            curr_task = self.task_tracker.current
             if (
-                self.task_tracker.current
-                and self.task_tracker.current.get("status") == "running"
+                curr_task
+                and curr_task.get("status") == "running"
             ):
                 resumption_cmds = self.heuristics.get(
                     "resumption_cmds", ["continue", "next"]
@@ -479,10 +480,11 @@ class Agent:
                     provider=self.client.provider,
                     model=self.client.model,
                 )
-                if hasattr(self.memory, "start_task") and self.task_tracker.current:
+                curr_task = self.task_tracker.current
+                if hasattr(self.memory, "start_task") and curr_task:
                     try:
                         self.memory.start_task(
-                            self.task_tracker.current["task_id"], original_user_input
+                            curr_task["task_id"], original_user_input
                         )
                     except (IOError, OSError, ValueError) as e:
                         print_warning(f"Warning: Failed to start task in memory: {e}")
@@ -521,14 +523,14 @@ class Agent:
                 reminder = self.cfg.get("prompts", {}).get("nudges", {}).get("repetition", "You're repeating the same approach. Try a COMPLETELY DIFFERENT strategy.")
                 messages.append({"role": "user", "content": reminder})
                 logger.info(
-                    f"{C.YELLOW}⚠  Repetition detected. Suggesting alternative approach.{C.RESET}"
+                    f"{C.YELLOW}▲  Repetition detected. Suggesting alternative approach.{C.RESET}"
                 )
 
             # Warn if iterations getting high (skip if warning_threshold is <= 0)
             warning_threshold = self.heuristics.get("iteration_warning_threshold", 20)
             if warning_threshold > 0 and iteration > warning_threshold and iteration % 10 == 0:
                 logger.info(
-                    f"{C.YELLOW}⚠  High iteration count ({iteration}). Consider FINAL ANSWER.{C.RESET}"
+                    f"{C.YELLOW}▲  High iteration count ({iteration}). Consider FINAL ANSWER.{C.RESET}"
                 )
 
             pulse_line(60)
@@ -571,7 +573,7 @@ class Agent:
                     others = [m for m in models if m != self.client.model]
                     new_model = random.choice(others)
                     logger.info(
-                        f"{C.YELLOW}⚠  Attempting auto-fallback to: {new_model}{C.RESET}"
+                        f"{C.YELLOW}▲  Attempting auto-fallback to: {new_model}{C.RESET}"
                     )
                     self.client.model = new_model
                     # Consumes one iteration to retry with the new model
@@ -601,7 +603,7 @@ class Agent:
                         if others:
                             new_model = random.choice(others)
                             logger.info(
-                                f"{C.YELLOW}⚠  Empty-loop fallback to: {new_model}{C.RESET}"
+                                f"{C.YELLOW}▲  Empty-loop fallback to: {new_model}{C.RESET}"
                             )
                             self.client.model = new_model
                             no_action_count = 0
@@ -632,6 +634,14 @@ class Agent:
                     continue
 
             actions = parse_actions(response)
+
+            if not actions and "ACTION:" in response.upper():
+                messages.append({"role": "assistant", "content": response})
+                self.memory.add("assistant", response)
+                nudge = "OBSERVATION: Tool parsing failed. You attempted a tool call under ACTION:, but the JSON was malformed or contained unescaped control characters (such as literal newlines). Please retry your action, escaping all newlines as '\\n' in JSON string values. Output exactly ONE action per turn and wait for the real observation."
+                messages.append({"role": "user", "content": nudge})
+                self.memory.add("user", nudge)
+                continue
 
             if actions:
                 no_action_count = 0
@@ -678,7 +688,7 @@ class Agent:
                         destructive = set(self.cfg.get("policy", {}).get("destructive_tools", ["delete_file", "delete_dir", "kill_process", "run_command", "run_script"]))
                         if tool_name in destructive:
                             try:
-                                ans = input(f"\n{C.RED}⚠  Confirm destructive '{tool_name}'? [y/N]: {C.RESET}").strip().lower()
+                                ans = input(f"\n{C.RED}▲  Confirm destructive '{tool_name}'? [y/N]: {C.RESET}").strip().lower()
                                 if ans != "y":
                                     observations.append(f"Action '{tool_name}' cancelled by user.")
                                     continue
@@ -747,9 +757,10 @@ class Agent:
                         except (IOError, OSError, ValueError) as e:
                             print_warning(f"Warning: Failed to record artifact: {e}")
 
-                    if hasattr(self.memory, "update_task") and self.task_tracker.current:
+                    curr_task = self.task_tracker.current
+                    if hasattr(self.memory, "update_task") and curr_task:
                         try:
-                            self.memory.update_task(self.task_tracker.current["task_id"])
+                            self.memory.update_task(curr_task["task_id"])
                         except (IOError, OSError, ValueError) as e:
                             print_warning(f"Warning: Failed to update task in memory: {e}")
                     if self.autonomy_cfg.get("task_tracking", True):
@@ -812,9 +823,7 @@ class Agent:
                         # Disabled heuristic: Was forcing write_file for long responses, but wastes API quota.
                         pass
 
-                logger.info(f"\n{C.GREEN}{C.BOLD}{'═' * 60}")
-                logger.info("  FINAL ANSWER")
-                logger.info(f"{'═' * 60}{C.RESET}")
+                logger.info(f"\n{C.EMERALD}  ── Final Answer ────────────────────────────────────────{C.RESET}")
 
                 final_ans = ""
                 idx = response.upper().find("FINAL ANSWER:")
@@ -941,34 +950,37 @@ class Agent:
                 # OpenClaw-inspired memory auto-compaction
                 try:
                     goal = "Task"
-                    if self.task_tracker.current and self.task_tracker.current.get("goal"):
-                        goal = self.task_tracker.current.get("goal")
+                    curr_task = self.task_tracker.current
+                    if curr_task and curr_task.get("goal"):
+                        goal = curr_task.get("goal")
                     
                     # Extract tools used from tracking
                     tools_used = []
-                    if self.task_tracker.current and self.task_tracker.current.get("actions_taken"):
-                        tools_used = [a.get("tool") for a in self.task_tracker.current.get("actions_taken", []) if a.get("tool")]
+                    if curr_task and curr_task.get("actions_taken"):
+                        tools_used = [a.get("tool") for a in curr_task.get("actions_taken", []) if a.get("tool")]
                         
                     duration_s = max(0.0, time.time() - run_started_ts)
+                    tracker_task_id = curr_task.get("task_id") if curr_task else None
                     log_task_completion(
                         goal=goal,
                         final_answer=final_ans or response,
                         tools_used=list(set(tools_used)),
                         success=True,
                         duration=duration_s,
-                        task_id=self.task_tracker.current.get("task_id") if self.task_tracker.current else None
+                        task_id=tracker_task_id
                     )
                 except Exception as e:
-                    print_error(f"Failed to consolidate memory: {e}")
+                    print_error(f"Failed to consolidate memory during experience logging: {e}")
 
+                curr_task = self.task_tracker.current
                 if hasattr(self.memory, "set_outcome"):
                     try:
                         next_steps = ""
-                        if self.task_tracker.current and self.task_tracker.current.get(
+                        if curr_task and curr_task.get(
                             "plan"
                         ):
                             next_steps = "\n".join(
-                                self.task_tracker.current.get("plan", [])[-3:]
+                                curr_task.get("plan", [])[-3:]
                             )
                         self.memory.set_outcome(
                             final_answer=final_ans or response, next_steps=next_steps
@@ -986,17 +998,18 @@ class Agent:
                         self.memory.set_summary(summary.strip())
                     except ValueError as e:
                         print_warning(f"Warning: Failed to set summary in memory: {e}")
-                if hasattr(self.memory, "complete_task") and self.task_tracker.current:
+                curr_task = self.task_tracker.current
+                if hasattr(self.memory, "complete_task") and curr_task:
                     try:
                         next_steps = ""
-                        if self.task_tracker.current.get("plan"):
+                        if curr_task.get("plan"):
                             next_steps = "\n".join(
-                                self.task_tracker.current.get("plan", [])[-3:]
+                                curr_task.get("plan", [])[-3:]
                             )
                         rpt = self.cfg.get("prompts", {}).get("reporting", {})
                         g_label = rpt.get("goal_label", "Goal:")
                         self.memory.complete_task(
-                            self.task_tracker.current["task_id"],
+                            curr_task["task_id"],
                             final_answer=final_ans or response,
                             next_steps=next_steps,
                             summary=f"{g_label} {original_user_input.strip()}",
@@ -1034,10 +1047,12 @@ class Agent:
             # Log failed task completion
             tools_used = []
             goal = "Task"
-            if self.task_tracker.current:
-                tools_used = [a.get("tool") for a in self.task_tracker.current.get("actions_taken", []) if a.get("tool")]
-                goal = self.task_tracker.current.get("goal", goal)
+            curr_task = self.task_tracker.current
+            if curr_task:
+                tools_used = [a.get("tool") for a in curr_task.get("actions_taken", []) if a.get("tool")]
+                goal = curr_task.get("goal", goal)
             duration_s = max(0.0, time.time() - run_started_ts)
+            tracker_task_id = curr_task.get("task_id") if curr_task else None
             try:
                 log_task_completion(
                     goal=goal,
@@ -1045,7 +1060,7 @@ class Agent:
                     tools_used=list(set(tools_used)),
                     success=False,
                     duration=duration_s,
-                    task_id=self.task_tracker.current.get("task_id") if self.task_tracker.current else None
+                    task_id=tracker_task_id
                 )
             except Exception as e:
                 print_warning(f"Warning: Failed to log task history: {e}")
@@ -1108,10 +1123,13 @@ class CLI:
         "/memory": "Show session memory summary",
         "/clear": "Clear session memory",
         "/reload": "Manually reload tools",
-        "/config": "Show current config",
+        "/config": "Open configuration folder in file explorer",
         "/history": "Show conversation history",
         "/version": "Show version info",
         "/shadow": "Toggle Shadow Mode (Dry Run)",
+        "/thinking": "Toggle verbose model thinking trace (Show/Hide)",
+        "/zone": "Toggle security zone (green/yellow/red/blue) or pass a zone name to switch directly",
+        "/logs": "Open logs folder or display recent logs (use '/logs tail')",
         "/exit": "Exit AgenticOs",
     }
 
@@ -1125,13 +1143,16 @@ class CLI:
 
     def handle_security_confirmation(self, path: str, operation: str) -> bool:
         """Confirm action with user (CLI implementation)."""
-        logger.info("\n\033[91m⚠ STOP — SECURITY GUARDRAIL\033[0m")
+        if self.cfg.get("agent", {}).get("auto_confirm") is True or self.cfg.get("autonomy", {}).get("autopilot") is True:
+            logger.info(f"Auto-confirming security action: {operation} on '{path}'")
+            return True
+        logger.info(f"\n{C.ROSE}▲ STOP — SECURITY GUARDRAIL{C.RESET}")
         logger.info(
-            f"The agent is attempting a \033[1m{operation.upper()}\033[0m action outside the workspace."
+            f"The agent is attempting a {C.BOLD}{operation.upper()}{C.RESET} action outside the workspace."
         )
-        logger.info(f"Target Path: \033[36m{path}\033[0m")
+        logger.info(f"Target Path: {C.TEAL}{path}{C.RESET}")
         logger.info(
-            "\033[90m(You can allow this once, or modify config.yaml to change security rules)\033[0m"
+            f"{C.SLATE}(You can allow this once, or modify config.yaml to change security rules){C.RESET}"
         )
         try:
             ans = input("\nDo you allow this specific action? [y/N]: ").strip().lower()
@@ -1171,11 +1192,16 @@ class CLI:
                     self.agent = Agent(self.cfg)
                     print_success(f"Provider set to: {chosen}")
                     return
-            except (ValueError, KeyboardInterrupt, EOFError):
+                else:
+                    print_error(f"Invalid selection: {idx} is out of range [1-{limit}].")
+            except ValueError:
+                print_error("Selection required: Please enter a valid integer.")
                 if not force:
                     return
-                print_error("Selection required.")
-            print_error("Invalid selection.")
+            except (KeyboardInterrupt, EOFError):
+                if not force:
+                    return
+                print_error("Selection required: Interrupted.")
 
     def select_model(self, force=False):
         """select_model function."""
@@ -1244,11 +1270,16 @@ class CLI:
                     self.agent.client.model = models[idx - 1]
                     print_success(f"Model set to: {self.agent.client.model}")
                     break
-            except (ValueError, KeyboardInterrupt, EOFError):
+                else:
+                    print_error(f"Invalid selection: {idx} is out of range [1-{limit}].")
+            except ValueError:
+                print_error("Selection required: Please enter a valid integer.")
                 if not force:
                     break
-                print_error("Selection required.")
-            print_error("Invalid selection.")
+            except (KeyboardInterrupt, EOFError):
+                if not force:
+                    break
+                print_error("Selection required: Interrupted.")
 
     def handle_command(self, cmd: str):
         """handle_command function."""
@@ -1402,13 +1433,45 @@ class CLI:
             )
             print_info(f"Shadow Mode (Dry Run) is now {status}")
 
+        elif base == "/thinking":
+            arg = parts[1].strip().lower() if len(parts) > 1 else ""
+            current = self.cfg.get("agent", {}).get("verbose_thinking", False)
+            if arg in ("hide", "off", "false", "disable"):
+                new_val = False
+            elif arg in ("show", "on", "true", "enable"):
+                new_val = True
+            else:
+                new_val = not current
+            self.cfg.setdefault("agent", {})["verbose_thinking"] = new_val
+            self.verbose = new_val
+            status = (
+                f"{C.GREEN}ON{C.RESET}"
+                if new_val
+                else f"{C.RED}OFF{C.RESET}"
+            )
+            print_info(f"Verbose model thinking trace is now {status}")
+
         elif base == "/reload":
             self.agent.mtimes = {}  # Force reload
             self.agent.check_reload()
 
         elif base == "/config":
-            logger.info(f"\n{C.CYAN}Current Config:{C.RESET}")
-            logger.info(yaml.dump(self.cfg, default_flow_style=False))
+            config_dir = os.path.join(BASE_DIR, "config")
+            logger.info(f"\n{C.CYAN}Opening config folder: {config_dir}{C.RESET}")
+            if not os.path.exists(config_dir):
+                print_error(f"Config directory does not exist: {config_dir}")
+            else:
+                try:
+                    import subprocess
+                    if sys.platform == "win32":
+                        os.startfile(config_dir)  # noqa: S606
+                    elif sys.platform == "darwin":
+                        subprocess.Popen(["open", config_dir])  # nosec B605
+                    else:
+                        subprocess.Popen(["xdg-open", config_dir])  # nosec B605
+                    print_success("Config folder opened successfully.")
+                except Exception as e:
+                    print_error(f"Failed to open config folder: {e}")
 
         elif base == "/history":
             msgs = self.agent.memory.get_messages()
@@ -1421,13 +1484,59 @@ class CLI:
 
         elif base == "/version":
             provider = self.agent.client.provider
-            logger.info(f"\n{C.CYAN}AgenticOs v1.1.0{C.RESET}")
+            version_str = "2.1.1"
+            try:
+                changelog_path = os.path.join(BASE_DIR, "CHANGELOG.md")
+                if os.path.exists(changelog_path):
+                    with open(changelog_path, "r", encoding="utf-8") as f:
+                        for line in f:
+                            if line.startswith("## "):
+                                match = re.search(r"\[?([0-9]+\.[0-9]+\.[0-9]+(?:-[a-zA-Z0-9.]+)*)\]?", line)
+                                if match:
+                                    version_str = match.group(1)
+                                    break
+            except Exception:
+                pass
+            logger.info(f"\n{C.CYAN}AgenticOs v{version_str}{C.RESET}")
             logger.info(f"  Provider : {provider}")
             logger.info(f"  Model    : {self.agent.client.model}")
             if hasattr(self.agent.client, "base_url"):
                 logger.info(f"  Endpoint : {self.agent.client.base_url}")
             logger.info(f"  Tools    : {len(self.agent.tools.registry)}")
             logger.info(f"  Session  : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+        elif base == "/logs":
+            log_dir = os.path.join(BASE_DIR, "data", "logs")
+            log_file = os.path.join(log_dir, "agenticos.log")
+            if len(parts) > 1 and parts[1].strip().lower() in ("tail", "show", "view"):
+                logger.info(f"\n{C.CYAN}Last 20 log entries from: {log_file}{C.RESET}")
+                if not os.path.exists(log_file):
+                    print_error("No log file found yet.")
+                else:
+                    try:
+                        with open(log_file, "r", encoding="utf-8") as f:
+                            lines = f.readlines()
+                            tail_lines = lines[-20:]
+                            for line in tail_lines:
+                                print(line, end="")
+                    except Exception as e:
+                        print_error(f"Failed to read log file: {e}")
+            else:
+                logger.info(f"\n{C.CYAN}Opening logs folder: {log_dir}{C.RESET}")
+                if not os.path.exists(log_dir):
+                    print_error(f"Logs directory does not exist: {log_dir}")
+                else:
+                    try:
+                        import subprocess
+                        if sys.platform == "win32":
+                            os.startfile(log_dir)  # noqa: S606
+                        elif sys.platform == "darwin":
+                            subprocess.Popen(["open", log_dir])  # nosec B605
+                        else:
+                            subprocess.Popen(["xdg-open", log_dir])  # nosec B605
+                        print_success("Logs folder opened successfully.")
+                    except Exception as e:
+                        print_error(f"Failed to open logs folder: {e}")
 
         elif base in ("/exit", "/quit", "/q"):
             try:
@@ -1449,15 +1558,108 @@ class CLI:
                 print_warning(f"Warning: Failed to log audit session end: {e}")
             self.running = False
 
+        elif base == "/zone":
+            guard = getattr(getattr(self.agent, "tools", None), "guard", None)
+            if guard is None:
+                print_error("PathGuard is not available on the current agent.")
+                return
+
+            # Zone configurations: (name, enabled, require_hitm, read_only)
+            #   green  → guard ON + HITM required       (strictest sandbox)
+            #   yellow → guard ON, no HITM              (autonomous outside workspace)
+            #   red    → guard OFF                      (fully unrestricted)
+            #   blue   → guard ON, all writes blocked   (read-only / audit mode)
+            ZONE_STATES = [
+                ("green",  True,  True,  False),
+                ("yellow", True,  False, False),
+                ("red",    False, False, False),
+                ("blue",   True,  False, True),
+            ]
+
+            # Numeric aliases: 1=green, 2=yellow, 3=red, 4=blue
+            ALIASES = {"1": "green", "2": "yellow", "3": "red", "4": "blue"}
+
+            arg = (parts[1].strip().lower() if len(parts) > 1 else "") or ""
+            arg = ALIASES.get(arg, arg)
+
+            if arg and arg not in (z[0] for z in ZONE_STATES):
+                print_error(
+                    f"Unknown zone: '{arg}'. "
+                    "Valid options: green, yellow, red, blue (or 1, 2, 3, 4)."
+                )
+                return
+
+            if arg:
+                target = next(z for z in ZONE_STATES if z[0] == arg)
+            else:
+                # Sequential toggle: match current guard state to find index
+                current_enabled  = guard.enabled
+                current_hitm     = guard.require_hitm
+                current_readonly = getattr(guard, "read_only", False)
+                current_idx = 0
+                for i, (_, en, hm, ro) in enumerate(ZONE_STATES):
+                    if en == current_enabled and hm == current_hitm and ro == current_readonly:
+                        current_idx = i
+                        break
+                target = ZONE_STATES[(current_idx + 1) % len(ZONE_STATES)]
+
+            zone_name, zone_enabled, zone_hitm, zone_readonly = target
+
+            # Apply to live PathGuard instance immediately
+            guard.enabled    = zone_enabled
+            guard.require_hitm = zone_hitm
+            guard.read_only  = zone_readonly
+
+            # Colour per zone
+            ZONE_COLORS = {
+                "green":  C.EMERALD,
+                "yellow": C.AMBER,
+                "red":    C.ROSE,
+                "blue":   C.BLUE,
+            }
+            zone_color = ZONE_COLORS.get(zone_name, C.SLATE)
+
+            # Status labels
+            guard_label = (
+                f"{C.EMERALD}ENABLED{C.RESET}"
+                if zone_enabled
+                else f"{C.ROSE}DISABLED{C.RESET}"
+            )
+            hitm_label = (
+                f"{C.AMBER}ON — write outside workspace requires approval{C.RESET}"
+                if zone_hitm
+                else f"{C.EMERALD}OFF — fully autonomous{C.RESET}"
+            )
+            ro_label = (
+                f"{C.BLUE}ON — all writes and deletes blocked globally{C.RESET}"
+                if zone_readonly
+                else f"{C.SLATE}OFF{C.RESET}"
+            )
+
+            logger.info(
+                f"\n{zone_color}{C.BOLD}◆ Zone switched → {zone_name.upper()} ZONE{C.RESET}"
+            )
+            logger.info(f"  PathGuard  : {guard_label}")
+            logger.info(f"  HITM       : {hitm_label}")
+            logger.info(f"  Read-Only  : {ro_label}")
+
+            zone_desc = {
+                "green":  "Workspace-only autonomy. Writes outside workspace require human approval.",
+                "yellow": "PathGuard active. Outside-workspace modifications allowed autonomously.",
+                "red":    "PathGuard disabled. Agent has unrestricted filesystem access.",
+                "blue":   "Audit / read-only mode. All write and delete operations blocked system-wide.",
+            }
+            logger.info(f"  {C.DIM}{zone_desc[zone_name]}{C.RESET}")
+
         else:
             print_error(f"Unknown command: {base}. Type /help.")
 
-    def run(self):
+    def run(self, task: Optional[str] = None):
         """run function."""
         banner(cfg=self.cfg)
 
         autonomy_cfg = self.cfg.get("autonomy", {})
-        if autonomy_cfg.get("startup_provider_prompt", False):
+        if autonomy_cfg.get("startup_provider_prompt", False) and not task:
             self.select_provider(force=False)
 
         # Connection check
@@ -1481,13 +1683,25 @@ class CLI:
             print_info(f"API key: {key_status}")
 
 
-        if autonomy_cfg.get("startup_model_prompt", False):
+        if autonomy_cfg.get("startup_model_prompt", False) and not task:
             # Non-forced by default so startup can remain quick for autopilot runs.
             self.select_model(force=False)
 
         print_success(
             f"Tools loaded: {len(self.agent.tools.registry)} tools available."
         )
+
+        if task:
+            logger.info(f"\n{C.BOLD}Executing autonomous task:{C.RESET} {task}\n")
+            try:
+                self.agent.run(task)
+            except KeyboardInterrupt:
+                logger.info(f"\n{C.YELLOW}Task interrupted.{C.RESET}")
+            except Exception as e:
+                print_error(f"Unexpected error: {e}")
+                traceback.print_exc()
+            return
+
         logger.info(
             f"\n{C.DIM}Type your task, or /help for commands. Ctrl+C or /exit to quit.{C.RESET}\n"
         )
@@ -1527,7 +1741,9 @@ def main(dry_run: bool = False):
     if not dry_run and "--dry-run" in sys.argv:
         dry_run = True
     try:
-        CLI(dry_run=dry_run).run()
+        task_args = [arg for arg in sys.argv[1:] if not arg.startswith("-")]
+        task = " ".join(task_args) if task_args else None
+        CLI(dry_run=dry_run).run(task=task)
     except RuntimeError as e:
         logger.info(f"\n\033[91mError: {e}\033[0m")
         logger.info("\033[33mAdd the missing key to your .env file and restart.\033[0m\n")

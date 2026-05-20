@@ -611,6 +611,12 @@
             box-shadow: 0 0 12px #ff4d6d88;
         }
 
+        .z-blue {
+            background: #3b82f6;
+            box-shadow: 0 0 12px #3b82f688;
+        }
+
+
         .zone-name {
             font-size: clamp(1.8rem, 3vw, 3rem);
             font-weight: 400;
@@ -1202,27 +1208,31 @@
                     <h3 class="zone-name">Green Zone</h3>
                     <div class="zone-right">
                         <span class="zone-path">workspace/</span>
-                        <p class="zone-desc">Full autonomous access. The agent operates freely — creates files, runs
-                            tasks, stores artifacts. No confirmation required.</p>
+                        <p class="zone-desc">Workspace isolation. The agent operates freely inside the workspace root. Write or delete operations outside the workspace require human confirmation (HITM).</p>
                     </div>
                 </div>
                 <div class="zone-item">
                     <div class="zone-dot z-yellow"></div>
                     <h3 class="zone-name">Yellow Zone</h3>
                     <div class="zone-right">
-                        <span class="zone-path">%USERPROFILE%/Documents, Desktop…</span>
-                        <p class="zone-desc">Human-in-the-Middle (HITM) mode. Every write or delete operation requires
-                            explicit user confirmation before execution.</p>
+                        <span class="zone-path">System-wide autonomy</span>
+                        <p class="zone-desc">PathGuard is active but outside-workspace modifications are allowed autonomously. Explicitly blocked paths (Red Zone) are still forbidden.</p>
                     </div>
                 </div>
                 <div class="zone-item">
                     <div class="zone-dot z-red"></div>
                     <h3 class="zone-name">Red Zone</h3>
                     <div class="zone-right">
-                        <span class="zone-path">C:\Windows, /System, /Library, /etc…</span>
-                        <p class="zone-desc">Hard-blocked. PathGuard enforces absolute platform-level path guardrails.
-                            No
-                            operation in this zone executes under any circumstance.</p>
+                        <span class="zone-path">PathGuard Disabled</span>
+                        <p class="zone-desc">The core guardrail engine is disabled entirely. The agent has unrestricted filesystem access and can read or write anywhere on the system.</p>
+                    </div>
+                </div>
+                <div class="zone-item">
+                    <div class="zone-dot z-blue"></div>
+                    <h3 class="zone-name">Blue Zone</h3>
+                    <div class="zone-right">
+                        <span class="zone-path">Read-Only / Audit</span>
+                        <p class="zone-desc">All write and delete operations are blocked system-wide. The agent has read-only access, making it ideal for non-destructive code review and security audits.</p>
                     </div>
                 </div>
             </div>

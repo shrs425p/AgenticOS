@@ -6,6 +6,7 @@ import os
 import sys
 import time
 import logging
+from typing import Any
 from collections import defaultdict, deque
 
 import requests
@@ -159,7 +160,11 @@ class OllamaClient:
             "model": self.model,
             "messages": full_messages,
             "stream": self.stream,
-            "options": {"temperature": self.temp, "num_ctx": self.ctx},
+            "options": {
+                "temperature": self.temp,
+                "num_ctx": self.ctx,
+                "stop": ["OBSERVATION:", "Observation:", "obs:", "\nObservation:", "\nOBSERVATION:"],
+            },
         }
 
         full = ""
@@ -168,15 +173,15 @@ class OllamaClient:
         base_delay = float(performance.get("base_retry_delay", 5.0))
 
         def _do_post():
-            with requests.post(
+            response = requests.post(
                 f"{self.base_url}/api/chat",
                 json=payload,
                 stream=self.stream,
                 timeout=self.timeout,
-            ) as response:
-                # Let caller handle response streaming/consumption; raise for status here.
-                response.raise_for_status()
-                return response
+            )
+            # Let caller handle response streaming/consumption; raise for status here.
+            response.raise_for_status()
+            return response
 
         def _retry_on_exc(exc: Exception) -> bool:
             # Retry only on HTTP 429. Do not retry ConnectionError here.
@@ -189,7 +194,7 @@ class OllamaClient:
             logging.warning(
                 "ollama rate limit hit (attempt %d). Waiting %.2fs", attempt, delay
             )
-            logger.info(f"\n\033[93m⚠ Rate limit hit (429). Retrying in {delay:.2f} seconds...\033[0m")
+            logger.info(f"\n\033[93m▲ Rate limit hit (429). Retrying in {delay:.2f} seconds...\033[0m")
 
         try:
             response = retry_call(
@@ -211,18 +216,22 @@ class OllamaClient:
             raise
 
         # Consume response (streaming or not)
-        if self.stream:
-            logger.info(f"{C.GREEN}")
-            for line in response.iter_lines():
-                if not line:
-                    continue
-                chunk = json.loads(line)
-                token = chunk.get("message", {}).get("content", "")
-                full += token
-                logger.info(token)
-            logger.info(C.RESET)
-        else:
-            full = response.json().get("message", {}).get("content", "")
+        with response as resp:
+            if self.stream:
+                sys.stdout.write(f"{C.GREEN}")
+                sys.stdout.flush()
+                for line in resp.iter_lines():
+                    if not line:
+                        continue
+                    chunk = json.loads(line)
+                    token = chunk.get("message", {}).get("content", "")
+                    full += token
+                    sys.stdout.write(token)
+                    sys.stdout.flush()
+                sys.stdout.write(C.RESET + "\n")
+                sys.stdout.flush()
+            else:
+                full = resp.json().get("message", {}).get("content", "")
 
         return full
 
@@ -272,7 +281,7 @@ class NvidiaClient:
             self.last_list_error = f"{type(exc).__name__}: {exc}"
             return [self.model]
 
-    def chat(self, messages: list, system: str = None) -> str:
+    def chat(self, messages: list, system: str | None = None) -> str:
         """chat function."""
         if not self.api_key:
             return "FINAL ANSWER: NVIDIA_API_KEY is not set. Add it to .env or switch the provider to Ollama in config.yaml."
@@ -346,6 +355,7 @@ class NvidiaClient:
                         extra_body=extra_body,
                         stream=self.stream,
                         timeout=self.timeout,
+                        stop=["OBSERVATION:", "Observation:", "obs:", "\nObservation:", "\nOBSERVATION:"],
                     )
 
             def _retry_on_exc(exc: Exception) -> bool:
@@ -359,7 +369,7 @@ class NvidiaClient:
                 logging.warning(
                     f"{self.provider} rate limit hit (attempt {attempt}). Waiting {delay:.2f}s"
                 )
-                logger.info(f"\n\033[93m⚠ Rate limit hit (429). Retrying in {delay:.2f} seconds...\033[0m")
+                logger.info(f"\n\033[93m▲ Rate limit hit (429). Retrying in {delay:.2f} seconds...\033[0m")
 
             try:
                 return retry_call(
@@ -391,6 +401,8 @@ class NvidiaClient:
 
         completion = _request(extra if extra else None)
 
+        show_thinking = self.cfg.get("agent", {}).get("verbose_thinking", False)
+
         if self.stream:
             in_think = False
             for chunk in completion:
@@ -400,23 +412,30 @@ class NvidiaClient:
                 reasoning = getattr(delta, "reasoning_content", None)
                 if reasoning:
                     reasoning_text += reasoning
-                    if not in_think:
-                        logger.info(f"{reasoning_color}~  ")
-                        in_think = True
-                    logger.info(reasoning)
+                    if show_thinking:
+                        if not in_think:
+                            sys.stdout.write(f"{reasoning_color}~  ")
+                            sys.stdout.flush()
+                            in_think = True
+                        sys.stdout.write(reasoning)
+                        sys.stdout.flush()
                 content = getattr(delta, "content", None)
                 if content:
                     if in_think:
-                        logger.info(f"{reset}")
+                        sys.stdout.write(f"{reset}")
+                        sys.stdout.flush()
                         in_think = False
-                    logger.info(content)
+                    sys.stdout.write(content)
+                    sys.stdout.flush()
                     full += content
-            logger.info()
+            sys.stdout.write("\n")
+            sys.stdout.flush()
         else:
             message = completion.choices[0].message
             reasoning = getattr(message, "reasoning_content", "")
             if reasoning:
-                logger.info(f"{reasoning_color}{reasoning}{reset}")
+                if show_thinking:
+                    logger.info(f"{reasoning_color}{reasoning}{reset}")
                 reasoning_text = reasoning_text + reasoning
             full = message.content or ""
 
@@ -439,9 +458,11 @@ class NvidiaClient:
                         delta = chunk.choices[0].delta
                         content = getattr(delta, "content", None)
                         if content:
-                            logger.info(content)
+                            sys.stdout.write(content)
+                            sys.stdout.flush()
                             full2 += content
-                    logger.info()
+                    sys.stdout.write("\n")
+                    sys.stdout.flush()
                 else:
                     msg2 = completion2.choices[0].message
                     full2 = msg2.content or ""
@@ -496,8 +517,9 @@ class GeminiClient:
             return _unique_sorted_model_ids(
                 m.name.replace("models/", "")
                 for m in models
-                if "generateContent" in getattr(m, "supported_actions", [])
-                or "generateContent" in getattr(m, "supported_generation_methods", [])
+                if m.name
+                and ("generateContent" in getattr(m, "supported_actions", [])
+                     or "generateContent" in getattr(m, "supported_generation_methods", []))
             )
         except Exception as exc:
             self.last_list_error = f"{type(exc).__name__}: {exc}"
@@ -523,7 +545,7 @@ class GeminiClient:
 
         # Convert AgenticOs messages → Gemini Content list
         # Roles: "user" stays "user", "assistant" becomes "model", skip "system"
-        contents = []
+        contents: list[Any] = []
         for msg in messages:
             role = msg.get("role", "user")
             content = msg.get("content", "")
@@ -547,7 +569,8 @@ class GeminiClient:
 
         if self.stream:
             if use_color:
-                logger.info("\033[92m")
+                sys.stdout.write("\033[92m")
+                sys.stdout.flush()
             for chunk in self._client.models.generate_content_stream(
                 model=self.model,
                 contents=contents,
@@ -556,11 +579,14 @@ class GeminiClient:
                 token = chunk.text if hasattr(chunk, "text") and chunk.text else ""
                 if token:
                     full += token
-                    logger.info(token)
+                    sys.stdout.write(token)
+                    sys.stdout.flush()
             if use_color:
-                logger.info("\033[0m")
+                sys.stdout.write("\033[0m\n")
+                sys.stdout.flush()
             else:
-                logger.info()
+                sys.stdout.write("\n")
+                sys.stdout.flush()
         else:
             response = self._client.models.generate_content(
                 model=self.model,
@@ -619,7 +645,7 @@ class GroqClient:
         _wait_for_rate_limit(self.cfg, self.provider, self.model)
 
         # Convert to OpenAI-style messages list
-        full_messages = []
+        full_messages: list[Any] = []
         if system:
             full_messages.append({"role": "system", "content": system})
         full_messages.extend(messages)
@@ -639,18 +665,22 @@ class GroqClient:
         full = ""
         if self.stream:
             if use_color:
-                logger.info("\033[92m")
+                sys.stdout.write("\033[92m")
+                sys.stdout.flush()
             for chunk in completion:
                 if not getattr(chunk, "choices", None) or not chunk.choices:
                     continue
                 content = getattr(chunk.choices[0].delta, "content", None)
                 if content:
-                    logger.info(content)
+                    sys.stdout.write(content)
+                    sys.stdout.flush()
                     full += content
             if use_color:
-                logger.info("\033[0m")
+                sys.stdout.write("\033[0m\n")
+                sys.stdout.flush()
             else:
-                logger.info()
+                sys.stdout.write("\n")
+                sys.stdout.flush()
         else:
             full = completion.choices[0].message.content or ""
 
@@ -680,15 +710,13 @@ class OpenAICompatibleClient:
 
         try:
             from openai import OpenAI
-            kwargs = {"api_key": self.api_key}
-
             base_url = provider_cfg.get("base_url")
             if base_url:
-                kwargs["base_url"] = base_url
-            elif provider != "openai":
-                raise RuntimeError(f"Missing 'base_url' configuration for {provider} in config/providers.yaml")
-
-            self._client = OpenAI(**kwargs)
+                self._client = OpenAI(api_key=self.api_key, base_url=base_url)
+            else:
+                if provider != "openai":
+                    raise RuntimeError(f"Missing 'base_url' configuration for {provider} in config/providers.yaml")
+                self._client = OpenAI(api_key=self.api_key)
         except ImportError:
             logger.info("Error: openai library not installed. Run: pip install openai")
             self._client = None
@@ -755,7 +783,7 @@ class OpenAICompatibleClient:
             logging.warning(
                 "%s rate limit hit (attempt %d). Waiting %.2fs", self.provider, attempt, delay
             )
-            logger.info(f"\n\033[93m⚠ Rate limit hit (429). Retrying in {delay:.2f} seconds...\033[0m")
+            logger.info(f"\n\033[93m▲ Rate limit hit (429). Retrying in {delay:.2f} seconds...\033[0m")
 
         try:
             completion = retry_call(
@@ -778,18 +806,22 @@ class OpenAICompatibleClient:
         full = ""
         if self.stream:
             if use_color:
-                logger.info("\033[92m")
+                sys.stdout.write("\033[92m")
+                sys.stdout.flush()
             for chunk in completion:
                 if not getattr(chunk, "choices", None) or not chunk.choices:
                     continue
                 content = getattr(chunk.choices[0].delta, "content", None)
                 if content:
-                    logger.info(content)
+                    sys.stdout.write(content)
+                    sys.stdout.flush()
                     full += content
             if use_color:
-                logger.info("\033[0m")
+                sys.stdout.write("\033[0m\n")
+                sys.stdout.flush()
             else:
-                logger.info()
+                sys.stdout.write("\n")
+                sys.stdout.flush()
         else:
             full = completion.choices[0].message.content or ""
 
@@ -828,7 +860,7 @@ class TieredClient:
         response = client.chat(messages, system="...")
     """
 
-    def __init__(self, primary, fallbacks: list = None):
+    def __init__(self, primary, fallbacks: list | None = None):
         self.primary = primary
         self.fallbacks = fallbacks or []
         self._active = primary

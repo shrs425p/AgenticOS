@@ -7,7 +7,7 @@ from datetime import datetime
 
 
 class TaskTracker:
-    def __init__(self, workspace: str, session_id: str = None, cfg: dict = None):
+    def __init__(self, workspace: str, session_id: str | None = None, cfg: dict | None = None):
         self.workspace = workspace
         self.cfg = cfg or {}
         self.tasks_dir = os.path.join(workspace, "tasks")
@@ -19,8 +19,8 @@ class TaskTracker:
         self.active_md = os.path.join(
             self.tasks_dir, f"active_task_{self.session_id}.md"
         )
-        self.current = None
-        self.tasks = []  # All tasks in this session
+        self.current: dict | None = None
+        self.tasks: list[dict] = []  # All tasks in this session
         self.load_active_session()
 
     def load_active_session(self):

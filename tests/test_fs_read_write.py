@@ -130,3 +130,55 @@ def test_read_write_errors(tmp_path):
     # 5. Read tail error (nonexistent file)
     assert "Error:" in tool.read_tail("nonexistent.txt")
 
+
+def test_write_file_limit(tmp_path):
+    tool = MockFileSystemTools(tmp_path)
+    
+    # Under limit (199 lines)
+    content_under = "line\n" * 199
+    res_under = tool.write_file("under.txt", content_under)
+    assert "Successfully wrote" in res_under
+    
+    # At/over limit (200 lines)
+    content_over = "line\n" * 200
+    res_over = tool.write_file("over.txt", content_over)
+    assert "Error: The content you are trying to write has" in res_over
+    assert "200 or more lines" in res_over
+
+
+def test_append_file_limit(tmp_path):
+    tool = MockFileSystemTools(tmp_path)
+    
+    # Under limit (199 lines)
+    content_under = "line\n" * 199
+    res_under = tool.append_file("append_limit.txt", content_under)
+    assert "Appended" in res_under
+    
+    # At/over limit (200 lines)
+    content_over = "line\n" * 200
+    res_over = tool.append_file("append_limit.txt", content_over)
+    assert "Error: The content you are trying to append has" in res_over
+    assert "200 or more lines" in res_over
+
+
+def test_edit_file_limit(tmp_path):
+    tool = MockFileSystemTools(tmp_path)
+    
+    # Setup initial file
+    tool.write_file("edit_limit.txt", "hello old_text world")
+    
+    # Under limit (199 lines)
+    content_under = "line\n" * 199
+    res_under = tool.edit_file("edit_limit.txt", "old_text", content_under)
+    assert "Replaced text in" in res_under
+    
+    # Reset
+    tool.write_file("edit_limit.txt", "hello old_text world")
+    
+    # At/over limit (200 lines)
+    content_over = "line\n" * 200
+    res_over = tool.edit_file("edit_limit.txt", "old_text", content_over)
+    assert "Error: The replacement text you are trying to write has" in res_over
+    assert "200 or more lines" in res_over
+
+

@@ -12,7 +12,7 @@ from tools.web import WebTools
     category="Business",
     desc="Fetches competitor intelligence matrix."
 )
-def competitive_intel(competitors: list = None) -> str:
+def competitive_intel(competitors: list | None = None) -> str:
     """
     Fetches competitor intelligence matrix.
     Args:

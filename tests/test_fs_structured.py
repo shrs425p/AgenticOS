@@ -79,3 +79,25 @@ def test_csv_tools(tmp_path):
     
     # 8. Test read_csv error
     assert "Error:" in tool.read_csv("nonexistent.csv")
+
+
+def test_structured_write_limits(tmp_path):
+    tool = MockStructuredTools(tmp_path)
+    
+    # 1. JSON under limit (formatted JSON will have ~100 lines)
+    res_json_under = tool.write_json("under.json", json.dumps({"list": [1] * 40}))
+    assert "Wrote JSON" in res_json_under
+    
+    # JSON over/at limit (formatted JSON will have > 200 lines)
+    res_json_over = tool.write_json("over.json", json.dumps({"list": [1] * 200}))
+    assert "Error: The JSON you are trying to write has" in res_json_over
+    assert "200 or more lines" in res_json_over
+
+    # 2. CSV under limit
+    res_csv_under = tool.write_csv("under.csv", json.dumps([[1, 2]] * 199))
+    assert "Wrote CSV" in res_csv_under
+    
+    # CSV over/at limit (200 rows)
+    res_csv_over = tool.write_csv("over.csv", json.dumps([[1, 2]] * 200))
+    assert "Error: The CSV you are trying to write has" in res_csv_over
+    assert "200 or more lines/rows" in res_csv_over

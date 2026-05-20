@@ -95,10 +95,10 @@ def auto_{cmd_clean}(args: str) -> str:
 
         if platform.system() == "Windows":
             cmd = f"{{cmd_path}} {{args}}"
-            res = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=120)
+            res = subprocess.run(cmd, shell=True, capture_output=True, encoding="utf-8", errors="replace", timeout=120)
         else:
             cmd = [cmd_path] + shlex.split(args)
-            res = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+            res = subprocess.run(cmd, capture_output=True, encoding="utf-8", errors="replace", timeout=120)
 
         out = (res.stdout or "").strip()
         err = (res.stderr or "").strip()
