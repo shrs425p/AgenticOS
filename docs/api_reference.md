@@ -301,7 +301,7 @@ Probes if the command is installed, installs if missing, and generates wrapper t
 
 Asynchronous OS Hardware Event Bus and telemetry polling daemon.
 
-<!-- (If you have Liquid or Jekyll variables below, please use {{ variable }} not {{})} -->
+<!-- If you have Liquid or Jekyll variables below, ensure they are properly closed. -->
 
 <a id="core.config_types"></a>
 
