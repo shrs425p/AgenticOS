@@ -14,3 +14,5 @@ autonomy:
   startup_provider_prompt: false
   startup_model_prompt: false
   power_mode: true
+log_level: INFO
+log_level: INFO

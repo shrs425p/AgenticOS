@@ -48,6 +48,11 @@ jobs:
       - name: Lint (Ruff)
         run: ruff check .
 
+      - name: Validate Plugins
+        env:
+          PYTHONPATH: .
+        run: python tools/plugin_validator.py
+
       - name: Run Tests
         env:
           PYTHONPATH: .

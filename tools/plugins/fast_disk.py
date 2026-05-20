@@ -3,13 +3,14 @@ import subprocess
 import os
 from core.tool_registry import tool
 from core.runtime_ui import C
+from core.platform_api import PlatformAPI
 
 @tool(
     name="fast_disk_audit",
     desc="Optimized disk analysis using native PowerShell. Finds large files, duplicates, and old files in seconds.",
     category="Files"
 )
-def fast_disk_audit(path: str = None, top_n: int = 20, min_mb: int = 100, mode: str = "all"):
+def fast_disk_audit(path: str = None, top_n: int = 20, min_mb: int = 100, mode: str = "all") -> str:
     """
     Performs a high-speed disk audit using PowerShell.
     Modes: 'large' (top files), 'duplicates' (duplicate filenames), 'old' (not accessed in 180d), 'all'.
@@ -39,8 +40,8 @@ def fast_disk_audit(path: str = None, top_n: int = 20, min_mb: int = 100, mode: 
     def run_ps(cmd):
         """run_ps function."""
         try:
-            res = subprocess.check_output(
-                ["powershell", "-NoProfile", "-NonInteractive", "-Command", cmd],
+            res = PlatformAPI.check_output_powershell(
+                cmd,
                 shell=False,
                 stderr=subprocess.STDOUT,
                 text=True,

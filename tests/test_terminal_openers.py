@@ -32,9 +32,7 @@ def test_find_app():
         
     # Start Menu shortcuts lookup fallback
     with patch("shutil.which", return_value=None), \
-         patch("os.path.isdir", return_value=True), \
-         patch("os.walk", return_value=[("/mock/dir", [], ["my_app.lnk"])]), \
-         patch("os.path.exists", return_value=True):
+         patch("core.platform_api.PlatformAPI.find_windows_app", return_value=os.path.join("/mock/dir", "my_app.lnk")):
              assert tool.find_app("my_app") == os.path.join("/mock/dir", "my_app.lnk")
 
 def test_open_app():

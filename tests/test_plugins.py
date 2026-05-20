@@ -3,7 +3,7 @@ from unittest import mock
 
 from tools.plugins.fast_disk import fast_disk_audit
 
-@mock.patch("subprocess.check_output")
+@mock.patch("core.platform_api.PlatformAPI.check_output_powershell")
 def test_fast_disk_default_path(mock_check_output):
     mock_check_output.return_value = "Mock result"
     
@@ -20,9 +20,8 @@ def test_fast_disk_default_path(mock_check_output):
     # In 'all' mode, it searches 'Users' inside the root path
     expected_scan_path = os.path.join(root_path, "Users")
     
-    # Get the arguments passed to the second call of check_output (the duplicates check)
+    # Get the arguments passed to the second call of check_output_powershell (the duplicates check)
     args, kwargs = mock_check_output.call_args_list[1]
-    cmd_list = args[0]
-    cmd = cmd_list[-1]  # The actual powershell command is the last argument
+    cmd = args[0]  # The actual powershell command is the first argument
     
     assert expected_scan_path.replace("'", "''") in cmd

@@ -1,6 +1,7 @@
 # Documentation Maintenance Logs
 
 ## 2026-05-19
+- Created `docs/contributor_guide.md` with instructions for dev setup, plugin registration, coding standards, and running tests.
 - Removed hardcoded C:\AgenticOs paths from core/memory_manager.py, config/prompts.yaml, and tests/test_all_tools_shadow.py.
 
 ## 2026-05-18

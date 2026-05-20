@@ -13,6 +13,8 @@ import time
 
 
 from core.tool_base import tool
+from core.platform_api import PlatformAPI
+
 class OpenersMixin:
     @tool(name="find_app", desc="Find an app executable path (dynamic: PATH/registry/Start Menu). Args: app_name", category="Terminal")
     def find_app(self, app_name: str) -> str:
@@ -46,55 +48,9 @@ class OpenersMixin:
 
 
         if self.system == "Windows":
-            # Registry App Paths
-            try:
-                import winreg  # type: ignore
-
-                sub = r"Software\Microsoft\Windows\CurrentVersion\App Paths"
-                candidates = [
-                    (winreg.HKEY_CURRENT_USER, f"{sub}\\{exe}"),
-                    (winreg.HKEY_LOCAL_MACHINE, f"{sub}\\{exe}"),
-                    (winreg.HKEY_CURRENT_USER, f"{sub}\\{name}"),
-                    (winreg.HKEY_LOCAL_MACHINE, f"{sub}\\{name}"),
-                ]
-                for root, key in candidates:
-                    try:
-                        with winreg.OpenKey(root, key) as h:
-                            val, _ = winreg.QueryValueEx(h, "")
-                            if val and os.path.exists(val):
-                                return val
-                    except (OSError, EnvironmentError):
-                        continue
-            except (OSError, EnvironmentError, ImportError):
-                pass  # Expected: Registry access may fail on non-Windows or restricted environments.
-
-
-            # Start Menu shortcuts by name (best-effort)
-            try:
-                start_dirs = [
-                    os.path.expandvars(
-                        r"%APPDATA%\Microsoft\Windows\Start Menu\Programs"
-                    ),
-                    os.path.expandvars(
-                        r"%ProgramData%\Microsoft\Windows\Start Menu\Programs"
-                    ),
-                ]
-                needle = (name or "").lower()
-                for sd in start_dirs:
-                    if not sd or not os.path.isdir(sd):
-                        continue
-                    for root, _dirs, files in os.walk(sd):
-                        for fn in files:
-                            if not fn.lower().endswith(".lnk"):
-                                continue
-                            if needle and needle not in fn.lower():
-                                continue
-                            p = os.path.join(root, fn)
-                            if os.path.exists(p):
-                                return p
-            except (OSError, FileNotFoundError):
-                pass  # Expected: Start Menu directories may be inaccessible.
-
+            val = PlatformAPI.find_windows_app(name)
+            if val:
+                return val
 
         return "Not found."
 
