@@ -1,4 +1,3 @@
-import pytest
 from core.runtime import CLI
 
 def test_thinking_command_toggle():

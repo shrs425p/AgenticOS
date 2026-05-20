@@ -1,5 +1,4 @@
 from unittest.mock import patch, MagicMock
-import sys
 from core.model_clients import NvidiaClient
 
 @patch('core.model_clients.os.environ.get')

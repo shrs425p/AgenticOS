@@ -18,7 +18,6 @@ except ImportError:
     except ImportError:
         readline = None
 
-import yaml
 import requests
 import re
 from typing import Dict, Optional, Callable, Tuple

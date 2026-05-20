@@ -1,5 +1,4 @@
 from unittest.mock import patch, MagicMock
-import subprocess
 from tools.plugins.git_manager import git_status, git_diff, git_add, git_commit, git_log
 
 @patch("subprocess.run")
@@ -16,7 +15,7 @@ def test_git_diff(mock_run):
     assert "diff output" in res
     mock_run.assert_called_once_with(["git", "diff"], capture_output=True, text=True, encoding="utf-8", errors="replace", check=False)
 
-    res_staged = git_diff(staged=True)
+    git_diff(staged=True)
     assert mock_run.call_count == 2
 
 @patch("subprocess.run")

@@ -5,7 +5,6 @@ Provides long-term memory consolidation, daily logging, and knowledge retention.
 """
 
 import json
-import logging
 import re
 from datetime import datetime, timedelta, timezone
 import uuid

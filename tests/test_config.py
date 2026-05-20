@@ -69,6 +69,6 @@ def test_load_config_caching_behavior(mock_exists, mock_isdir, mock_read_yaml):
         assert cfg1["agent"]["workspace"] == old_workspace
         
         # 3. Forced reload loads from disk again (count increases)
-        cfg3 = load_config("caching_test.yaml", force_reload=True)
+        load_config("caching_test.yaml", force_reload=True)
         assert call_count == 2
 

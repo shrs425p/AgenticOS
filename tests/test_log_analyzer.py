@@ -1,5 +1,4 @@
-import os
-from tools.plugins.log_analyzer import search_logs, get_log_errors, _get_log_path
+from tools.plugins.log_analyzer import search_logs, get_log_errors
 from unittest.mock import patch
 
 def test_search_logs_file_missing():

@@ -1,6 +1,4 @@
-import sys
 from unittest.mock import patch, MagicMock
-import pytest
 from main import run_health_check
 
 
@@ -22,7 +20,7 @@ def test_run_health_check_ollama_success():
          patch("core.runtime_config.load_config", return_value=mock_config), \
          patch("core.config_validator.warn_config_issues", return_value=mock_issues_result), \
          patch("urllib.request.urlopen", return_value=mock_response), \
-         patch("urllib.request.Request") as mock_req:
+         patch("urllib.request.Request"):
          
         run_health_check()
         mock_exit.assert_called_once_with(0)
@@ -41,7 +39,7 @@ def test_run_health_check_nvidia_success():
          patch("core.runtime_config.load_config", return_value=mock_config), \
          patch("core.config_validator.warn_config_issues", return_value=mock_issues_result), \
          patch.dict("os.environ", {"NVIDIA_API_KEY": "nvapi-testkey"}), \
-         patch("urllib.request.urlopen") as mock_urlopen:
+         patch("urllib.request.urlopen"):
          
         run_health_check()
         mock_exit.assert_called_once_with(0)

@@ -185,7 +185,7 @@ def run_health_check() -> None:
                 try:
                     host_url = base_url.split("/v1")[0]
                     req = urllib.request.Request(host_url, method="HEAD")
-                    with urllib.request.urlopen(req, timeout=3) as resp:
+                    with urllib.request.urlopen(req, timeout=3):
                         pass
                     print(f"    ✓ Base URL reachable: {base_url}")
                 except Exception:

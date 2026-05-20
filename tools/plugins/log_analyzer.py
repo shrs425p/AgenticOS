@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import os
-import re
 from core.tool_registry import tool
 
 def _get_log_path() -> str:

@@ -1,7 +1,6 @@
 """Module for git_manager.py"""
 from __future__ import annotations
 
-import os
 import subprocess
 from core.tool_registry import tool
 

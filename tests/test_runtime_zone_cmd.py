@@ -1,6 +1,5 @@
 """Unit tests for the /zone CLI command."""
 
-import pytest
 from unittest.mock import MagicMock, patch, mock_open
 from core.runtime import CLI
 
