@@ -20,7 +20,7 @@ def test_detect_runtime_path():
         assert path == "Not Installed"
 
 
-@patch("subprocess.run")
+@patch("core.platform_api.PlatformAPI.run_powershell")
 def test_get_active_windows_windows(mock_run):
     """Verify active desktop window extraction on Windows."""
     mock_response = MagicMock()
@@ -81,7 +81,8 @@ def test_get_active_windows_unix_linux(mock_run, mock_which, mock_system):
 @patch("platform.system")
 @patch("shutil.which")
 @patch("subprocess.run")
-def test_os_sandbox_auditor_windows(mock_run, mock_which, mock_system):
+@patch("core.platform_api.PlatformAPI.run_powershell")
+def test_os_sandbox_auditor_windows(mock_ps_run, mock_run, mock_which, mock_system):
     """Verify full capability report structure under simulated Windows environment."""
     mock_system.return_value = "Windows"
     mock_which.return_value = "C:\\Python\\python.exe"
@@ -90,13 +91,14 @@ def test_os_sandbox_auditor_windows(mock_run, mock_which, mock_system):
     mock_ps_response = MagicMock()
     mock_ps_response.returncode = 0
     mock_ps_response.stdout = "code::Visual Studio Code"
+    mock_ps_run.return_value = mock_ps_response
     
     # Mock pip list response
     mock_pip_response = MagicMock()
     mock_pip_response.returncode = 0
     mock_pip_response.stdout = "requests==2.31.0\npytest==9.0.3\n"
 
-    mock_run.side_effect = [mock_ps_response, mock_pip_response]
+    mock_run.return_value = mock_pip_response
 
     report = os_sandbox_auditor()
 

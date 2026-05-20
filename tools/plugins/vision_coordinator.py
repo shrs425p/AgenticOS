@@ -10,6 +10,7 @@ from typing import Optional, List, Dict, Any
 from core.tool_base import tool
 from tools.screen_tools import ScreenManager
 from tools.terminal import TerminalExecutor
+from core.platform_api import PlatformAPI
 
 def _extract_word_boxes(image_path: str) -> List[Dict[str, Any]]:
     """Runs high-speed WinRT OCR or Tesseract to extract word bounding boxes from image.
@@ -52,8 +53,8 @@ def _extract_word_boxes(image_path: str) -> List[Dict[str, Any]]:
         }}
         """
         try:
-            process = subprocess.Popen(
-                ["powershell", "-NoProfile", "-NonInteractive", "-Command", "-"],
+            process = PlatformAPI.popen_powershell(
+                "-",
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -281,7 +282,7 @@ def drag_and_drop_visual(source: str, destination: str) -> str:
             Start-Sleep -Milliseconds 100;
             [Mouse]::mouse_event(0x0004, 0, 0, 0, 0); # MOUSEEVENTF_LEFTUP
             """
-            subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", ps_script])
+            PlatformAPI.run_powershell(ps_script)
         elif sys_name == "Darwin":
             term = TerminalExecutor()
             term.mouse_move(sx, sy)
