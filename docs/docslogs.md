@@ -3,6 +3,9 @@
 ## 2026-05-20
 - Updated `docs/index.html` to reflect the correct number of tools (180+) in line with `README.md`.
 - Updated `docs/index.html` Quick Start instructions to use the automated `setup.ps1` and `setup.sh` scripts instead of manual `pip install` commands.
+- Updated `README.md` test counts and status badges to 444 tests passed following Code AST Parser plugin implementation.
+- Updated `tests/README.md` to reflect over 440+ comprehensive tests.
+- Aligned documentation files and version history dates in `docs/version_history.md`.
 
 ## 2026-05-19
 - Created `docs/contributor_guide.md` with instructions for dev setup, plugin registration, coding standards, and running tests.
