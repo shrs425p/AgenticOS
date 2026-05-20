@@ -948,7 +948,8 @@ class Agent:
                         final_answer=final_ans or response,
                         tools_used=list(set(tools_used)),
                         success=True,
-                        duration=duration_s
+                        duration=duration_s,
+                        task_id=self.task_tracker.current.get("task_id") if self.task_tracker.current else None
                     )
                 except Exception as e:
                     print_error(f"Failed to consolidate memory: {e}")
@@ -1023,6 +1024,25 @@ class Agent:
         
         if self.autonomy_cfg.get("task_tracking", True):
             self.task_tracker.fail(fail_msg)
+            # Log failed task completion
+            tools_used = []
+            goal = "Task"
+            if self.task_tracker.current:
+                tools_used = [a.get("tool") for a in self.task_tracker.current.get("actions_taken", []) if a.get("tool")]
+                goal = self.task_tracker.current.get("goal", goal)
+            duration_s = max(0.0, time.time() - run_started_ts)
+            try:
+                log_task_completion(
+                    goal=goal,
+                    final_answer=fail_msg,
+                    tools_used=list(set(tools_used)),
+                    success=False,
+                    duration=duration_s,
+                    task_id=self.task_tracker.current.get("task_id") if self.task_tracker.current else None
+                )
+            except Exception as e:
+                print_warning(f"Warning: Failed to log task history: {e}")
+
         print_error(fail_msg)
         try:
             self.audit.session_end(self.session_id, status="max_iterations")
