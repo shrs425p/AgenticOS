@@ -4,5 +4,5 @@ black==26.5.1
 ruff==0.15.13
 mypy==1.10.0
 radon==6.0.1
-pdoc==14.5.1
+pdoc==16.0.0
 bandit[sarif]==1.9.4
