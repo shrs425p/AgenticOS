@@ -1129,6 +1129,7 @@ class CLI:
         "/thinking": "Toggle verbose model thinking trace (Show/Hide)",
         "/zone": "Toggle security zone (green/yellow/red/blue) or pass a zone name to switch directly",
         "/logs": "Open logs folder or display recent logs (use '/logs tail')",
+        "/tasks": "List all session tasks or show the active task progress (use '/tasks current')",
         "/exit": "Exit AgenticOs",
     }
 
@@ -1453,6 +1454,87 @@ class CLI:
         elif base == "/reload":
             self.agent.mtimes = {}  # Force reload
             self.agent.check_reload()
+
+        elif base == "/tasks":
+            arg = parts[1].strip().lower() if len(parts) > 1 else "list"
+            tasks = getattr(self.task_tracker, "tasks", [])
+            current_task = getattr(self.task_tracker, "current", None)
+
+            if not tasks:
+                print_info("No tasks recorded in the active session.")
+            elif arg in ("list", "all"):
+                logger.info(f"\n{C.CYAN}Active Session Tasks ({len(tasks)} tasks):{C.RESET}")
+                for idx, task in enumerate(tasks, 1):
+                    status = task.get("status", "unknown").lower()
+                    is_curr = task is current_task
+                    
+                    if status == "completed":
+                        badge = f"{C.EMERALD}[COMPLETED]{C.RESET}"
+                    elif status == "failed":
+                        badge = f"{C.ROSE}[FAILED]{C.RESET}"
+                    elif status == "running":
+                        badge = f"{C.TEAL}[RUNNING]{C.RESET}"
+                    else:
+                        badge = f"{C.SLATE}[{status.upper()}]{C.RESET}"
+                        
+                    goal = task.get("goal", "").replace("\n", " ")
+                    if len(goal) > 55:
+                        goal = goal[:52] + "..."
+                        
+                    curr_marker = f" {C.PURPLE}(current){C.RESET}" if is_curr else ""
+                    iter_info = f" (Iteration: {task.get('iteration', 0)})" if status == "running" else ""
+                    logger.info(f"  {C.BOLD}#{idx:<3}{C.RESET} {badge:<22} {goal}{curr_marker}{iter_info}")
+            elif arg in ("current", "active", "show"):
+                if not current_task:
+                    print_info("No active task is currently running.")
+                else:
+                    status = current_task.get("status", "unknown").lower()
+                    if status == "completed":
+                        badge = f"{C.EMERALD}[COMPLETED]{C.RESET}"
+                    elif status == "failed":
+                        badge = f"{C.ROSE}[FAILED]{C.RESET}"
+                    elif status == "running":
+                        badge = f"{C.TEAL}[RUNNING]{C.RESET}"
+                    else:
+                        badge = f"{C.SLATE}[{status.upper()}]{C.RESET}"
+
+                    logger.info(f"\n{C.CYAN}Current Task Details:{C.RESET}")
+                    logger.info(f"  {C.BOLD}Goal:{C.RESET} {current_task.get('goal', 'Untitled')}")
+                    logger.info(f"  {C.BOLD}Status:{C.RESET} {badge}")
+                    logger.info(f"  {C.BOLD}Iteration:{C.RESET} {current_task.get('iteration', 0)}")
+                    logger.info(f"  {C.BOLD}Current Step:{C.RESET} {C.AMBER}{current_task.get('current_step', 'None')}{C.RESET}")
+                    
+                    plan = current_task.get("plan", [])
+                    current_step = current_task.get("current_step", "")
+                    if plan:
+                        logger.info(f"\n  {C.BOLD}Plan & Progress:{C.RESET}")
+                        found_curr = False
+                        for i, step in enumerate(plan, 1):
+                            is_step_curr = (step == current_step or (current_step and current_step in step))
+                            if is_step_curr:
+                                marker = f"{C.AMBER}[/]{C.RESET}"
+                                step_text = f"{C.BOLD}{C.AMBER}{step}{C.RESET}"
+                                found_curr = True
+                            elif found_curr:
+                                marker = "[ ]"
+                                step_text = f"{C.SLATE}{step}{C.RESET}"
+                            else:
+                                marker = f"{C.EMERALD}[x]{C.RESET}"
+                                step_text = f"{C.DIM}{C.SLATE}{step}{C.RESET}"
+                            logger.info(f"    {marker} {i}. {step_text}")
+                    
+                    last_act = current_task.get("last_action", "")
+                    if last_act:
+                        logger.info(f"\n  {C.BOLD}Last Action:{C.RESET} {last_act}")
+                    
+                    last_obs = current_task.get("last_observation", "")
+                    if last_obs:
+                        preview_obs = last_obs.replace("\n", " ")
+                        if len(preview_obs) > 120:
+                            preview_obs = preview_obs[:117] + "..."
+                        logger.info(f"  {C.BOLD}Last Observation:{C.RESET} {C.DIM}{preview_obs}{C.RESET}")
+            else:
+                print_error(f"Unknown tasks option: '{arg}'. Valid options: list, current.")
 
         elif base == "/config":
             config_dir = os.path.join(BASE_DIR, "config")

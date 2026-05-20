@@ -293,17 +293,16 @@ def main() -> None:
         llm = None
         try:
             from core.runtime_config import load_config as _load_config_internal
+            from core.runtime import PROVIDER_CLIENT_MAP
+            import core.model_clients as model_clients
 
             full_cfg = _load_config_internal()
             provider = full_cfg.get("agent", {}).get("provider", "ollama").lower()
-            if provider == "gemini":
-                from core.model_clients import GeminiClient
-
-                llm = GeminiClient(full_cfg)
-            elif provider == "ollama":
-                from core.model_clients import OllamaClient
-
-                llm = OllamaClient(full_cfg)
+            
+            if provider in PROVIDER_CLIENT_MAP:
+                client_name = PROVIDER_CLIENT_MAP[provider]
+                client_cls = getattr(model_clients, client_name)
+                llm = client_cls(full_cfg)
         except Exception:
             pass
 

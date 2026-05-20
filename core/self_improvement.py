@@ -36,14 +36,15 @@ class SelfImprovementDaemon:
 
     def should_dream(self, force: bool = False) -> bool:
         """Check if enough time has passed since the last dream cycle."""
+        if force:
+            return True
+            
         # Check if today's daily dream_log exists
         today_str = datetime.now().strftime("%Y-%m-%d")
         daily_log_path = self.workspace / "daily_logs" / f"dream_log_{today_str}.md"
         if daily_log_path.exists():
             return False
 
-        if force:
-            return True
         if not self.dream_marker_file.exists():
             return True
         try:
