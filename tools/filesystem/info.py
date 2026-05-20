@@ -10,6 +10,7 @@ from core.tool_base import tool, _size_human
 class InfoMixin:
     @tool(name="file_info", desc="Get metadata of file. Args: path", category="Files")
     def file_info(self, path: str) -> str:
+        """file_info function."""
         p = self._resolve(path)
         try:
             if not p.exists():
@@ -32,6 +33,7 @@ class InfoMixin:
 
     @tool(name="file_exists", desc="Check if path exists. Args: path", category="Files")
     def file_exists(self, path: str) -> str:
+        """file_exists function."""
         try:
             return str(self._resolve(path).exists())
         except Exception:
@@ -39,6 +41,7 @@ class InfoMixin:
 
     @tool(name="file_hash", desc="Compute file hash. Args: path, algorithm (optional)", category="Files")
     def file_hash(self, path: str, algorithm: str = "sha256") -> str:
+        """file_hash function."""
         p = self._resolve(path)
         try:
             h = hashlib.new((algorithm or "sha256").lower())

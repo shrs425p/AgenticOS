@@ -9,6 +9,7 @@ from core.tool_base import tool
 class UtilsMixin:
     @tool(name="shorten_url", desc="Shorten a URL. Args: url", category="Web")
     def shorten_url(self, url: str) -> str:
+        """shorten_url function."""
         err = self._network_error()
         if err:
             return err
@@ -27,6 +28,7 @@ class UtilsMixin:
 
     @tool(name="expand_url", desc="Follow redirects to final URL. Args: url", category="Web")
     def expand_url(self, url: str) -> str:
+        """expand_url function."""
         err = self._network_error()
         if err:
             return err
@@ -40,6 +42,7 @@ class UtilsMixin:
 
     @tool(name="rss_feed", desc="Fetch and parse RSS feed. Args: url, num_items (optional)", category="Web")
     def rss_feed(self, url: str, num_items: str = "5") -> str:
+        """rss_feed function."""
         err = self._network_error()
         if err:
             return err
@@ -78,6 +81,7 @@ class UtilsMixin:
 
     @tool(name="wayback_snapshot", desc="Get Wayback Machine snapshot. Args: url", category="Web")
     def wayback_snapshot(self, url: str) -> str:
+        """wayback_snapshot function."""
         err = self._network_error()
         if err:
             return err
@@ -92,6 +96,7 @@ class UtilsMixin:
 
     @tool(name="scrape_table", desc="Scrape HTML table. Args: url, table_index (optional)", category="Web")
     def scrape_table(self, url: str, table_index: str = "0") -> str:
+        """scrape_table function."""
         err = self._network_error()
         if err:
             return err

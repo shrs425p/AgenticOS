@@ -8,6 +8,7 @@ from core.tool_base import tool
 class ListingMixin:
     @tool(name="list_dir", desc="List directory contents. Args: path (optional)", category="Files")
     def list_dir(self, path: str = ".") -> str:
+        """list_dir function."""
         p = self._resolve(path)
         try:
             if not p.exists():
@@ -26,6 +27,7 @@ class ListingMixin:
 
     @tool(name="tree", desc="Show directory tree. Args: path, max_depth (optional)", category="Files")
     def tree(self, path: str = ".", max_depth: str = "3") -> str:
+        """tree function."""
         root = self._resolve(path)
         try:
             depth_limit = max(0, int(max_depth))
@@ -40,6 +42,7 @@ class ListingMixin:
         lines = [str(root.name)]
 
         def walk(directory: Path, prefix: str, current_depth: int):
+            """walk function."""
             if current_depth >= depth_limit:
                 return
             children = sorted(

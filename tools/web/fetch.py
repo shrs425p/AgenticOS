@@ -11,6 +11,7 @@ from core.tool_base import tool
 class FetchMixin:
     @tool(name="fetch_url", desc="Fetch webpage raw content. Args: url", category="Web")
     def fetch_url(self, url: str, timeout: str = "15") -> str:
+        """fetch_url function."""
         err = self._network_error()
         if err:
             return err
@@ -23,6 +24,7 @@ class FetchMixin:
 
     @tool(name="get_page_text", desc="Extract readable text from webpage. Args: url", category="Web")
     def get_page_text(self, url: str) -> str:
+        """get_page_text function."""
         err = self._network_error()
         if err:
             return err
@@ -46,6 +48,7 @@ class FetchMixin:
 
     @tool(name="get_page_links", desc="Extract links from webpage. Args: url", category="Web")
     def get_page_links(self, url: str) -> str:
+        """get_page_links function."""
         err = self._network_error()
         if err:
             return err
@@ -74,6 +77,7 @@ class FetchMixin:
 
     @tool(name="get_page_images", desc="Extract image URLs from webpage. Args: url", category="Web")
     def get_page_images(self, url: str) -> str:
+        """get_page_images function."""
         err = self._network_error()
         if err:
             return err
@@ -102,6 +106,7 @@ class FetchMixin:
 
     @tool(name="download_file", desc="Download file from URL. Args: url, dest_path", category="Web")
     def download_file(self, url: str, dest_path: str, timeout: str = "") -> str:
+        """download_file function."""
         err = self._network_error("download")
         if err:
             return err

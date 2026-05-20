@@ -13,6 +13,8 @@ import time
 
 
 from core.tool_base import tool
+from core.platform_api import PlatformAPI
+
 class OpenersMixin:
     @tool(name="find_app", desc="Find an app executable path (dynamic: PATH/registry/Start Menu). Args: app_name", category="Terminal")
     def find_app(self, app_name: str) -> str:
@@ -46,55 +48,9 @@ class OpenersMixin:
 
 
         if self.system == "Windows":
-            # Registry App Paths
-            try:
-                import winreg  # type: ignore
-
-                sub = r"Software\Microsoft\Windows\CurrentVersion\App Paths"
-                candidates = [
-                    (winreg.HKEY_CURRENT_USER, f"{sub}\\{exe}"),
-                    (winreg.HKEY_LOCAL_MACHINE, f"{sub}\\{exe}"),
-                    (winreg.HKEY_CURRENT_USER, f"{sub}\\{name}"),
-                    (winreg.HKEY_LOCAL_MACHINE, f"{sub}\\{name}"),
-                ]
-                for root, key in candidates:
-                    try:
-                        with winreg.OpenKey(root, key) as h:
-                            val, _ = winreg.QueryValueEx(h, "")
-                            if val and os.path.exists(val):
-                                return val
-                    except (OSError, EnvironmentError):
-                        continue
-            except (OSError, EnvironmentError, ImportError):
-                pass  # Expected: Registry access may fail on non-Windows or restricted environments.
-
-
-            # Start Menu shortcuts by name (best-effort)
-            try:
-                start_dirs = [
-                    os.path.expandvars(
-                        r"%APPDATA%\Microsoft\Windows\Start Menu\Programs"
-                    ),
-                    os.path.expandvars(
-                        r"%ProgramData%\Microsoft\Windows\Start Menu\Programs"
-                    ),
-                ]
-                needle = (name or "").lower()
-                for sd in start_dirs:
-                    if not sd or not os.path.isdir(sd):
-                        continue
-                    for root, _dirs, files in os.walk(sd):
-                        for fn in files:
-                            if not fn.lower().endswith(".lnk"):
-                                continue
-                            if needle and needle not in fn.lower():
-                                continue
-                            p = os.path.join(root, fn)
-                            if os.path.exists(p):
-                                return p
-            except (OSError, FileNotFoundError):
-                pass  # Expected: Start Menu directories may be inaccessible.
-
+            val = PlatformAPI.find_windows_app(name)
+            if val:
+                return val
 
         return "Not found."
 
@@ -131,6 +87,7 @@ class OpenersMixin:
 
     @tool(name="launch_application", desc="Launch desktop application. Args: app_name, arguments (optional)", category="Terminal")
     def launch_application(self, app_name: str, arguments: str = "") -> str:
+        """launch_application function."""
         name = (app_name or "").strip()
         if not name:
             return "Error: app_name required."
@@ -216,6 +173,7 @@ class OpenersMixin:
 
     @tool(name="open_spotify_search", desc="Open Spotify search in browser/app. Args: query", category="Terminal")
     def open_spotify_search(self, query: str) -> str:
+        """open_spotify_search function."""
         q = (query or "").strip()
         if not q:
             return "Error: query required."
@@ -226,6 +184,7 @@ class OpenersMixin:
 
     @tool(name="open_whatsapp_web", desc="Open WhatsApp Web.", category="Terminal")
     def open_whatsapp_web(self) -> str:
+        """open_whatsapp_web function."""
         base = self.cfg.get("endpoints", {}).get("whatsapp_web", "https://web.whatsapp.com/")
         return self.open_url(base)
 
@@ -257,6 +216,7 @@ class OpenersMixin:
 
     @tool(name="open_instagram_profile", desc="Open Instagram profile. Args: username", category="Terminal")
     def open_instagram_profile(self, username: str) -> str:
+        """open_instagram_profile function."""
         u = (username or "").strip().lstrip("@")
         if not u:
             return "Error: username required."
@@ -265,6 +225,7 @@ class OpenersMixin:
 
     @tool(name="open_x_profile", desc="Open X/Twitter profile. Args: username", category="Terminal")
     def open_x_profile(self, username: str) -> str:
+        """open_x_profile function."""
         u = (username or "").strip().lstrip("@")
         if not u:
             return "Error: username required."
@@ -273,6 +234,7 @@ class OpenersMixin:
 
     @tool(name="open_facebook_profile", desc="Open Facebook profile or URL. Args: handle_or_url", category="Terminal")
     def open_facebook_profile(self, handle_or_url: str) -> str:
+        """open_facebook_profile function."""
         h = (handle_or_url or "").strip()
         if not h:
             return "Error: handle_or_url required."
@@ -283,11 +245,13 @@ class OpenersMixin:
 
     @tool(name="open_discord", desc="Open Discord in browser.", category="Terminal")
     def open_discord(self) -> str:
+        """open_discord function."""
         base = self.cfg.get("endpoints", {}).get("discord", "https://discord.com/app")
         return self.open_url(base)
 
     @tool(name="open_google_search", desc="Open Google search. Args: query", category="Terminal")
     def open_google_search(self, query: str) -> str:
+        """open_google_search function."""
         q = (query or "").strip()
         if not q:
             return "Error: query required."
@@ -296,6 +260,7 @@ class OpenersMixin:
 
     @tool(name="open_google_maps", desc="Open Google Maps search. Args: query", category="Terminal")
     def open_google_maps(self, query: str) -> str:
+        """open_google_maps function."""
         q = (query or "").strip()
         if not q:
             return "Error: query required."
@@ -304,6 +269,7 @@ class OpenersMixin:
 
     @tool(name="open_youtube_search", desc="Open YouTube search. Args: query", category="Terminal")
     def open_youtube_search(self, query: str) -> str:
+        """open_youtube_search function."""
         q = (query or "").strip()
         if not q:
             return "Error: query required."
@@ -312,6 +278,7 @@ class OpenersMixin:
 
     @tool(name="open_github_search", desc="Open GitHub search. Args: query", category="Terminal")
     def open_github_search(self, query: str) -> str:
+        """open_github_search function."""
         q = (query or "").strip()
         if not q:
             return "Error: query required."
@@ -320,6 +287,7 @@ class OpenersMixin:
 
     @tool(name="open_stackoverflow_search", desc="Open StackOverflow search. Args: query", category="Terminal")
     def open_stackoverflow_search(self, query: str) -> str:
+        """open_stackoverflow_search function."""
         q = (query or "").strip()
         if not q:
             return "Error: query required."
@@ -328,6 +296,7 @@ class OpenersMixin:
 
     @tool(name="open_file", desc="Open file with default application. Args: path", category="Terminal")
     def open_file(self, path: str) -> str:
+        """open_file function."""
         raw = (path or "").strip()
         if not raw:
             return "Error: path required."
@@ -369,6 +338,7 @@ class OpenersMixin:
 
     @tool(name="open_url", desc="Open URL in default browser. Args: url", category="Terminal")
     def open_url(self, url: str) -> str:
+        """open_url function."""
         try:
             webbrowser.open(url)
             return "Opened."

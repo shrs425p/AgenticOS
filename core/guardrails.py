@@ -1,5 +1,10 @@
+
 from pathlib import Path
 from typing import Dict, List, Tuple, Callable, Optional
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
 
 
 class PathGuard:
@@ -74,12 +79,12 @@ class PathGuard:
 
         # Default CLI implementation (blocking)
         from core.runtime_ui import C
-        print(f"\n{C.RED}⚠ STOP — SECURITY GUARDRAIL{C.RESET}")
-        print(
+        logger.info(f"\n{C.RED}⚠ STOP — SECURITY GUARDRAIL{C.RESET}")
+        logger.info(
             f"The agent is attempting a {C.BOLD}{operation.upper()}{C.RESET} action outside the workspace."
         )
-        print(f"Target Path: {C.CYAN}{path}{C.RESET}")
-        print(
+        logger.info(f"Target Path: {C.CYAN}{path}{C.RESET}")
+        logger.info(
             f"{C.GRAY}(You can allow this once, or modify config.yaml to change security rules){C.RESET}"
         )
         try:

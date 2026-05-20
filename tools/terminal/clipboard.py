@@ -6,6 +6,7 @@ from core.tool_base import tool
 class ClipboardMixin:
     @tool(name="clipboard_get", desc="Get clipboard text.", category="Terminal")
     def clipboard_get(self) -> str:
+        """clipboard_get function."""
         try:
             import pyperclip
 
@@ -26,6 +27,7 @@ class ClipboardMixin:
 
     @tool(name="clipboard_set", desc="Set clipboard text. Args: text", category="Terminal")
     def clipboard_set(self, text: str) -> str:
+        """clipboard_set function."""
         try:
             import pyperclip
 

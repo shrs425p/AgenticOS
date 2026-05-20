@@ -8,6 +8,7 @@ from core.tool_base import tool
 class SearchMixin:
     @tool(name="search_files", desc="Search files by name pattern. Args: path, pattern", category="Files")
     def search_files(self, path: str, pattern: str) -> str:
+        """search_files function."""
         root = self._resolve(path)
         try:
             if not root.exists():
@@ -22,6 +23,7 @@ class SearchMixin:
 
     @tool(name="grep_file", desc="Search text in file. Args: path, query", category="Files")
     def grep_file(self, path: str, query: str, case_sensitive: str = "true") -> str:
+        """grep_file function."""
         p = self._resolve(path)
         try:
             cs = str(case_sensitive).lower() == "true"
@@ -38,6 +40,7 @@ class SearchMixin:
 
     @tool(name="grep_dir", desc="Grep across directory. Args: path, query, pattern", category="Files")
     def grep_dir(self, path: str, query: str, pattern: str = "*") -> str:
+        """grep_dir function."""
         root = self._resolve(path)
         try:
             if (

@@ -113,6 +113,7 @@ class AuditLogger:
             pass
 
     def session_start(self, session_id: str, provider: str, model: str, workspace: str):
+        """session_start function."""
         obj = {
             "ts": _now_iso(),
             "event": "session_start",
@@ -133,6 +134,7 @@ class AuditLogger:
         )
 
     def session_end(self, session_id: str, status: str = "ended"):
+        """session_end function."""
         obj = {
             "ts": _now_iso(),
             "event": "session_end",
@@ -156,6 +158,7 @@ class AuditLogger:
         validation: str = "",
         observation_preview: str = "",
     ):
+        """tool_call function."""
         dur_ms = int(max(0.0, (ended_ts - started_ts) * 1000))
         args_limit = int(self.log_cfg.get("args_truncation_limit", 2000))
         val_limit = int(self.log_cfg.get("validation_truncation_limit", 500))
@@ -201,6 +204,7 @@ class AuditLogger:
             pass
 
     def error(self, session_id: str, where: str, message: str):
+        """error function."""
         error_limit = int(self.log_cfg.get("error_truncation_limit", 4000))
         msg = _redact(message, cfg=self.cfg)[:error_limit]
         obj = {

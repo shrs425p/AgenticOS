@@ -11,6 +11,7 @@ from core.tool_base import tool
 class SystemMixin:
     @tool(name="system_info", desc="Get OS/hardware info.", category="Terminal")
     def system_info(self) -> str:
+        """system_info function."""
         try:
             return (
                 f"os={platform.system()} {platform.release()} "
@@ -22,6 +23,7 @@ class SystemMixin:
 
     @tool(name="disk_usage", desc="Disk usage. Args: path (optional)", category="Terminal")
     def disk_usage(self, path: str = "/") -> str:
+        """disk_usage function."""
         try:
             total, used, free = shutil.disk_usage(path)
             return f"total={total} used={used} free={free}"
@@ -30,6 +32,7 @@ class SystemMixin:
 
     @tool(name="cpu_usage", desc="CPU usage snapshot.", category="Terminal")
     def cpu_usage(self) -> str:
+        """cpu_usage function."""
         t = self.cfg.get("timeouts", {}).get("system_admin", 10)
         if self.system == "Windows":
             return self.run_powershell("Get-CimInstance Win32_Processor | Measure-Object -Property LoadPercentage -Average | Select-Object -ExpandProperty Average", timeout=t)
@@ -37,6 +40,7 @@ class SystemMixin:
 
     @tool(name="memory_usage", desc="Memory usage.", category="Terminal")
     def memory_usage(self) -> str:
+        """memory_usage function."""
         t = self.cfg.get("timeouts", {}).get("system_admin", 10)
         if self.system == "Windows":
             return self.run_powershell("Get-CimInstance Win32_OperatingSystem | Select-Object FreePhysicalMemory, TotalVisibleMemorySize | Format-List", timeout=t)
@@ -44,6 +48,7 @@ class SystemMixin:
 
     @tool(name="uptime", desc="System uptime.", category="Terminal")
     def uptime(self) -> str:
+        """uptime function."""
         t = self.cfg.get("timeouts", {}).get("system_admin", 10)
         if self.system == "Windows":
             return self.run_powershell("Get-CimInstance Win32_OperatingSystem | Select-Object -ExpandProperty LastBootUpTime", timeout=t)

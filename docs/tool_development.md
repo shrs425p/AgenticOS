@@ -147,7 +147,7 @@ def quick_disk_audit(self, path: str = None):
     Native implementation for disk analysis. Bypasses Python's slow file crawler.
     """
     # Use config-driven default if no path provided
-    target = path or self.cfg.get("runtime", {}).get("default_audit_root", "C:\\")
+    target = path or self.cfg.get("runtime", {}).get("default_audit_root", os.environ.get("SystemDrive", "C:") + "\\")
     
     cmd = f"powershell -Command \"Get-ChildItem -Path '{target}' -File -Recurse | Sort-Object Length -Descending | Select-Object -First 10\""
     try:

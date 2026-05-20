@@ -20,10 +20,12 @@ CONFIG_LAYERS = [
 
 
 def get_path(rel_path: str) -> str:
+    """get_path function."""
     return os.path.join(BASE_DIR, rel_path)
 
 
 def resolve_local_path(path: str, default: str = "") -> str:
+    """resolve_local_path function."""
     raw_path = path or default
     expanded = os.path.expandvars(os.path.expanduser(raw_path))
     if not os.path.isabs(expanded):
@@ -153,6 +155,7 @@ def _load_layered_config(root_path: str) -> tuple[dict, dict]:
 
 
 def load_config(path: str = None) -> ConfigDict:
+    """load_config function."""
     if path is None:
         path = get_path("config.yaml")
 

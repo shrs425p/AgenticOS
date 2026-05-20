@@ -1,0 +1,11 @@
+loaders:
+  - type: python
+    search_path: ['.']
+    packages: ['core', 'tools']
+processors:
+  - type: filter
+    expression: not obj.name.startswith('_') and obj.docstring
+  - type: smart
+  - type: crossref
+renderer:
+  type: markdown

@@ -101,6 +101,95 @@ def _apply_cache_env() -> None:
         os.environ["PYTEST_ADDOPTS"] = addopts
 
 
+def run_health_check() -> None:
+    import sys
+    import os
+    import importlib
+    import urllib.request
+    import json
+
+    passed = True
+    print("\n  AgenticOS Health Check")
+    print("  ======================")
+
+    # 1. Python Version
+    py_version = sys.version_info
+    print(f"  [Python] Version {py_version.major}.{py_version.minor}.{py_version.micro}")
+    if py_version >= (3, 10):
+        print("    ✓ Meets >= 3.10 requirement")
+    else:
+        print("    ✗ Fails >= 3.10 requirement")
+        passed = False
+
+    # 2. Config Keys
+    print("  [Config] Validating config.yaml")
+    try:
+        from core.runtime_config import load_config
+        from core.config_validator import warn_config_issues
+        cfg = load_config()
+        result = warn_config_issues(cfg, quiet=True)
+        if result.has_errors:
+            print("    ✗ Critical configuration errors detected")
+            passed = False
+        else:
+            print("    ✓ Configuration is valid")
+    except Exception as e:
+        print(f"    ✗ Config load failed: {e}")
+        passed = False
+        cfg = {}
+
+    # 3. Ollama Reachability
+    print("  [Ollama] Checking reachability")
+    ollama_url = cfg.get("ollama", {}).get("base_url", "http://localhost:11434").rstrip("/")
+    try:
+        req = urllib.request.Request(f"{ollama_url}/api/version", method="GET")
+        with urllib.request.urlopen(req, timeout=2) as response:
+            if response.status == 200:
+                data = json.loads(response.read().decode('utf-8'))
+                version = data.get("version", "unknown")
+                print(f"    ✓ Reachable (Version {version})")
+            else:
+                print(f"    ✗ HTTP {response.status}")
+                passed = False
+    except Exception as e:
+        print(f"    ✗ Unreachable: {e}")
+        passed = False
+
+    # 4. Tools Importability
+    print("  [Tools] Verifying tool imports")
+    tools_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools")
+    failed_imports = []
+    total_tools = 0
+    for root, _, files in os.walk(tools_dir):
+        if "__pycache__" in root:
+            continue
+        for file in files:
+            if file.endswith(".py") and not file.startswith("__"):
+                total_tools += 1
+                rel_path = os.path.relpath(os.path.join(root, file), start=os.path.dirname(os.path.abspath(__file__)))
+                module_name = rel_path.replace(os.sep, ".")[:-3]
+                try:
+                    importlib.import_module(module_name)
+                except Exception as e:
+                    failed_imports.append((module_name, str(e)))
+
+    if failed_imports:
+        print(f"    ✗ Failed to import {len(failed_imports)}/{total_tools} tools:")
+        for mod, err in failed_imports:
+            print(f"      - {mod}: {err}")
+        passed = False
+    else:
+        print(f"    ✓ All {total_tools} tools successfully imported")
+
+    print("\n  ======================")
+    if passed:
+        print("  Status: PASS\n")
+        sys.exit(0)
+    else:
+        print("  Status: FAIL\n")
+        sys.exit(1)
+
+
 def main() -> None:
     _apply_cache_env()
 
@@ -134,6 +223,9 @@ def main() -> None:
             sys.stderr.reconfigure(encoding="utf-8")
         except Exception:
             pass
+
+    if "--health" in sys.argv:
+        run_health_check()
 
     if "--dream" in sys.argv:
         import logging
@@ -184,7 +276,8 @@ def main() -> None:
 
     from core.runtime import main as _runtime_main
 
-    _runtime_main()
+    dry_run = "--dry-run" in sys.argv
+    _runtime_main(dry_run=dry_run)
 
 
 if __name__ == "__main__":
