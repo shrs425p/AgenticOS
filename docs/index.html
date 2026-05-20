@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgenticOS | Personal AI Superintelligence</title>
     <meta name="description"
-        content="AgenticOS — A secure, modular autonomous AI assistant for Windows, macOS, and Linux. 350+ tools, self-healing, zone-based security.">
+        content="AgenticOS — A secure, modular autonomous AI assistant for Windows, macOS, and Linux. 180+ tools, self-healing, zone-based security.">
 
     <meta property="og:title" content="AgenticOS | Personal AI Superintelligence">
     <meta property="og:description"
@@ -911,7 +911,7 @@
             <p class="hero-tag">v2.1.1 Hardened &nbsp;·&nbsp; Active &nbsp;·&nbsp; Windows, macOS, and Linux</p>
             <h1 class="hero-title">AGENTIC<br><span class="italic-serif">OS</span></h1>
             <p class="hero-subtitle">
-                Your personal AI superintelligence. Private, simple, and extremely powerful. 350+ tools. Self-healing.
+                Your personal AI superintelligence. Private, simple, and extremely powerful. 180+ tools. Self-healing.
                 Fully local.
             </p>
             <div class="hero-actions">
@@ -923,7 +923,7 @@
         <!-- METRICS -->
         <div id="metrics" class="reveal">
             <div class="metric">
-                <span class="metric-num">350+</span>
+                <span class="metric-num">180+</span>
                 <span class="metric-label">Specialized Tools</span>
             </div>
             <div class="metric">
@@ -1081,7 +1081,7 @@
                             <text x="210" y="219" font-family="'Outfit', sans-serif" font-size="11" fill="#cbd5e1"
                                 text-anchor="middle">Tool Registry</text>
                             <text x="298" y="218" font-family="'Space Mono', monospace" font-size="7" fill="#888888"
-                                text-anchor="start">350+ Tools</text>
+                                text-anchor="start">180+ Tools</text>
                         </g>
 
                         <!-- Node: Memory Layer -->
@@ -1132,7 +1132,7 @@
                     </div>
                     <div class="arch-item">
                         <h3 class="arch-item-title">Tool Registry</h3>
-                        <p class="arch-item-desc">Auto-discovers 350+ modular tools from the tools/ directory. Plugins
+                        <p class="arch-item-desc">Auto-discovers 180+ modular tools from the tools/ directory. Plugins
                             hot-load at runtime — the agent can register new tools mid-session.</p>
                     </div>
                     <div class="arch-item">
@@ -1235,12 +1235,14 @@
                 <div class="install-step">
                     <div class="step-n">01</div>
                     <div>
-                        <p class="step-title">Clone & Install</p>
+                        <p class="step-title">Clone & Setup Environment</p>
                         <div class="code-block">
                             <span class="cmd">git clone https://github.com/shrs425p/AgenticOS.git</span>
                             <span class="cmd">cd AgenticOS</span>
-                            <span class="cmd">pip install -r requirements.txt</span>
-                            <span class="cmd">playwright install chromium</span>
+                            <span style="color:var(--muted);display:block;margin-top:10px;"># Windows (PowerShell or CMD)</span>
+                            <span class="cmd">powershell -ExecutionPolicy Bypass -File .\setup.ps1</span>
+                            <span style="color:var(--muted);display:block;margin-top:10px;"># macOS / Linux</span>
+                            <span class="cmd">./setup.sh</span>
                         </div>
                     </div>
                 </div>

@@ -1,5 +1,9 @@
 # Documentation Maintenance Logs
 
+## 2026-05-20
+- Updated `docs/index.html` to reflect the correct number of tools (180+) in line with `README.md`.
+- Updated `docs/index.html` Quick Start instructions to use the automated `setup.ps1` and `setup.sh` scripts instead of manual `pip install` commands.
+
 ## 2026-05-19
 - Created `docs/contributor_guide.md` with instructions for dev setup, plugin registration, coding standards, and running tests.
 - Removed hardcoded C:\AgenticOs paths from core/memory_manager.py, config/prompts.yaml, and tests/test_all_tools_shadow.py.
