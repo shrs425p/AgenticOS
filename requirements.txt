@@ -4,7 +4,7 @@ httpx==0.28.1
 beautifulsoup4==4.14.3
 lxml==6.1.1
 openai==2.37.0
-google-genai==2.4.0
+google-genai==2.5.0
 groq==1.2.0
 playwright==1.60.0
 
