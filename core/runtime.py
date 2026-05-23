@@ -1693,7 +1693,6 @@ class CLI:
 
         elif base == "/logs":
             log_dir = os.path.join(BASE_DIR, "data", "logs")
-            log_file = os.path.join(log_dir, "agenticos.log")
 
             def resolve_log_path(name: str) -> Optional[str]:
                 if os.path.isabs(name) and os.path.exists(name):

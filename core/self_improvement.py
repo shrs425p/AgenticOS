@@ -12,8 +12,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from core.logger import get_logger
-logger = get_logger(__name__)
 from core.memory_manager import is_meaningful_task
+logger = get_logger(__name__)
 
 
 

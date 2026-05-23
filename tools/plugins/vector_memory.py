@@ -8,7 +8,6 @@ import logging
 from typing import Any, Dict, List
 
 from core.tool_registry import tool
-from openai import OpenAI
 
 try:
     import numpy as np

@@ -456,7 +456,7 @@ Curated knowledge, insights, and learned patterns from agent experiences.
     daily_file.write_text(daily_log_content, encoding="utf-8")
     
     # 2. Initialize MemoryManager (which triggers clean_historical_memory automatically)
-    mm = MemoryManager(str(workspace))
+    MemoryManager(str(workspace))
     
     # 3. Verify clean MEMORY.md
     cleaned_md = long_term_file.read_text(encoding="utf-8")
