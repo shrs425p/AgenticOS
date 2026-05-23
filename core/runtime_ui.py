@@ -1,4 +1,3 @@
-
 """UI helpers and response parsing for the AgenticOs runtime."""
 
 import sys
@@ -6,9 +5,14 @@ import time
 import threading
 import itertools
 import re
+import os
 from typing import Optional
 from core.logger import get_logger
 logger = get_logger(__name__)
+
+if sys.platform == "win32":
+    # Enable VT100 Escape Sequence for WINDOWS 10+
+    os.system("")
 
 
 
@@ -71,15 +75,15 @@ class C:
     BOLD = "\033[1m"
     DIM = "\033[2m"
     
-    # Premium Light & Soft 256-Color Palette
-    TEAL = "\033[38;5;152m"     # Soft Pastel Sage/Teal
-    SLATE = "\033[38;5;246m"    # Soft Light Slate Gray
-    PURPLE = "\033[38;5;182m"   # Soft Pastel Lavender
-    AMBER = "\033[38;5;223m"    # Soft Pale Amber/Peach
-    EMERALD = "\033[38;5;151m"  # Soft Pastel Sage/Mint Green
-    ROSE = "\033[38;5;217m"     # Soft Pastel Rose
-    BLUE = "\033[38;5;153m"     # Soft Pastel Ice Blue
-    WHITE = "\033[38;5;253m"    # Soft Light Off-White
+    # Premium Light & Soft True-Color Palette
+    TEAL = "\033[38;2;167;219;216m"     # Soft Pastel Sage/Teal
+    SLATE = "\033[38;2;148;163;184m"    # Soft Light Slate Gray
+    PURPLE = "\033[38;2;196;181;253m"   # Soft Pastel Lavender
+    AMBER = "\033[38;2;253;230;138m"    # Soft Pale Amber/Peach
+    EMERALD = "\033[38;2;167;243;208m"  # Soft Pastel Mint Green
+    ROSE = "\033[38;2;254;205;211m"     # Soft Pastel Rose
+    BLUE = "\033[38;2;186;230;253m"     # Soft Pastel Ice Blue
+    WHITE = "\033[38;2;248;250;252m"    # Soft Light Off-White
 
     # Standard Fallback Aliases
     RED = ROSE

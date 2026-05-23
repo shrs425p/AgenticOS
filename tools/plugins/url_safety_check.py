@@ -59,7 +59,7 @@ def _parse_whois_creation_year(raw_data: str) -> int:
     return 0
 
 
-@tool(name="url_safety_check", category="Security", desc="Automated description")
+@tool(name="url_safety_check", category="Security", desc="Audit a URL's safety, WHOIS registration age, and SSL certificate security profiles.")
 def url_safety_check(url: str) -> str:
     """Performs a comprehensive security and cryptographic audit of a URL.
 

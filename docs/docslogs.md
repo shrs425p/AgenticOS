@@ -1,5 +1,13 @@
 # Documentation Maintenance Logs
 
+## 2026-05-22
+- Implemented robust Long-Term Memory Filtering & Nonsense Prevention heuristics (`is_meaningful_task`).
+- Added early-exit checks to `log_task_completion` to prevent logging trivial conversational greetings/gibberish to daily files (`memory-*.md`) and local task logs.
+- Refactored `SelfImprovementDaemon.dream` task reflections to filter out conversational loops using `is_meaningful_task`.
+- Programmatically performed retroactive cleanup and visual formatting of historical entries in `workspace/MEMORY.md`.
+- Expanded the pytest suite with dedicated unit tests in `tests/test_memory_manager.py` (increasing overall passing test count from 444 to 445).
+- Updated status badges and descriptions in `README.md` to reflect 445 tests passed.
+
 ## 2026-05-20
 - Updated `docs/index.html` to reflect the correct number of tools (180+) in line with `README.md`.
 - Updated `docs/index.html` Quick Start instructions to use the automated `setup.ps1` and `setup.sh` scripts instead of manual `pip install` commands.

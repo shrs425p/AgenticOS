@@ -37,6 +37,12 @@ class MemoryManager:
         self._lock = threading.RLock()  # Add lock for thread safety
         self.commitments = self._load_commitments()
         
+        # Proactively clean and sweep existing memory files of nonsense/conversational entries
+        try:
+            self.clean_historical_memory()
+        except Exception as e:
+            logger.warning(f"Failed to run proactive memory clean on startup: {e}")
+        
     def _load_commitments(self) -> List[Dict[str, Any]]:
         """Load pending commitments from disk."""
         if self.commitments_file.exists():
@@ -175,6 +181,10 @@ class MemoryManager:
     def log_task_completion(self, task_goal: str, final_answer: str, tools_used: List[str], 
                            success: bool, duration: float, metadata: Optional[Dict] = None, task_id: Optional[str] = None):
         """Log a completed task to daily memory and prepare for consolidation."""
+        if not is_meaningful_task(task_goal):
+            logger.info(f"Skipping daily logging and memory tracking for non-meaningful task: {task_goal}")
+            return
+            
         event_description = f"""
 **Goal:** {task_goal}
 
@@ -315,18 +325,23 @@ class MemoryManager:
             if not completed_tasks:
                 return
             
+            # Filter out nonsense/trivial tasks to keep memory clean
+            meaningful_tasks = [t for t in completed_tasks if is_meaningful_task(t.get("goal", ""))]
+            if not meaningful_tasks:
+                return
+            
             # Generate insights from recent tasks
-            insights = self._generate_insights_from_tasks(completed_tasks[-10:])  # Last 10 tasks
+            insights = self._generate_insights_from_tasks(meaningful_tasks[-10:])  # Last 10 tasks
             
             # Update long-term memory
-            self._update_long_term_memory(insights, completed_tasks[-10:])
+            self._update_long_term_memory(insights, meaningful_tasks[-10:])
             
             # Mark consolidation as done
             tracking_data["last_consolidation"] = datetime.now().isoformat()
             with open(tracking_file, "w", encoding="utf-8") as f:
                 json.dump(tracking_data, f, indent=2)
                 
-            logger.info(f"✓ Memory consolidation completed. Processed {len(completed_tasks[-10:])} recent tasks.")
+            logger.info(f"✓ Memory consolidation completed. Processed {len(meaningful_tasks[-10:])} recent tasks.")
             
         except Exception as e:
             logger.info(f"Warning: Memory consolidation failed: {e}")
@@ -579,10 +594,193 @@ Curated knowledge, insights, and learned patterns from agent experiences.
                     memory_file.unlink()
                     cleaned_count += 1
             except Exception:
-                # Skip files that don't match expected format
                 continue
         
         return cleaned_count
+
+    def clean_historical_memory(self):
+        """Cleans existing memory entries in MEMORY.md, task_tracking.json, and daily logs by removing non-meaningful/nonsense items."""
+        with self._lock:
+            # 1. Clean MEMORY.md
+            if self.long_term_memory_file.exists():
+                try:
+                    with open(self.long_term_memory_file, "r", encoding="utf-8") as f:
+                        content = f.read()
+                    
+                    # Split content into sections starting with ##
+                    sections = []
+                    current_section = []
+                    for line in content.splitlines():
+                        if line.startswith("## "):
+                            if current_section:
+                                sections.append(current_section)
+                            current_section = [line]
+                        else:
+                            current_section.append(line)
+                    if current_section:
+                        sections.append(current_section)
+                    
+                    cleaned_sections = []
+                    for section in sections:
+                        header = section[0]
+                        is_consolidation = "Memory Consolidation" in header or "Dream Cycle" in header
+                        if is_consolidation:
+                            new_lines = []
+                            in_tasks_list = False
+                            tasks_list = []
+                            
+                            for line in section:
+                                if "Notable Recent Tasks:" in line:
+                                    in_tasks_list = True
+                                    new_lines.append(line)
+                                    continue
+                                
+                                if in_tasks_list:
+                                    match = re.match(r'^(\s*\d+\.\s*[✓✗]\s*)(.*)$', line)
+                                    if match:
+                                        prefix = match.group(1)
+                                        goal = match.group(2).strip()
+                                        if goal.endswith("..."):
+                                            goal = goal[:-3].strip()
+                                        
+                                        if is_meaningful_task(goal):
+                                            tasks_list.append((prefix, goal))
+                                        continue
+                                    elif line.strip() == "" or line.startswith("---") or line.startswith("## "):
+                                        in_tasks_list = False
+                                        for idx, (pfx, g) in enumerate(tasks_list, 1):
+                                            symbol = "✓" if "✓" in pfx else "✗"
+                                            new_lines.append(f"{idx}. {symbol} {g}...")
+                                        tasks_list = []
+                                        new_lines.append(line)
+                                    else:
+                                        # Keep other non-list lines if they exist, or ignore them
+                                        pass
+                                else:
+                                    new_lines.append(line)
+                                    
+                            if in_tasks_list and tasks_list:
+                                for idx, (pfx, g) in enumerate(tasks_list, 1):
+                                    symbol = "✓" if "✓" in pfx else "✗"
+                                    new_lines.append(f"{idx}. {symbol} {g}...")
+                            
+                            cleaned_sections.append(new_lines)
+                        else:
+                            cleaned_sections.append(section)
+                    
+                    new_content = ""
+                    for section in cleaned_sections:
+                        new_content += "\n".join(section) + "\n"
+                    
+                    new_content = re.sub(r'\n{3,}', '\n\n', new_content).strip() + '\n'
+                    with open(self.long_term_memory_file, "w", encoding="utf-8") as f:
+                        f.write(new_content)
+                except Exception as e:
+                    logger.warning(f"Failed to clean historical MEMORY.md: {e}")
+            
+            # 2. Clean task_tracking.json
+            tracking_file = self.memory_dir / "task_tracking.json"
+            if tracking_file.exists():
+                try:
+                    with open(tracking_file, "r", encoding="utf-8") as f:
+                        tracking_data = json.load(f)
+                    
+                    completed_tasks = tracking_data.get("completed_tasks", [])
+                    if completed_tasks:
+                        cleaned_tasks = [t for t in completed_tasks if is_meaningful_task(t.get("goal", ""))]
+                        tracking_data["completed_tasks"] = cleaned_tasks
+                        
+                        with open(tracking_file, "w", encoding="utf-8") as f:
+                            json.dump(tracking_data, f, indent=2)
+                except Exception as e:
+                    logger.warning(f"Failed to clean task_tracking.json: {e}")
+            
+            # 3. Clean daily memory-*.md files
+            if self.memory_dir.exists():
+                for daily_file in self.memory_dir.glob("memory-*.md"):
+                    try:
+                        with open(daily_file, "r", encoding="utf-8") as f:
+                            content = f.read()
+                        
+                        blocks = content.split("\n---\n")
+                        cleaned_blocks = []
+                        
+                        for block in blocks:
+                            if not block.strip():
+                                continue
+                            
+                            goal_match = re.search(r'^\*\*Goal:\*\*\s*(.*)$', block, re.MULTILINE)
+                            if goal_match:
+                                goal = goal_match.group(1).strip()
+                                if not is_meaningful_task(goal):
+                                    continue
+                            
+                            cleaned_blocks.append(block)
+                        
+                        if cleaned_blocks:
+                            new_content = "\n---\n".join(cleaned_blocks) + "\n---\n"
+                            with open(daily_file, "w", encoding="utf-8") as f:
+                                f.write(new_content)
+                        else:
+                            daily_file.unlink()
+                    except Exception as e:
+                        logger.warning(f"Failed to clean daily memory file {daily_file}: {e}")
+
+def is_meaningful_task(goal: str) -> bool:
+    """Determines if a task goal is meaningful enough to be remembered/consolidated.
+    
+    Filters out simple greetings, single-word commands, generic short loops,
+    conversational fluff, and non-action trivial inputs.
+    """
+    if not goal or not isinstance(goal, str):
+        return False
+    
+    goal_lower = goal.strip().lower()
+    
+    # 1. Single word or extremely short commands (excluding known meaningful commands)
+    words = [w for w in re.split(r'\s+', goal_lower) if w]
+    if len(words) <= 1:
+        if len(goal_lower) < 4 or goal_lower in ("hey", "hello", "hi", "wtf", "u", "kill", "open", "more", "continue", "next", "yo", "test", "status"):
+            return False
+
+    # 2. For two-word inputs, verify it contains a known action verb or command indicator.
+    # Otherwise, it's likely conversational fluff (e.g. "parts names", "in inr", "ram price", "what else")
+    if len(words) == 2:
+        action_verbs = {
+            "open", "kill", "play", "run", "make", "find", "get", "check", "stop", "start",
+            "list", "show", "read", "write", "delete", "remove", "update", "set", "search",
+            "install", "exec", "execute", "launch", "git", "python", "pip", "npm", "node",
+            "cargo", "go", "gcc", "docker", "sys", "system", "status", "info", "view", "tail"
+        }
+        if not any(w in action_verbs for w in words):
+            return False
+            
+    # 3. Conversational greetings and gibberish
+    nonsense_patterns = [
+        r'^hey+$', r'^hello+$', r'^hi+$', r'^yo+$', r'^test(ing)?$', 
+        r'^wtf+$', r'^fuck+$', r'^shit+$', r'^u+$', r'^more$', r'^continue$', 
+        r'^next$', r'^hello there$', r'^good morning$', r'^good afternoon$',
+        r'^pls$', r'^please$', r'^ok$', r'^okay$', r'^yes$', r'^no$',
+        r'^wtf\.\.\.$', r'^hey\.\.\.$',
+        r'^what else(\.*)?$', r'^what next(\.*)?$', r'^what now(\.*)?$',
+        r'^tell me more$', r'^go ahead$', r'^go on$', r'^and now$',
+        r'^really\??$', r'^are you sure\??$', r'^is it\??$', r'^is that right\??$',
+        r'^ddr5 right\??$', r'^gen4 right\??$', r'^gen5 right\??$',
+        r'^parts names(\.*)?$', r'^in inr$', r'^ram price$', r'^whats? else(\.*)?$',
+        r'^what can (u|you) do\??$', r'^do some th?ing$', r'^anything else\??$',
+        r'^nothing else$', r'^no way$', r'^sure$', r'^yep$', r'^nah$', r'^okay?$',
+        r'^its not current.*$', r'^it is not current.*$'
+    ]
+    for pattern in nonsense_patterns:
+        if re.match(pattern, goal_lower):
+            return False
+            
+    # 4. Simple punctuation/gibberish
+    if not re.search(r'[a-zA-Z0-9]', goal_lower):
+        return False
+        
+    return True
+
 
 
 # Global memory manager instance (will be initialized in runtime)

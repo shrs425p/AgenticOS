@@ -70,7 +70,7 @@ def _get_active_windows_unix() -> list:
         return []
 
 
-@tool(name="os_sandbox_auditor", category="System", desc="Automated description")
+@tool(name="os_sandbox_auditor", category="System", desc="Audit the local OS environment, available runtimes, compilers, and active GUI windows.")
 def os_sandbox_auditor() -> str:
     """Performs a deep audit of the host environment, runtimes, package modules, and active windows.
 

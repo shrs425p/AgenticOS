@@ -39,11 +39,11 @@ jobs:
 
       - name: Install Playwright browsers (Linux)
         if: runner.os == 'Linux'
-        run: playwright install chromium --with-deps
+        run: python -m playwright install chromium --with-deps
 
       - name: Install Playwright browsers (macOS / Windows)
         if: runner.os == 'macOS' || runner.os == 'Windows'
-        run: playwright install chromium
+        run: python -m playwright install chromium
 
       - name: Lint (Ruff)
         run: ruff check .

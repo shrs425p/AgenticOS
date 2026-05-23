@@ -31,7 +31,7 @@ def _get_available_managers() -> dict:
     return managers
 
 
-@tool(name="check_package_managers", category="System", desc="Automated description")
+@tool(name="check_package_managers", category="System", desc="Identify available system package managers (e.g. winget, brew, apt) on the host machine.")
 def check_package_managers() -> str:
     """Probes and identifies available package managers on the host machine.
 
@@ -61,7 +61,7 @@ def check_package_managers() -> str:
     return "\n".join(report)
 
 
-@tool(name="install_system_package", category="System", desc="Automated description")
+@tool(name="install_system_package", category="System", desc="Autonomously install system utilities (e.g. git, ffmpeg) using the local package manager.")
 def install_system_package(package_name: str) -> str:
     """Autonomously installs a system utility package using the preferred local manager.
 

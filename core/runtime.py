@@ -7,6 +7,14 @@ import sys
 import time
 import traceback
 from datetime import datetime
+import subprocess
+import platform
+
+try:
+    import psutil
+except ImportError:
+    psutil = None
+
 
 try:
     import readline
@@ -1108,6 +1116,103 @@ class Agent:
             self.memory.record_artifact(v, action=action, kind="path")
 
 
+# ── CommandCompleter ──────────────────────────────────────────────────────────
+class CommandCompleter:
+    """Readline custom completer for AgenticOS CLI."""
+
+    def __init__(self, commands, cli_instance):
+        self.commands = sorted(list(commands))
+        self.cli_instance = cli_instance
+        self.choices = {
+            "/zone": ["green", "yellow", "red", "blue", "1", "2", "3", "4"],
+            "/logs": ["tail", "show", "view"],
+            "/tasks": ["list", "all", "current", "active", "show"],
+            "/thinking": ["hide", "off", "false", "disable", "show", "on", "true", "enable"],
+        }
+
+    def complete(self, text: str, state: int) -> Optional[str]:
+        """Complete method for readline."""
+        try:
+            if not readline:
+                return None
+            buffer = readline.get_line_buffer()
+            words = buffer.lstrip().split()
+
+            # Scenario A: No words typed yet, or typing the first word (the command)
+            if not words or (len(words) == 1 and not buffer.endswith(" ")):
+                options = [cmd for cmd in self.commands if cmd.startswith(text)]
+                if state < len(options):
+                    return options[state]
+                return None
+
+            # Scenario B: Command already typed, typing the arguments
+            base_cmd = words[0].lower()
+            is_second_word = (len(words) == 1 and buffer.endswith(" ")) or (len(words) == 2 and not buffer.endswith(" "))
+
+            # Autocomplete sub-arguments
+            if is_second_word and base_cmd in self.choices:
+                sub_choices = self.choices[base_cmd]
+                options = [opt for opt in sub_choices if opt.startswith(text)]
+                if state < len(options):
+                    return options[state]
+                return None
+
+            # Dynamic completion for provider choice
+            if is_second_word and base_cmd == "/provider":
+                providers = ["ollama"]
+                if self.cli_instance and hasattr(self.cli_instance, "cfg"):
+                    cloud_cfg = self.cli_instance.cfg.get("cloud", {})
+                    if isinstance(cloud_cfg, dict):
+                        providers.extend(cloud_cfg.keys())
+                options = [opt for opt in providers if opt.startswith(text)]
+                if state < len(options):
+                    return options[state]
+                return None
+
+            # Scenario C: File/directory path autocompletion fallback
+            import os
+            norm_text = text.replace("\\", "/")
+            if "/" in norm_text:
+                search_dir, prefix = norm_text.rsplit("/", 1)
+                if search_dir == "":
+                    search_dir = "/"
+            else:
+                search_dir = "."
+                prefix = norm_text
+
+            try:
+                if os.path.isdir(search_dir):
+                    entries = os.listdir(search_dir)
+                    options = []
+                    for entry in entries:
+                        if entry.startswith(prefix):
+                            full_path = os.path.join(search_dir, entry)
+                            if search_dir == ".":
+                                disp = entry
+                            elif search_dir == "/":
+                                disp = "/" + entry
+                            else:
+                                original_dir = text.replace("\\", "/").rsplit("/", 1)[0]
+                                if "\\" in text and "/" not in text:
+                                    disp = original_dir.replace("/", "\\") + "\\" + entry
+                                else:
+                                    disp = original_dir + "/" + entry
+                            
+                            if os.path.isdir(full_path):
+                                disp += "\\" if "\\" in text and "/" not in text else "/"
+                            options.append(disp)
+                    
+                    options.sort()
+                    if state < len(options):
+                        return options[state]
+            except Exception:
+                pass
+
+            return None
+        except Exception:
+            return None
+
+
 # ── CLI ───────────────────────────────────────────────────────────────────────
 class CLI:
     COMMANDS = {
@@ -1130,6 +1235,7 @@ class CLI:
         "/zone": "Toggle security zone (green/yellow/red/blue) or pass a zone name to switch directly",
         "/logs": "Open logs folder or display recent logs (use '/logs tail')",
         "/tasks": "List all session tasks or show the active task progress (use '/tasks current')",
+        "/sysinfo": "Display system resources and agent health dashboard (CPU, RAM, Disk, Uptime)",
         "/exit": "Exit AgenticOs",
     }
 
@@ -1543,7 +1649,6 @@ class CLI:
                 print_error(f"Config directory does not exist: {config_dir}")
             else:
                 try:
-                    import subprocess
                     if sys.platform == "win32":
                         os.startfile(config_dir)  # noqa: S606
                     elif sys.platform == "darwin":
@@ -1608,7 +1713,6 @@ class CLI:
                     print_error(f"Logs directory does not exist: {log_dir}")
                 else:
                     try:
-                        import subprocess
                         if sys.platform == "win32":
                             os.startfile(log_dir)  # noqa: S606
                         elif sys.platform == "darwin":
@@ -1732,6 +1836,144 @@ class CLI:
             }
             logger.info(f"  {C.DIM}{zone_desc[zone_name]}{C.RESET}")
 
+        elif base == "/sysinfo":
+            logger.info(f"\n  {C.TEAL}{C.BOLD}◆ AgenticOS System Telemetry & Health Dashboard{C.RESET}")
+            logger.info(f"  {C.SLATE}──────────────────────────────────────────────────────────────────────{C.RESET}")
+            try:
+                if psutil is None:
+                    raise ImportError("psutil package is not installed")
+
+
+                # 1. OS & Uptime
+                os_name = platform.system()
+                os_release = platform.release()
+                os_arch = platform.machine()
+                py_ver = platform.python_version()
+                
+                uptime_secs = time.time() - psutil.boot_time()
+                hours, remainder = divmod(uptime_secs, 3600)
+                minutes, seconds = divmod(remainder, 60)
+                uptime_str = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
+
+                # 2. Helper for colored progress bar
+                def make_bar(percent: float, width: int = 15) -> str:
+                    filled = int(round((percent / 100.0) * width))
+                    if percent < 60:
+                        color = C.EMERALD
+                    elif percent < 85:
+                        color = C.AMBER
+                    else:
+                        color = C.ROSE
+                    bar = f"{color}{'■' * filled}{C.RESET}{C.SLATE}{'·' * (width - filled)}{C.RESET}"
+                    return bar
+
+                # 3. CPU Load
+                cpu = psutil.cpu_percent(interval=0.1)
+                cpu_bar = make_bar(cpu)
+
+                # 4. RAM
+                mem = psutil.virtual_memory()
+                mem_used_mb = mem.used // (1024**2)
+                mem_total_mb = mem.total // (1024**2)
+                mem_bar = make_bar(mem.percent)
+
+                # 5. Disk
+                disk = psutil.disk_usage("/")
+                disk_free_gb = disk.free // (1024**3)
+                disk_total_gb = disk.total // (1024**3)
+                disk_bar = make_bar(disk.percent)
+
+                # 6. Agent Process Stats
+                pid = os.getpid()
+                proc = psutil.Process(pid)
+                proc_mem_mb = proc.memory_info().rss // (1024**2)
+                
+                # 7. GPU Telemetry
+                gpus = []
+                import shutil
+                import json
+                nv_smi = shutil.which("nvidia-smi")
+                if nv_smi:
+                    try:
+                        res = subprocess.run(
+                            [nv_smi, "--query-gpu=gpu_name,memory.used,memory.total,utilization.gpu", "--format=csv,noheader,nounits"],
+                            capture_output=True, text=True, check=True
+                        )
+                        for line in res.stdout.strip().split("\n"):
+                            if line:
+                                parts = [p.strip() for p in line.split(",")]
+                                if len(parts) >= 4:
+                                    gpus.append({
+                                        "name": parts[0],
+                                        "used_mb": int(parts[1]),
+                                        "total_mb": int(parts[2]),
+                                        "util_percent": float(parts[3]),
+                                        "type": "NVIDIA"
+                                    })
+                    except Exception:
+                        pass
+
+                if platform.system() == "Windows":
+                    try:
+                        cmd = "Get-CimInstance Win32_VideoController | Select-Object Name, AdapterRAM | ConvertTo-Json"
+                        res = subprocess.run(
+                            ["powershell", "-NoProfile", "-Command", cmd],
+                            capture_output=True, text=True, timeout=5
+                        )
+                        if res.returncode == 0 and res.stdout.strip():
+                            data = json.loads(res.stdout.strip())
+                            if isinstance(data, dict):
+                                data = [data]
+                            for item in data:
+                                name = item.get("Name")
+                                if name:
+                                    if "Microsoft Basic Display Adapter" in name and len(data) > 1:
+                                        continue
+                                    if any(g["name"].lower() in name.lower() or name.lower() in g["name"].lower() for g in gpus):
+                                        continue
+                                    ram_bytes = item.get("AdapterRAM", 0)
+                                    ram_mb = 0
+                                    if isinstance(ram_bytes, int) and ram_bytes > 0:
+                                        ram_mb = ram_bytes // (1024**2)
+                                    gpus.append({
+                                        "name": name,
+                                        "used_mb": None,
+                                        "total_mb": ram_mb if ram_mb > 0 else None,
+                                        "util_percent": None,
+                                        "type": "Windows"
+                                    })
+                    except Exception:
+                        pass
+
+                # Format printouts
+                logger.info(f"  {C.BOLD}Platform     :{C.RESET} {os_name} {os_release} ({os_arch})")
+                logger.info(f"  {C.BOLD}Python       :{C.RESET} v{py_ver}")
+                logger.info(f"  {C.BOLD}System Uptime:{C.RESET} {uptime_str}")
+                logger.info(f"  {C.SLATE}──────────────────────────────────────────────────────────────────────{C.RESET}")
+                logger.info(f"  {C.BOLD}CPU Load     :{C.RESET} [{cpu_bar}] {C.BOLD}{cpu:.1f}%{C.RESET}")
+                logger.info(f"  {C.BOLD}Memory (RAM) :{C.RESET} [{mem_bar}] {C.BOLD}{mem.percent:.1f}%{C.RESET} ({mem_used_mb}MB used of {mem_total_mb}MB)")
+                logger.info(f"  {C.BOLD}Storage (/)  :{C.RESET} [{disk_bar}] {C.BOLD}{disk.percent:.1f}%{C.RESET} ({disk_free_gb}GB free of {disk_total_gb}GB)")
+                
+                if gpus:
+                    logger.info(f"  {C.SLATE}──────────────────────────────────────────────────────────────────────{C.RESET}")
+                    for idx, gpu in enumerate(gpus, 1):
+                        gpu_name = gpu["name"]
+                        if gpu["util_percent"] is not None:
+                            gpu_bar = make_bar(gpu["util_percent"])
+                            vram_used = gpu["used_mb"]
+                            vram_total = gpu["total_mb"]
+                            logger.info(f"  {C.BOLD}GPU #{idx} Load  :{C.RESET} [{gpu_bar}] {C.BOLD}{gpu['util_percent']:.1f}%{C.RESET} ({gpu_name})")
+                            logger.info(f"  {C.BOLD}GPU #{idx} VRAM  :{C.RESET} {vram_used}MB used of {vram_total}MB")
+                        else:
+                            vram_str = f" ({gpu['total_mb']}MB VRAM)" if gpu["total_mb"] else ""
+                            logger.info(f"  {C.BOLD}GPU #{idx} (Aux) :{C.RESET} {gpu_name}{vram_str}")
+
+                logger.info(f"  {C.SLATE}──────────────────────────────────────────────────────────────────────{C.RESET}")
+                logger.info(f"  {C.BOLD}Agent Process:{C.RESET} PID={C.PURPLE}{pid}{C.RESET} | Memory={C.PURPLE}{proc_mem_mb}MB{C.RESET} | Uptime={C.PURPLE}{time.time() - proc.create_time():.1f}s{C.RESET}")
+            except Exception as e:
+                print_error(f"Failed to gather system metrics: {e}")
+            logger.info("")
+
         else:
             print_error(f"Unknown command: {base}. Type /help.")
 
@@ -1787,10 +2029,17 @@ class CLI:
             f"\n{C.DIM}Type your task, or /help for commands. Ctrl+C or /exit to quit.{C.RESET}\n"
         )
 
-        try:
-            readline.parse_and_bind("tab: complete")
-        except (RuntimeError, ImportError) as e:
-            print_warning(f"Warning: Failed to configure readline: {e}")
+        if readline:
+            try:
+                if hasattr(readline, "set_completer_delims"):
+                    delims = readline.get_completer_delims()
+                    if "/" in delims:
+                        readline.set_completer_delims(delims.replace("/", ""))
+                completer = CommandCompleter(self.COMMANDS.keys(), self)
+                readline.set_completer(completer.complete)
+                readline.parse_and_bind("tab: complete")
+            except (RuntimeError, ImportError) as e:
+                print_warning(f"Warning: Failed to configure autocompletion: {e}")
 
         while self.running:
             try:

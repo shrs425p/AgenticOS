@@ -3,7 +3,7 @@ import difflib
 from core.tool_registry import tool
 
 
-@tool(name="diff_summarizer", category="Custom", desc="Automated description")
+@tool(name="diff_summarizer", category="Custom", desc="Generate an elegant, line-by-line plain-English summary of differences between two texts.")
 def summarize_text_diff(old_text: str, new_text: str) -> str:
     """Takes two text strings and returns a detailed, plain-English summary of what changed between them.
 

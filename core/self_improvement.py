@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from core.logger import get_logger
 logger = get_logger(__name__)
+from core.memory_manager import is_meaningful_task
 
 
 
@@ -74,7 +75,7 @@ class SelfImprovementDaemon:
             try:
                 with open(tracking_file, "r", encoding="utf-8") as f:
                     tracking = json.load(f)
-                tasks = tracking.get("completed_tasks", [])
+                tasks = [t for t in tracking.get("completed_tasks", []) if is_meaningful_task(t.get("goal", ""))]
             except Exception as e:
                 logger.info(f"Warning: Error reading task history: {e}")
 

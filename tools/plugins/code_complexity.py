@@ -24,7 +24,7 @@ def _ensure_radon_installed() -> bool:
             return False
 
 
-@tool(name="code_complexity", category="Developer", desc="Automated description")
+@tool(name="code_complexity", category="Developer", desc="Analyze Python code cyclomatic complexity using Radon to identify hot spots.")
 def code_complexity(file_path: str) -> str:
     """Analyzes the cyclomatic complexity of functions and classes in a Python file.
 

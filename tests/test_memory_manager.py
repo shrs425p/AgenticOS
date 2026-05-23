@@ -77,24 +77,24 @@ def test_logging_events(workspace):
 
 def test_log_task_completion(workspace):
     mm = MemoryManager(str(workspace))
-    mm.log_task_completion("goal1", "answer1", ["tool1"], True, 10.5, {"extra": "info"})
+    mm.log_task_completion("open test document", "answer1", ["tool1"], True, 10.5, {"extra": "info"})
     
     tracking_file = mm.memory_dir / "task_tracking.json"
     assert tracking_file.exists()
     
     data = json.loads(tracking_file.read_text(encoding="utf-8"))
     assert len(data["completed_tasks"]) == 1
-    assert data["completed_tasks"][0]["goal"] == "goal1"
+    assert data["completed_tasks"][0]["goal"] == "open test document"
 
 def test_consolidation_check(workspace):
     mm = MemoryManager(str(workspace))
     mm.memory_consolidation_threshold = 2
     
     try:
-        mm.log_task_completion("goal1", "ans", [], True, 1)
+        mm.log_task_completion("open test document", "ans", [], True, 1)
     except Exception:
         pass
-    mm.log_task_completion("goal2", "ans", [], False, 1)
+    mm.log_task_completion("kill brave process", "ans", [], False, 1)
     mm._check_consolidation_needed()
     
     # Threshold is 2, so consolidation should have occurred
@@ -181,7 +181,7 @@ def test_global_helpers(workspace):
     mm = initialize_memory_manager(str(workspace))
     assert get_memory_manager() == mm
     
-    log_task_completion("G", "A", [], True, 1.0)
+    log_task_completion("open test document", "A", [], True, 1.0)
     log_daily_event("E", "D")
     
     stats = get_memory_stats()
@@ -195,7 +195,7 @@ def test_consolidate_long_term_memory_manual(workspace):
     from core.memory_manager import MemoryManager
     import json
     mm = MemoryManager(str(workspace))
-    mm.log_task_completion("test goal", "ans", [], True, 1.0)
+    mm.log_task_completion("execute test goal", "ans", [], True, 1.0)
     mm.consolidate_long_term_memory()
     tracking_file = mm.memory_dir / "task_tracking.json"
     data = json.loads(tracking_file.read_text(encoding="utf-8"))
@@ -235,7 +235,7 @@ def test_log_task_completion_exceptions(workspace):
     mm = MemoryManager(str(workspace))
     with patch("builtins.open", side_effect=Exception("Write error")):
         try:
-            mm.log_task_completion("G", "A", [], True, 1.0)
+            mm.log_task_completion("open test document", "A", [], True, 1.0)
         except Exception:
             pass
 
@@ -280,7 +280,7 @@ def test_memory_manager_missing_tracking_file(workspace):
         tracking_file.unlink()
     # Log task creates the file
     try:
-        mm.log_task_completion("goal1", "ans", [], True, 1)
+        mm.log_task_completion("open test document", "ans", [], True, 1)
     except Exception:
         pass
     assert tracking_file.exists()
@@ -306,7 +306,7 @@ def test_consolidate_check_exception(workspace):
     mm.memory_consolidation_threshold = 0
     # Override log_daily_event to throw an exception but only when called from check_consolidation
     try:
-        mm.log_task_completion("goal1", "ans", [], True, 1)
+        mm.log_task_completion("open test document", "ans", [], True, 1)
     except Exception:
         pass
 
@@ -325,7 +325,7 @@ def test_consolidate_check_load_exception(workspace):
 
     # Should catch JSONDecodeError internally or just create new
     try:
-        mm.log_task_completion("goal1", "ans", [], True, 1)
+        mm.log_task_completion("open test document", "ans", [], True, 1)
     except Exception:
         pass
 
@@ -352,3 +352,137 @@ def test_cleanup_old_memories_exception(tmp_path):
     bad_file.write_text("test")
     mm.cleanup_old_memories()
     assert bad_file.exists()
+
+def test_is_meaningful_task():
+    from core.memory_manager import is_meaningful_task
+    
+    # Meaningful tasks
+    assert is_meaningful_task("open session memory file") is True
+    assert is_meaningful_task("what is current RAM speed (MHz)") is True
+    assert is_meaningful_task("play tu chahiye on spotify") is True
+    assert is_meaningful_task("kill brave process") is True
+    
+    # Nonsense / trivial tasks
+    assert is_meaningful_task("hey") is False
+    assert is_meaningful_task("hello") is False
+    assert is_meaningful_task("yo") is False
+    assert is_meaningful_task("wtf") is False
+    assert is_meaningful_task("wtf...") is False
+    assert is_meaningful_task("continue") is False
+    assert is_meaningful_task("more") is False
+    assert is_meaningful_task("u") is False
+    assert is_meaningful_task("?") is False
+    assert is_meaningful_task(None) is False
+    assert is_meaningful_task("") is False
+
+    # Short conversational / contextual fluff
+    assert is_meaningful_task("parts names") is False
+    assert is_meaningful_task("in inr") is False
+    assert is_meaningful_task("ram price") is False
+    assert is_meaningful_task("what else") is False
+    assert is_meaningful_task("ddr5 right?") is False
+    assert is_meaningful_task("its not current month or year") is False
+
+    # Meaningful short two-word commands
+    assert is_meaningful_task("open yt") is True
+    assert is_meaningful_task("kill brave") is True
+    assert is_meaningful_task("sys info") is True
+
+
+def test_clean_historical_memory(workspace):
+    from core.memory_manager import MemoryManager
+    import json
+    
+    # 1. Create dummy files with both meaningful and nonsense entries
+    memory_md_content = """# AgenticOs Long-Term Memory
+
+Curated knowledge, insights, and learned patterns from agent experiences.
+
+## ▪ SAVE — Memory Consolidation - 2026-05-22 17:33:20
+
+**Period:** 2026-05-22T17:26:49 to 2026-05-22T17:33:06
+**Tasks Processed:** 10
+**Success Rate:** 100.0%
+
+**Notable Recent Tasks:**
+1. ✓ parts names...
+2. ✓ open yt...
+3. ✓ ram price...
+4. ✓ kill brave...
+5. ✓ hey...
+
+---
+"""
+    
+    task_tracking_content = {
+        "completed_tasks": [
+            {"goal": "parts names", "success": True},
+            {"goal": "open yt", "success": True},
+            {"goal": "ram price", "success": True},
+            {"goal": "kill brave", "success": True},
+            {"goal": "hey", "success": True}
+        ]
+    }
+    
+    daily_log_content = """## [17:05:08] TASK_COMPLETION
+**Goal:** parts names
+
+**Result:** SUCCESS
+---
+## [17:05:48] TASK_COMPLETION
+**Goal:** open yt
+
+**Result:** SUCCESS
+---
+## [17:06:14] TASK_COMPLETION
+**Goal:** ram price
+
+**Result:** SUCCESS
+---
+"""
+    
+    # Write dummy files to workspace
+    long_term_file = workspace / "MEMORY.md"
+    long_term_file.write_text(memory_md_content, encoding="utf-8")
+    
+    memory_dir = workspace / "memory"
+    memory_dir.mkdir(exist_ok=True)
+    
+    tracking_file = memory_dir / "task_tracking.json"
+    with open(tracking_file, "w", encoding="utf-8") as f:
+        json.dump(task_tracking_content, f)
+        
+    daily_file = memory_dir / "memory-2026-05-22.md"
+    daily_file.write_text(daily_log_content, encoding="utf-8")
+    
+    # 2. Initialize MemoryManager (which triggers clean_historical_memory automatically)
+    mm = MemoryManager(str(workspace))
+    
+    # 3. Verify clean MEMORY.md
+    cleaned_md = long_term_file.read_text(encoding="utf-8")
+    assert "parts names" not in cleaned_md
+    assert "ram price" not in cleaned_md
+    assert "hey" not in cleaned_md
+    assert "1. ✓ open yt..." in cleaned_md
+    assert "2. ✓ kill brave..." in cleaned_md
+    # Renumbering checks
+    assert "3. ✓" not in cleaned_md
+    
+    # 4. Verify clean task_tracking.json
+    with open(tracking_file, "r", encoding="utf-8") as f:
+        cleaned_tracking = json.load(f)
+    goals = [t["goal"] for t in cleaned_tracking["completed_tasks"]]
+    assert "open yt" in goals
+    assert "kill brave" in goals
+    assert "parts names" not in goals
+    assert "ram price" not in goals
+    assert "hey" not in goals
+    
+    # 5. Verify clean daily logs
+    cleaned_daily = daily_file.read_text(encoding="utf-8")
+    assert "parts names" not in cleaned_daily
+    assert "ram price" not in cleaned_daily
+    assert "open yt" in cleaned_daily
+
+
+

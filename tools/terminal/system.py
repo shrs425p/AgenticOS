@@ -33,58 +33,54 @@ class SystemMixin:
     @tool(name="cpu_usage", desc="CPU usage snapshot.", category="Terminal")
     def cpu_usage(self) -> str:
         """cpu_usage function."""
-        t = self.cfg.get("timeouts", {}).get("system_admin", 10)
-        if self.system == "Windows":
-            return self.run_powershell("Get-CimInstance Win32_Processor | Measure-Object -Property LoadPercentage -Average | Select-Object -ExpandProperty Average", timeout=t)
-        return self._run("top -bn1 | head -n 5", timeout=t)
+        try:
+            import psutil
+            return f"{psutil.cpu_percent(interval=0.1)}%"
+        except Exception as e:
+            return f"Error: {e}"
 
     @tool(name="memory_usage", desc="Memory usage.", category="Terminal")
     def memory_usage(self) -> str:
         """memory_usage function."""
-        t = self.cfg.get("timeouts", {}).get("system_admin", 10)
-        if self.system == "Windows":
-            return self.run_powershell("Get-CimInstance Win32_OperatingSystem | Select-Object FreePhysicalMemory, TotalVisibleMemorySize | Format-List", timeout=t)
-        return self._run("free -h", timeout=t)
+        try:
+            import psutil
+            mem = psutil.virtual_memory()
+            return f"total={mem.total} used={mem.used} free={mem.available} percent={mem.percent}%"
+        except Exception as e:
+            return f"Error: {e}"
 
     @tool(name="uptime", desc="System uptime.", category="Terminal")
     def uptime(self) -> str:
         """uptime function."""
-        t = self.cfg.get("timeouts", {}).get("system_admin", 10)
-        if self.system == "Windows":
-            return self.run_powershell("Get-CimInstance Win32_OperatingSystem | Select-Object -ExpandProperty LastBootUpTime", timeout=t)
-        return self._run("uptime", timeout=t)
+        try:
+            import psutil
+            import time
+            uptime_seconds = time.time() - psutil.boot_time()
+            hours, remainder = divmod(uptime_seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            return f"Uptime: {int(hours)}h {int(minutes)}m {int(seconds)}s"
+        except Exception as e:
+            return f"Error: {e}"
 
     @tool(name="system_health", desc="Detailed report on system CPU, Memory, and Disk health, including agent process stats.", category="Terminal")
     def system_health(self) -> str:
         """Detailed report on system CPU, Memory, and Disk health, including agent process stats."""
         try:
-            t_short = self.cfg.get("timeouts", {}).get("system_admin", 10)
-            t_long = self.cfg.get("timeouts", {}).get("system_admin", 30)
-            if self.system == "Windows":
-                # Use PowerShell for a comprehensive, clean report.
-                pid = os.getpid()
-                script = (
-                    "$os = Get-CimInstance Win32_OperatingSystem; "
-                    "$cpu = Get-CimInstance Win32_Processor | Measure-Object -Property LoadPercentage -Average; "
-                    "$proc = Get-Process -Id " + str(pid) + "; "
-                    '$disk = Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" | Select-Object DeviceID, FreeSpace, Size; '
-                    "$out = @{ "
-                    '  SystemCPU_Load = "$($cpu.Average)%"; '
-                    '  SystemMem_Total = "$([math]::round($os.TotalVisibleMemorySize / 1MB, 2)) GB"; '
-                    '  SystemMem_Free = "$([math]::round($os.FreePhysicalMemory / 1MB, 2)) GB"; '
-                    '  AgentMem_WorkingSet = "$([math]::round($proc.WorkingSet64 / 1MB, 2)) MB"; '
-                    '  AgentCPU_Time = "$($proc.TotalProcessorTime.TotalSeconds)s"; '
-                    "  Disks = ($disk | ForEach-Object { \"$($_.DeviceID) ($([math]::round($_.FreeSpace / 1GB, 2))GB free of $([math]::round($_.Size / 1GB, 2))GB)\" }) -join ', '; "
-                    "}; "
-                    "$out | ConvertTo-Json"
-                )
-                return self.run_powershell(script, timeout=t_long)
-            else:
-                # POSIX fallback
-                cpu = self._run("top -bn1 | grep 'Cpu(s)'", timeout=t_short)
-                mem = self._run("free -h", timeout=t_short)
-                disk = self._run("df -h /", timeout=t_short)
-                return f"CPU: {cpu}\nMemory: {mem}\nDisk: {disk}"
+            import psutil
+            import os
+            pid = os.getpid()
+            proc = psutil.Process(pid)
+            cpu = psutil.cpu_percent(interval=0.1)
+            mem = psutil.virtual_memory()
+            disk = psutil.disk_usage("/")
+            
+            # Format output strings
+            return (
+                f"CPU Load: {cpu}%\n"
+                f"Memory: {mem.percent}% used ({mem.available // (1024**2)}MB free of {mem.total // (1024**2)}MB)\n"
+                f"Disk (/): {disk.percent}% used ({disk.free // (1024**3)}GB free of {disk.total // (1024**3)}GB)\n"
+                f"Agent Process: CPU={proc.cpu_percent()}%, Mem={proc.memory_info().rss // (1024**2)}MB"
+            )
         except Exception as e:
             return f"Error gathering health stats: {e}"
 
