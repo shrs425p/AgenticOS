@@ -170,9 +170,8 @@ def run_health_check() -> None:
         env_key = env_key_map.get(provider, f"{provider.upper()}_API_KEY")
         api_key = os.environ.get(env_key)
         if api_key:
-            masked_key = api_key[:4] + "..." + api_key[-4:] if len(api_key) > 8 else "configured"
-            print(f"    ✓ {env_key} is configured ({masked_key})")
-            
+            print(f"    ✓ {env_key} is configured")
+
             base_url = ""
             if provider == "nvidia":
                 base_url = cfg.get("cloud", {}).get("nvidia", {}).get("base_url", "https://integrate.api.nvidia.com/v1").rstrip("/")
