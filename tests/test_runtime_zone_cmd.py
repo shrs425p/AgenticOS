@@ -393,3 +393,67 @@ def test_logs_cmd_tail(mock_print, mock_exists):
     assert any("Line 2" in str(c) for c in print_calls)
     assert any("Line 3" in str(c) for c in print_calls)
 
+
+@patch("os.path.exists")
+@patch("os.walk")
+@patch("os.path.getsize")
+@patch("os.path.getmtime")
+@patch("core.runtime.logger")
+def test_logs_cmd_list(mock_logger, mock_getmtime, mock_getsize, mock_walk, mock_exists):
+    """/logs list command prints available log and memory files."""
+    cli, _ = _make_cli()
+    mock_exists.return_value = True
+    
+    mock_walk.side_effect = [
+        [("/path/to/logs", [], ["agenticos.log"])],
+        [("/path/to/memory", [], ["MEMORY.md"])]
+    ]
+    mock_getsize.return_value = 1024
+    mock_getmtime.return_value = 1779450364.0
+    
+    cli.handle_command("/logs list")
+    
+    log_calls = [call[0][0] for call in mock_logger.info.call_args_list]
+    assert any("AGENTIC OS" in str(c) for c in log_calls)
+    assert any("agenticos.log" in str(c) for c in log_calls)
+    assert any("MEMORY.md" in str(c) for c in log_calls)
+
+
+@patch("os.path.exists")
+@patch("builtins.print")
+def test_logs_cmd_tail_specific_file(mock_print, mock_exists):
+    """/logs tail [file] [n] reads a specific log file and prints it."""
+    cli, _ = _make_cli()
+    mock_exists.return_value = True
+    
+    mock_content = "Log Item 1\nLog Item 2\nLog Item 3\nLog Item 4\nLog Item 5\n"
+    with patch("builtins.open", mock_open(read_data=mock_content)):
+        cli.handle_command("/logs tail memory/MEMORY.md 3")
+        
+    print_calls = [call[0][0] for call in mock_print.call_args_list]
+    assert any("Log Item 3" in str(c) for c in print_calls)
+    assert any("Log Item 4" in str(c) for c in print_calls)
+    assert any("Log Item 5" in str(c) for c in print_calls)
+    assert not any("Log Item 1" in str(c) for c in print_calls)
+
+
+@patch("os.path.exists")
+@patch("builtins.print")
+def test_logs_cmd_view(mock_print, mock_exists):
+    """/logs view [file] [n] reads and colorizes the beginning of a log file."""
+    cli, _ = _make_cli()
+    mock_exists.return_value = True
+    
+    mock_content = "First line OK\nSecond line completed\nThird line failed\n"
+    with patch("builtins.open", mock_open(read_data=mock_content)):
+        cli.handle_command("/logs view agenticos.log 2")
+        
+    import re
+    def strip_ansi(text):
+        return re.sub(r"\033\[[0-9;]*m", "", text)
+        
+    print_calls = [strip_ansi(str(call[0][0])) for call in mock_print.call_args_list]
+    assert any("1 │ First line" in c for c in print_calls)
+    assert any("2 │ Second line" in c for c in print_calls)
+    assert not any("Third line" in c for c in print_calls)
+

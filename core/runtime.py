@@ -1125,7 +1125,7 @@ class CommandCompleter:
         self.cli_instance = cli_instance
         self.choices = {
             "/zone": ["green", "yellow", "red", "blue", "1", "2", "3", "4"],
-            "/logs": ["tail", "show", "view"],
+            "/logs": ["list", "tail", "show", "view"],
             "/tasks": ["list", "all", "current", "active", "show"],
             "/thinking": ["hide", "off", "false", "disable", "show", "on", "true", "enable"],
         }
@@ -1694,19 +1694,156 @@ class CLI:
         elif base == "/logs":
             log_dir = os.path.join(BASE_DIR, "data", "logs")
             log_file = os.path.join(log_dir, "agenticos.log")
-            if len(parts) > 1 and parts[1].strip().lower() in ("tail", "show", "view"):
-                logger.info(f"\n{C.CYAN}Last 20 log entries from: {log_file}{C.RESET}")
-                if not os.path.exists(log_file):
-                    print_error("No log file found yet.")
+
+            def resolve_log_path(name: str) -> Optional[str]:
+                if os.path.isabs(name) and os.path.exists(name):
+                    return name
+                if os.path.exists(name):
+                    return os.path.abspath(name)
+                
+                search_folders = []
+                if os.path.exists(log_dir):
+                    search_folders.append(log_dir)
+                memory_dir = os.path.join(self.agent.workspace, "memory")
+                if os.path.exists(memory_dir):
+                    search_folders.append(memory_dir)
+                    
+                for folder in search_folders:
+                    p = os.path.join(folder, name)
+                    if os.path.exists(p):
+                        return p
+                        
+                for folder in search_folders:
+                    for r, _, files in os.walk(folder):
+                        for f in files:
+                            if name.lower() in f.lower() or f.lower().startswith(name.lower()):
+                                return os.path.join(r, f)
+                return None
+
+            def format_and_print_lines(lines, start_idx=1):
+                for idx, line in enumerate(lines, start_idx):
+                    clean_line = line.rstrip("\n")
+                    line_colored = clean_line
+                    
+                    if any(k in line_colored.lower() for k in ("completed", "✓", "success", "ok", "green")):
+                        line_colored = re.sub(
+                            r"(completed|✓|success|ok|green)", 
+                            f"{C.EMERALD}\\1{C.RESET}", 
+                            line_colored, 
+                            flags=re.IGNORECASE
+                        )
+                    if any(k in line_colored.lower() for k in ("failed", "error", "exception", "red", "rose")):
+                        line_colored = re.sub(
+                            r"(failed|error|exception|red|rose)", 
+                            f"{C.ROSE}\\1{C.RESET}", 
+                            line_colored, 
+                            flags=re.IGNORECASE
+                        )
+                    if any(k in line_colored.lower() for k in ("running", "info", "warning", "thinking", "yellow", "amber", "teal")):
+                        line_colored = re.sub(
+                            r"(running|info|warning|thinking|yellow|amber|teal)", 
+                            f"{C.AMBER}\\1{C.RESET}", 
+                            line_colored, 
+                            flags=re.IGNORECASE
+                        )
+                    
+                    line_colored = re.sub(
+                        r"(\d{4}-\d{2}-\d{2}(?:\s+\d{2}:\d{2}:\d{2}(?:\.\d+)?)?)",
+                        f"{C.CYAN}\\1{C.RESET}",
+                        line_colored
+                    )
+                    
+                    prefix = f"{C.DIM}{C.SLATE}{idx:>4} │ {C.RESET}"
+                    print(f"{prefix}{line_colored}")
+
+            if len(parts) > 1 and parts[1].strip().lower().split()[0] == "list":
+                logger.info(f"\n{C.CYAN}{C.BOLD}AGENTIC OS • Log & Memory Directory{C.RESET}")
+                logger.info(f"{C.SLATE}──────────────────────────────────────────────────────────────────────────{C.RESET}")
+                logger.info(f"  {C.BOLD}{'#':<3} {'Relative Path':<40} {'Size':<10} {'Last Modified':<16}{C.RESET}")
+                logger.info(f"{C.SLATE}──────────────────────────────────────────────────────────────────────────{C.RESET}")
+                
+                found_files = []
+                memory_dir = os.path.join(self.agent.workspace, "memory")
+                for folder in (log_dir, memory_dir):
+                    if os.path.exists(folder):
+                        for root, _, files in os.walk(folder):
+                            for f in files:
+                                if f.endswith((".log", ".txt", ".md", ".json")) and not f.startswith("."):
+                                    full_path = os.path.join(root, f)
+                                    rel_path = os.path.relpath(full_path, self.agent.workspace).replace("\\", "/")
+                                    size_bytes = os.path.getsize(full_path)
+                                    mtime = os.path.getmtime(full_path)
+                                    found_files.append((rel_path, full_path, size_bytes, mtime))
+                
+                found_files.sort(key=lambda x: x[3], reverse=True)
+                
+                if not found_files:
+                    logger.info("  No logs or memory files recorded yet.")
+                else:
+                    for idx, (rel_path, full_path, size_bytes, mtime) in enumerate(found_files, 1):
+                        dt = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
+                        if size_bytes < 1024:
+                            size_str = f"{size_bytes} B"
+                        elif size_bytes < 1024 * 1024:
+                            size_str = f"{size_bytes / 1024:.1f} KB"
+                        else:
+                            size_str = f"{size_bytes / (1024 * 1024):.1f} MB"
+                        
+                        disp_path = rel_path
+                        if len(disp_path) > 40:
+                            disp_path = "..." + disp_path[-37:]
+                            
+                        logger.info(f"  {C.BOLD}{idx:<3}{C.RESET} {C.TEAL}{disp_path:<40}{C.RESET} {C.SLATE}{size_str:<10}{C.RESET} {C.PURPLE}{dt:<16}{C.RESET}")
+                logger.info(f"{C.SLATE}──────────────────────────────────────────────────────────────────────────{C.RESET}")
+
+            elif len(parts) > 1 and parts[1].strip().lower().split()[0] in ("tail", "show", "view"):
+                subparts = parts[1].strip().split()
+                sub = subparts[0].lower()
+                rem = subparts[1:]
+                
+                target_name = "agenticos.log"
+                num_lines = 20
+                
+                if len(rem) == 1:
+                    if rem[0].isdigit():
+                        num_lines = int(rem[0])
+                    else:
+                        target_name = rem[0]
+                elif len(rem) >= 2:
+                    if rem[-1].isdigit():
+                        num_lines = int(rem[-1])
+                        target_name = " ".join(rem[:-1])
+                    else:
+                        target_name = " ".join(rem)
+                
+                resolved_file = resolve_log_path(target_name)
+                if not resolved_file:
+                    print_error(f"Could not find any log or memory file matching: '{target_name}'")
                 else:
                     try:
-                        with open(log_file, "r", encoding="utf-8") as f:
+                        with open(resolved_file, "r", encoding="utf-8", errors="replace") as f:
                             lines = f.readlines()
-                            tail_lines = lines[-20:]
-                            for line in tail_lines:
-                                print(line, end="")
+                        
+                        total_lines = len(lines)
+                        if sub == "tail":
+                            slice_lines = lines[-num_lines:]
+                            start_idx = max(1, total_lines - num_lines + 1)
+                            label_str = f"Last {len(slice_lines)} entries (tail)"
+                        else:
+                            slice_lines = lines[:num_lines]
+                            start_idx = 1
+                            label_str = f"First {len(slice_lines)} entries ({sub})"
+                            
+                        rel_path = os.path.relpath(resolved_file, self.agent.workspace).replace("\\", "/")
+                        logger.info(f"\n{C.CYAN}{C.BOLD}{label_str} from {rel_path}:{C.RESET}")
+                        logger.info(f"{C.SLATE}────────────────────────────────────────────────────────────────────────{C.RESET}")
+                        if not slice_lines:
+                            logger.info("  [Empty file or range]")
+                        else:
+                            format_and_print_lines(slice_lines, start_idx)
+                        logger.info(f"{C.SLATE}────────────────────────────────────────────────────────────────────────{C.RESET}")
                     except Exception as e:
-                        print_error(f"Failed to read log file: {e}")
+                        print_error(f"Failed to read file: {e}")
             else:
                 logger.info(f"\n{C.CYAN}Opening logs folder: {log_dir}{C.RESET}")
                 if not os.path.exists(log_dir):
