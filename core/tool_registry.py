@@ -60,7 +60,7 @@ class ToolRegistry:
             cfg=self.cfg,
         )
         self.web = web.WebTools(rules=self.rules, base_dir=workspace, cfg=self.cfg)
-        self.ui = notifications.NotificationCenter(rules=self.rules)
+        self.ui = notifications.NotificationCenter(rules=self.rules, cfg=self.cfg)
         self.screen = screen.ScreenManager(rules=self.rules, base_dir=workspace)
         self.ocr = ocr.OCRManager(rules=self.rules, base_dir=workspace, registry=self, cfg=self.cfg)
         self.sys_mgr = system_tools.SystemManager(rules=self.rules, cfg=self.cfg)

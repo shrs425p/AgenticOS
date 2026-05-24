@@ -69,6 +69,7 @@ class TaskTracker:
             "final_answer": "",
             "stall_count": 0,
             "plan_version": 1,
+            "actions_taken": [],
         }
         self.tasks.append(self.current)
         self._persist()
@@ -93,11 +94,26 @@ class TaskTracker:
         self.current["updated_at"] = datetime.now().isoformat()
         self._persist()
 
-    def record_action(self, tool_name: str, args: list[str]):
+    def record_action(self, tool_name: str, args: list[str] | dict | None):
         """record_action function."""
         if not self.current:
             return
-        arg_text = " | ".join(str(arg) for arg in args)
+        if "actions_taken" not in self.current:
+            self.current["actions_taken"] = []
+        self.current["actions_taken"].append({
+            "tool": tool_name,
+            "args": args,
+            "timestamp": datetime.now().isoformat()
+        })
+        
+        arg_text = ""
+        if isinstance(args, list):
+            arg_text = " | ".join(str(arg) for arg in args)
+        elif isinstance(args, dict):
+            arg_text = ", ".join(f"{k}={v}" for k, v in args.items())
+        elif args is not None:
+            arg_text = str(args)
+
         self.current["last_action"] = (
             f"{tool_name} | {arg_text}" if arg_text else tool_name
         )

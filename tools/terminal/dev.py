@@ -27,12 +27,10 @@ class DevToolsMixin:
         joined = " ".join(str(a) for a in args if a is not None)
         return self._run(f"git {joined}".strip(), timeout=120)
 
-    @tool(name="git_status", desc="Git status. Args: path (optional)", category="Terminal")
     def git_status(self, path: str = ".") -> str:
         """git_status function."""
         return self._run(f"git -C {self._quote_arg(path)} status", timeout=60)
 
-    @tool(name="git_log", desc="Git log. Args: path, n (optional)", category="Terminal")
     def git_log(self, path: str = ".", n: str = "10") -> str:
         """git_log function."""
         try:

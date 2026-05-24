@@ -84,7 +84,6 @@ class SystemMixin:
         except Exception as e:
             return f"Error gathering health stats: {e}"
 
-    @tool(name="set_wallpaper", desc="Set Windows desktop wallpaper to local image. Args: path", category="Terminal")
     def set_wallpaper(self, path: str) -> str:
         """Set Windows desktop wallpaper to a local image path."""
         if self.system != "Windows":

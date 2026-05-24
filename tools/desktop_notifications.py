@@ -12,25 +12,42 @@ import ctypes
 
 from core.tool_base import tool
 class NotificationCenter:
-    def __init__(self, rules: dict = None):
+    def __init__(self, rules: dict = None, cfg: dict = None):
         self.rules = rules or {}
+        self.cfg = cfg or {}
         self.system = platform.system()  # 'Windows', 'Darwin', 'Linux'
+        
+        # Determine workspace path for resolving relative wallpaper paths
+        from core.runtime_config import DEFAULT_WORKSPACE
+        workspace = self.cfg.get("agent", {}).get("workspace", DEFAULT_WORKSPACE)
+        self.workspace_root = os.path.abspath(workspace)
 
-    @tool(name="set_wallpaper", desc="Set desktop wallpaper. Args: image_path", category="General")
-    def set_wallpaper(self, image_path: str) -> str:
+    @tool(name="set_wallpaper", desc="Set desktop wallpaper. Args: image_path or path", category="General")
+    def set_wallpaper(self, image_path: str = None, path: str = None) -> str:
         """Set the desktop wallpaper using a local image file."""
+        target_path = image_path or path
+        if not target_path:
+            return "Error: image_path or path argument is required."
+            
+        target_path = str(target_path).strip().strip('"')
+        
+        # Resolve relative paths relative to workspace_root
+        if not os.path.isabs(target_path) and hasattr(self, "workspace_root"):
+            abs_path = os.path.abspath(os.path.join(self.workspace_root, target_path))
+        else:
+            abs_path = os.path.abspath(target_path)
+            
         try:
-            # Note: Path resolution should be handled by the caller or passed as absolute
-            if not os.path.exists(image_path):
-                return f"Error: Image not found at {image_path}"
+            if not os.path.exists(abs_path):
+                return f"Error: Image not found at {abs_path}"
 
             if self.system == "Windows":
-                ctypes.windll.user32.SystemParametersInfoW(20, 0, str(image_path), 3)
-                return f"Wallpaper successfully set to {image_path}"
+                ctypes.windll.user32.SystemParametersInfoW(20, 0, str(abs_path), 3)
+                return f"Wallpaper successfully set to {abs_path}"
             elif self.system == "Darwin":
-                script = f'tell application "System Events" to set picture of every desktop to "{image_path}"'
+                script = f'tell application "System Events" to set picture of every desktop to "{abs_path}"'
                 subprocess.run(["osascript", "-e", script], check=False)
-                return f"Wallpaper set via AppleScript: {image_path}"
+                return f"Wallpaper set via AppleScript: {abs_path}"
             else:
                 try:
                     subprocess.run(
@@ -39,7 +56,7 @@ class NotificationCenter:
                             "set",
                             "org.gnome.desktop.background",
                             "picture-uri",
-                            f"file://{image_path}",
+                            f"file://{abs_path}",
                         ]
                     )
                     subprocess.run(
@@ -48,12 +65,12 @@ class NotificationCenter:
                             "set",
                             "org.gnome.desktop.background",
                             "picture-uri-dark",
-                            f"file://{image_path}",
+                            f"file://{abs_path}",
                         ]
                     )
-                    return f"Wallpaper set (Gnome): {image_path}"
+                    return f"Wallpaper set (Gnome): {abs_path}"
                 except Exception:
-                    return f"Set wallpaper not fully implemented for this Linux environment. Path: {image_path}"
+                    return f"Set wallpaper not fully implemented for this Linux environment. Path: {abs_path}"
         except Exception as e:
             return f"Error setting wallpaper: {e}"
 
