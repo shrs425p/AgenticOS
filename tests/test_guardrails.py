@@ -325,3 +325,48 @@ def test_blue_zone_blocked_paths_still_enforced(tmp_path):
     allowed, msg = guard.check_path(str(blocked / "secret.txt"), "read")
     assert not allowed
     assert "SECURITY POLICY" in msg
+
+
+def test_guardrails_sensitive_shields(tmp_path):
+    """PathGuard strictly shields sensitive credential/config files and tamper-proofs audit logs."""
+    ws = tmp_path / "workspace"
+    ws.mkdir()
+    cfg = {"agent": {"workspace": str(ws)}}
+    guard = PathGuard(cfg)
+
+    # 1. Credentials file (.env) shielded completely
+    allowed, msg = guard.check_path(str(ws / ".env"), "read")
+    assert not allowed
+    assert "strictly blocked" in msg
+
+    allowed, msg = guard.check_path(str(ws / "subfolder" / ".env"), "write")
+    assert not allowed
+    assert "strictly blocked" in msg
+
+    # 2. Git internal data (.git) shielded completely
+    allowed, msg = guard.check_path(str(ws / ".git" / "config"), "read")
+    assert not allowed
+    assert "strictly blocked" in msg
+
+    # 3. Config files (config.yaml, config/*) read allowed, but modify/delete strictly blocked
+    allowed, _ = guard.check_path(str(ws / "config.yaml"), "read")
+    assert allowed
+
+    allowed, msg = guard.check_path(str(ws / "config.yaml"), "write")
+    assert not allowed
+    assert "strictly blocked" in msg
+
+    allowed, _ = guard.check_path(str(ws / "config" / "policy.yaml"), "read")
+    assert allowed
+
+    allowed, msg = guard.check_path(str(ws / "config" / "policy.yaml"), "delete")
+    assert not allowed
+    assert "strictly blocked" in msg
+
+    # 4. Audit logs (data/logs/*, logs/*) read allowed, but modify/delete strictly blocked
+    allowed, _ = guard.check_path(str(ws / "data" / "logs" / "agenticos.log"), "read")
+    assert allowed
+
+    allowed, msg = guard.check_path(str(ws / "data" / "logs" / "agenticos.log"), "write")
+    assert not allowed
+    assert "tamper-proof" in msg

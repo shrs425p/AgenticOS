@@ -43,6 +43,29 @@ class PathGuard:
         except Exception as e:
             return False, f"Invalid path: {e}"
 
+        # 1.5. Advanced Enterprise-Grade Sensitive Shielding
+        name = target.name.lower()
+        parts = [part.lower() for part in target.parts]
+        
+        # Shielded: .env (read/write/delete blocked)
+        if name == ".env" or ".env" in parts:
+            return False, "SECURITY POLICY: Access to environment credential file '.env' is strictly blocked."
+            
+        # Shielded: .git (read/write/delete blocked)
+        if ".git" in parts:
+            return False, "SECURITY POLICY: Access to Git repository internals '.git' is strictly blocked."
+            
+        # Shielded: config.yaml and config/ directory (write/delete blocked)
+        if operation != "read":
+            if name == "config.yaml" or "config.yaml" in parts:
+                return False, "SECURITY POLICY: Modifying system configuration 'config.yaml' is strictly blocked."
+            if "config" in parts:
+                return False, "SECURITY POLICY: Modifying system configuration directory 'config/' is strictly blocked."
+                
+            # Tamper-proof: logs (write/delete blocked)
+            if "logs" in parts:
+                return False, f"SECURITY POLICY: Direct modification or deletion of audit logs inside '{target}' is strictly blocked to maintain a tamper-proof audit trail."
+
         # 2. Check RED ZONE (Blocked)
         for blocked in self.blocked_paths:
             try:
