@@ -9,11 +9,12 @@ This document tracks the technical evolution of AgenticOS from its initial proto
 ## v2.1.2 - The "Fast-Path Resource Hardened" Edition (Current)
 *Release Date: 2026-06-03*
 
-The v2.1.2 release addresses critical background resource and directory scanning overheads in the AgenticOS runtime to eliminate system lag and optimize disk I/O.
+The v2.1.2 release addresses critical background resource, filesystem traversal, and directory scanning overheads in the AgenticOS runtime to eliminate system lag, optimize disk I/O, and improve cross-platform auditing.
 
 ### Key Innovations:
-1.  **Hot-Reload Filter Guards**: Refactored `_get_mtimes` in `core/runtime.py` to filter out heavy directories like `venv`, `node_modules`, `workspace`, and `data` from modification checking walk operations. This prevents thousands of synchronous directory/file checks from running on every idle throttle interval.
-2.  **Optimized Workspace Scan**: Refactored `_scan_workspace` in `core/context_engine.py` to skip scanning and child-counting for heavy or system-generated directories (`.git`, `venv`, `node_modules`, `__pycache__`, caches, and data directories) during prompt assembly.
+1.  **High-Performance Filesystem Walker**: Replaced slow `Path.rglob` traversals and native PowerShell pipelines with highly-optimized native Python DFS stack-based directory traversal (`os.scandir`). This yields a **~170x** speed improvement on drive scans (from 35.4s to 0.20s) and prevents recursion loops by automatically bypassing symlinks and NTFS junction points.
+2.  **Hot-Reload Filter Guards**: Refactored `_get_mtimes` in `core/runtime.py` to filter out heavy directories like `venv`, `node_modules`, `workspace`, and `data` from modification checking walk operations. This prevents thousands of synchronous directory/file checks from running on every idle throttle interval.
+3.  **Optimized Workspace Scan**: Refactored `_scan_workspace` in `core/context_engine.py` to skip scanning and child-counting for heavy or system-generated directories (`.git`, `venv`, `node_modules`, `__pycache__`, caches, and data directories) during prompt assembly.
 
 ---
 
@@ -114,5 +115,5 @@ The next phase of AgenticOS development will focus on multi-agent collaboration 
 
 ---
 
-*Last Updated: 2026-05-20*
-*Status: v2.1.1 Hardened*
+*Last Updated: 2026-06-03*
+*Status: v2.1.2 Hardened*

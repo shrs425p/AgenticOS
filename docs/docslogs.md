@@ -1,5 +1,11 @@
 # Documentation Maintenance Logs
 
+## 2026-06-03
+- Corrected outdated tool count references from `180+` to `350+` across all active documentation files (`README.md`, `docs/setup_guide.md`, `docs/architecture.md`, `docs/index.html`) to align with the actual `352` registered tools in the `ToolRegistry`.
+- Updated disk I/O performance speedup figures from `150x` to `170x` to represent the native Python DFS stack walker benchmarks.
+- Replaced the outdated PowerShell pipeline diagram and descriptions in `docs/visual_index.md` with the new stack-based Python `os.scandir` walker flowchart, and resolved a code block formatting rendering bug.
+- Updated version reference numbers from `2.1.1` to `2.1.2` in `README.md`, `docs/index.html`, and `docs/version_history.md`.
+
 ## 2026-05-22
 - Implemented robust Long-Term Memory Filtering & Nonsense Prevention heuristics (`is_meaningful_task`).
 - Added early-exit checks to `log_task_completion` to prevent logging trivial conversational greetings/gibberish to daily files (`memory-*.md`) and local task logs.
