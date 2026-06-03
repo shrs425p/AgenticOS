@@ -41,7 +41,7 @@ class SearchMixin:
                                     stack.append(entry.path)
                             except Exception:
                                 pass
-                except Exception as e:
+                except Exception:
                     if curr == str(root):
                         raise
                     else:
@@ -111,7 +111,7 @@ class SearchMixin:
                                     stack.append(entry.path)
                             except Exception:
                                 pass
-                except Exception as e:
+                except Exception:
                     if curr == str(root):
                         raise
                     else:

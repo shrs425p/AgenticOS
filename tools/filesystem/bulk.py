@@ -54,7 +54,7 @@ class BulkMixin:
                                     stack.append(entry.path)
                             except Exception:
                                 pass
-                except Exception as e:
+                except Exception:
                     if curr == str(root):
                         raise
                     else:
@@ -111,7 +111,7 @@ class BulkMixin:
                                     stack.append(entry.path)
                             except Exception:
                                 pass
-                except Exception as e:
+                except Exception:
                     if curr == str(root):
                         raise
                     else:
