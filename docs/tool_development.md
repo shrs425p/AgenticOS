@@ -66,7 +66,7 @@ One of the most important lessons from our intensive stress tests is the **Perfo
 -   Active Directory/Domain queries.
 
 ### Pro-Tip: The "Fast-Path" Pattern
-When writing a tool that needs to search or traverse files across the whole drive, do NOT use `pathlib.Path.rglob` (which is slow and memory-intensive) or native subprocesses (which carry process startup overhead). Instead, use a custom stack-based depth-first search (DFS) using Python's native `os.scandir()`. It provides a cross-platform 150x speedup compared to standard Python walkers.
+When writing a tool that needs to search or traverse files across the whole drive, do NOT use `pathlib.Path.rglob` (which is slow and memory-intensive) or native subprocesses (which carry process startup overhead). Instead, use a custom stack-based depth-first search (DFS) using Python's native `os.scandir()`. It provides a cross-platform 170x speedup compared to standard Python walkers.
 
 ---
 

@@ -130,7 +130,7 @@ Explore the full AgenticOS manual for deep technical insights:
 
 -   **Self-Evolution**: The agent can autonomously identify missing capabilities, `pip install` libraries, and generate new tool plugins at runtime.
 -   **Typewriter Optimization**: Optimized rendering engine ensures 100% CPU focus on the task, not the terminal.
--   **Native Dispatch**: High-load tasks (Disk Audits, Registry Scans) are delegated to high-speed native Python or PowerShell pipelines.
+-   **Native Dispatch**: High-load tasks (Disk Audits, Registry Scans) are delegated to high-speed native Python depth-first search (DFS) traversals or optimized system scripts.
 
 ---
 

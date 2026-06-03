@@ -30,7 +30,7 @@ tools/
 Provides atomic, safe, and high-performance operations for traversing and mutating the workspace.
 - **Read & Write**: Optimized file-reading with automated chunking to prevent memory issues.
 - **Bulk Operations**: Safe directory-wide file edits, deletions, and moves.
-- **Fast-Path IO**: Incorporates optimized, stack-based Python DFS `os.scandir` scanning that is up to 150x faster than traditional recursive Python `rglob` lookups.
+- **Fast-Path IO**: Incorporates optimized, stack-based Python DFS `os.scandir` scanning that is up to 170x faster than traditional recursive Python `rglob` lookups.
 
 ### 2. Terminal (`tools/terminal/`)
 Facilitates native interaction with the host operating system.
