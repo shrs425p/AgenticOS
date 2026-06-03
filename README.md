@@ -15,7 +15,7 @@
 
   <p>
     <img src="https://img.shields.io/badge/status-production_stable-orange?style=flat-square" alt="Status">
-    <img src="https://img.shields.io/badge/latest-v2.1.1-blue?style=flat-square" alt="Latest Version">
+    <img src="https://img.shields.io/badge/latest-v2.1.2-blue?style=flat-square" alt="Latest Version">
     <img src="https://img.shields.io/badge/license-Apache_2.0-red?style=flat-square" alt="License">
     <img src="https://img.shields.io/badge/tools-350+-green?style=flat-square" alt="Tools">
     <img src="https://img.shields.io/badge/tests-445_passed-brightgreen?style=flat-square" alt="Tests">
@@ -65,7 +65,7 @@ AgenticOS is a high-performance autonomous tool. Its best results are achieved t
 ---
 
 ## The "Crucible" Hardened Architecture
-Following a massive 96-item stress test, AgenticOS v2.1.1 has been hardened for real-world production environments. It solves the core bottlenecks of traditional agents:
+Following a massive 96-item stress test, AgenticOS v2.1.2 has been hardened for real-world production environments. It solves the core bottlenecks of traditional agents:
 -   **No-Lag Terminal UI**: Block-level rendering removes the character-by-character "typewriter lag."
 -   **Rate-Limit Shield**: Built-in exponential backoff masks all `429 Too Many Requests` errors (implemented in `core/retry.py` as `retry_call()`).
 -   **Centralized Logging**: Consistent, structured stream formatting and persistent storage (`workspace/logs/agenticos.log` or `data/logs/agenticos.log`) with a unified logger factory.

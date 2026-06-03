@@ -1673,7 +1673,7 @@ class CLI:
 
         elif base == "/version":
             provider = self.agent.client.provider
-            version_str = "2.1.1"
+            version_str = "2.1.2"
             try:
                 changelog_path = os.path.join(BASE_DIR, "CHANGELOG.md")
                 if os.path.exists(changelog_path):
