@@ -75,23 +75,32 @@ graph LR
     Agent -->|BLOCKED| Win
     Agent -->|Read-Only / Writes Blocked| RO
 ```
-```
 
 ---
 
 ## The "Fast-Path" Optimization Flow
 
-How the system switches between slow Python processing and high-speed PowerShell pipelines.
+How the system scans filesystems at high speed using an optimized native Python depth-first search (DFS) stack.
 
 ```mermaid
 graph TD
-    A[Agent Requests File Audit] --> B{Path is Root C:?}
-    B -- Yes --> C[Trigger Fast-Path Optimization]
-    B -- No --> D[Use Standard Python Walker]
-    C --> E[Spawn Native PowerShell Pipeline]
-    E --> F[Streaming Result to CSV]
-    F --> G[Summarize Results for Agent]
-    D --> G
+    A[Agent Requests File Audit] --> B[Initialize DFS Stack with Path]
+    B --> C{Stack Empty?}
+    C -- Yes --> D[Filter, Sort and Format Results]
+    C -- No --> E[Pop Directory from Stack]
+    E --> F[Scan Directory using os.scandir]
+    F --> G{Loop Entries}
+    G --> H{Is Symlink or NTFS Junction?}
+    H -- Yes --> G
+    H -- No --> I{Is File?}
+    I -- Yes --> J[Check Selection Criteria]
+    I -- No --> K{Is Dir?}
+    K -- Yes --> L[Push Dir to Stack]
+    L --> G
+    J --> G
+    K -- No --> G
+    G -- Loop Finished --> C
+    D --> M[Return Result Report to Agent]
 ```
 
 ---

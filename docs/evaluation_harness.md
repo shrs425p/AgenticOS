@@ -35,7 +35,7 @@ The `task.md` file in the project root contains the full list of production stre
 
 ### 1. System Maintenance (Tasks 1-15)
 -   **Objective**: Audit the host OS, check disk health, and monitor process telemetry.
--   **Key Success**: The agent must use native PowerShell for the `C:\` drive scan to pass the performance gate.
+-   **Key Success**: The agent must use optimized Fast-Path scans (like `fast_disk_audit`) for the `C:\` drive scan to pass the performance gate.
 
 ### 2. Security and Compliance (Tasks 16-30)
 -   **Objective**: Audit firewall rules, check for CVEs in installed apps, and analyze event logs.
@@ -67,7 +67,7 @@ You can expand the evaluation suite by adding new entries to `task.md`.
 ```markdown
 - Task Name: [Summary of the goal]
 - Success Criteria: [What the agent must produce, e.g., 'A CSV file in workspace/']
-- Constraints: [e.g., 'Do not use Python walkers, use PowerShell']
+- Constraints: [e.g., 'Do not use standard Python pathlib walkers, use Fast-Path DFS']
 ```
 
 The harness will automatically pick up any new bullet points in the `task.md` file.
@@ -84,7 +84,7 @@ The harness produces a summary at the end of the run:
 ### Target Performance for v2.0.0:
 | Metric | Baseline (v1.0) | Target (Hardened v2.0.0) |
 | :--- | :--- | :--- |
-| **Task 8 Speed** | 30+ Minutes | < 3 Minutes |
+| **Task 8 Speed** | 30+ Minutes | < 30 Seconds |
 | **API Crash Rate** | 15% (on 429s) | 0% (Auto-retry enabled) |
 | **UI Latency** | High (Typewriter) | Zero (Block printing) |
 
@@ -103,5 +103,5 @@ The Evaluation Harness is your primary tool for **Continuous Integration**. Befo
 
 ---
 
-*Last Updated: 2026-05-14*
+*Last Updated: 2026-06-03*
 *Status: Harness Verified*

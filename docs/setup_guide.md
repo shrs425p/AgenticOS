@@ -180,7 +180,7 @@ This will run the automated suite to ensure core components, filesystem tools, a
 -   Read the [Architecture Deep-Dive](architecture.md).
 -   Learn how to write [Custom Plugins](tool_development.md).
 -   Explore the [Testing Guide](testing_guide.md).
--   Explore the [API Reference](api_reference.md) for a list of all 180+ tools.
+-   Explore the [API Reference](api_reference.md) for a list of all 350+ tools.
 
 ---
 

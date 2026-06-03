@@ -17,7 +17,7 @@
     <img src="https://img.shields.io/badge/status-production_stable-orange?style=flat-square" alt="Status">
     <img src="https://img.shields.io/badge/latest-v2.1.1-blue?style=flat-square" alt="Latest Version">
     <img src="https://img.shields.io/badge/license-Apache_2.0-red?style=flat-square" alt="License">
-    <img src="https://img.shields.io/badge/tools-180-green?style=flat-square" alt="Tools">
+    <img src="https://img.shields.io/badge/tools-350+-green?style=flat-square" alt="Tools">
     <img src="https://img.shields.io/badge/tests-445_passed-brightgreen?style=flat-square" alt="Tests">
     <a href="https://codecov.io/gh/shrs425p/AgenticOS"><img src="https://codecov.io/gh/shrs425p/AgenticOS/branch/main/graph/badge.svg" alt="Coverage"></a>
   </p>
@@ -43,7 +43,7 @@
 
 ---
 
-**AgenticOS** is a secure autonomous framework designed for extreme performance, deep system orchestration, and resilient multi-modal research across **Windows, macOS, and Linux**. It integrates high-scale cloud models (NVIDIA NIM, Google Gemini) and local LLMs (Ollama) with a modular ecosystem of over **180 specialized tools** to provide a proactive, self-healing operational experience.
+**AgenticOS** is a secure autonomous framework designed for extreme performance, deep system orchestration, and resilient multi-modal research across **Windows, macOS, and Linux**. It integrates high-scale cloud models (NVIDIA NIM, Google Gemini) and local LLMs (Ollama) with a modular ecosystem of over **350 specialized tools** to provide a proactive, self-healing operational experience.
 
 ---
 
@@ -101,7 +101,7 @@ Explore the full AgenticOS manual for deep technical insights:
 *   [**Developer Onboarding**](docs/developer_onboarding.md): Guide for contributing to the core engine.
 *   [**Contributor Guide**](docs/contributor_guide.md): Comprehensive guide on setting up, coding standards, and testing.
 *   [**Tool Development Guide**](docs/tool_development.md): Write your own plugins and optimize performance.
-*   [**API & Tool Reference**](docs/api_reference.md): Overview of the 180 tools in the registry.
+*   [**API & Tool Reference**](docs/api_reference.md): Overview of the 350+ tools in the registry.
 *   [**Autonomous Operations**](docs/autonomous_operations.md): How the "Agent Brain" plans and self-heals.
 *   [**Prompt Engineering Guide**](docs/prompt_engineering_guide.md): Best practices for task optimization.
 

@@ -86,7 +86,7 @@ To prevent context window bloat, the agent automatically compresses history when
 
 ## Tool Registry and Plugin Architecture
 
-The registry (`core/tool_registry.py`) is the brain of the agent's capabilities. It manages over 180+ tools across several categories and automatically loads dynamic plugins from the `tools/plugins/` directory.
+The registry (`core/tool_registry.py`) is the brain of the agent's capabilities. It manages over 350+ tools across several categories and automatically loads dynamic plugins from the `tools/plugins/` directory.
 
 ### Category Breakdown
 | Category | Primary Tools | Implementation Type |

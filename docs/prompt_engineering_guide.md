@@ -51,7 +51,7 @@ To make the agent work faster (and save on API costs):
 
 ### 1. Use the "Native-First" Keyword
 Remind the agent to use optimized tools for heavy lifting.
--   **Prompt**: *"Audit my drive. **Use native PowerShell tools** for the search to ensure it runs fast."*
+-   Prompt: *"Audit my drive. **Use Fast-Path tools** for the search to ensure it runs fast."*
 
 ### 2. Batching Requests
 Instead of one-by-one commands, give the agent a structured list.
@@ -90,5 +90,5 @@ Think of the agent as a highly capable intern. The more context and structure yo
 
 ---
 
-*Last Updated: 2026-05-14*
+*Last Updated: 2026-06-03*
 *Status: Developer Ready*
