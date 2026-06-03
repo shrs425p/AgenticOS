@@ -39,22 +39,41 @@ class ContextEngine:
         """
         file_map_lines = []
         md_files = []
+        ignore_dirs = {
+            ".git",
+            "venv",
+            "node_modules",
+            "__pycache__",
+            ".pytest_cache",
+            ".mypy_cache",
+            ".ruff_cache",
+            "data",
+            "mock_workspace",
+        }
 
-        for entry in sorted(os.listdir(self.workspace)):
-            full_path = os.path.join(self.workspace, entry)
-            if os.path.isdir(full_path):
-                # Count children for context
-                try:
-                    child_count = len(os.listdir(full_path))
-                except OSError:
-                    child_count = 0
-                file_map_lines.append(f"  {entry}/  ({child_count} items)")
-            elif os.path.isfile(full_path):
-                size = os.path.getsize(full_path)
-                file_map_lines.append(f"  {entry}  ({size} bytes)")
-                # Collect .md files to inject
-                if entry.lower().endswith(".md"):
-                    md_files.append((entry, full_path))
+        try:
+            for entry in sorted(os.listdir(self.workspace)):
+                if entry in ignore_dirs or entry.startswith("."):
+                    continue
+                full_path = os.path.join(self.workspace, entry)
+                if os.path.isdir(full_path):
+                    # Count children for context
+                    try:
+                        child_count = len(os.listdir(full_path))
+                    except OSError:
+                        child_count = 0
+                    file_map_lines.append(f"  {entry}/  ({child_count} items)")
+                elif os.path.isfile(full_path):
+                    try:
+                        size = os.path.getsize(full_path)
+                    except OSError:
+                        size = 0
+                    file_map_lines.append(f"  {entry}  ({size} bytes)")
+                    # Collect .md files to inject
+                    if entry.lower().endswith(".md"):
+                        md_files.append((entry, full_path))
+        except OSError:
+            pass
 
         return file_map_lines, md_files
 

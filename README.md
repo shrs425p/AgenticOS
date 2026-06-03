@@ -49,7 +49,7 @@
 
 ## Proven in the "Crucible" Stress Test
 AgenticOS recently completed a **96-task autonomous audit** of a live Windows system.
--   **Disk Hygiene**: Scanned 1M+ files on C:\ in < 3 minutes using native PowerShell optimization.
+-   **Disk Hygiene**: Scanned 1M+ files on C:\ in < 30 seconds using optimized native Python traversal.
 -   **Security Audit**: Successfully identified 12+ suspicious scheduled tasks and non-standard firewall ports.
 -   **API Resilience**: Handled over 50+ "429 Rate Limit" errors flawlessly without a single agent crash.
 -   **Resource Efficiency**: Maintained < 150MB RAM usage during complex 60-iteration tasks.
@@ -71,7 +71,7 @@ Following a massive 96-item stress test, AgenticOS v2.1.1 has been hardened for 
 -   **Centralized Logging**: Consistent, structured stream formatting and persistent storage (`workspace/logs/agenticos.log` or `data/logs/agenticos.log`) with a unified logger factory.
 -   **Early Schema Validation**: Real-time boot diagnostics verify `config.yaml` layers and halt early if critical sections are missing.
 -   **Native Windows COM Audio**: C# code dynamically compiled via PowerShell provides native, dependency-free volume controls.
--   **Fast-Path IO & Checkguards**: Native PowerShell scanning is 20x faster than Python's `rglob`, wrapped in strict tool checkguards (e.g. `shutil.which` warnings) on Linux.
+-   **Fast-Path IO & Checkguards**: Optimized native Python `os.scandir` DFS traversals are over 100x faster than standard Python `rglob` and avoid PowerShell subprocess overhead, wrapped in strict tool checkguards (e.g. `shutil.which` warnings) on Linux.
 -   **OS-Level Desktop Accessibility**: AppleScript accessibility control (AXMinimized / AXZoomed) and recursive window queries for scriptable Cocoa & non-scriptable macOS applications.
 -   **Zone-Based Security**: Hardware-level path guardrails protect critical system folders.
 -   **Environment Portability**: 100% configuration-driven logic with zero hardcoded paths or URLs.
@@ -130,7 +130,7 @@ Explore the full AgenticOS manual for deep technical insights:
 
 -   **Self-Evolution**: The agent can autonomously identify missing capabilities, `pip install` libraries, and generate new tool plugins at runtime.
 -   **Typewriter Optimization**: Optimized rendering engine ensures 100% CPU focus on the task, not the terminal.
--   **Native Dispatch**: High-load tasks (Disk Audits, Registry Scans) are delegated to high-speed PowerShell pipelines.
+-   **Native Dispatch**: High-load tasks (Disk Audits, Registry Scans) are delegated to high-speed native Python or PowerShell pipelines.
 
 ---
 

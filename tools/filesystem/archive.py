@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import zipfile
+from pathlib import Path
 
 
 from core.tool_base import tool
@@ -20,13 +21,39 @@ class ArchiveMixin:
                     if not p.exists():
                         continue
                     if p.is_dir():
-                        for child in p.rglob("*"):
-                            if child.is_file():
-                                zf.write(
-                                    child, arcname=str(child.relative_to(self.base_dir))
-                                )
+                        import os
+                        stack = [str(p)]
+                        while stack:
+                            curr = stack.pop()
+                            try:
+                                with os.scandir(curr) as it:
+                                    for entry in it:
+                                        try:
+                                            is_reparse = False
+                                            if entry.is_symlink():
+                                                is_reparse = True
+                                            else:
+                                                stat_val = entry.stat(follow_symlinks=False)
+                                                if hasattr(stat_val, 'st_file_attributes') and (stat_val.st_file_attributes & 0x400):
+                                                    is_reparse = True
+                                            if is_reparse:
+                                                continue
+
+                                            if entry.is_file():
+                                                child_path = Path(entry.path)
+                                                try:
+                                                    arcname = str(child_path.resolve().relative_to(self.base_dir.resolve()))
+                                                    zf.write(child_path, arcname=arcname)
+                                                except Exception:
+                                                    pass
+                                            elif entry.is_dir():
+                                                stack.append(entry.path)
+                                        except Exception:
+                                            pass
+                            except Exception:
+                                pass
                     else:
-                        zf.write(p, arcname=str(p.relative_to(self.base_dir)))
+                        zf.write(p, arcname=str(p.resolve().relative_to(self.base_dir.resolve())))
             return f"Created zip: {out}"
         except Exception as e:
             return f"Zip error: {e}"

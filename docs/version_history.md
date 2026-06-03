@@ -6,7 +6,18 @@ This document tracks the technical evolution of AgenticOS from its initial proto
 
 ---
 
-## v2.1.1 - The "Bulletproof Cross-Platform Hardened" Edition (Current)
+## v2.1.2 - The "Fast-Path Resource Hardened" Edition (Current)
+*Release Date: 2026-06-03*
+
+The v2.1.2 release addresses critical background resource and directory scanning overheads in the AgenticOS runtime to eliminate system lag and optimize disk I/O.
+
+### Key Innovations:
+1.  **Hot-Reload Filter Guards**: Refactored `_get_mtimes` in `core/runtime.py` to filter out heavy directories like `venv`, `node_modules`, `workspace`, and `data` from modification checking walk operations. This prevents thousands of synchronous directory/file checks from running on every idle throttle interval.
+2.  **Optimized Workspace Scan**: Refactored `_scan_workspace` in `core/context_engine.py` to skip scanning and child-counting for heavy or system-generated directories (`.git`, `venv`, `node_modules`, `__pycache__`, caches, and data directories) during prompt assembly.
+
+---
+
+## v2.1.1 - The "Bulletproof Cross-Platform Hardened" Edition
 *Release Date: 2026-05-18*
 
 The v2.1.1 release establishes seamless, robust, low-level OS integrations across Windows 11, macOS Darwin, and modern Linux GNOME environments.

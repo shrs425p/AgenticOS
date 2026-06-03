@@ -47,9 +47,36 @@ class PathsMixin:
             base = Path(root).expanduser()
             if not base.exists():
                 continue
-            for p in base.rglob("*"):
-                if p.name.lower() == target.lower():
-                    hits.append(str(p))
-                if len(hits) >= 50:
-                    break
+            stack = [str(base)]
+            done = False
+            while stack and not done:
+                curr = stack.pop()
+                try:
+                    with os.scandir(curr) as it:
+                        for entry in it:
+                            try:
+                                is_reparse = False
+                                if entry.is_symlink():
+                                    is_reparse = True
+                                else:
+                                    stat_val = entry.stat(follow_symlinks=False)
+                                    if hasattr(stat_val, 'st_file_attributes') and (stat_val.st_file_attributes & 0x400):
+                                        is_reparse = True
+                                if is_reparse:
+                                    continue
+
+                                if entry.name.lower() == target.lower():
+                                    hits.append(entry.path)
+                                    if len(hits) >= 50:
+                                        done = True
+                                        break
+                                
+                                if entry.is_dir():
+                                    stack.append(entry.path)
+                            except Exception:
+                                pass
+                except Exception:
+                    pass
+            if len(hits) >= 50:
+                break
         return "\n".join(hits) if hits else "No matches."

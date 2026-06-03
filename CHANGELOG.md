@@ -1,3 +1,9 @@
+## [2.1.2] - 2026-06-03
+
+### Performance Improvements
+- **Optimized Hot-Reload Checks**: Refactored `_get_mtimes` inside `core/runtime.py` to exclude dependency/data directories (`venv`, `node_modules`, `workspace`, `data`, and `mock_workspace`) from the file scanning traversal. This reduces idle CPU usage and disk I/O significantly.
+- **Optimized Workspace Context Scan**: Updated `_scan_workspace` inside `core/context_engine.py` to skip scanning and child-counting for heavy or system-generated directories (`.git`, `venv`, `node_modules`, `__pycache__`, caches, and data directories) during prompt assembly.
+
 ## [2.1.1] - 2026-05-18
 
 ### CI/CD and Workflow Hardening

@@ -90,10 +90,10 @@ def test_grep_dir_rules_and_errors(tmp_path):
     assert "disabled by config" in res
     
     # Exception handling
-    # We trigger an exception by having rglob raise an OSError
+    # We trigger an exception by having os.scandir raise an OSError
     tool.rules = {"allow_full_drive_grep": True}
     from unittest.mock import patch
-    with patch.object(Path, "rglob", side_effect=OSError("permission denied")):
+    with patch("os.scandir", side_effect=OSError("permission denied")):
         assert "Error: permission denied" in tool.grep_dir(".", "query")
 
 

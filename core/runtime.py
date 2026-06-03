@@ -231,13 +231,16 @@ class Agent:
         tracked_dirs = [os.path.join(BASE_DIR, d) for d in self.cfg.get("hot_reload", {}).get("tracked_dirs", ["core", "tools", "scripts"])]
         if BASE_DIR not in tracked_dirs:
             tracked_dirs.append(BASE_DIR)
+        
+        blacklisted_dirs = {"venv", "node_modules", "workspace", "data", "mock_workspace"}
         try:
             for directory in tracked_dirs:
                 if not os.path.isdir(directory):
                     continue
                 for root, dirs, files in os.walk(directory):
                     dirs[:] = [
-                        d for d in dirs if d != "__pycache__" and not d.startswith(".")
+                        d for d in dirs
+                        if d != "__pycache__" and not d.startswith(".") and d not in blacklisted_dirs
                     ]
                     for name in files:
                         if not (name.endswith(".py") or name == "config.yaml"):

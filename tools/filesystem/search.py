@@ -13,10 +13,39 @@ class SearchMixin:
         try:
             if not root.exists():
                 return "Path not found."
+            
+            import os
+            
             matches = []
-            for p in root.rglob("*"):
-                if p.is_file() and fnmatch.fnmatch(p.name, pattern):
-                    matches.append(str(p))
+            stack = [str(root)]
+            while stack:
+                curr = stack.pop()
+                try:
+                    with os.scandir(curr) as it:
+                        for entry in it:
+                            try:
+                                is_reparse = False
+                                if entry.is_symlink():
+                                    is_reparse = True
+                                else:
+                                    stat_val = entry.stat(follow_symlinks=False)
+                                    if hasattr(stat_val, 'st_file_attributes') and (stat_val.st_file_attributes & 0x400):
+                                        is_reparse = True
+                                if is_reparse:
+                                    continue
+
+                                if entry.is_file():
+                                    if fnmatch.fnmatch(entry.name, pattern):
+                                        matches.append(entry.path)
+                                elif entry.is_dir():
+                                    stack.append(entry.path)
+                            except Exception:
+                                pass
+                except Exception as e:
+                    if curr == str(root):
+                        raise
+                    else:
+                        pass
             return "\n".join(matches[:500]) if matches else "No matches."
         except Exception as e:
             return f"Error: {e}"
@@ -53,13 +82,40 @@ class SearchMixin:
                     "(performance.allow_full_drive_grep=false)."
                 )
 
+            import os
+
             matches = []
-            for p in root.rglob(pattern):
-                if not p.is_file():
-                    continue
-                hit = self.grep_file(str(p), query)
-                if hit and hit != "No matches." and not hit.startswith("Error:"):
-                    matches.append(f"\n== {p} ==\n{hit}")
+            stack = [str(root)]
+            while stack:
+                curr = stack.pop()
+                try:
+                    with os.scandir(curr) as it:
+                        for entry in it:
+                            try:
+                                is_reparse = False
+                                if entry.is_symlink():
+                                    is_reparse = True
+                                else:
+                                    stat_val = entry.stat(follow_symlinks=False)
+                                    if hasattr(stat_val, 'st_file_attributes') and (stat_val.st_file_attributes & 0x400):
+                                        is_reparse = True
+                                if is_reparse:
+                                    continue
+
+                                if entry.is_file():
+                                    if pattern == "*" or fnmatch.fnmatch(entry.name, pattern):
+                                        hit = self.grep_file(entry.path, query)
+                                        if hit and hit != "No matches." and not hit.startswith("Error:"):
+                                            matches.append(f"\n== {entry.path} ==\n{hit}")
+                                elif entry.is_dir():
+                                    stack.append(entry.path)
+                            except Exception:
+                                pass
+                except Exception as e:
+                    if curr == str(root):
+                        raise
+                    else:
+                        pass
             return "\n".join(matches[:50]) if matches else "No matches."
         except Exception as e:
             return f"Error: {e}"
