@@ -57,29 +57,55 @@
 
 ---
 
-## Advanced Zero-Trust Security
+## Autonomous Self-Evolution & Dynamic Tool Creation
 
-At the heart of AgenticOS is a zero-trust model designed to execute complex operations safely on host systems:
-
-*   **Abstract Syntax Tree (AST) Validation**: Standard command regexes can be bypassed. AgenticOS tokenizes and parses shell commands at a structural level using `shlex`, validating multi-word arguments, quote/tick nested strings, and PowerShell abbreviations.
-*   **Encrypted & Obfuscated Command Defense**: Decodes base64-encoded command wrappers (e.g., PowerShell `-EncodedCommand` flags) and checks the payload before execution.
-*   **PathGuard Sandbox**: Enforces isolation zones. Any write access attempting to target system folders, user profiles, or Git configuration directories is immediately blocked unless explicit approval is granted.
-*   **Structured Auditing**: Keeps a queryable, persistent SQLite audit log recording every thought, command execution, and tool input/output for forensics.
+Unlike static orchestrators limited to pre-configured integrations, AgenticOS can expand its own capabilities at runtime:
+*   **Dynamic Code Generation**: When faced with a task requiring missing dependencies or tools (e.g., parsing a new file format, computing specific metrics), the agent autonomously writes a Python plugin conforming to the system's plugin decorators.
+*   **Automated Validation & Testing**: Before reloading, the agent runs linting checks and builds temporary unit tests to verify that the newly generated plugin behaves deterministically.
+*   **Hot-Reload Registry**: Registers and loads the verified plugin dynamically into the running execution loop without requiring a restart or interrupting active workflows.
+*   **Self-Healing Loop**: If execution fails, the agent parses the stack trace, adjusts the code, re-runs tests, and heals the plugin programmatically.
 
 ---
 
-## Native Performance & System Benchmarks
+## Deep OS Automation & Low-Level Host Control
 
-AgenticOS bypasses slow shell spawning and system overheads to deliver high-performance automation:
-*   **Fast-Disk IO**: Replaces generic Python recursive globbing (`rglob`) with an optimized `os.scandir` depth-first search (DFS) traversal, delivering **100x speedups** on standard HDDs/SSDs.
-*   **Robust Network Resiliency**: Built-in exponential backoff retries (`retry_call()`) mask all cloud model rate limits to preserve execution state across long runs.
-*   **Minimal Footprint**: Operates with less than **150MB of RAM** usage, even during complex, high-iteration loops.
+AgenticOS interfaces directly with the host system using native APIs and low-level script automation:
+*   **OS Accessibility Integration**: Controls AppleScript accessibility (AXMinimized, AXZoomed, AXFrame) to query UI element titles and layouts in macOS scriptable/non-scriptable Cocoa applications.
+*   **Native Windows COM Control**: Compiles and executes C# code on-the-fly via PowerShell to interface with the Win32 COM APIs for native, dependency-free hardware control (e.g., volume management, network interfaces).
+*   **System Telemetry and Diagnostics**: Inspects active registry keys, queries local firewall configurations (flagging rules permitting inbound traffic on non-standard ports), audits scheduled system tasks, and parses local user account metrics.
+
+---
+
+## Headless Browser Scraping & Dynamic Web Intelligence
+
+AgenticOS drives a dynamic browser engine to parse modern JavaScript-rendered web apps:
+*   **Playwright Automation**: Launches sandboxed Chromium browsers to scrape content, fill interactive forms, capture element screenshots, download files, and bypass basic scraper blocklists.
+*   **DNS & Security Audits**: Resolves network hosts, validates SSL certificate signatures/expiration, checks WHOIS domains registration logs, and queries security blacklist databases to evaluate URL safety.
+*   **Recursive Research Loops**: Executes multi-phase search-and-synthesize cycles, using query results to refine subsequent research prompts for deep intelligence gathering.
+
+---
+
+## Advanced Zero-Trust Security & AST-Level Sandboxing
+
+Security is the primary constraint. The framework enforces strict boundary controls to protect the host:
+*   **Abstract Syntax Tree (AST) Parsing**: Traditional regex validators are bypassed by simple quote or string variations. AgenticOS uses `shlex` to deconstruct command arguments, verifying nested quotes, variable expansions, and escaped strings.
+*   **PowerShell Abbreviation & Encoded Command Defense**: Detects parameter prefix matching (e.g., `-e`, `-enc`, `-en` flags for execution) and decodes base64-encoded PowerShell commands to audit the underlying script payload before launching the subprocess.
+*   **Line-by-Line Script Validation**: When running shell scripts (`.sh`, `.bash`, `.ps1`, `.bat`, `.cmd`), the agent reads the file content, filters syntax-specific comments, handles line continuation characters, and validates every single instruction block against safety rules.
+*   **PathGuard Boundary Isolation**: Restricts system writes, preventing access to critical OS folders, active system configurations, or local Git repositories.
+
+---
+
+## Under-the-Hood Resilience & Memory Architecture
+
+*   **SQLite-Backed Context Memory**: Persists short-term plans, model thought patterns, actions, and observations in a structured SQLite database to ensure the agent remembers its progress even across session restarts.
+*   **Rate-Limit Shielding**: Jittered exponential backoff retries (`retry_call()`) mask all cloud model API limit (HTTP 429) spikes, maintaining task stability under high network volumes.
+*   **Optimized Native Dispatch**: Scans directories and counts millions of files in seconds using native DFS traversals, bypassing the CPU overhead of spawning subprocess commands.
 
 ---
 
 ## Interactive Documentation Center
 
-Our comprehensive technical library covers everything you need to configure, run, and scale AgenticOS:
+Our comprehensive technical library covers configurations, architecture, and extension guides:
 
 ### Getting Started
 *   [**Setup Guide**](docs/setup_guide.md): Native installer walkthrough for Windows, macOS, and Linux.
