@@ -59,10 +59,13 @@ Plans:
   2. Blocks return detailed explanation messages to the caller.
 
 **Plans**: 2 plans
-
 Plans:
+**Wave 1**
 
 - [ ] 03-01: Update `RunnerMixin` in `tools/terminal/runner.py` to invoke the structural validator.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 03-02: Verify run command execution with active safety rules enabled.
 
 ### Phase 4: Safety Verification Suite
