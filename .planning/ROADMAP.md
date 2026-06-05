@@ -42,7 +42,6 @@ Plans:
   2. Obfuscated commands (e.g. `n"e"t u"s"er`) are successfully detected and blocked.
 
 **Plans**: 2 plans
-
 Plans:
 
 - [ ] 02-01: Implement chaining and obfuscation filters.
