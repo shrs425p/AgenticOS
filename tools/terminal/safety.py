@@ -1,4 +1,5 @@
 """Module for safety.py"""
+
 from __future__ import annotations
 
 import os
@@ -30,10 +31,6 @@ class SafetyMixin:
         """
         if not token:
             return "", False, False
-
-        # Detect if there are any quotes
-        has_quotes = "'" in token or '"' in token
-        
         # Recursively strip wrapping quote layers
         cleaned = token
         while len(cleaned) >= 2:
@@ -113,7 +110,9 @@ class SafetyMixin:
                 return True
         return False
 
-    def _has_chaining_operators(self, command: str, is_windows: bool) -> tuple[bool, str]:
+    def _has_chaining_operators(
+        self, command: str, is_windows: bool
+    ) -> tuple[bool, str]:
         """Scan command string for unquoted chaining operators.
 
         Args:
@@ -129,7 +128,7 @@ class SafetyMixin:
         n = len(command)
         while i < n:
             char = command[i]
-            
+
             # Handle escape sequences
             if is_windows:
                 # Caret (^) escapes the next character in CMD outside quotes
@@ -141,7 +140,7 @@ class SafetyMixin:
                 if char == "\\" and not in_single:
                     i += 2
                     continue
-                    
+
             # Handle quotes
             if char == "'" and not in_double:
                 in_single = not in_single
@@ -235,7 +234,9 @@ class SafetyMixin:
             # On Windows, use posix=False to preserve backslashes in folder paths.
             tokens = shlex.split(cmd_str, posix=not is_windows)
             # Use posix=False to preserve escapes for obfuscation check
-            obfuscation_tokens = shlex.split(cmd_str, posix=False) if not is_windows else tokens
+            obfuscation_tokens = (
+                shlex.split(cmd_str, posix=False) if not is_windows else tokens
+            )
         except Exception as e:
             return f"Command blocked by safety rules: shell parsing error ({e})"
 
@@ -299,16 +300,16 @@ class SafetyMixin:
             # Check powershell wrappers
             if verb in {"powershell", "pwsh"}:
                 if self._is_powershell_command_flag(token) and i + 1 < len(tokens):
-                    nested_cmd = " ".join(tokens[i + 1:])
+                    nested_cmd = " ".join(tokens[i + 1 :])
                     nested_cmd = self._strip_wrapping_quotes(nested_cmd)
-                    
+
                     # Contextual variable check: if the nested command parameter is a variable lookup
                     if self._contains_variable(nested_cmd):
                         return (
                             "Command blocked by safety rules: environment variable expansion "
                             f"detected in wrapper parameters ({nested_cmd})"
                         )
-                        
+
                     nested_reason = self._blocked_command_reason(nested_cmd)
                     if nested_reason:
                         return nested_reason
@@ -316,8 +317,11 @@ class SafetyMixin:
                     encoded_payload = self._strip_wrapping_quotes(tokens[i + 1])
                     try:
                         import base64
-                        decoded_bytes = base64.b64decode(encoded_payload.encode('ascii'))
-                        decoded_cmd = decoded_bytes.decode('utf-16-le')
+
+                        decoded_bytes = base64.b64decode(
+                            encoded_payload.encode("ascii")
+                        )
+                        decoded_cmd = decoded_bytes.decode("utf-16-le")
                     except Exception as e:
                         return f"Command blocked by safety rules: base64-decode-failure ({e})"
 
@@ -327,32 +331,32 @@ class SafetyMixin:
             # Check cmd wrappers
             elif verb == "cmd":
                 if token.lower() in {"/c", "/k", "/r"} and i + 1 < len(tokens):
-                    nested_cmd = " ".join(tokens[i + 1:])
+                    nested_cmd = " ".join(tokens[i + 1 :])
                     nested_cmd = self._strip_wrapping_quotes(nested_cmd)
-                    
+
                     # Contextual variable check: if the nested command parameter is a variable lookup
                     if self._contains_variable(nested_cmd):
                         return (
                             "Command blocked by safety rules: environment variable expansion "
                             f"detected in wrapper parameters ({nested_cmd})"
                         )
-                        
+
                     nested_reason = self._blocked_command_reason(nested_cmd)
                     if nested_reason:
                         return nested_reason
             # Check POSIX shell wrappers
             elif verb in {"bash", "sh", "zsh", "dash", "ash"}:
                 if token.lower() == "-c" and i + 1 < len(tokens):
-                    nested_cmd = " ".join(tokens[i + 1:])
+                    nested_cmd = " ".join(tokens[i + 1 :])
                     nested_cmd = self._strip_wrapping_quotes(nested_cmd)
-                    
+
                     # Contextual variable check: if the nested command parameter is a variable lookup
                     if self._contains_variable(nested_cmd):
                         return (
                             "Command blocked by safety rules: environment variable expansion "
                             f"detected in wrapper parameters ({nested_cmd})"
                         )
-                        
+
                     nested_reason = self._blocked_command_reason(nested_cmd)
                     if nested_reason:
                         return nested_reason

@@ -1,4 +1,5 @@
 """Module for runner.py"""
+
 from __future__ import annotations
 
 import os
@@ -11,6 +12,8 @@ from typing import Optional
 
 
 from core.tool_base import tool
+
+
 class RunnerMixin:
     def _shell_args(self, command: str) -> dict:
         if self.system == "Windows":
@@ -50,11 +53,12 @@ class RunnerMixin:
                 cmd_name = parts[0]
         except Exception:
             cmd_name = command.split()[0] if command.split() else ""
-        cmd_name = os.path.basename(cmd_name).replace('"', '').replace("'", "")
+        cmd_name = os.path.basename(cmd_name).replace('"', "").replace("'", "")
 
         if cmd_name:
             try:
                 from core.self_provisioner import self_provision_command
+
                 if self_provision_command(cmd_name):
                     return self._run(
                         command,
@@ -94,6 +98,7 @@ class RunnerMixin:
         # Dynamic PATH refreshing prior to execution
         try:
             from core.self_provisioner import refresh_path
+
             refresh_path()
         except ImportError:
             pass
@@ -154,7 +159,9 @@ class RunnerMixin:
         except Exception as e:
             return f"Error running command: {type(e).__name__}: {e}"
 
-    @tool(name="run_command", desc="Run shell command. Args: command", category="Terminal")
+    @tool(
+        name="run_command", desc="Run shell command. Args: command", category="Terminal"
+    )
     def run_command(self, command: str, timeout: int = 30) -> str:
         """Run a shell command on the host system.
 
@@ -167,7 +174,11 @@ class RunnerMixin:
         """
         return self._run(command, timeout=timeout)
 
-    @tool(name="run_powershell", desc="Run PowerShell command. Args: command", category="Terminal")
+    @tool(
+        name="run_powershell",
+        desc="Run PowerShell command. Args: command",
+        category="Terminal",
+    )
     def run_powershell(self, command: str, timeout: int = 60) -> str:
         """Run a command inside a PowerShell process.
 
@@ -189,18 +200,18 @@ class RunnerMixin:
 
     # Map of common non-ASCII typographic characters the model may inject into code
     _CODE_CHAR_MAP = {
-        "\u2013": "-",   # en dash
-        "\u2014": "-",   # em dash
-        "\u2018": "'",   # left single quote
-        "\u2019": "'",   # right single quote
-        "\u201c": '"',   # left double quote
-        "\u201d": '"',   # right double quote
-        "\u2026": "...", # ellipsis
-        "\u2022": "-",   # bullet point
-        "\u00a0": " ",   # non-breaking space
-        "\u2012": "-",   # figure dash
-        "\u2015": "-",   # horizontal bar
-        "\u2212": "-",   # minus sign
+        "\u2013": "-",  # en dash
+        "\u2014": "-",  # em dash
+        "\u2018": "'",  # left single quote
+        "\u2019": "'",  # right single quote
+        "\u201c": '"',  # left double quote
+        "\u201d": '"',  # right double quote
+        "\u2026": "...",  # ellipsis
+        "\u2022": "-",  # bullet point
+        "\u00a0": " ",  # non-breaking space
+        "\u2012": "-",  # figure dash
+        "\u2015": "-",  # horizontal bar
+        "\u2212": "-",  # minus sign
     }
 
     # Line continuation characters by shell script suffix.
@@ -221,7 +232,11 @@ class RunnerMixin:
             code = code.replace(char, replacement)
         return code
 
-    @tool(name="run_python", desc="Run Python code string. Args: code", category="Terminal")
+    @tool(
+        name="run_python",
+        desc="Run Python code string. Args: code",
+        category="Terminal",
+    )
     def run_python(self, code: str) -> str:
         """Execute a Python code block and capture the output.
 
@@ -309,7 +324,11 @@ class RunnerMixin:
 
         return ""
 
-    @tool(name="run_script", desc="Run a script file. Args: path, interpreter (optional)", category="Terminal")
+    @tool(
+        name="run_script",
+        desc="Run a script file. Args: path, interpreter (optional)",
+        category="Terminal",
+    )
     def run_script(self, path: str, interpreter: str = "") -> str:
         """Run a script file with optional interpreter override.
 

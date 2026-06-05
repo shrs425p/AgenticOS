@@ -1,8 +1,11 @@
 """Unit tests for SafetyMixin structural command validation and obfuscation detection."""
+
 from __future__ import annotations
 
 import os
-import pytest
+from pathlib import Path
+
+from tools.terminal.runner import RunnerMixin
 from tools.terminal.safety import SafetyMixin
 
 
@@ -30,23 +33,57 @@ def test_basic_safety_blocks():
     safety = DummySafety(rules)
 
     # 1. Service control blocks
-    assert "Command blocked by safety rules: sc" in safety._blocked_command_reason("sc query")
-    assert "Command blocked by safety rules: net stop" in safety._blocked_command_reason("net stop spooler")
-    assert "Command blocked by safety rules: net start" in safety._blocked_command_reason("net start spooler")
-    assert "Command blocked by safety rules: systemctl" in safety._blocked_command_reason("systemctl restart nginx")
-    assert "Command blocked by safety rules: service" in safety._blocked_command_reason("service apache2 start")
+    assert "Command blocked by safety rules: sc" in safety._blocked_command_reason(
+        "sc query"
+    )
+    assert (
+        "Command blocked by safety rules: net stop"
+        in safety._blocked_command_reason("net stop spooler")
+    )
+    assert (
+        "Command blocked by safety rules: net start"
+        in safety._blocked_command_reason("net start spooler")
+    )
+    assert (
+        "Command blocked by safety rules: systemctl"
+        in safety._blocked_command_reason("systemctl restart nginx")
+    )
+    assert "Command blocked by safety rules: service" in safety._blocked_command_reason(
+        "service apache2 start"
+    )
 
     # 2. Registry edit blocks
-    assert "Command blocked by safety rules: reg add" in safety._blocked_command_reason("reg add HKLM\\Software")
-    assert "Command blocked by safety rules: reg delete" in safety._blocked_command_reason("reg delete HKLM\\Software")
-    assert "Command blocked by safety rules: reg import" in safety._blocked_command_reason("reg import file.reg")
-    assert "Command blocked by safety rules: set-itemproperty" in safety._blocked_command_reason("set-itemproperty -Path HKCU:\\")
+    assert "Command blocked by safety rules: reg add" in safety._blocked_command_reason(
+        "reg add HKLM\\Software"
+    )
+    assert (
+        "Command blocked by safety rules: reg delete"
+        in safety._blocked_command_reason("reg delete HKLM\\Software")
+    )
+    assert (
+        "Command blocked by safety rules: reg import"
+        in safety._blocked_command_reason("reg import file.reg")
+    )
+    assert (
+        "Command blocked by safety rules: set-itemproperty"
+        in safety._blocked_command_reason("set-itemproperty -Path HKCU:\\")
+    )
 
     # 3. System change blocks
-    assert "Command blocked by safety rules: shutdown" in safety._blocked_command_reason("shutdown /s /t 0")
-    assert "Command blocked by safety rules: reboot" in safety._blocked_command_reason("reboot")
-    assert "Command blocked by safety rules: format" in safety._blocked_command_reason("format D:")
-    assert "Command blocked by safety rules: diskpart" in safety._blocked_command_reason("diskpart")
+    assert (
+        "Command blocked by safety rules: shutdown"
+        in safety._blocked_command_reason("shutdown /s /t 0")
+    )
+    assert "Command blocked by safety rules: reboot" in safety._blocked_command_reason(
+        "reboot"
+    )
+    assert "Command blocked by safety rules: format" in safety._blocked_command_reason(
+        "format D:"
+    )
+    assert (
+        "Command blocked by safety rules: diskpart"
+        in safety._blocked_command_reason("diskpart")
+    )
 
 
 def test_executable_paths_and_extensions():
@@ -60,8 +97,13 @@ def test_executable_paths_and_extensions():
     safety = DummySafety(rules)
 
     # Basename extraction check
-    assert "Command blocked by safety rules: sc" in safety._blocked_command_reason("C:\\Windows\\System32\\sc.exe query")
-    assert "Command blocked by safety rules: reg delete" in safety._blocked_command_reason("C:\\Windows\\reg.exe delete HKLM")
+    assert "Command blocked by safety rules: sc" in safety._blocked_command_reason(
+        "C:\\Windows\\System32\\sc.exe query"
+    )
+    assert (
+        "Command blocked by safety rules: reg delete"
+        in safety._blocked_command_reason("C:\\Windows\\reg.exe delete HKLM")
+    )
 
 
 def test_benign_commands_allowed():
@@ -79,7 +121,7 @@ def test_benign_commands_allowed():
     assert safety._blocked_command_reason("netcat") == ""
     assert safety._blocked_command_reason("format_disk") == ""
     # Safe commands with matched parameters inside quotes should not block the outer command
-    assert safety._blocked_command_reason("echo \"sc stop spooler\"") == ""
+    assert safety._blocked_command_reason('echo "sc stop spooler"') == ""
     assert safety._blocked_command_reason("git commit -m 'net stop spooler'") == ""
 
 
@@ -93,13 +135,17 @@ def test_quote_obfuscation_detection():
     safety = DummySafety(rules)
 
     # Obfuscated command verbs
-    assert "command obfuscation detected" in safety._blocked_command_reason("s'c' query")
-    assert "command obfuscation detected" in safety._blocked_command_reason("n\"e\"t stop")
-    assert "command obfuscation detected" in safety._blocked_command_reason("net\"\"stop")
-    
+    assert "command obfuscation detected" in safety._blocked_command_reason(
+        "s'c' query"
+    )
+    assert "command obfuscation detected" in safety._blocked_command_reason(
+        'n"e"t stop'
+    )
+    assert "command obfuscation detected" in safety._blocked_command_reason('net""stop')
+
     # Benign quotes (wrapping/normal usage) should not trigger obfuscation blocks
     assert safety._blocked_command_reason("echo 'hello'") == ""
-    assert safety._blocked_command_reason("echo \"hello\"") == ""
+    assert safety._blocked_command_reason('echo "hello"') == ""
     assert safety._blocked_command_reason("dir 'C:\\Program Files'") == ""
 
 
@@ -114,16 +160,30 @@ def test_nested_execution_recursion():
     safety = DummySafety(rules)
 
     # powershell nested checks
-    assert "Command blocked by safety rules: sc" in safety._blocked_command_reason("powershell -Command \"sc stop spooler\"")
-    assert "Command blocked by safety rules: sc" in safety._blocked_command_reason("pwsh -c sc stop")
+    assert "Command blocked by safety rules: sc" in safety._blocked_command_reason(
+        'powershell -Command "sc stop spooler"'
+    )
+    assert "Command blocked by safety rules: sc" in safety._blocked_command_reason(
+        "pwsh -c sc stop"
+    )
 
     # cmd nested checks
-    assert "Command blocked by safety rules: reg delete" in safety._blocked_command_reason("cmd.exe /c \"reg delete HKLM\"")
-    assert "Command blocked by safety rules: reg delete" in safety._blocked_command_reason("cmd /k reg delete HKLM")
+    assert (
+        "Command blocked by safety rules: reg delete"
+        in safety._blocked_command_reason('cmd.exe /c "reg delete HKLM"')
+    )
+    assert (
+        "Command blocked by safety rules: reg delete"
+        in safety._blocked_command_reason("cmd /k reg delete HKLM")
+    )
 
     # bash nested checks
-    assert "Command blocked by safety rules: sc" in safety._blocked_command_reason("bash -c \"sc stop\"")
-    assert "Command blocked by safety rules: sc" in safety._blocked_command_reason("sh -c sc")
+    assert "Command blocked by safety rules: sc" in safety._blocked_command_reason(
+        'bash -c "sc stop"'
+    )
+    assert "Command blocked by safety rules: sc" in safety._blocked_command_reason(
+        "sh -c sc"
+    )
 
 
 def test_chaining_operators(monkeypatch):
@@ -137,17 +197,31 @@ def test_chaining_operators(monkeypatch):
     safety = DummySafety(rules)
 
     # Chaining operators (blocked)
-    assert "shell chaining operator detected" in safety._blocked_command_reason("echo hello && sc stop")
-    assert "shell chaining operator detected" in safety._blocked_command_reason("echo hello; sc stop")
-    assert "shell chaining operator detected" in safety._blocked_command_reason("echo hello|sc stop")
-    assert "shell chaining operator detected" in safety._blocked_command_reason("echo $(whoami)")
-    assert "shell chaining operator detected" in safety._blocked_command_reason("echo `whoami`")
+    assert "shell chaining operator detected" in safety._blocked_command_reason(
+        "echo hello && sc stop"
+    )
+    assert "shell chaining operator detected" in safety._blocked_command_reason(
+        "echo hello; sc stop"
+    )
+    assert "shell chaining operator detected" in safety._blocked_command_reason(
+        "echo hello|sc stop"
+    )
+    assert "shell chaining operator detected" in safety._blocked_command_reason(
+        "echo $(whoami)"
+    )
+    assert "shell chaining operator detected" in safety._blocked_command_reason(
+        "echo `whoami`"
+    )
 
     # Quoted chaining operators (allowed/not blocked by chaining check)
     # Note: they might be blocked by other rules if they contain blocked commands,
     # but here we check they don't trigger the "shell chaining operator detected" block.
-    assert "shell chaining operator detected" not in safety._blocked_command_reason("echo \"hello && welcome\"")
-    assert "shell chaining operator detected" not in safety._blocked_command_reason("echo 'hello; world'")
+    assert "shell chaining operator detected" not in safety._blocked_command_reason(
+        'echo "hello && welcome"'
+    )
+    assert "shell chaining operator detected" not in safety._blocked_command_reason(
+        "echo 'hello; world'"
+    )
 
 
 def test_variable_expansions():
@@ -160,15 +234,36 @@ def test_variable_expansions():
     safety = DummySafety(rules)
 
     # Blocked in command verb position
-    assert "environment variable expansion detected in verb position" in safety._blocked_command_reason("%COMSPEC% /c sc")
-    assert "environment variable expansion detected in verb position" in safety._blocked_command_reason("$VAR stop")
-    assert "environment variable expansion detected in verb position" in safety._blocked_command_reason("${VAR} start")
-    assert "environment variable expansion detected in verb position" in safety._blocked_command_reason("$env:VAR start")
+    assert (
+        "environment variable expansion detected in verb position"
+        in safety._blocked_command_reason("%COMSPEC% /c sc")
+    )
+    assert (
+        "environment variable expansion detected in verb position"
+        in safety._blocked_command_reason("$VAR stop")
+    )
+    assert (
+        "environment variable expansion detected in verb position"
+        in safety._blocked_command_reason("${VAR} start")
+    )
+    assert (
+        "environment variable expansion detected in verb position"
+        in safety._blocked_command_reason("$env:VAR start")
+    )
 
     # Blocked in nested wrapper parameter position
-    assert "environment variable expansion detected in wrapper parameters" in safety._blocked_command_reason("powershell -c $a")
-    assert "environment variable expansion detected in wrapper parameters" in safety._blocked_command_reason("cmd /c %VAR%")
-    assert "environment variable expansion detected in wrapper parameters" in safety._blocked_command_reason("bash -c $VAR")
+    assert (
+        "environment variable expansion detected in wrapper parameters"
+        in safety._blocked_command_reason("powershell -c $a")
+    )
+    assert (
+        "environment variable expansion detected in wrapper parameters"
+        in safety._blocked_command_reason("cmd /c %VAR%")
+    )
+    assert (
+        "environment variable expansion detected in wrapper parameters"
+        in safety._blocked_command_reason("bash -c $VAR")
+    )
 
     # Allowed in normal argument position
     assert safety._blocked_command_reason("echo $PATH") == ""
@@ -186,12 +281,18 @@ def test_escape_obfuscation_windows(monkeypatch):
     safety = DummySafety(rules)
 
     # Windows escapes blocked
-    assert "command obfuscation detected" in safety._blocked_command_reason("n^e^t stop")
-    assert "command obfuscation detected" in safety._blocked_command_reason("n`e`t start")
+    assert "command obfuscation detected" in safety._blocked_command_reason(
+        "n^e^t stop"
+    )
+    assert "command obfuscation detected" in safety._blocked_command_reason(
+        "n`e`t start"
+    )
 
     # Backslash is a path separator on Windows, not an escape, so allowed
     assert safety._blocked_command_reason("C:\\Windows\\System32\\sc.exe query") == ""
-    assert "command obfuscation detected" not in safety._blocked_command_reason("s\\c query")
+    assert "command obfuscation detected" not in safety._blocked_command_reason(
+        "s\\c query"
+    )
 
 
 def test_escape_obfuscation_posix(monkeypatch):
@@ -205,19 +306,22 @@ def test_escape_obfuscation_posix(monkeypatch):
     safety = DummySafety(rules)
 
     # POSIX escapes blocked
-    assert "command obfuscation detected" in safety._blocked_command_reason("s\\c query")
+    assert "command obfuscation detected" in safety._blocked_command_reason(
+        "s\\c query"
+    )
 
     # Caret and backtick are not escapes on POSIX, so not blocked as escape obfuscation
-    assert "command obfuscation detected" not in safety._blocked_command_reason("n^e^t stop")
-    assert "command obfuscation detected" not in safety._blocked_command_reason("n`e`t start")
+    assert "command obfuscation detected" not in safety._blocked_command_reason(
+        "n^e^t stop"
+    )
+    assert "command obfuscation detected" not in safety._blocked_command_reason(
+        "n`e`t start"
+    )
 
 
 # ---------------------------------------------------------------------------
 # Wave 2 — Phase 3: Runner Integration tests
 # ---------------------------------------------------------------------------
-
-from pathlib import Path
-from tools.terminal.runner import RunnerMixin
 
 
 class DummyRunner(SafetyMixin, RunnerMixin):
@@ -307,9 +411,7 @@ def test_script_allows_safe_sh(tmp_path):
 def test_script_skips_comments_sh(tmp_path):
     """Comments containing blocked commands should not trigger blocking."""
     script = tmp_path / "comments.sh"
-    script.write_text(
-        "#!/bin/bash\n# sc stop spooler\necho safe\n", encoding="utf-8"
-    )
+    script.write_text("#!/bin/bash\n# sc stop spooler\necho safe\n", encoding="utf-8")
     runner = DummyRunner(_default_rules())
 
     result = runner.run_script(str(script))
@@ -332,9 +434,7 @@ def test_script_skips_comments_bat(tmp_path):
 def test_script_skips_blank_lines(tmp_path):
     """Blank lines should be silently ignored."""
     script = tmp_path / "blanks.sh"
-    script.write_text(
-        "#!/bin/bash\n\n\n\necho hello\n\n", encoding="utf-8"
-    )
+    script.write_text("#!/bin/bash\n\n\n\necho hello\n\n", encoding="utf-8")
     runner = DummyRunner(_default_rules())
 
     result = runner.run_script(str(script))
@@ -431,7 +531,9 @@ def test_audit_security_validation_logged(tmp_path):
     errors_log = Path(audit_dir) / "errors.jsonl"
     assert errors_log.exists(), "errors.jsonl should be created"
 
-    entries = [json.loads(line) for line in errors_log.read_text(encoding="utf-8").splitlines()]
+    entries = [
+        json.loads(line) for line in errors_log.read_text(encoding="utf-8").splitlines()
+    ]
     assert len(entries) == 1
     entry = entries[0]
     assert entry["event"] == "error"
@@ -480,9 +582,9 @@ def test_safety_validation_performance():
     avg_ms = (total_time / total_calls) * 1000
 
     # Must be under 10ms average per call
-    assert avg_ms < 10.0, (
-        f"Average validation time {avg_ms:.3f}ms exceeds 10ms threshold"
-    )
+    assert (
+        avg_ms < 10.0
+    ), f"Average validation time {avg_ms:.3f}ms exceeds 10ms threshold"
 
 
 def test_powershell_flag_abbreviations_and_case():
@@ -497,10 +599,10 @@ def test_powershell_flag_abbreviations_and_case():
     assert safety._is_powershell_command_flag("-command")
     assert safety._is_powershell_command_flag("/command")
     assert safety._is_powershell_command_flag("-CoMmAnD")
-    
+
     # Non-command flags starting with c
     assert not safety._is_powershell_command_flag("-config")
-    
+
     # PowerShell encoded command flags
     assert safety._is_powershell_encoded_flag("-en")
     assert safety._is_powershell_encoded_flag("-enc")
@@ -517,6 +619,7 @@ def test_powershell_flag_abbreviations_and_case():
 def test_powershell_base64_encoded_blocked_commands():
     """Verify that blocked commands nested inside Base64 parameters are blocked."""
     import base64
+
     rules = _default_rules()
     safety = DummySafety(rules)
 
@@ -526,10 +629,14 @@ def test_powershell_base64_encoded_blocked_commands():
 
     # Test via powershell -encodedcommand <base64>
     command1 = f"powershell -encodedcommand {encoded_payload}"
-    assert "Command blocked by safety rules: sc" in safety._blocked_command_reason(command1)
+    assert "Command blocked by safety rules: sc" in safety._blocked_command_reason(
+        command1
+    )
 
     command2 = f"powershell -enc {encoded_payload}"
-    assert "Command blocked by safety rules: sc" in safety._blocked_command_reason(command2)
+    assert "Command blocked by safety rules: sc" in safety._blocked_command_reason(
+        command2
+    )
 
     # Encode a benign command: "echo hello"
     benign_cmd = "echo hello"
@@ -549,10 +656,14 @@ def test_powershell_base64_invalid_and_variables():
 
     # 2. Base64 payload decoding to a command with variable expansion in verb position
     import base64
+
     var_cmd = "$x stop"
     encoded_var = base64.b64encode(var_cmd.encode("utf-16-le")).decode("ascii")
     command_var = f"powershell -enc {encoded_var}"
-    assert "environment variable expansion detected in verb position" in safety._blocked_command_reason(command_var)
+    assert (
+        "environment variable expansion detected in verb position"
+        in safety._blocked_command_reason(command_var)
+    )
 
 
 def test_zsh_script_validation(tmp_path):
@@ -561,12 +672,16 @@ def test_zsh_script_validation(tmp_path):
 
     # 1. Blocked command in .zsh script
     script_danger = tmp_path / "danger.zsh"
-    script_danger.write_text("#!/bin/zsh\n# comment here\nsc stop spooler\n", encoding="utf-8")
+    script_danger.write_text(
+        "#!/bin/zsh\n# comment here\nsc stop spooler\n", encoding="utf-8"
+    )
     assert "blocked by safety rules" in runner.run_script(str(script_danger)).lower()
 
     # 2. Safe .zsh script with comment and continuation
     script_safe = tmp_path / "safe.zsh"
-    script_safe.write_text("#!/bin/zsh\n# sc stop spooler\necho \\\n  \"hello\"\n", encoding="utf-8")
+    script_safe.write_text(
+        '#!/bin/zsh\n# sc stop spooler\necho \\\n  "hello"\n', encoding="utf-8"
+    )
     assert "OK:" in runner.run_script(str(script_safe))
 
 
@@ -579,7 +694,9 @@ def test_extra_chaining_operators():
     reason_backtick = safety._blocked_command_reason("echo `whoami`")
     assert "Command blocked by safety rules" in reason_backtick
     # Subshell syntax
-    assert "shell chaining operator detected" in safety._blocked_command_reason("echo $(whoami)")
+    assert "shell chaining operator detected" in safety._blocked_command_reason(
+        "echo $(whoami)"
+    )
 
 
 def test_command_verb_obfuscation():
@@ -588,8 +705,12 @@ def test_command_verb_obfuscation():
     safety = DummySafety(rules)
 
     # Obfuscation tricks
-    assert "command obfuscation detected" in safety._blocked_command_reason("s''c query")
-    assert "command obfuscation detected" in safety._blocked_command_reason("s\"\"c query")
+    assert "command obfuscation detected" in safety._blocked_command_reason(
+        "s''c query"
+    )
+    assert "command obfuscation detected" in safety._blocked_command_reason(
+        's""c query'
+    )
     assert "command obfuscation detected" in safety._blocked_command_reason("s`c query")
 
 
@@ -598,5 +719,11 @@ def test_env_var_expansions_in_wrappers():
     rules = _default_rules()
     safety = DummySafety(rules)
 
-    assert "environment variable expansion detected in wrapper parameters" in safety._blocked_command_reason("powershell -c $nested_cmd")
-    assert "environment variable expansion detected in wrapper parameters" in safety._blocked_command_reason("cmd /c %nested_cmd%")
+    assert (
+        "environment variable expansion detected in wrapper parameters"
+        in safety._blocked_command_reason("powershell -c $nested_cmd")
+    )
+    assert (
+        "environment variable expansion detected in wrapper parameters"
+        in safety._blocked_command_reason("cmd /c %nested_cmd%")
+    )

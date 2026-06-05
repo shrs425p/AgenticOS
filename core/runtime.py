@@ -1,4 +1,3 @@
-
 """AgenticOs runtime orchestration."""
 
 from datetime import datetime
@@ -62,8 +61,8 @@ from core.runtime_ui import (
 from core.session_memory_sqlite import SqliteSessionMemory
 from core.task_tracker import TaskTracker
 from core.tool_registry import ToolRegistry
-logger = get_logger(__name__)
 
+logger = get_logger(__name__)
 
 
 PROVIDER_CLIENT_MAP = {
@@ -152,12 +151,16 @@ class Agent:
         if not os.path.isabs(audit_dir):
             audit_dir = os.path.join(BASE_DIR, audit_dir)
         audit_fmt = (logging_cfg.get("audit_format") or "jsonl").lower().strip()
-        self.audit = AuditLogger(audit_dir, enabled=audit_enabled, fmt=audit_fmt, cfg=self.cfg)
+        self.audit = AuditLogger(
+            audit_dir, enabled=audit_enabled, fmt=audit_fmt, cfg=self.cfg
+        )
 
         self.session_id = getattr(
             self.memory,
             "session_id",
-            datetime.now().strftime(self.heuristics.get("session_id_format", "%Y%m%d_%H%M%S")),
+            datetime.now().strftime(
+                self.heuristics.get("session_id_format", "%Y%m%d_%H%M%S")
+            ),
         )
         try:
             self.audit.session_start(
@@ -184,7 +187,10 @@ class Agent:
         os.makedirs(self.workspace, exist_ok=True)
         file_templates = self.cfg.get("prompts", {}).get("file_templates", {})
         for init_file, default_content in [
-            ("AGENTS.md", "# Agent Identity\n\nDefine your agent persona and rules here.\n"),
+            (
+                "AGENTS.md",
+                "# Agent Identity\n\nDefine your agent persona and rules here.\n",
+            ),
             (
                 "MEMORY.md",
                 "# AgenticOs Long-Term Memory\n\nCurated knowledge, insights, and learned patterns from agent experiences.\n",
@@ -237,19 +243,33 @@ class Agent:
 
     def _get_mtimes(self) -> Dict[str, float]:
         mtimes: Dict[str, float] = {}
-        tracked_dirs = [os.path.join(BASE_DIR, d) for d in self.cfg.get("hot_reload", {}).get("tracked_dirs", ["core", "tools", "scripts"])]
+        tracked_dirs = [
+            os.path.join(BASE_DIR, d)
+            for d in self.cfg.get("hot_reload", {}).get(
+                "tracked_dirs", ["core", "tools", "scripts"]
+            )
+        ]
         if BASE_DIR not in tracked_dirs:
             tracked_dirs.append(BASE_DIR)
-        
-        blacklisted_dirs = {"venv", "node_modules", "workspace", "data", "mock_workspace"}
+
+        blacklisted_dirs = {
+            "venv",
+            "node_modules",
+            "workspace",
+            "data",
+            "mock_workspace",
+        }
         try:
             for directory in tracked_dirs:
                 if not os.path.isdir(directory):
                     continue
                 for root, dirs, files in os.walk(directory):
                     dirs[:] = [
-                        d for d in dirs
-                        if d != "__pycache__" and not d.startswith(".") and d not in blacklisted_dirs
+                        d
+                        for d in dirs
+                        if d != "__pycache__"
+                        and not d.startswith(".")
+                        and d not in blacklisted_dirs
                     ]
                     for name in files:
                         if not (name.endswith(".py") or name == "config.yaml"):
@@ -311,7 +331,9 @@ class Agent:
                                 try:
                                     importlib.reload(sys.modules[mod])
                                 except (ImportError, AttributeError) as e:
-                                    print_warning(f"Warning: Failed to reload module {mod}: {e}")
+                                    print_warning(
+                                        f"Warning: Failed to reload module {mod}: {e}"
+                                    )
 
                 # Standard reload for other changed modules
                 for f in changed_files:
@@ -337,7 +359,9 @@ class Agent:
             print_success("Environment reloaded successfully.")
 
         except Exception as e:
-            print_error(f"Reload failed: An error occurred while hot-reloading changed modules: {e}\n{traceback.format_exc()}")
+            print_error(
+                f"Reload failed: An error occurred while hot-reloading changed modules: {e}\n{traceback.format_exc()}"
+            )
             self.mtimes = new_mtimes or self._get_mtimes()
 
         # Add null check before calling build_system_prompt
@@ -346,13 +370,18 @@ class Agent:
             return ""
         return self.context_engine.build_system_prompt()
 
-    def verify_action(self, tool_name: str, args: Dict, context: str) -> Tuple[bool, str]:
+    def verify_action(
+        self, tool_name: str, args: Dict, context: str
+    ) -> Tuple[bool, str]:
         """
         Performs a 'mental simulation' to verify if the tool call is valid and necessary.
         """
         # Hard Check: Tool Existence
         if tool_name not in self.tools.registry:
-            return False, f"Tool '{tool_name}' is not in the registry. Check /tools for available capabilities."
+            return (
+                False,
+                f"Tool '{tool_name}' is not in the registry. Check /tools for available capabilities.",
+            )
 
         # Soft Check: Model Verification
         verification_cfg = self.cfg.get("prompts", {}).get("verification", {})
@@ -375,7 +404,7 @@ class Agent:
                 "If the action is technically valid, reply ONLY with 'OK'.\n"
                 "If invalid, broken, or a loop, reply 'REJECT: [concise technical reason]'"
             )
-        
+
         prompt = prompt_tmpl.format(tool_name=tool_name, args=args, context=context)
 
         try:
@@ -386,7 +415,9 @@ class Agent:
 
             # Use a minimal message history for speed
             verification_msgs = [{"role": "user", "content": prompt}]
-            system_msg = verification_cfg.get("system", "You are a strict verification monitor.")
+            system_msg = verification_cfg.get(
+                "system", "You are a strict verification monitor."
+            )
             response = self.client.chat(verification_msgs, system=system_msg)
 
             if self.cov_model:
@@ -416,15 +447,18 @@ class Agent:
         if not text or len(text) > max_chars:
             return False
         upper = text.upper()
-        control_markers = self.cfg.get("parser", {}).get("keywords", [
-            "OBJECTIVE:",
-            "TASK:",
-            "PLAN:",
-            "CURRENT_STEP:",
-            "STRATEGY:",
-            "ACTION:",
-            "OBSERVATION:",
-        ])
+        control_markers = self.cfg.get("parser", {}).get(
+            "keywords",
+            [
+                "OBJECTIVE:",
+                "TASK:",
+                "PLAN:",
+                "CURRENT_STEP:",
+                "STRATEGY:",
+                "ACTION:",
+                "OBSERVATION:",
+            ],
+        )
         if any(marker in upper for marker in control_markers):
             return False
         if has_final_answer(text):
@@ -474,15 +508,14 @@ class Agent:
                                 + user_input
                             )
             except Exception as e:
-                print_error(f"Failed to load preferences from memory: {e}. Check if the database connection or table schema is correct.")
+                print_error(
+                    f"Failed to load preferences from memory: {e}. Check if the database connection or table schema is correct."
+                )
 
         if self.autonomy_cfg.get("task_tracking", True):
             should_start_new = True
             curr_task = self.task_tracker.current
-            if (
-                curr_task
-                and curr_task.get("status") == "running"
-            ):
+            if curr_task and curr_task.get("status") == "running":
                 resumption_cmds = self.heuristics.get(
                     "resumption_cmds", ["continue", "next"]
                 )
@@ -529,17 +562,24 @@ class Agent:
             if not limitless and iteration > self.max_iter:
                 break
             self.check_reload()
-            
+
             # Active Recall & Commitments (Phase 2 Proactive Architecture)
             recall = self.context_engine.get_active_recall(original_user_input)
             commitments = self.context_engine.get_commitments()
-            
+
             system = self.context_engine.build_system_prompt(recall, commitments)
 
             # Detect repetitive loops
             if repetition_count >= 2:
                 repetition_count = 0
-                reminder = self.cfg.get("prompts", {}).get("nudges", {}).get("repetition", "You're repeating the same approach. Try a COMPLETELY DIFFERENT strategy.")
+                reminder = (
+                    self.cfg.get("prompts", {})
+                    .get("nudges", {})
+                    .get(
+                        "repetition",
+                        "You're repeating the same approach. Try a COMPLETELY DIFFERENT strategy.",
+                    )
+                )
                 messages.append({"role": "user", "content": reminder})
                 logger.info(
                     f"{C.YELLOW}▲  Repetition detected. Suggesting alternative approach.{C.RESET}"
@@ -547,13 +587,19 @@ class Agent:
 
             # Warn if iterations getting high (skip if warning_threshold is <= 0)
             warning_threshold = self.heuristics.get("iteration_warning_threshold", 20)
-            if warning_threshold > 0 and iteration > warning_threshold and iteration % 10 == 0:
+            if (
+                warning_threshold > 0
+                and iteration > warning_threshold
+                and iteration % 10 == 0
+            ):
                 logger.info(
                     f"{C.YELLOW}▲  High iteration count ({iteration}). Consider FINAL ANSWER.{C.RESET}"
                 )
 
             pulse_line(60)
-            iter_label = f"{iteration}/∞" if limitless else f"{iteration}/{self.max_iter}"
+            iter_label = (
+                f"{iteration}/∞" if limitless else f"{iteration}/{self.max_iter}"
+            )
             logger.info(f"{C.DIM}Iteration {iter_label}{C.RESET}")
 
             try:
@@ -609,7 +655,12 @@ class Agent:
                 messages.append(
                     {
                         "role": "user",
-                        "content": self.cfg.get("prompts", {}).get("nudges", {}).get("empty_response", "Your last message was empty. Respond NOW with one of the required formats and include ACTION if any tool is needed."),
+                        "content": self.cfg.get("prompts", {})
+                        .get("nudges", {})
+                        .get(
+                            "empty_response",
+                            "Your last message was empty. Respond NOW with one of the required formats and include ACTION if any tool is needed.",
+                        ),
                     }
                 )
                 self.memory.add("user", messages[-1]["content"])
@@ -644,7 +695,14 @@ class Agent:
                 if "FINAL ANSWER:" not in r_upper:
                     print_warning("Model output unclear. Reminding about format...")
                     messages.append({"role": "assistant", "content": response})
-                    obs = self.cfg.get("prompts", {}).get("nudges", {}).get("format_error", "Please respond with one of these: 1) FINAL ANSWER: ... 2) OBJECTIVE/PLAN/CURRENT_STEP/ACTION 3) TASK/CONTEXT/STRATEGY/ACTION")
+                    obs = (
+                        self.cfg.get("prompts", {})
+                        .get("nudges", {})
+                        .get(
+                            "format_error",
+                            "Please respond with one of these: 1) FINAL ANSWER: ... 2) OBJECTIVE/PLAN/CURRENT_STEP/ACTION 3) TASK/CONTEXT/STRATEGY/ACTION",
+                        )
+                    )
                     # In autopilot/minimal-clarifications mode, keep nudges short and action-oriented.
                     nudge = obs if minimal_clarifications else f"Clarification: {obs}"
                     messages.append({"role": "user", "content": nudge})
@@ -664,7 +722,7 @@ class Agent:
 
             if actions:
                 no_action_count = 0
-                
+
                 # Prevent wasting turns on the same action sequence repeatedly.
                 current_signature = "||".join([f"{t}|{args}" for t, args in actions])
                 if current_signature == last_action_signature:
@@ -690,9 +748,16 @@ class Agent:
 
                     # Chain-of-Verification (Mental Simulation)
                     if self.enable_cov:
-                        verification_context = "\n".join([f"{m['role'].upper()}: {m['content'][:500]}" for m in messages[-3:]])
+                        verification_context = "\n".join(
+                            [
+                                f"{m['role'].upper()}: {m['content'][:500]}"
+                                for m in messages[-3:]
+                            ]
+                        )
                         verification_context += f"\nASSISTANT: {response[:500]}"
-                        verified, reason = self.verify_action(tool_name, args, verification_context)
+                        verified, reason = self.verify_action(
+                            tool_name, args, verification_context
+                        )
                         if not verified:
                             obs = f"Mental Verification Failed: {reason}"
                             print_warning(obs)
@@ -703,19 +768,42 @@ class Agent:
                         self.task_tracker.record_action(tool_name, args)
 
                     # Optional confirmation for destructive actions
-                    if (self.cfg.get("rules", {}).get("require_confirm_destructive") and not self.confirm):
-                        destructive = set(self.cfg.get("policy", {}).get("destructive_tools", ["delete_file", "delete_dir", "kill_process", "run_command", "run_script"]))
+                    if (
+                        self.cfg.get("rules", {}).get("require_confirm_destructive")
+                        and not self.confirm
+                    ):
+                        destructive = set(
+                            self.cfg.get("policy", {}).get(
+                                "destructive_tools",
+                                [
+                                    "delete_file",
+                                    "delete_dir",
+                                    "kill_process",
+                                    "run_command",
+                                    "run_script",
+                                ],
+                            )
+                        )
                         if tool_name in destructive:
                             try:
-                                ans = input(f"\n{C.RED}▲  Confirm destructive '{tool_name}'? [y/N]: {C.RESET}").strip().lower()
+                                ans = (
+                                    input(
+                                        f"\n{C.RED}▲  Confirm destructive '{tool_name}'? [y/N]: {C.RESET}"
+                                    )
+                                    .strip()
+                                    .lower()
+                                )
                                 if ans != "y":
-                                    observations.append(f"Action '{tool_name}' cancelled by user.")
+                                    observations.append(
+                                        f"Action '{tool_name}' cancelled by user."
+                                    )
                                     continue
                             except (KeyboardInterrupt, EOFError):
                                 print_info("\nCancelled.")
                                 return
 
                     import time as _time
+
                     started = _time.time()
                     obs = self.tools.call(tool_name, args)
                     ended = _time.time()
@@ -743,9 +831,11 @@ class Agent:
                         self.audit.tool_call(
                             session_id=self.session_id,
                             tool_name=tool_name,
-                            tool_args=_json.dumps(args, ensure_ascii=False)
-                            if isinstance(args, (dict, list))
-                            else str(args),
+                            tool_args=(
+                                _json.dumps(args, ensure_ascii=False)
+                                if isinstance(args, (dict, list))
+                                else str(args)
+                            ),
                             started_ts=started,
                             ended_ts=ended,
                             success=ok,
@@ -754,7 +844,9 @@ class Agent:
                         )
                     except Exception as exc:
                         try:
-                            self.audit.error(self.session_id, "audit.tool_call", str(exc))
+                            self.audit.error(
+                                self.session_id, "audit.tool_call", str(exc)
+                            )
                         except (IOError, OSError) as e:
                             print_warning(f"Warning: Failed to log audit error: {e}")
 
@@ -768,9 +860,11 @@ class Agent:
                             )
                             logger.warning(
                                 "SECURITY WARNING: Command execution blocked by safety rules: %s",
-                                _json.dumps(args, ensure_ascii=False)
-                                if isinstance(args, (dict, list))
-                                else str(args),
+                                (
+                                    _json.dumps(args, ensure_ascii=False)
+                                    if isinstance(args, (dict, list))
+                                    else str(args)
+                                ),
                             )
                     except Exception:
                         pass
@@ -782,9 +876,11 @@ class Agent:
 
                             self.memory.record_tool_event(
                                 tool_name=tool_name,
-                                tool_args=_json.dumps(args, ensure_ascii=False)
-                                if isinstance(args, (dict, list))
-                                else str(args),
+                                tool_args=(
+                                    _json.dumps(args, ensure_ascii=False)
+                                    if isinstance(args, (dict, list))
+                                    else str(args)
+                                ),
                                 observation=str(obs),
                             )
                         except (IOError, OSError, ValueError) as e:
@@ -801,34 +897,47 @@ class Agent:
                         try:
                             self.memory.update_task(curr_task["task_id"])
                         except (IOError, OSError, ValueError) as e:
-                            print_warning(f"Warning: Failed to update task in memory: {e}")
+                            print_warning(
+                                f"Warning: Failed to update task in memory: {e}"
+                            )
                     if self.autonomy_cfg.get("task_tracking", True):
                         self.task_tracker.record_observation(obs)
 
                 # Combine all observations
                 combined_obs = "\n---\n".join(observations)
-                
+
                 # Nudge if the model tried to batch actions (which we now truncate in parse_actions)
                 if response.count("ACTION:") > 1:
                     batch_hint = "\n\nHINT: You attempted to call multiple tools. Only the first tool was executed. Please wait for the observation before calling the next tool. Call exactly ONE tool per turn."
                     combined_obs += batch_hint
-                
+
                 print_observation(combined_obs)
 
                 # Limit observation length
                 try:
-                    max_obs_chars = int(self.cfg.get("agent", {}).get("max_observation_chars", self.heuristics.get("max_observation_chars", 12000)))
+                    max_obs_chars = int(
+                        self.cfg.get("agent", {}).get(
+                            "max_observation_chars",
+                            self.heuristics.get("max_observation_chars", 12000),
+                        )
+                    )
                 except ValueError as e:
                     print_warning(f"Warning: Invalid max_observation_chars config: {e}")
                     max_obs_chars = 12000
-                
+
                 if max_obs_chars and len(combined_obs) > max_obs_chars:
                     head_n = int(max_obs_chars * 0.7)
                     tail_n = max_obs_chars - head_n
-                    combined_obs = combined_obs[:head_n] + "\n... [TRUNCATED] ...\n" + (combined_obs[-tail_n:] if tail_n > 0 else "")
+                    combined_obs = (
+                        combined_obs[:head_n]
+                        + "\n... [TRUNCATED] ...\n"
+                        + (combined_obs[-tail_n:] if tail_n > 0 else "")
+                    )
 
                 messages.append({"role": "assistant", "content": response})
-                messages.append({"role": "user", "content": f"OBSERVATION: {combined_obs}"})
+                messages.append(
+                    {"role": "user", "content": f"OBSERVATION: {combined_obs}"}
+                )
                 self.memory.add("assistant", response)
                 self.memory.add("user", f"OBSERVATION: {combined_obs}")
                 continue
@@ -840,29 +949,50 @@ class Agent:
                 # ── Artifact Persistence Guardrail ──────────────────────────────────
                 # If the agent mentions saving/writing/creating but hasn't called a tool to do so recently, nudge it.
                 resp_lower = response.lower()
-                mentions_save = any(kw in resp_lower for kw in ["save", "write", "create", "update", "persist", "report", "analysis", "content"])
-                
+                mentions_save = any(
+                    kw in resp_lower
+                    for kw in [
+                        "save",
+                        "write",
+                        "create",
+                        "update",
+                        "persist",
+                        "report",
+                        "analysis",
+                        "content",
+                    ]
+                )
+
                 if mentions_save:
                     # Look back at recent actions to see if any persistence tool was used.
                     recent_actions = []
                     # Check current response first (sometimes they include both ACTION and FINAL ANSWER, which is discouraged)
                     current_actions = parse_actions(response)
                     recent_actions.extend([t for t, _ in current_actions])
-                    
+
                     # Check recent history
                     for m in reversed(messages[-4:]):
                         if m["role"] == "assistant":
                             prev_actions = parse_actions(m["content"])
                             recent_actions.extend([t for t, _ in prev_actions])
-                    
-                    persistence_tools = {"write_file", "append_file", "create_plugin", "write_json", "write_csv", "save_to_canvas"}
+
+                    persistence_tools = {
+                        "write_file",
+                        "append_file",
+                        "create_plugin",
+                        "write_json",
+                        "write_csv",
+                        "save_to_canvas",
+                    }
                     persisted = any(t in recent_actions for t in persistence_tools)
-                    
+
                     if not persisted:
                         # Disabled heuristic: Was forcing write_file for long responses, but wastes API quota.
                         pass
 
-                logger.info(f"\n{C.EMERALD}  ── Final Answer ────────────────────────────────────────{C.RESET}")
+                logger.info(
+                    f"\n{C.EMERALD}  ── Final Answer ────────────────────────────────────────{C.RESET}"
+                )
 
                 final_ans = ""
                 idx = response.upper().find("FINAL ANSWER:")
@@ -920,7 +1050,9 @@ class Agent:
                                 + "\n".join((m.get("content") or "") for m in messages)
                             )
                         except (RuntimeError, ValueError) as e:
-                            print_warning(f"Warning: Failed to build conversation for token estimation: {e}")
+                            print_warning(
+                                f"Warning: Failed to build conversation for token estimation: {e}"
+                            )
                             convo = (system or "") + "\n" + (original_user_input or "")
                         down = _est_tokens(convo)
                         up = _est_tokens(response or "")
@@ -928,56 +1060,100 @@ class Agent:
                             f"Time: {elapsed_s:.1f}s | Tokens (est) down={down} up={up}"
                         )
                     except RuntimeError as e:
-                        print_warning(f"Warning: Failed to compute token estimates: {e}")
+                        print_warning(
+                            f"Warning: Failed to compute token estimates: {e}"
+                        )
 
                     # Artifact-first workflow: persist a per-session result artifact.
                     try:
                         ws = self.cfg["agent"].get("workspace", DEFAULT_WORKSPACE)
                         if not os.path.isabs(ws):
                             ws = os.path.join(BASE_DIR, ws)
-                        session_report_dir = os.path.join(ws, "reports", str(self.session_id))
+                        session_report_dir = os.path.join(
+                            ws, "reports", str(self.session_id)
+                        )
                         os.makedirs(session_report_dir, exist_ok=True)
-                        
-                        report_cfg = self.cfg.get("prompts", {}).get("session_report", {})
+
+                        report_cfg = self.cfg.get("prompts", {}).get(
+                            "session_report", {}
+                        )
                         file_name = report_cfg.get("file_name", "result.md")
                         out_path = os.path.join(session_report_dir, file_name)
                         is_new = not os.path.exists(out_path)
-                        
+
                         with open(out_path, "a", encoding="utf-8") as handle:
                             if is_new:
-                                handle.write(report_cfg.get("header", "# Session Report\n\n"))
-                                handle.write(report_cfg.get("metadata_header", "## Session Metadata\n\n"))
+                                handle.write(
+                                    report_cfg.get("header", "# Session Report\n\n")
+                                )
+                                handle.write(
+                                    report_cfg.get(
+                                        "metadata_header", "## Session Metadata\n\n"
+                                    )
+                                )
                                 handle.write("| Field | Value |\n|-------|-------|\n")
-                                
-                                row_tmpl = report_cfg.get("metadata_table_row", "| **{key}** | `{value}` |\n")
-                                handle.write(row_tmpl.format(key="Session ID", value=self.session_id))
-                                handle.write(row_tmpl.format(key="Provider", value=self.client.provider))
-                                handle.write(row_tmpl.format(key="Model", value=self.client.model))
-                                handle.write(row_tmpl.format(key="Started", value=datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+
+                                row_tmpl = report_cfg.get(
+                                    "metadata_table_row", "| **{key}** | `{value}` |\n"
+                                )
+                                handle.write(
+                                    row_tmpl.format(
+                                        key="Session ID", value=self.session_id
+                                    )
+                                )
+                                handle.write(
+                                    row_tmpl.format(
+                                        key="Provider", value=self.client.provider
+                                    )
+                                )
+                                handle.write(
+                                    row_tmpl.format(
+                                        key="Model", value=self.client.model
+                                    )
+                                )
+                                handle.write(
+                                    row_tmpl.format(
+                                        key="Started",
+                                        value=datetime.now().strftime(
+                                            "%Y-%m-%d %H:%M:%S"
+                                        ),
+                                    )
+                                )
                                 handle.write("\n")
 
                             ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                             goal = "Task"
-                            if self.task_tracker.current and self.task_tracker.current.get("goal"):
+                            if (
+                                self.task_tracker.current
+                                and self.task_tracker.current.get("goal")
+                            ):
                                 goal = self.task_tracker.current.get("goal")
 
-                            entry_tmpl = report_cfg.get("task_entry", "## COMPLETED [{ts}] {goal}\n\n")
+                            entry_tmpl = report_cfg.get(
+                                "task_entry", "## COMPLETED [{ts}] {goal}\n\n"
+                            )
                             handle.write(entry_tmpl.format(ts=ts, goal=goal))
                             handle.write(final_ans.strip() + "\n\n")
                             handle.write(report_cfg.get("footer", "---\n\n"))
-                        
+
                         try:
                             self.memory.record_artifact(
                                 out_path, action="final_answer", kind="report"
                             )
                         except (IOError, OSError, ValueError) as e:
-                            print_warning(f"Warning: Failed to record result artifact: {e}")
+                            print_warning(
+                                f"Warning: Failed to record result artifact: {e}"
+                            )
                     except (IOError, OSError) as e:
                         print_warning(f"Warning: Failed to write session report: {e}")
 
                 # Send notification per rule #9
                 try:
-                    msg = self.cfg.get("prompts", {}).get("notifications", {}).get("task_completed", "Task completed successfully.")
+                    msg = (
+                        self.cfg.get("prompts", {})
+                        .get("notifications", {})
+                        .get("task_completed", "Task completed successfully.")
+                    )
                     self.tools.ui.send_notification("AgenticOs", msg)
                 except RuntimeError as e:
                     print_warning(f"Warning: Failed to send notification: {e}")
@@ -992,12 +1168,16 @@ class Agent:
                     curr_task = self.task_tracker.current
                     if curr_task and curr_task.get("goal"):
                         goal = curr_task.get("goal")
-                    
+
                     # Extract tools used from tracking
                     tools_used = []
                     if curr_task and curr_task.get("actions_taken"):
-                        tools_used = [a.get("tool") for a in curr_task.get("actions_taken", []) if a.get("tool")]
-                        
+                        tools_used = [
+                            a.get("tool")
+                            for a in curr_task.get("actions_taken", [])
+                            if a.get("tool")
+                        ]
+
                     duration_s = max(0.0, time.time() - run_started_ts)
                     tracker_task_id = curr_task.get("task_id") if curr_task else None
                     log_task_completion(
@@ -1006,21 +1186,19 @@ class Agent:
                         tools_used=list(set(tools_used)),
                         success=True,
                         duration=duration_s,
-                        task_id=tracker_task_id
+                        task_id=tracker_task_id,
                     )
                 except Exception as e:
-                    print_error(f"Failed to consolidate memory during experience logging: {e}")
+                    print_error(
+                        f"Failed to consolidate memory during experience logging: {e}"
+                    )
 
                 curr_task = self.task_tracker.current
                 if hasattr(self.memory, "set_outcome"):
                     try:
                         next_steps = ""
-                        if curr_task and curr_task.get(
-                            "plan"
-                        ):
-                            next_steps = "\n".join(
-                                curr_task.get("plan", [])[-3:]
-                            )
+                        if curr_task and curr_task.get("plan"):
+                            next_steps = "\n".join(curr_task.get("plan", [])[-3:])
                         self.memory.set_outcome(
                             final_answer=final_ans or response, next_steps=next_steps
                         )
@@ -1042,9 +1220,7 @@ class Agent:
                     try:
                         next_steps = ""
                         if curr_task.get("plan"):
-                            next_steps = "\n".join(
-                                curr_task.get("plan", [])[-3:]
-                            )
+                            next_steps = "\n".join(curr_task.get("plan", [])[-3:])
                         rpt = self.cfg.get("prompts", {}).get("reporting", {})
                         g_label = rpt.get("goal_label", "Goal:")
                         self.memory.complete_task(
@@ -1054,7 +1230,9 @@ class Agent:
                             summary=f"{g_label} {original_user_input.strip()}",
                         )
                     except ValueError as e:
-                        print_warning(f"Warning: Failed to complete task in memory: {e}")
+                        print_warning(
+                            f"Warning: Failed to complete task in memory: {e}"
+                        )
                 return
 
             else:
@@ -1066,10 +1244,17 @@ class Agent:
                     "active_planning", True
                 ):
                     no_action_count = 0
-                    stall_obs = self.cfg.get("prompts", {}).get("nudges", {}).get("stall_detected", (
-                        "Stall detected: produce an ACTION (tool call) or FINAL ANSWER. "
-                        "Update PLAN and CURRENT_STEP, then choose a concrete next action."
-                    ))
+                    stall_obs = (
+                        self.cfg.get("prompts", {})
+                        .get("nudges", {})
+                        .get(
+                            "stall_detected",
+                            (
+                                "Stall detected: produce an ACTION (tool call) or FINAL ANSWER. "
+                                "Update PLAN and CURRENT_STEP, then choose a concrete next action."
+                            ),
+                        )
+                    )
                     print_warning("Stall detected. Requesting replan.")
                     if self.autonomy_cfg.get("task_tracking", True):
                         self.task_tracker.note_stall(stall_obs)
@@ -1078,9 +1263,12 @@ class Agent:
                 continue
 
         rpt = self.cfg.get("prompts", {}).get("reporting", {})
-        max_iter_tmpl = rpt.get("max_iter_reached", "Reached max iterations ({max_iter}) without a final answer.")
+        max_iter_tmpl = rpt.get(
+            "max_iter_reached",
+            "Reached max iterations ({max_iter}) without a final answer.",
+        )
         fail_msg = max_iter_tmpl.format(max_iter=self.max_iter)
-        
+
         if self.autonomy_cfg.get("task_tracking", True):
             self.task_tracker.fail(fail_msg)
             # Log failed task completion
@@ -1088,7 +1276,11 @@ class Agent:
             goal = "Task"
             curr_task = self.task_tracker.current
             if curr_task:
-                tools_used = [a.get("tool") for a in curr_task.get("actions_taken", []) if a.get("tool")]
+                tools_used = [
+                    a.get("tool")
+                    for a in curr_task.get("actions_taken", [])
+                    if a.get("tool")
+                ]
                 goal = curr_task.get("goal", goal)
             duration_s = max(0.0, time.time() - run_started_ts)
             tracker_task_id = curr_task.get("task_id") if curr_task else None
@@ -1099,7 +1291,7 @@ class Agent:
                     tools_used=list(set(tools_used)),
                     success=False,
                     duration=duration_s,
-                    task_id=tracker_task_id
+                    task_id=tracker_task_id,
                 )
             except Exception as e:
                 print_warning(f"Warning: Failed to log task history: {e}")
@@ -1159,7 +1351,16 @@ class CommandCompleter:
             "/zone": ["green", "yellow", "red", "blue", "1", "2", "3", "4"],
             "/logs": ["list", "tail", "show", "view"],
             "/tasks": ["list", "all", "current", "active", "show"],
-            "/thinking": ["hide", "off", "false", "disable", "show", "on", "true", "enable"],
+            "/thinking": [
+                "hide",
+                "off",
+                "false",
+                "disable",
+                "show",
+                "on",
+                "true",
+                "enable",
+            ],
         }
 
     def complete(self, text: str, state: int) -> Optional[str]:
@@ -1179,7 +1380,9 @@ class CommandCompleter:
 
             # Scenario B: Command already typed, typing the arguments
             base_cmd = words[0].lower()
-            is_second_word = (len(words) == 1 and buffer.endswith(" ")) or (len(words) == 2 and not buffer.endswith(" "))
+            is_second_word = (len(words) == 1 and buffer.endswith(" ")) or (
+                len(words) == 2 and not buffer.endswith(" ")
+            )
 
             # Autocomplete sub-arguments
             if is_second_word and base_cmd in self.choices:
@@ -1203,6 +1406,7 @@ class CommandCompleter:
 
             # Scenario C: File/directory path autocompletion fallback
             import os
+
             norm_text = text.replace("\\", "/")
             if "/" in norm_text:
                 search_dir, prefix = norm_text.rsplit("/", 1)
@@ -1226,14 +1430,18 @@ class CommandCompleter:
                             else:
                                 original_dir = text.replace("\\", "/").rsplit("/", 1)[0]
                                 if "\\" in text and "/" not in text:
-                                    disp = original_dir.replace("/", "\\") + "\\" + entry
+                                    disp = (
+                                        original_dir.replace("/", "\\") + "\\" + entry
+                                    )
                                 else:
                                     disp = original_dir + "/" + entry
-                            
+
                             if os.path.isdir(full_path):
-                                disp += "\\" if "\\" in text and "/" not in text else "/"
+                                disp += (
+                                    "\\" if "\\" in text and "/" not in text else "/"
+                                )
                             options.append(disp)
-                    
+
                     options.sort()
                     if state < len(options):
                         return options[state]
@@ -1281,7 +1489,10 @@ class CLI:
 
     def handle_security_confirmation(self, path: str, operation: str) -> bool:
         """Confirm action with user (CLI implementation)."""
-        if self.cfg.get("agent", {}).get("auto_confirm") is True or self.cfg.get("autonomy", {}).get("autopilot") is True:
+        if (
+            self.cfg.get("agent", {}).get("auto_confirm") is True
+            or self.cfg.get("autonomy", {}).get("autopilot") is True
+        ):
             logger.info(f"Auto-confirming security action: {operation} on '{path}'")
             return True
         logger.info(f"\n{C.ROSE}▲ STOP — SECURITY GUARDRAIL{C.RESET}")
@@ -1331,7 +1542,9 @@ class CLI:
                     print_success(f"Provider set to: {chosen}")
                     return
                 else:
-                    print_error(f"Invalid selection: {idx} is out of range [1-{limit}].")
+                    print_error(
+                        f"Invalid selection: {idx} is out of range [1-{limit}]."
+                    )
             except ValueError:
                 print_error("Selection required: Please enter a valid integer.")
                 if not force:
@@ -1365,7 +1578,9 @@ class CLI:
             logger.info(f"  {C.BOLD}{i}.{C.RESET} {m}{marker}")
 
         if not force:
-            logger.info(f"\n  {C.BOLD}0.{C.RESET} Keep current ({self.agent.client.model})")
+            logger.info(
+                f"\n  {C.BOLD}0.{C.RESET} Keep current ({self.agent.client.model})"
+            )
 
         # Always show locally installed Ollama models (read-only) for convenience.
         try:
@@ -1386,7 +1601,9 @@ class CLI:
                     for m in ollama_models[:60]:
                         logger.info(f"  {m}")
                     if len(ollama_models) > 60:
-                        logger.info(f"  {C.DIM}... ({len(ollama_models) - 60} more){C.RESET}")
+                        logger.info(
+                            f"  {C.DIM}... ({len(ollama_models) - 60} more){C.RESET}"
+                        )
         except (RuntimeError, OSError) as e:
             print_warning(f"Warning: Failed to list models: {e}")
 
@@ -1409,7 +1626,9 @@ class CLI:
                     print_success(f"Model set to: {self.agent.client.model}")
                     break
                 else:
-                    print_error(f"Invalid selection: {idx} is out of range [1-{limit}].")
+                    print_error(
+                        f"Invalid selection: {idx} is out of range [1-{limit}]."
+                    )
             except ValueError:
                 print_error("Selection required: Please enter a valid integer.")
                 if not force:
@@ -1458,7 +1677,9 @@ class CLI:
                 f"\n{C.CYAN}{C.BOLD}Available Tools ({len(self.agent.tools.registry)}):{C.RESET}"
             )
             for name, info in self.agent.tools.registry.items():
-                logger.info(f"  {C.YELLOW}{name:<25}{C.RESET} {C.DIM}{info['desc']}{C.RESET}")
+                logger.info(
+                    f"  {C.YELLOW}{name:<25}{C.RESET} {C.DIM}{info['desc']}{C.RESET}"
+                )
 
         elif base == "/tool_report":
             # Authoritative: read directly from the registry, not from the truncated prompt.
@@ -1556,7 +1777,9 @@ class CLI:
                 print_error(f"provider check: Error: {e}")
 
         elif base == "/memory":
-            logger.info(f"\n{C.CYAN}Session Memory:{C.RESET}\n{self.agent.memory.summary()}")
+            logger.info(
+                f"\n{C.CYAN}Session Memory:{C.RESET}\n{self.agent.memory.summary()}"
+            )
 
         elif base == "/clear":
             self.agent.memory.clear()
@@ -1582,11 +1805,7 @@ class CLI:
                 new_val = not current
             self.cfg.setdefault("agent", {})["verbose_thinking"] = new_val
             self.verbose = new_val
-            status = (
-                f"{C.GREEN}ON{C.RESET}"
-                if new_val
-                else f"{C.RED}OFF{C.RESET}"
-            )
+            status = f"{C.GREEN}ON{C.RESET}" if new_val else f"{C.RED}OFF{C.RESET}"
             print_info(f"Verbose model thinking trace is now {status}")
 
         elif base == "/reload":
@@ -1601,11 +1820,13 @@ class CLI:
             if not tasks:
                 print_info("No tasks recorded in the active session.")
             elif arg in ("list", "all"):
-                logger.info(f"\n{C.CYAN}Active Session Tasks ({len(tasks)} tasks):{C.RESET}")
+                logger.info(
+                    f"\n{C.CYAN}Active Session Tasks ({len(tasks)} tasks):{C.RESET}"
+                )
                 for idx, task in enumerate(tasks, 1):
                     status = task.get("status", "unknown").lower()
                     is_curr = task is current_task
-                    
+
                     if status == "completed":
                         badge = f"{C.EMERALD}[COMPLETED]{C.RESET}"
                     elif status == "failed":
@@ -1614,14 +1835,20 @@ class CLI:
                         badge = f"{C.TEAL}[RUNNING]{C.RESET}"
                     else:
                         badge = f"{C.SLATE}[{status.upper()}]{C.RESET}"
-                        
+
                     goal = task.get("goal", "").replace("\n", " ")
                     if len(goal) > 55:
                         goal = goal[:52] + "..."
-                        
+
                     curr_marker = f" {C.PURPLE}(current){C.RESET}" if is_curr else ""
-                    iter_info = f" (Iteration: {task.get('iteration', 0)})" if status == "running" else ""
-                    logger.info(f"  {C.BOLD}#{idx:<3}{C.RESET} {badge:<22} {goal}{curr_marker}{iter_info}")
+                    iter_info = (
+                        f" (Iteration: {task.get('iteration', 0)})"
+                        if status == "running"
+                        else ""
+                    )
+                    logger.info(
+                        f"  {C.BOLD}#{idx:<3}{C.RESET} {badge:<22} {goal}{curr_marker}{iter_info}"
+                    )
             elif arg in ("current", "active", "show"):
                 if not current_task:
                     print_info("No active task is currently running.")
@@ -1637,18 +1864,26 @@ class CLI:
                         badge = f"{C.SLATE}[{status.upper()}]{C.RESET}"
 
                     logger.info(f"\n{C.CYAN}Current Task Details:{C.RESET}")
-                    logger.info(f"  {C.BOLD}Goal:{C.RESET} {current_task.get('goal', 'Untitled')}")
+                    logger.info(
+                        f"  {C.BOLD}Goal:{C.RESET} {current_task.get('goal', 'Untitled')}"
+                    )
                     logger.info(f"  {C.BOLD}Status:{C.RESET} {badge}")
-                    logger.info(f"  {C.BOLD}Iteration:{C.RESET} {current_task.get('iteration', 0)}")
-                    logger.info(f"  {C.BOLD}Current Step:{C.RESET} {C.AMBER}{current_task.get('current_step', 'None')}{C.RESET}")
-                    
+                    logger.info(
+                        f"  {C.BOLD}Iteration:{C.RESET} {current_task.get('iteration', 0)}"
+                    )
+                    logger.info(
+                        f"  {C.BOLD}Current Step:{C.RESET} {C.AMBER}{current_task.get('current_step', 'None')}{C.RESET}"
+                    )
+
                     plan = current_task.get("plan", [])
                     current_step = current_task.get("current_step", "")
                     if plan:
                         logger.info(f"\n  {C.BOLD}Plan & Progress:{C.RESET}")
                         found_curr = False
                         for i, step in enumerate(plan, 1):
-                            is_step_curr = (step == current_step or (current_step and current_step in step))
+                            is_step_curr = step == current_step or (
+                                current_step and current_step in step
+                            )
                             if is_step_curr:
                                 marker = f"{C.AMBER}[/]{C.RESET}"
                                 step_text = f"{C.BOLD}{C.AMBER}{step}{C.RESET}"
@@ -1660,19 +1895,23 @@ class CLI:
                                 marker = f"{C.EMERALD}[x]{C.RESET}"
                                 step_text = f"{C.DIM}{C.SLATE}{step}{C.RESET}"
                             logger.info(f"    {marker} {i}. {step_text}")
-                    
+
                     last_act = current_task.get("last_action", "")
                     if last_act:
                         logger.info(f"\n  {C.BOLD}Last Action:{C.RESET} {last_act}")
-                    
+
                     last_obs = current_task.get("last_observation", "")
                     if last_obs:
                         preview_obs = last_obs.replace("\n", " ")
                         if len(preview_obs) > 120:
                             preview_obs = preview_obs[:117] + "..."
-                        logger.info(f"  {C.BOLD}Last Observation:{C.RESET} {C.DIM}{preview_obs}{C.RESET}")
+                        logger.info(
+                            f"  {C.BOLD}Last Observation:{C.RESET} {C.DIM}{preview_obs}{C.RESET}"
+                        )
             else:
-                print_error(f"Unknown tasks option: '{arg}'. Valid options: list, current.")
+                print_error(
+                    f"Unknown tasks option: '{arg}'. Valid options: list, current."
+                )
 
         elif base == "/config":
             config_dir = os.path.join(BASE_DIR, "config")
@@ -1693,12 +1932,16 @@ class CLI:
 
         elif base == "/history":
             msgs = self.agent.memory.get_messages()
-            logger.info(f"\n{C.CYAN}Conversation History ({len(msgs)} messages):{C.RESET}")
+            logger.info(
+                f"\n{C.CYAN}Conversation History ({len(msgs)} messages):{C.RESET}"
+            )
             for msg in msgs[-20:]:
                 role = msg["role"].upper()
                 color = C.BLUE if role == "USER" else C.GREEN
                 preview = msg["content"][:200].replace("\n", " ")
-                logger.info(f"  {color}{C.BOLD}{role:<12}{C.RESET} {C.DIM}{preview}{C.RESET}")
+                logger.info(
+                    f"  {color}{C.BOLD}{role:<12}{C.RESET} {C.DIM}{preview}{C.RESET}"
+                )
 
         elif base == "/version":
             provider = self.agent.client.provider
@@ -1709,7 +1952,10 @@ class CLI:
                     with open(changelog_path, "r", encoding="utf-8") as f:
                         for line in f:
                             if line.startswith("## "):
-                                match = re.search(r"\[?([0-9]+\.[0-9]+\.[0-9]+(?:-[a-zA-Z0-9.]+)*)\]?", line)
+                                match = re.search(
+                                    r"\[?([0-9]+\.[0-9]+\.[0-9]+(?:-[a-zA-Z0-9.]+)*)\]?",
+                                    line,
+                                )
                                 if match:
                                     version_str = match.group(1)
                                     break
@@ -1731,23 +1977,25 @@ class CLI:
                     return name
                 if os.path.exists(name):
                     return os.path.abspath(name)
-                
+
                 search_folders = []
                 if os.path.exists(log_dir):
                     search_folders.append(log_dir)
                 memory_dir = os.path.join(self.agent.workspace, "memory")
                 if os.path.exists(memory_dir):
                     search_folders.append(memory_dir)
-                    
+
                 for folder in search_folders:
                     p = os.path.join(folder, name)
                     if os.path.exists(p):
                         return p
-                        
+
                 for folder in search_folders:
                     for r, _, files in os.walk(folder):
                         for f in files:
-                            if name.lower() in f.lower() or f.lower().startswith(name.lower()):
+                            if name.lower() in f.lower() or f.lower().startswith(
+                                name.lower()
+                            ):
                                 return os.path.join(r, f)
                 return None
 
@@ -1755,63 +2003,96 @@ class CLI:
                 for idx, line in enumerate(lines, start_idx):
                     clean_line = line.rstrip("\n")
                     line_colored = clean_line
-                    
-                    if any(k in line_colored.lower() for k in ("completed", "✓", "success", "ok", "green")):
+
+                    if any(
+                        k in line_colored.lower()
+                        for k in ("completed", "✓", "success", "ok", "green")
+                    ):
                         line_colored = re.sub(
-                            r"(completed|✓|success|ok|green)", 
-                            f"{C.EMERALD}\\1{C.RESET}", 
-                            line_colored, 
-                            flags=re.IGNORECASE
+                            r"(completed|✓|success|ok|green)",
+                            f"{C.EMERALD}\\1{C.RESET}",
+                            line_colored,
+                            flags=re.IGNORECASE,
                         )
-                    if any(k in line_colored.lower() for k in ("failed", "error", "exception", "red", "rose")):
+                    if any(
+                        k in line_colored.lower()
+                        for k in ("failed", "error", "exception", "red", "rose")
+                    ):
                         line_colored = re.sub(
-                            r"(failed|error|exception|red|rose)", 
-                            f"{C.ROSE}\\1{C.RESET}", 
-                            line_colored, 
-                            flags=re.IGNORECASE
+                            r"(failed|error|exception|red|rose)",
+                            f"{C.ROSE}\\1{C.RESET}",
+                            line_colored,
+                            flags=re.IGNORECASE,
                         )
-                    if any(k in line_colored.lower() for k in ("running", "info", "warning", "thinking", "yellow", "amber", "teal")):
+                    if any(
+                        k in line_colored.lower()
+                        for k in (
+                            "running",
+                            "info",
+                            "warning",
+                            "thinking",
+                            "yellow",
+                            "amber",
+                            "teal",
+                        )
+                    ):
                         line_colored = re.sub(
-                            r"(running|info|warning|thinking|yellow|amber|teal)", 
-                            f"{C.AMBER}\\1{C.RESET}", 
-                            line_colored, 
-                            flags=re.IGNORECASE
+                            r"(running|info|warning|thinking|yellow|amber|teal)",
+                            f"{C.AMBER}\\1{C.RESET}",
+                            line_colored,
+                            flags=re.IGNORECASE,
                         )
-                    
+
                     line_colored = re.sub(
                         r"(\d{4}-\d{2}-\d{2}(?:\s+\d{2}:\d{2}:\d{2}(?:\.\d+)?)?)",
                         f"{C.CYAN}\\1{C.RESET}",
-                        line_colored
+                        line_colored,
                     )
-                    
+
                     prefix = f"{C.DIM}{C.SLATE}{idx:>4} │ {C.RESET}"
                     print(f"{prefix}{line_colored}")
 
             if len(parts) > 1 and parts[1].strip().lower().split()[0] == "list":
-                logger.info(f"\n{C.CYAN}{C.BOLD}AGENTIC OS • Log & Memory Directory{C.RESET}")
-                logger.info(f"{C.SLATE}──────────────────────────────────────────────────────────────────────────{C.RESET}")
-                logger.info(f"  {C.BOLD}{'#':<3} {'Relative Path':<40} {'Size':<10} {'Last Modified':<16}{C.RESET}")
-                logger.info(f"{C.SLATE}──────────────────────────────────────────────────────────────────────────{C.RESET}")
-                
+                logger.info(
+                    f"\n{C.CYAN}{C.BOLD}AGENTIC OS • Log & Memory Directory{C.RESET}"
+                )
+                logger.info(
+                    f"{C.SLATE}──────────────────────────────────────────────────────────────────────────{C.RESET}"
+                )
+                logger.info(
+                    f"  {C.BOLD}{'#':<3} {'Relative Path':<40} {'Size':<10} {'Last Modified':<16}{C.RESET}"
+                )
+                logger.info(
+                    f"{C.SLATE}──────────────────────────────────────────────────────────────────────────{C.RESET}"
+                )
+
                 found_files = []
                 memory_dir = os.path.join(self.agent.workspace, "memory")
                 for folder in (log_dir, memory_dir):
                     if os.path.exists(folder):
                         for root, _, files in os.walk(folder):
                             for f in files:
-                                if f.endswith((".log", ".txt", ".md", ".json")) and not f.startswith("."):
+                                if f.endswith(
+                                    (".log", ".txt", ".md", ".json")
+                                ) and not f.startswith("."):
                                     full_path = os.path.join(root, f)
-                                    rel_path = os.path.relpath(full_path, self.agent.workspace).replace("\\", "/")
+                                    rel_path = os.path.relpath(
+                                        full_path, self.agent.workspace
+                                    ).replace("\\", "/")
                                     size_bytes = os.path.getsize(full_path)
                                     mtime = os.path.getmtime(full_path)
-                                    found_files.append((rel_path, full_path, size_bytes, mtime))
-                
+                                    found_files.append(
+                                        (rel_path, full_path, size_bytes, mtime)
+                                    )
+
                 found_files.sort(key=lambda x: x[3], reverse=True)
-                
+
                 if not found_files:
                     logger.info("  No logs or memory files recorded yet.")
                 else:
-                    for idx, (rel_path, full_path, size_bytes, mtime) in enumerate(found_files, 1):
+                    for idx, (rel_path, full_path, size_bytes, mtime) in enumerate(
+                        found_files, 1
+                    ):
                         dt = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
                         if size_bytes < 1024:
                             size_str = f"{size_bytes} B"
@@ -1819,22 +2100,30 @@ class CLI:
                             size_str = f"{size_bytes / 1024:.1f} KB"
                         else:
                             size_str = f"{size_bytes / (1024 * 1024):.1f} MB"
-                        
+
                         disp_path = rel_path
                         if len(disp_path) > 40:
                             disp_path = "..." + disp_path[-37:]
-                            
-                        logger.info(f"  {C.BOLD}{idx:<3}{C.RESET} {C.TEAL}{disp_path:<40}{C.RESET} {C.SLATE}{size_str:<10}{C.RESET} {C.PURPLE}{dt:<16}{C.RESET}")
-                logger.info(f"{C.SLATE}──────────────────────────────────────────────────────────────────────────{C.RESET}")
 
-            elif len(parts) > 1 and parts[1].strip().lower().split()[0] in ("tail", "show", "view"):
+                        logger.info(
+                            f"  {C.BOLD}{idx:<3}{C.RESET} {C.TEAL}{disp_path:<40}{C.RESET} {C.SLATE}{size_str:<10}{C.RESET} {C.PURPLE}{dt:<16}{C.RESET}"
+                        )
+                logger.info(
+                    f"{C.SLATE}──────────────────────────────────────────────────────────────────────────{C.RESET}"
+                )
+
+            elif len(parts) > 1 and parts[1].strip().lower().split()[0] in (
+                "tail",
+                "show",
+                "view",
+            ):
                 subparts = parts[1].strip().split()
                 sub = subparts[0].lower()
                 rem = subparts[1:]
-                
+
                 target_name = "agenticos.log"
                 num_lines = 20
-                
+
                 if len(rem) == 1:
                     if rem[0].isdigit():
                         num_lines = int(rem[0])
@@ -1846,15 +2135,19 @@ class CLI:
                         target_name = " ".join(rem[:-1])
                     else:
                         target_name = " ".join(rem)
-                
+
                 resolved_file = resolve_log_path(target_name)
                 if not resolved_file:
-                    print_error(f"Could not find any log or memory file matching: '{target_name}'")
+                    print_error(
+                        f"Could not find any log or memory file matching: '{target_name}'"
+                    )
                 else:
                     try:
-                        with open(resolved_file, "r", encoding="utf-8", errors="replace") as f:
+                        with open(
+                            resolved_file, "r", encoding="utf-8", errors="replace"
+                        ) as f:
                             lines = f.readlines()
-                        
+
                         total_lines = len(lines)
                         if sub == "tail":
                             slice_lines = lines[-num_lines:]
@@ -1864,15 +2157,23 @@ class CLI:
                             slice_lines = lines[:num_lines]
                             start_idx = 1
                             label_str = f"First {len(slice_lines)} entries ({sub})"
-                            
-                        rel_path = os.path.relpath(resolved_file, self.agent.workspace).replace("\\", "/")
-                        logger.info(f"\n{C.CYAN}{C.BOLD}{label_str} from {rel_path}:{C.RESET}")
-                        logger.info(f"{C.SLATE}────────────────────────────────────────────────────────────────────────{C.RESET}")
+
+                        rel_path = os.path.relpath(
+                            resolved_file, self.agent.workspace
+                        ).replace("\\", "/")
+                        logger.info(
+                            f"\n{C.CYAN}{C.BOLD}{label_str} from {rel_path}:{C.RESET}"
+                        )
+                        logger.info(
+                            f"{C.SLATE}────────────────────────────────────────────────────────────────────────{C.RESET}"
+                        )
                         if not slice_lines:
                             logger.info("  [Empty file or range]")
                         else:
                             format_and_print_lines(slice_lines, start_idx)
-                        logger.info(f"{C.SLATE}────────────────────────────────────────────────────────────────────────{C.RESET}")
+                        logger.info(
+                            f"{C.SLATE}────────────────────────────────────────────────────────────────────────{C.RESET}"
+                        )
                     except Exception as e:
                         print_error(f"Failed to read file: {e}")
             else:
@@ -1923,10 +2224,10 @@ class CLI:
             #   red    → guard OFF                      (fully unrestricted)
             #   blue   → guard ON, all writes blocked   (read-only / audit mode)
             ZONE_STATES = [
-                ("green",  True,  True,  False),
-                ("yellow", True,  False, False),
-                ("red",    False, False, False),
-                ("blue",   True,  False, True),
+                ("green", True, True, False),
+                ("yellow", True, False, False),
+                ("red", False, False, False),
+                ("blue", True, False, True),
             ]
 
             # Numeric aliases: 1=green, 2=yellow, 3=red, 4=blue
@@ -1946,12 +2247,16 @@ class CLI:
                 target = next(z for z in ZONE_STATES if z[0] == arg)
             else:
                 # Sequential toggle: match current guard state to find index
-                current_enabled  = guard.enabled
-                current_hitm     = guard.require_hitm
+                current_enabled = guard.enabled
+                current_hitm = guard.require_hitm
                 current_readonly = getattr(guard, "read_only", False)
                 current_idx = 0
                 for i, (_, en, hm, ro) in enumerate(ZONE_STATES):
-                    if en == current_enabled and hm == current_hitm and ro == current_readonly:
+                    if (
+                        en == current_enabled
+                        and hm == current_hitm
+                        and ro == current_readonly
+                    ):
                         current_idx = i
                         break
                 target = ZONE_STATES[(current_idx + 1) % len(ZONE_STATES)]
@@ -1959,16 +2264,16 @@ class CLI:
             zone_name, zone_enabled, zone_hitm, zone_readonly = target
 
             # Apply to live PathGuard instance immediately
-            guard.enabled    = zone_enabled
+            guard.enabled = zone_enabled
             guard.require_hitm = zone_hitm
-            guard.read_only  = zone_readonly
+            guard.read_only = zone_readonly
 
             # Colour per zone
             ZONE_COLORS = {
-                "green":  C.EMERALD,
+                "green": C.EMERALD,
                 "yellow": C.AMBER,
-                "red":    C.ROSE,
-                "blue":   C.BLUE,
+                "red": C.ROSE,
+                "blue": C.BLUE,
             }
             zone_color = ZONE_COLORS.get(zone_name, C.SLATE)
 
@@ -1997,27 +2302,30 @@ class CLI:
             logger.info(f"  Read-Only  : {ro_label}")
 
             zone_desc = {
-                "green":  "Workspace-only autonomy. Writes outside workspace require human approval.",
+                "green": "Workspace-only autonomy. Writes outside workspace require human approval.",
                 "yellow": "PathGuard active. Outside-workspace modifications allowed autonomously.",
-                "red":    "PathGuard disabled. Agent has unrestricted filesystem access.",
-                "blue":   "Audit / read-only mode. All write and delete operations blocked system-wide.",
+                "red": "PathGuard disabled. Agent has unrestricted filesystem access.",
+                "blue": "Audit / read-only mode. All write and delete operations blocked system-wide.",
             }
             logger.info(f"  {C.DIM}{zone_desc[zone_name]}{C.RESET}")
 
         elif base == "/sysinfo":
-            logger.info(f"\n  {C.TEAL}{C.BOLD}◆ AgenticOS System Telemetry & Health Dashboard{C.RESET}")
-            logger.info(f"  {C.SLATE}──────────────────────────────────────────────────────────────────────{C.RESET}")
+            logger.info(
+                f"\n  {C.TEAL}{C.BOLD}◆ AgenticOS System Telemetry & Health Dashboard{C.RESET}"
+            )
+            logger.info(
+                f"  {C.SLATE}──────────────────────────────────────────────────────────────────────{C.RESET}"
+            )
             try:
                 if psutil is None:
                     raise ImportError("psutil package is not installed")
-
 
                 # 1. OS & Uptime
                 os_name = platform.system()
                 os_release = platform.release()
                 os_arch = platform.machine()
                 py_ver = platform.python_version()
-                
+
                 uptime_secs = time.time() - psutil.boot_time()
                 hours, remainder = divmod(uptime_secs, 3600)
                 minutes, seconds = divmod(remainder, 60)
@@ -2055,29 +2363,38 @@ class CLI:
                 pid = os.getpid()
                 proc = psutil.Process(pid)
                 proc_mem_mb = proc.memory_info().rss // (1024**2)
-                
+
                 # 7. GPU Telemetry
                 gpus = []
                 import shutil
                 import json
+
                 nv_smi = shutil.which("nvidia-smi")
                 if nv_smi:
                     try:
                         res = subprocess.run(
-                            [nv_smi, "--query-gpu=gpu_name,memory.used,memory.total,utilization.gpu", "--format=csv,noheader,nounits"],
-                            capture_output=True, text=True, check=True
+                            [
+                                nv_smi,
+                                "--query-gpu=gpu_name,memory.used,memory.total,utilization.gpu",
+                                "--format=csv,noheader,nounits",
+                            ],
+                            capture_output=True,
+                            text=True,
+                            check=True,
                         )
                         for line in res.stdout.strip().split("\n"):
                             if line:
                                 parts = [p.strip() for p in line.split(",")]
                                 if len(parts) >= 4:
-                                    gpus.append({
-                                        "name": parts[0],
-                                        "used_mb": int(parts[1]),
-                                        "total_mb": int(parts[2]),
-                                        "util_percent": float(parts[3]),
-                                        "type": "NVIDIA"
-                                    })
+                                    gpus.append(
+                                        {
+                                            "name": parts[0],
+                                            "used_mb": int(parts[1]),
+                                            "total_mb": int(parts[2]),
+                                            "util_percent": float(parts[3]),
+                                            "type": "NVIDIA",
+                                        }
+                                    )
                     except Exception:
                         pass
 
@@ -2086,7 +2403,9 @@ class CLI:
                         cmd = "Get-CimInstance Win32_VideoController | Select-Object Name, AdapterRAM | ConvertTo-Json"
                         res = subprocess.run(
                             ["powershell", "-NoProfile", "-Command", cmd],
-                            capture_output=True, text=True, timeout=5
+                            capture_output=True,
+                            text=True,
+                            timeout=5,
                         )
                         if res.returncode == 0 and res.stdout.strip():
                             data = json.loads(res.stdout.strip())
@@ -2095,49 +2414,84 @@ class CLI:
                             for item in data:
                                 name = item.get("Name")
                                 if name:
-                                    if "Microsoft Basic Display Adapter" in name and len(data) > 1:
+                                    if (
+                                        "Microsoft Basic Display Adapter" in name
+                                        and len(data) > 1
+                                    ):
                                         continue
-                                    if any(g["name"].lower() in name.lower() or name.lower() in g["name"].lower() for g in gpus):
+                                    if any(
+                                        g["name"].lower() in name.lower()
+                                        or name.lower() in g["name"].lower()
+                                        for g in gpus
+                                    ):
                                         continue
                                     ram_bytes = item.get("AdapterRAM", 0)
                                     ram_mb = 0
                                     if isinstance(ram_bytes, int) and ram_bytes > 0:
                                         ram_mb = ram_bytes // (1024**2)
-                                    gpus.append({
-                                        "name": name,
-                                        "used_mb": None,
-                                        "total_mb": ram_mb if ram_mb > 0 else None,
-                                        "util_percent": None,
-                                        "type": "Windows"
-                                    })
+                                    gpus.append(
+                                        {
+                                            "name": name,
+                                            "used_mb": None,
+                                            "total_mb": ram_mb if ram_mb > 0 else None,
+                                            "util_percent": None,
+                                            "type": "Windows",
+                                        }
+                                    )
                     except Exception:
                         pass
 
                 # Format printouts
-                logger.info(f"  {C.BOLD}Platform     :{C.RESET} {os_name} {os_release} ({os_arch})")
+                logger.info(
+                    f"  {C.BOLD}Platform     :{C.RESET} {os_name} {os_release} ({os_arch})"
+                )
                 logger.info(f"  {C.BOLD}Python       :{C.RESET} v{py_ver}")
                 logger.info(f"  {C.BOLD}System Uptime:{C.RESET} {uptime_str}")
-                logger.info(f"  {C.SLATE}──────────────────────────────────────────────────────────────────────{C.RESET}")
-                logger.info(f"  {C.BOLD}CPU Load     :{C.RESET} [{cpu_bar}] {C.BOLD}{cpu:.1f}%{C.RESET}")
-                logger.info(f"  {C.BOLD}Memory (RAM) :{C.RESET} [{mem_bar}] {C.BOLD}{mem.percent:.1f}%{C.RESET} ({mem_used_mb}MB used of {mem_total_mb}MB)")
-                logger.info(f"  {C.BOLD}Storage (/)  :{C.RESET} [{disk_bar}] {C.BOLD}{disk.percent:.1f}%{C.RESET} ({disk_free_gb}GB free of {disk_total_gb}GB)")
-                
+                logger.info(
+                    f"  {C.SLATE}──────────────────────────────────────────────────────────────────────{C.RESET}"
+                )
+                logger.info(
+                    f"  {C.BOLD}CPU Load     :{C.RESET} [{cpu_bar}] {C.BOLD}{cpu:.1f}%{C.RESET}"
+                )
+                logger.info(
+                    f"  {C.BOLD}Memory (RAM) :{C.RESET} [{mem_bar}] {C.BOLD}{mem.percent:.1f}%{C.RESET} ({mem_used_mb}MB used of {mem_total_mb}MB)"
+                )
+                logger.info(
+                    f"  {C.BOLD}Storage (/)  :{C.RESET} [{disk_bar}] {C.BOLD}{disk.percent:.1f}%{C.RESET} ({disk_free_gb}GB free of {disk_total_gb}GB)"
+                )
+
                 if gpus:
-                    logger.info(f"  {C.SLATE}──────────────────────────────────────────────────────────────────────{C.RESET}")
+                    logger.info(
+                        f"  {C.SLATE}──────────────────────────────────────────────────────────────────────{C.RESET}"
+                    )
                     for idx, gpu in enumerate(gpus, 1):
                         gpu_name = gpu["name"]
                         if gpu["util_percent"] is not None:
                             gpu_bar = make_bar(gpu["util_percent"])
                             vram_used = gpu["used_mb"]
                             vram_total = gpu["total_mb"]
-                            logger.info(f"  {C.BOLD}GPU #{idx} Load  :{C.RESET} [{gpu_bar}] {C.BOLD}{gpu['util_percent']:.1f}%{C.RESET} ({gpu_name})")
-                            logger.info(f"  {C.BOLD}GPU #{idx} VRAM  :{C.RESET} {vram_used}MB used of {vram_total}MB")
+                            logger.info(
+                                f"  {C.BOLD}GPU #{idx} Load  :{C.RESET} [{gpu_bar}] {C.BOLD}{gpu['util_percent']:.1f}%{C.RESET} ({gpu_name})"
+                            )
+                            logger.info(
+                                f"  {C.BOLD}GPU #{idx} VRAM  :{C.RESET} {vram_used}MB used of {vram_total}MB"
+                            )
                         else:
-                            vram_str = f" ({gpu['total_mb']}MB VRAM)" if gpu["total_mb"] else ""
-                            logger.info(f"  {C.BOLD}GPU #{idx} (Aux) :{C.RESET} {gpu_name}{vram_str}")
+                            vram_str = (
+                                f" ({gpu['total_mb']}MB VRAM)"
+                                if gpu["total_mb"]
+                                else ""
+                            )
+                            logger.info(
+                                f"  {C.BOLD}GPU #{idx} (Aux) :{C.RESET} {gpu_name}{vram_str}"
+                            )
 
-                logger.info(f"  {C.SLATE}──────────────────────────────────────────────────────────────────────{C.RESET}")
-                logger.info(f"  {C.BOLD}Agent Process:{C.RESET} PID={C.PURPLE}{pid}{C.RESET} | Memory={C.PURPLE}{proc_mem_mb}MB{C.RESET} | Uptime={C.PURPLE}{time.time() - proc.create_time():.1f}s{C.RESET}")
+                logger.info(
+                    f"  {C.SLATE}──────────────────────────────────────────────────────────────────────{C.RESET}"
+                )
+                logger.info(
+                    f"  {C.BOLD}Agent Process:{C.RESET} PID={C.PURPLE}{pid}{C.RESET} | Memory={C.PURPLE}{proc_mem_mb}MB{C.RESET} | Uptime={C.PURPLE}{time.time() - proc.create_time():.1f}s{C.RESET}"
+                )
             except Exception as e:
                 print_error(f"Failed to gather system metrics: {e}")
             logger.info("")
@@ -2172,7 +2526,6 @@ class CLI:
             key_status = "[SET]" if self.agent.client.api_key else "NOT SET"
             print_success("Nvidia NIM provider connected.")
             print_info(f"API key: {key_status}")
-
 
         if autonomy_cfg.get("startup_model_prompt", False) and not task:
             # Non-forced by default so startup can remain quick for autopilot runs.
@@ -2244,7 +2597,9 @@ def main(dry_run: bool = False):
         CLI(dry_run=dry_run).run(task=task)
     except RuntimeError as e:
         logger.info(f"\n\033[91mError: {e}\033[0m")
-        logger.info("\033[33mAdd the missing key to your .env file and restart.\033[0m\n")
+        logger.info(
+            "\033[33mAdd the missing key to your .env file and restart.\033[0m\n"
+        )
         raise SystemExit(1)
 
 

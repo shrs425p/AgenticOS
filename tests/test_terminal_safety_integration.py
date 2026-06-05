@@ -1,4 +1,5 @@
 """Integration tests for terminal command safety on the host OS."""
+
 from __future__ import annotations
 
 import os
@@ -35,22 +36,26 @@ def _default_rules() -> dict:
 
 
 # Detect available shells
-has_powershell = shutil.which("powershell") is not None or shutil.which("pwsh") is not None
+has_powershell = (
+    shutil.which("powershell") is not None or shutil.which("pwsh") is not None
+)
 has_bash = shutil.which("bash") is not None
 
 
-@pytest.mark.skipif(not has_powershell, reason="PowerShell is not available on this host")
+@pytest.mark.skipif(
+    not has_powershell, reason="PowerShell is not available on this host"
+)
 def test_integration_powershell_blocked_command():
     """Verify that run_powershell blocks service control commands on host OS."""
     runner = IntegrationRunner(_default_rules())
-    
+
     # 1. Direct blocked command
     res1 = runner.run_powershell("sc query")
     assert res1.startswith("Error: Command blocked by safety rules:")
     assert "sc" in res1
 
     # 2. Blocked command inside powershell wrapper flag
-    res2 = runner.run_command("powershell -Command \"sc stop spooler\"")
+    res2 = runner.run_command('powershell -Command "sc stop spooler"')
     assert res2.startswith("Error: Command blocked by safety rules:")
     assert "sc" in res2
 
@@ -60,7 +65,7 @@ def test_integration_bash_blocked_command():
     """Verify that run_command with bash -c blocks commands on host OS."""
     runner = IntegrationRunner(_default_rules())
 
-    res = runner.run_command("bash -c \"sc stop\"")
+    res = runner.run_command('bash -c "sc stop"')
     assert res.startswith("Error: Command blocked by safety rules:")
     assert "sc" in res
 
