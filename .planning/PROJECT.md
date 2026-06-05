@@ -17,13 +17,14 @@ Ensure 100% reliable detection and blocking of unauthorized shell operations wit
 - ✓ **CORE-03**: Support Nvidia, Gemini, Groq, and Ollama LLM provider adapters with auto-retry.
 - ✓ **CORE-04**: Dynamically discover, validate, and hot-reload modular capability tools and plugins.
 - ✓ **CORE-05**: Persist thoughts, actions, and audit logs to local SQLite and structured log files.
+- ✓ **SEC-01**: Implement a structural command token parser using `shlex` or structural analysis to replace substring checks. (Validated in Phase 1)
+- ✓ **SEC-02**: Intercept and block command chaining operators (e.g. `;`, `&&`, `||`, `|`, `$()`, `` ` ``). (Validated in Phase 2)
+- ✓ **SEC-03**: Identify and neutralize shell command obfuscation techniques (such as string manipulation, variables, quotes/escapes). (Validated in Phase 2)
+- ✓ **SEC-04**: Write comprehensive test fixtures covering potential shell execution bypass vectors. (Validated in Phase 3)
 
 ### Active
 
-- [ ] **SEC-01**: Implement a structural command token parser using `shlex` or structural analysis to replace substring checks.
-- [ ] **SEC-02**: Intercept and block command chaining operators (e.g. `;`, `&&`, `||`, `|`, `$()`, `` ` ``).
-- [ ] **SEC-03**: Identify and neutralize shell command obfuscation techniques (such as string manipulation, variables, quotes/escapes).
-- [ ] **SEC-04**: Write comprehensive test fixtures covering potential shell execution bypass vectors.
+(None)
 
 ### Out of Scope
 
