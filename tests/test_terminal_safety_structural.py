@@ -483,3 +483,120 @@ def test_safety_validation_performance():
     assert avg_ms < 10.0, (
         f"Average validation time {avg_ms:.3f}ms exceeds 10ms threshold"
     )
+
+
+def test_powershell_flag_abbreviations_and_case():
+    """Verify that PowerShell wrapper flags support abbreviations and case insensitivity."""
+    rules = _default_rules()
+    safety = DummySafety(rules)
+
+    # PowerShell command flags
+    assert safety._is_powershell_command_flag("-c")
+    assert safety._is_powershell_command_flag("-co")
+    assert safety._is_powershell_command_flag("-comm")
+    assert safety._is_powershell_command_flag("-command")
+    assert safety._is_powershell_command_flag("/command")
+    assert safety._is_powershell_command_flag("-CoMmAnD")
+    
+    # Non-command flags starting with c
+    assert not safety._is_powershell_command_flag("-config")
+    
+    # PowerShell encoded command flags
+    assert safety._is_powershell_encoded_flag("-en")
+    assert safety._is_powershell_encoded_flag("-enc")
+    assert safety._is_powershell_encoded_flag("-encoded")
+    assert safety._is_powershell_encoded_flag("-encodedcommand")
+    assert safety._is_powershell_encoded_flag("/enc")
+    assert safety._is_powershell_encoded_flag("-EnCoDeDCoMmAnD")
+
+    # Short/ambiguous/other flags
+    assert not safety._is_powershell_encoded_flag("-e")
+    assert not safety._is_powershell_encoded_flag("-file")
+
+
+def test_powershell_base64_encoded_blocked_commands():
+    """Verify that blocked commands nested inside Base64 parameters are blocked."""
+    import base64
+    rules = _default_rules()
+    safety = DummySafety(rules)
+
+    # Encode "sc stop spooler" in UTF-16LE Base64
+    blocked_cmd = "sc stop spooler"
+    encoded_payload = base64.b64encode(blocked_cmd.encode("utf-16-le")).decode("ascii")
+
+    # Test via powershell -encodedcommand <base64>
+    command1 = f"powershell -encodedcommand {encoded_payload}"
+    assert "Command blocked by safety rules: sc" in safety._blocked_command_reason(command1)
+
+    command2 = f"powershell -enc {encoded_payload}"
+    assert "Command blocked by safety rules: sc" in safety._blocked_command_reason(command2)
+
+    # Encode a benign command: "echo hello"
+    benign_cmd = "echo hello"
+    benign_payload = base64.b64encode(benign_cmd.encode("utf-16-le")).decode("ascii")
+    command3 = f"powershell -enc {benign_payload}"
+    assert safety._blocked_command_reason(command3) == ""
+
+
+def test_powershell_base64_invalid_and_variables():
+    """Verify handling of invalid base64 payloads and payloads with variable expansion."""
+    rules = _default_rules()
+    safety = DummySafety(rules)
+
+    # 1. Invalid base64 payload should block with base64-decode-failure warning
+    command_invalid = "powershell -enc InvalidBase64Text!!!"
+    assert "base64-decode-failure" in safety._blocked_command_reason(command_invalid)
+
+    # 2. Base64 payload decoding to a command with variable expansion in verb position
+    import base64
+    var_cmd = "$x stop"
+    encoded_var = base64.b64encode(var_cmd.encode("utf-16-le")).decode("ascii")
+    command_var = f"powershell -enc {encoded_var}"
+    assert "environment variable expansion detected in verb position" in safety._blocked_command_reason(command_var)
+
+
+def test_zsh_script_validation(tmp_path):
+    """Verify Zsh script support for line continuation and comment skipping."""
+    runner = DummyRunner(_default_rules())
+
+    # 1. Blocked command in .zsh script
+    script_danger = tmp_path / "danger.zsh"
+    script_danger.write_text("#!/bin/zsh\n# comment here\nsc stop spooler\n", encoding="utf-8")
+    assert "blocked by safety rules" in runner.run_script(str(script_danger)).lower()
+
+    # 2. Safe .zsh script with comment and continuation
+    script_safe = tmp_path / "safe.zsh"
+    script_safe.write_text("#!/bin/zsh\n# sc stop spooler\necho \\\n  \"hello\"\n", encoding="utf-8")
+    assert "OK:" in runner.run_script(str(script_safe))
+
+
+def test_extra_chaining_operators():
+    """Verify extra shell chaining operators like subshells and backticks."""
+    rules = _default_rules()
+    safety = DummySafety(rules)
+
+    # POSIX backticks subshell: blocked as chaining operator on Unix or obfuscation/escape on Windows.
+    reason_backtick = safety._blocked_command_reason("echo `whoami`")
+    assert "Command blocked by safety rules" in reason_backtick
+    # Subshell syntax
+    assert "shell chaining operator detected" in safety._blocked_command_reason("echo $(whoami)")
+
+
+def test_command_verb_obfuscation():
+    """Verify command verb obfuscation checks (ticks, slashes, carets, nested quotes)."""
+    rules = _default_rules()
+    safety = DummySafety(rules)
+
+    # Obfuscation tricks
+    assert "command obfuscation detected" in safety._blocked_command_reason("s''c query")
+    assert "command obfuscation detected" in safety._blocked_command_reason("s\"\"c query")
+    assert "command obfuscation detected" in safety._blocked_command_reason("s`c query")
+
+
+def test_env_var_expansions_in_wrappers():
+    """Verify environment variable expansions in wrapper parameters."""
+    rules = _default_rules()
+    safety = DummySafety(rules)
+
+    assert "environment variable expansion detected in wrapper parameters" in safety._blocked_command_reason("powershell -c $nested_cmd")
+    assert "environment variable expansion detected in wrapper parameters" in safety._blocked_command_reason("cmd /c %nested_cmd%")
