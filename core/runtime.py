@@ -746,6 +746,23 @@ class Agent:
                         except (IOError, OSError) as e:
                             print_warning(f"Warning: Failed to log audit error: {e}")
 
+                    # Log security validation events to audit trail and logger.
+                    try:
+                        if not ok and "blocked by safety rules" in obs_text.lower():
+                            self.audit.error(
+                                self.session_id,
+                                "security_validation",
+                                f"Security warning: {obs_text}",
+                            )
+                            logger.warning(
+                                "SECURITY WARNING: Command execution blocked by safety rules: %s",
+                                _json.dumps(args, ensure_ascii=False)
+                                if isinstance(args, (dict, list))
+                                else str(args),
+                            )
+                    except Exception:
+                        pass
+
                     # Persist tool events + artifacts for SQLite memory backend.
                     if hasattr(self.memory, "record_tool_event"):
                         try:

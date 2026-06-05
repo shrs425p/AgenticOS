@@ -41,6 +41,8 @@ class RunnerMixin:
 
         blocked_reason = self._blocked_command_reason(command)
         if blocked_reason:
+            if not blocked_reason.startswith("Command blocked by safety rules:"):
+                blocked_reason = f"Command blocked by safety rules: {blocked_reason}"
             return f"Error: {blocked_reason}"
 
         # Dynamic PATH refreshing prior to execution
@@ -165,6 +167,16 @@ class RunnerMixin:
         "\u2212": "-",   # minus sign
     }
 
+    # Line continuation characters by shell script suffix.
+    # Used to reconstruct multi-line commands before safety validation.
+    _CONTINUATION_CHARS = {
+        ".sh": "\\",
+        ".bash": "\\",
+        ".ps1": "`",
+        ".cmd": "^",
+        ".bat": "^",
+    }
+
     def _sanitize_code(self, code: str) -> str:
         """Replace typographic Unicode characters with ASCII equivalents
         to prevent SyntaxError when the model injects fancy punctuation."""
@@ -177,12 +189,103 @@ class RunnerMixin:
         """run_python function."""
         return self._run("python -", timeout=60, input_data=self._sanitize_code(code))
 
+    def _validate_script_content(self, p: Path) -> str:
+        """Scan interior lines of a shell script for blocked commands.
+
+        Reads the script file, strips comments and blank lines, merges
+        line continuations, and validates each reconstructed command
+        through ``_blocked_command_reason``.
+
+        Args:
+            p: Resolved Path to the script file.
+
+        Returns:
+            An empty string if the script is safe, or a normalized error
+            string if any line is blocked.
+        """
+        suffix = p.suffix.lower()
+        continuation_char = self._CONTINUATION_CHARS.get(suffix)
+        if continuation_char is None:
+            # Not a shell script we scan (e.g. .py, .zsh) — skip.
+            return ""
+
+        try:
+            content = p.read_text(encoding="utf-8", errors="replace")
+        except Exception as e:
+            return f"Error: Command blocked by safety rules: unable to read script for validation: {e}"
+
+        lines = content.splitlines()
+        current_line: list[str] = []
+
+        for line in lines:
+            stripped = line.strip()
+            if not stripped:
+                continue
+
+            # Filter full-line comments based on script type.
+            is_comment = False
+            if suffix in (".sh", ".bash", ".ps1"):
+                if stripped.startswith("#"):
+                    is_comment = True
+            elif suffix in (".bat", ".cmd"):
+                up = stripped.upper()
+                if up.startswith("REM ") or up == "REM" or stripped.startswith("::"):
+                    is_comment = True
+
+            if is_comment:
+                continue
+
+            # Accumulate or finalize multi-line commands.
+            if stripped.endswith(continuation_char):
+                current_line.append(stripped[: -len(continuation_char)].strip())
+                continue
+
+            current_line.append(stripped)
+            full_command = " ".join(current_line).strip()
+            current_line = []
+
+            if full_command:
+                reason = self._blocked_command_reason(full_command)
+                if reason:
+                    if not reason.startswith("Command blocked by safety rules:"):
+                        reason = f"Command blocked by safety rules: {reason}"
+                    return f"Error: {reason}"
+
+        # Handle trailing continuation (script ends on a continued line).
+        if current_line:
+            full_command = " ".join(current_line).strip()
+            if full_command:
+                reason = self._blocked_command_reason(full_command)
+                if reason:
+                    if not reason.startswith("Command blocked by safety rules:"):
+                        reason = f"Command blocked by safety rules: {reason}"
+                    return f"Error: {reason}"
+
+        return ""
+
     @tool(name="run_script", desc="Run a script file. Args: path, interpreter (optional)", category="Terminal")
     def run_script(self, path: str, interpreter: str = "") -> str:
-        """run_script function."""
+        """Run a script file with optional interpreter override.
+
+        Shell scripts (.sh, .bash, .ps1, .bat, .cmd) are scanned
+        line-by-line for blocked commands before execution.  Python
+        scripts (.py) skip interior scanning.
+
+        Args:
+            path: Path to the script file.
+            interpreter: Optional interpreter override string.
+
+        Returns:
+            Command output or a normalized safety error string.
+        """
         p = Path(path).resolve()
         if not p.exists():
             return f"Error: Script not found: {path}"
+
+        # Deep content validation for shell scripts.
+        script_error = self._validate_script_content(p)
+        if script_error:
+            return script_error
 
         interp = (interpreter or "").strip()
         if not interp:

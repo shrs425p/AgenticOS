@@ -210,3 +210,276 @@ def test_escape_obfuscation_posix(monkeypatch):
     # Caret and backtick are not escapes on POSIX, so not blocked as escape obfuscation
     assert "command obfuscation detected" not in safety._blocked_command_reason("n^e^t stop")
     assert "command obfuscation detected" not in safety._blocked_command_reason("n`e`t start")
+
+
+# ---------------------------------------------------------------------------
+# Wave 2 — Phase 3: Runner Integration tests
+# ---------------------------------------------------------------------------
+
+from pathlib import Path
+from tools.terminal.runner import RunnerMixin
+
+
+class DummyRunner(SafetyMixin, RunnerMixin):
+    """Minimal stub combining SafetyMixin + RunnerMixin for testing.
+
+    Overrides ``_run`` so no real subprocess is launched.
+    """
+
+    def __init__(self, rules: dict, system: str = "Windows"):
+        """Initialize the dummy runner.
+
+        Args:
+            rules: The safety rules dictionary.
+            system: The OS platform string.
+        """
+        self.rules = rules
+        self.system = system
+        self._env_overrides = {}
+
+    def _run(self, command: str, timeout: int = 60, **kwargs) -> str:
+        """Stub _run that only performs safety validation (no subprocess)."""
+        blocked_reason = self._blocked_command_reason(command)
+        if blocked_reason:
+            if not blocked_reason.startswith("Command blocked by safety rules:"):
+                blocked_reason = f"Command blocked by safety rules: {blocked_reason}"
+            return f"Error: {blocked_reason}"
+        return f"OK: {command}"
+
+
+def _default_rules() -> dict:
+    """Return a standard restrictive rules dict for testing."""
+    return {
+        "allow_shell_exec": True,
+        "validate_commands": True,
+        "allow_registry_edit": False,
+        "allow_service_control": False,
+        "allow_system_changes": False,
+    }
+
+
+# --- Task 4: Script validation tests ---
+
+
+def test_script_blocks_dangerous_sh(tmp_path):
+    """Shell script containing a blocked command should be intercepted."""
+    script = tmp_path / "danger.sh"
+    script.write_text("#!/bin/bash\necho hello\nsc stop spooler\n", encoding="utf-8")
+    runner = DummyRunner(_default_rules())
+
+    result = runner.run_script(str(script))
+    assert "Error:" in result
+    assert "blocked by safety rules" in result.lower()
+
+
+def test_script_blocks_dangerous_bat(tmp_path):
+    """Batch script containing a blocked command should be intercepted."""
+    script = tmp_path / "danger.bat"
+    script.write_text("@echo off\nreg delete HKLM\\Software\n", encoding="utf-8")
+    runner = DummyRunner(_default_rules())
+
+    result = runner.run_script(str(script))
+    assert "Error:" in result
+    assert "blocked by safety rules" in result.lower()
+
+
+def test_script_blocks_dangerous_ps1(tmp_path):
+    """PowerShell script containing a blocked command should be intercepted."""
+    script = tmp_path / "danger.ps1"
+    script.write_text("# A PowerShell script\nshutdown /s /t 0\n", encoding="utf-8")
+    runner = DummyRunner(_default_rules())
+
+    result = runner.run_script(str(script))
+    assert "Error:" in result
+    assert "blocked by safety rules" in result.lower()
+
+
+def test_script_allows_safe_sh(tmp_path):
+    """Shell script with only safe commands should execute normally."""
+    script = tmp_path / "safe.sh"
+    script.write_text("#!/bin/bash\necho hello\nls -la\n", encoding="utf-8")
+    runner = DummyRunner(_default_rules())
+
+    result = runner.run_script(str(script))
+    assert "OK:" in result
+
+
+def test_script_skips_comments_sh(tmp_path):
+    """Comments containing blocked commands should not trigger blocking."""
+    script = tmp_path / "comments.sh"
+    script.write_text(
+        "#!/bin/bash\n# sc stop spooler\necho safe\n", encoding="utf-8"
+    )
+    runner = DummyRunner(_default_rules())
+
+    result = runner.run_script(str(script))
+    assert "OK:" in result
+
+
+def test_script_skips_comments_bat(tmp_path):
+    """Batch REM/:: comments containing blocked commands should be skipped."""
+    script = tmp_path / "comments.bat"
+    script.write_text(
+        "@echo off\nREM reg delete HKLM\\Software\n:: shutdown /s\necho safe\n",
+        encoding="utf-8",
+    )
+    runner = DummyRunner(_default_rules())
+
+    result = runner.run_script(str(script))
+    assert "OK:" in result
+
+
+def test_script_skips_blank_lines(tmp_path):
+    """Blank lines should be silently ignored."""
+    script = tmp_path / "blanks.sh"
+    script.write_text(
+        "#!/bin/bash\n\n\n\necho hello\n\n", encoding="utf-8"
+    )
+    runner = DummyRunner(_default_rules())
+
+    result = runner.run_script(str(script))
+    assert "OK:" in result
+
+
+def test_script_line_continuation_sh(tmp_path):
+    """POSIX backslash continuations should be merged before validation."""
+    script = tmp_path / "cont.sh"
+    # "sc \\\n stop spooler" should be reconstructed as "sc stop spooler"
+    script.write_text("sc \\\nstop spooler\n", encoding="utf-8")
+    runner = DummyRunner(_default_rules())
+
+    result = runner.run_script(str(script))
+    assert "Error:" in result
+    assert "blocked by safety rules" in result.lower()
+
+
+def test_script_line_continuation_bat(tmp_path):
+    """Batch caret continuations should be merged before validation."""
+    script = tmp_path / "cont.bat"
+    # "reg ^\n delete HKLM" should be reconstructed as "reg delete HKLM"
+    script.write_text("reg ^\ndelete HKLM\\Software\n", encoding="utf-8")
+    runner = DummyRunner(_default_rules())
+
+    result = runner.run_script(str(script))
+    assert "Error:" in result
+    assert "blocked by safety rules" in result.lower()
+
+
+def test_script_line_continuation_ps1(tmp_path):
+    """PowerShell backtick continuations should be merged before validation."""
+    script = tmp_path / "cont.ps1"
+    script.write_text("shutdown `\n/s /t 0\n", encoding="utf-8")
+    runner = DummyRunner(_default_rules())
+
+    result = runner.run_script(str(script))
+    assert "Error:" in result
+    assert "blocked by safety rules" in result.lower()
+
+
+def test_script_python_skips_scanning(tmp_path):
+    """Python scripts should not be scanned line-by-line for shell commands."""
+    script = tmp_path / "dangerous.py"
+    # Even though this contains "sc stop", it's a Python file — skip interior scanning.
+    script.write_text("import os\nos.system('sc stop spooler')\n", encoding="utf-8")
+    runner = DummyRunner(_default_rules())
+
+    result = runner.run_script(str(script))
+    # Python scripts pass through to _run which validates the wrapper "python <path>",
+    # not the interior lines.
+    assert "OK:" in result
+
+
+def test_script_not_found():
+    """Non-existent script path should return a file-not-found error."""
+    runner = DummyRunner(_default_rules())
+    result = runner.run_script("/nonexistent/path/foo.sh")
+    assert "Error: Script not found:" in result
+
+
+# --- Task 4 cont: Normalized error formatting ---
+
+
+def test_run_error_format_normalized():
+    """Blocked commands through _run should return the normalized error format."""
+    runner = DummyRunner(_default_rules())
+    result = runner._run("sc stop spooler")
+    assert result.startswith("Error: Command blocked by safety rules:")
+
+
+def test_run_error_format_contains_reason():
+    """The error string should contain the specific blocked reason."""
+    runner = DummyRunner(_default_rules())
+    result = runner._run("shutdown /s /t 0")
+    assert "shutdown" in result.lower()
+
+
+# --- Task 4 cont: Audit logging integration ---
+
+
+def test_audit_security_validation_logged(tmp_path):
+    """Verify that AuditLogger.error is called with where='security_validation'."""
+    import json
+    from core.audit_logger import AuditLogger
+
+    audit_dir = str(tmp_path / "audit")
+    audit = AuditLogger(log_dir=audit_dir, enabled=True, fmt="jsonl", cfg={})
+
+    # Simulate the security validation audit call from runtime.py
+    obs_text = "Error: Command blocked by safety rules: sc stop is not allowed"
+    audit.error("test-session", "security_validation", f"Security warning: {obs_text}")
+
+    errors_log = Path(audit_dir) / "errors.jsonl"
+    assert errors_log.exists(), "errors.jsonl should be created"
+
+    entries = [json.loads(line) for line in errors_log.read_text(encoding="utf-8").splitlines()]
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry["event"] == "error"
+    assert entry["where"] == "security_validation"
+    assert "blocked by safety rules" in entry["message"].lower()
+    assert entry["session_id"] == "test-session"
+
+
+# --- Task 5: Performance benchmark ---
+
+
+def test_safety_validation_performance():
+    """Verify that _blocked_command_reason executes in <10ms average over 100 iterations.
+
+    This validates the performance constraint from the project requirements.
+    """
+    import time
+
+    safety = DummySafety(_default_rules())
+
+    # A representative mix of blocked and benign commands
+    test_commands = [
+        "sc stop spooler",
+        "echo hello",
+        "reg delete HKLM\\Software",
+        "git commit -m 'update'",
+        "shutdown /s /t 0",
+        "ls -la",
+        "net stop spooler",
+        "python main.py",
+        "systemctl restart nginx",
+        "echo 'hello world'",
+    ]
+
+    iterations = 100
+    total_time = 0.0
+
+    for _ in range(iterations):
+        for cmd in test_commands:
+            start = time.perf_counter()
+            safety._blocked_command_reason(cmd)
+            elapsed = time.perf_counter() - start
+            total_time += elapsed
+
+    total_calls = iterations * len(test_commands)
+    avg_ms = (total_time / total_calls) * 1000
+
+    # Must be under 10ms average per call
+    assert avg_ms < 10.0, (
+        f"Average validation time {avg_ms:.3f}ms exceeds 10ms threshold"
+    )
