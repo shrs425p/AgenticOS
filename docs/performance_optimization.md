@@ -44,7 +44,7 @@ AgenticOS uses a custom stack-based depth-first search (DFS) traversal implement
 | Task | Standard Python pathlib | Native PowerShell | Optimized Python DFS | Improvement |
 | :--- | :--- | :--- | :--- | :--- |
 | **Workspace File Audit** | 35.4 Seconds | 28.0 Seconds | **0.20 Seconds** | **~170x Faster** |
-| **500k Files Scan (C:\\)** | ~15 Minutes | ~3 Minutes | **9.7 Seconds** | **~90x Faster** |
+| **500k Files Scan (system drive)** | ~15 Minutes | ~3 Minutes | **9.7 Seconds** | **~90x Faster** |
 
 ---
 

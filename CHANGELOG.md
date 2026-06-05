@@ -1,3 +1,17 @@
+## [2.2.0] - 2026-06-05
+
+### Security Hardening
+- **Zero-Trust AST Command Validator**: Implemented a robust, AST-like structural command validation engine using `shlex` lexical parsing. It deconstructs command strings into distinct arguments to block chaining operators (`&&`, `;`, `||`, `|`, `&`) and quote-escaped/backslash-obfuscated bypasses.
+- **PowerShell Encoded Command Audit**: Extracted and audited base64-encoded PowerShell payloads recursively before execution, matching abbreviation parameters (e.g., `-e`, `-enc`, `-encodedcommand`) using prefix scanning.
+- **Line-by-Line Script Validation**: Hardened shell script runner executions (`.ps1`, `.bat`, `.cmd`, `.sh`, `.bash`) by parsing script files line-by-line, stripping comments/whitespace, resolving continuation lines, and auditing each statement against the security rules.
+- **Security Audits Tracking**: Integrated security warning telemetry, logging audit events with `where="security_validation"` directly inside the persistent SQLite database for forensic visibility.
+
+### Documentation & Onboarding
+- **Command Validation Reference**: Added `docs/command_validation.md` documenting the zero-trust validator, script parser, and PowerShell audits.
+- **Self-Improvement Guide**: Added `docs/self_improvement.md` detailing the dreaming reflections engine, logs audits, and offline heuristics.
+- **Developer Quick Start**: Added `docs/quick_start.md` containing a fast 2-minute setup, CLI run command, and standard agent workflows.
+- **Core and Package Docs Update**: Synchronized `docs/security_guardrails.md`, `docs/architecture.md`, `docs/testing_guide.md`, `docs/CATALOG.md`, `core/README.md`, `tools/README.md`, and `tests/README.md`.
+
 ## [2.1.2] - 2026-06-03
 
 ### Performance Improvements
@@ -13,7 +27,7 @@
 ## [2.1.1] - 2026-05-18
 
 ### CI/CD and Workflow Hardening
-- **Deleted Duplicate Workflows**: Removed [.github/workflows/auto-merge.yml](file:///.github/workflows/auto-merge.yml) to eliminate double runner execution and optimize GitHub billing/minutes.
+- **Deleted Duplicate Workflows**: Removed [.github/workflows/auto-merge.yml](.github/workflows/auto-merge.yml) to eliminate double runner execution and optimize GitHub billing/minutes.
 - **Concurrency Controls**: Added concurrency groups across all active GitHub Workflows (`ci.yml`, `bandit.yml`, `codeql.yml`, `dependency-review.yml`) to automatically cancel redundant builds on subsequent pushes.
 - **Fixed Hallucinated Action Versions**:
   - Corrected broken `actions/upload-artifact@v7` (non-existent) references to `@v4` in `ci.yml` and `dependency-review.yml`.
@@ -26,7 +40,7 @@
 - **Resilient Cache Loader**: Fixed `UnboundLocalError` in `main.py` cache root resolver where a missing `PyYAML` package in clean/isolated Python environments crashed the startup loader instead of gracefully falling back to defaults.
 
 ### Documentation and QA
-- **Upgraded PR Template**: Re-engineered [.github/PULL_REQUEST_TEMPLATE.md](file:///.github/PULL_REQUEST_TEMPLATE.md) to integrate customized checks for AgenticOS tool registry, shadow testing (`test_all_tools_shadow.py`), command execution safety, and dynamic path portability checks.
+- **Upgraded PR Template**: Re-engineered [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md) to integrate customized checks for AgenticOS tool registry, shadow testing (`test_all_tools_shadow.py`), command execution safety, and dynamic path portability checks.
 
 ## [2.1.0] - 2026-05-17
 
@@ -78,7 +92,7 @@
 
 ### Performance Improvements
 - Crucible Stress Test: Successfully completed the 96-task autonomous audit of a live Windows system.
-- Disk Hygiene: Scanned 1M+ files on C:\ in < 3 minutes using native PowerShell optimization.
+- Disk Hygiene: Scanned 1M+ files on the system drive in < 3 minutes using native PowerShell optimization.
 - Resource Efficiency: Maintained stable RAM usage (<150MB) during high-intensity 60-iteration tasks.
 
 ### Security Hardening

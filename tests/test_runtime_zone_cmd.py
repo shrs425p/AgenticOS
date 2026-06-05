@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch, mock_open
 from core.runtime import CLI
+from core.version import DEFAULT_VERSION
 
 
 # ── Shared fixture helpers ─────────────────────────────────────────────────────
@@ -303,7 +304,7 @@ def test_version_cmd_fallback(mock_logger_info, mock_exists):
     called_with_version = False
     for call in mock_logger_info.call_args_list:
         msg = call[0][0]
-        if "AgenticOs v2.1.2" in msg:
+        if f"AgenticOs v{DEFAULT_VERSION}" in msg:
             called_with_version = True
             break
     assert called_with_version is True
@@ -342,7 +343,7 @@ def test_version_cmd_invalid_format(mock_logger_info, mock_exists):
     called_with_version = False
     for call in mock_logger_info.call_args_list:
         msg = call[0][0]
-        if "AgenticOs v2.1.2" in msg:
+        if f"AgenticOs v{DEFAULT_VERSION}" in msg:
             called_with_version = True
             break
     assert called_with_version is True

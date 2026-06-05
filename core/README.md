@@ -36,9 +36,8 @@ An abstraction layer for cloud and local LLM backends (Gemini, Groq, Nvidia, Ope
 - **Payload Redaction**: Automatically filters system and user credentials before transmitting payloads to external clouds.
 
 ### 3. Zero-Trust Security (`core/guardrails.py`)
-Enforces safe and compliant execution constraints:
-- **PathGuard**: Restricts file modifications based on zones (Green: unrestricted `workspace/`; Yellow: HITM-required system paths; Red: fully blocked operating system zones).
-- **Command Sanitizer**: Intercepts shell scripts to block dangerous operations such as formatting, system shutdown, or user privilege modifications.
+Enforces safe and compliant filesystem boundaries:
+- **PathGuard**: Restricts file modifications based on zones (Green: unrestricted `workspace/`; Yellow: HITM-required system paths; Red: fully blocked operating system zones; Blue: read-only mode). It also protects sensitive workspace internals like `.git` and `.env` files.
 
 ### 4. Registry & Plugins (`core/tool_registry.py` & `core/tool_base.py`)
 Loads, parses, and dynamically registers all workspace capabilities:
@@ -58,7 +57,7 @@ Maintains agent state across tasks and system reboots:
 | :--- | :--- | :--- |
 | [runtime.py](runtime.py) | Coordinates the main execution loop and schedules task resolution. | Loop |
 | [model_clients.py](model_clients.py) | Abstraction layer for Gemini, Groq, Nvidia, and OpenAI API calls. | Model |
-| [guardrails.py](guardrails.py) | Implements PathGuard rules and active command blacklists. | Security |
+| [guardrails.py](guardrails.py) | Implements PathGuard directory isolation rules and sensitive path checks. | Security |
 | [session_memory_sqlite.py](session_memory_sqlite.py) | Persists tool invocation history and agent thoughts to SQLite. | Memory |
 | [tool_registry.py](tool_registry.py) | Discovers, imports, and exposes standard modules and dynamic plugins. | Extensibility |
 | [retry.py](retry.py) | Provides centralized exponential backoff and jittered retries. | Network |

@@ -66,7 +66,7 @@ pytest tests/test_fs_read_write.py
 We follow a **Zero-Hardcoding Policy**. The core engine must be 100% environment-agnostic.
 
 ### The Rules
-1. **No Absolute Paths**: Never use `C:\` or `/home/`. Use `self.cfg.get("workspace")` or `Path.home()`.
+1. **No Absolute Paths**: Never use machine-specific absolute roots. Use `self.cfg.get("workspace")` or `Path.home()`.
 2. **No Hardcoded URLs**: All API endpoints and service URLs must reside in `config/endpoints.yaml`.
 3. **No Magic Numbers**: Timeouts, retry counts, and heuristic thresholds belong in `config/runtime.yaml`.
 

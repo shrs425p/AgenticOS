@@ -114,6 +114,29 @@ def test_agent_reload_enabled(mock_init_mm, mock_ctx, mock_tools, mock_audit, mo
                 agent.check_reload()
                 mock_reload.assert_called_once()
 
+def test_get_mtimes_uses_configured_excluded_dirs(tmp_path):
+    root = tmp_path
+    keep_dir = root / "core"
+    skip_dir = root / "generated"
+    keep_dir.mkdir()
+    skip_dir.mkdir()
+    (keep_dir / "kept.py").write_text("print('kept')", encoding="utf-8")
+    (skip_dir / "ignored.py").write_text("print('ignored')", encoding="utf-8")
+
+    agent = Agent.__new__(Agent)
+    agent.cfg = {
+        "hot_reload": {
+            "tracked_dirs": ["core", "generated"],
+            "excluded_dirs": ["generated"],
+        }
+    }
+
+    with patch("core.runtime.BASE_DIR", str(root)):
+        mtimes = agent._get_mtimes()
+
+    assert os.path.join("core", "kept.py") in mtimes
+    assert os.path.join("generated", "ignored.py") not in mtimes
+
 @patch("core.runtime.OllamaClient")
 @patch("core.runtime.SqliteSessionMemory")
 @patch("core.runtime.AuditLogger")

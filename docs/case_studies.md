@@ -7,7 +7,7 @@ This document provides real-world examples of tasks performed during the "Crucib
 ## Case Study 1: Enterprise Disk Hygiene Audit (Task 8)
 
 ### The Challenge:
-Analyze the entire `C:\` drive to find:
+Analyze the entire system drive to find:
 1.  The top 20 largest files.
 2.  Duplicate filenames across common directories.
 3.  Files not accessed in 180+ days.
@@ -16,15 +16,15 @@ Analyze the entire `C:\` drive to find:
 ### The "Crucible" Evolution:
 -   **Initial Attempt**: The agent used a recursive Python walker (`grep_dir`). This caused 100% SSD usage and a system-wide lag due to the millions of files on the host machine.
 -   **Optimization**: We implemented an optimized, stack-based native Python DFS `os.scandir` crawler as part of the "Fast-Path" IO subsystem.
--   **Final Result**: The agent completed the entire drive audit in **under 30 seconds** (scanning 1M+ files on `C:\`).
+-   **Final Result**: The agent completed the entire drive audit in **under 30 seconds** (scanning 1M+ files on the system drive).
 
 ### Verified Output:
 > **Report Excerpt (`workspace/disk_hygiene_report.md`):**
 > | File Name | Size | Path |
 > | :--- | :--- | :--- |
-> | `pagefile.sys` | 16.0 GB | `C:\pagefile.sys` |
-> | `hiberfil.sys` | 8.2 GB | `C:\hiberfil.sys` |
-> | `archive.zip` | 4.1 GB | `C:\Users\shrs\Downloads\archive.zip` |
+> | `pagefile.sys` | 16.0 GB | `%SystemDrive%\pagefile.sys` |
+> | `hiberfil.sys` | 8.2 GB | `%SystemDrive%\hiberfil.sys` |
+> | `archive.zip` | 4.1 GB | `%USERPROFILE%\Downloads\archive.zip` |
 
 ---
 

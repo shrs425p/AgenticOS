@@ -26,7 +26,7 @@ AgenticOS is a complex system interacting with multiple APIs and the local opera
 ## Performance Issues
 
 ### 1. "My system is lagging when the agent scans the drive."
--   **Cause**: The agent is using a slow Python-based recursive search (e.g., `grep_dir` on `C:\`).
+-   **Cause**: The agent is using a slow Python-based recursive search across an entire system drive.
 -   **Fix**: Use the `find_large_files` tool. We implemented **Performance Guardrails** that should now block these slow scans and suggest the faster native method.
 
 ### 2. "The terminal UI is flickering or slow."
@@ -50,9 +50,9 @@ AgenticOS is a complex system interacting with multiple APIs and the local opera
     -   Ensure the terminal is running with appropriate permissions (though Admin is rarely required).
     -   Check the `PathGuard` settings in `config.yaml` to ensure the path isn't in the **Red Zone**.
 
-### 2. `CRITICAL: Recursive content grep on C:\ is forbidden`
+### 2. `CRITICAL: Recursive content grep on system drive is forbidden`
 -   **Cause**: You triggered a security guardrail designed to prevent SSD thrashing.
--   **Fix**: This is intended behavior. Narrow your search to a specific folder (e.g., `C:\Users\shrs\Downloads`) or use the `search_files` tool for filename searches.
+-   **Fix**: This is intended behavior. Narrow your search to a specific folder (e.g., `%USERPROFILE%\Downloads`) or use the `search_files` tool for filename searches.
 
 ---
 

@@ -35,7 +35,7 @@ The `task.md` file in the project root contains the full list of production stre
 
 ### 1. System Maintenance (Tasks 1-15)
 -   **Objective**: Audit the host OS, check disk health, and monitor process telemetry.
--   **Key Success**: The agent must use optimized Fast-Path scans (like `fast_disk_audit`) for the `C:\` drive scan to pass the performance gate.
+-   **Key Success**: The agent must use optimized Fast-Path scans (like `fast_disk_audit`) for system-drive scans to pass the performance gate.
 
 ### 2. Security and Compliance (Tasks 16-30)
 -   **Objective**: Audit firewall rules, check for CVEs in installed apps, and analyze event logs.

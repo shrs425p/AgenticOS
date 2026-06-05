@@ -13,7 +13,7 @@ A high-performance prompt for AgenticOS should contain three elements: **Context
 > **Result**: The agent might wander aimlessly, looking for temp files or large videos, wasting tokens.
 
 ### Strong Prompt:
-> *"Analyze my C:\Users\shrs\Downloads folder. Identify any .zip or .exe files older than 30 days that are larger than 500MB. Write a list of these files to 'workspace/cleanup_suggestions.md' and ask for my permission before deleting anything."*
+> *"Analyze my `%USERPROFILE%\Downloads` folder. Identify any .zip or .exe files older than 30 days that are larger than 500MB. Write a list of these files to `workspace/cleanup_suggestions.md` and ask for my permission before deleting anything."*
 > **Result**: The agent has a clear directory, specific criteria, a defined output format, and a safety constraint.
 
 ---
@@ -28,7 +28,7 @@ Ask the agent to explain its plan before it starts.
 
 ### 2. Multi-Step Decomposition
 For massive tasks, break them down into sub-objectives.
--   **Step 1**: *"Find all duplicate images in C:\Photos."*
+-   **Step 1**: *"Find all duplicate images in my Photos folder."*
 -   **Step 2**: *"Of those duplicates, identify which ones have the lowest resolution."*
 -   **Step 3**: *"Move the low-res duplicates to a 'trash' folder in the workspace."*
 

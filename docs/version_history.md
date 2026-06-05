@@ -6,7 +6,21 @@ This document tracks the technical evolution of AgenticOS from its initial proto
 
 ---
 
-## v2.1.2 - The "Fast-Path Resource Hardened" Edition (Current)
+## v2.2.0 - The "Zero-Trust AST Hardened" Edition (Current)
+*Release Date: 2026-06-05*
+
+The v2.2.0 release implements a complete zero-trust command execution sandbox, introducing structural command validations, script safety scanning, base64 payload decoding audits, and robust documentation.
+
+### Key Innovations:
+1.  **Zero-Trust AST Command Validator**: Migrated from regex-based validation to structural tokenization using `shlex`, allowing precise parameter isolation and blocking command chaining (`&&`, `;`, `||`, `|`, `&`) or tick/quote obfuscations.
+2.  **PowerShell Base64 & Abbreviation Audits**: Intercepts abbreviated PowerShell execution flags (via prefix matching) and recursively decodes base64 payload arguments to inspect underlying instructions before execution.
+3.  **Line-by-Line Script Validation**: Hardened shell script executions (`.ps1`, `.bat`, `.cmd`, `.sh`, `.bash`) by reading scripts line-by-line, stripping comments, merging continuation sequences, and validating every command string.
+4.  **Security warning Audits**: Hooks validation errors to log security warning events and record structured audit entries with `where="security_validation"` in the SQLite database.
+5.  **Documentation Architecture Update**: Added guides for `command_validation.md`, `quick_start.md`, and `self_improvement.md`, and updated existing guides and package-level READMEs.
+
+---
+
+## v2.1.2 - The "Fast-Path Resource Hardened" Edition
 *Release Date: 2026-06-03*
 
 The v2.1.2 release addresses critical background resource, filesystem traversal, and directory scanning overheads in the AgenticOS runtime to eliminate system lag, optimize disk I/O, and improve cross-platform auditing.
@@ -115,5 +129,5 @@ The next phase of AgenticOS development will focus on multi-agent collaboration 
 
 ---
 
-*Last Updated: 2026-06-03*
-*Status: v2.1.2 Hardened*
+*Last Updated: 2026-06-05*
+*Status: v2.2.0 Hardened*

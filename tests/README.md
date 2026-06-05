@@ -17,6 +17,8 @@ tests/
 ├── test_web_*.py        # Web scrapers, search engines, and browser tool mock assertions
 ├── test_fs_*.py         # High-speed filesystem mutations, bulk actions, and search utilities
 ├── test_terminal_*.py   # Native OS, shell, audio, and keyboard input wrappers
+├── test_terminal_safety_structural.py # Verifies AST parsing, chaining, obfuscation, base64 PowerShell audits, and script line scanning
+├── test_terminal_safety_integration.py # Runs E2E live shell/process safety validation checks across cmd/powershell/bash
 ├── test_diff_summarizer.py # Asserts line-level plain-English diff transformations offline
 ├── test_url_safety_check.py # Simulates domain WHOIS lookups and certificate peer handshakes
 ├── test_os_sandbox_auditor.py # Simulates process filters and compilers checks cross-platform

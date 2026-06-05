@@ -51,7 +51,7 @@ Centralizes all hardcoded URLs to ensure portability.
 
 ## Zero-Hardcoding Policy
 
-Developers must **never** hardcode absolute paths (e.g., `C:\`) or URLs in the Python source code. All environment-specific values must be fetched via the config system:
+Developers must **never** hardcode absolute paths or URLs in the Python source code. All environment-specific values must be fetched via the config system:
 
 ```python
 # GOOD: Configuration-driven

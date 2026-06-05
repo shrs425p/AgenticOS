@@ -15,10 +15,10 @@
 
   <p>
     <img src="https://img.shields.io/badge/status-production_stable-orange?style=flat-square" alt="Status">
-    <img src="https://img.shields.io/badge/latest-v2.1.2-blue?style=flat-square" alt="Latest Version">
+    <img src="https://img.shields.io/github/v/release/shrs425p/AgenticOS?style=flat-square&label=latest" alt="Latest Version">
     <img src="https://img.shields.io/badge/license-Apache_2.0-red?style=flat-square" alt="License">
     <img src="https://img.shields.io/badge/tools-350+-green?style=flat-square" alt="Tools">
-    <img src="https://img.shields.io/badge/tests-445_passed-brightgreen?style=flat-square" alt="Tests">
+    <img src="https://img.shields.io/badge/tests-494_passed-brightgreen?style=flat-square" alt="Tests">
     <a href="https://codecov.io/gh/shrs425p/AgenticOS"><img src="https://codecov.io/gh/shrs425p/AgenticOS/branch/main/graph/badge.svg" alt="Coverage"></a>
   </p>
   

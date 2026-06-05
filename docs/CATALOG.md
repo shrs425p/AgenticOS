@@ -16,6 +16,7 @@ This catalog is the canonical index for all maintained Markdown documentation in
 ## Core Product Documentation (`docs/`)
 
 ### Getting Started
+- [Quick Start Guide](quick_start.md)
 - [Setup Guide](setup_guide.md)
 - [System Requirements](system_requirements.md)
 - [Deployment Scenarios](deployment_scenarios.md)
@@ -25,6 +26,7 @@ This catalog is the canonical index for all maintained Markdown documentation in
 - [Architecture](architecture.md)
 - [Runtime Configuration](runtime_configuration.md)
 - [Autonomous Operations](autonomous_operations.md)
+- [Self-Improvement Guide](self_improvement.md)
 - [Evaluation Harness](evaluation_harness.md)
 - [Visual Index](visual_index.md)
 
@@ -37,6 +39,7 @@ This catalog is the canonical index for all maintained Markdown documentation in
 
 ### Security, Safety, and Privacy
 - [Security Guardrails](security_guardrails.md)
+- [Command Validation Guide](command_validation.md)
 - [Safety Guide](safety_guide.md)
 - [Privacy & Data Policy](privacy_data_policy.md)
 

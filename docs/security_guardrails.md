@@ -29,7 +29,7 @@ The `PathGuard` system divides the host machine into four distinct security zone
 ### 2. The Yellow Zone (System-Wide Autonomy)
 -   **Definition**: The entire filesystem (excluding explicitly blocked paths in the Red Zone).
 -   **Configuration**: `guard.enabled = True`, `guard.require_hitm = False`, `guard.read_only = False`.
--   **Behavior**: The agent can write and delete files outside the workspace autonomously without prompting the user. Explicitly blocked paths (e.g. `C:\Windows`) are still hard-blocked.
+-   **Behavior**: The agent can write and delete files outside the workspace autonomously without prompting the user. Explicitly blocked system paths are still hard-blocked.
 
 ### 3. The Red Zone (PathGuard Disabled)
 -   **Definition**: Bypasses all workspace boundaries and path validation checks.
@@ -79,7 +79,14 @@ If an agent attempts to run `find_large_files` or `grep_dir` on the root `<SYSTE
 
 ## Terminal and Command Validation
 
-The `run_command` and `run_powershell` tools are the most powerful and dangerous in the registry. They are protected by a regex-based validator.
+The `run_command`, `run_powershell`, and `run_script` tools are the most powerful and dangerous in the registry. To prevent command injection and obfuscation attacks, AgenticOS enforces a zero-trust command validation layer (`SafetyMixin` in [safety.py](../tools/terminal/safety.py)).
+
+### Validation Heuristics:
+1.  **AST-like Tokenization**: Splits commands into structural arguments using `shlex` lexical parsing. This ensures nested quotes, escape characters, and spacing cannot bypass the validation rules.
+2.  **Chaining Interception**: Scans for command concatenation operators (`&&`, `;`, `||`, `|`, `&`) and blocks execution if chaining is attempted.
+3.  **Obfuscation Scans**: Blocks shell escape tick marks, quote variations (e.g., `n""et`), and environment variables constructing execution targets dynamically.
+4.  **PowerShell Encoded Command Audit**: Detects parameter prefix matching (e.g., `-e`, `-enc`) and recursively decodes base64-encoded command arguments to validate their plain-text payloads.
+5.  **Line-by-Line Script Validation**: Reads shell script files (`.ps1`, `.bat`, `.cmd`, `.sh`, `.bash`) line-by-line, stripping syntax comments and reconstructing line continuation blocks, validating every statement before execution.
 
 ### Blocked Patterns:
 -   **Disk Formatting**: `format`, `DiskPart`
@@ -87,6 +94,8 @@ The `run_command` and `run_powershell` tools are the most powerful and dangerous
 -   **System Shutdown**: `shutdown`, `restart`, `halt`
 -   **Registry Tampering**: `reg delete` (unless `allow_registry_edit` is true)
 -   **Mass Deletion**: `rm -rf /`, `del /s /q <SYSTEM_DRIVE>\*`
+
+For detailed validation and script hardening mechanisms, refer to the [Command Validation Guide](command_validation.md).
 
 ---
 
@@ -142,8 +151,8 @@ security:
   
   # List of paths that are NEVER accessible (Multi-platform paths can be specified)
   blocked_paths: 
-    - "C:\\Windows"
-    - "C:\\Program Files"
+    - "%SystemRoot%"
+    - "%ProgramFiles%"
     - "/System"
     - "/Library"
     - "/etc"

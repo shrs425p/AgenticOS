@@ -81,7 +81,7 @@ To ensure a high-quality codebase, please adhere to the following standards:
 Do not use emojis in `.py` files to prevent encoding and formatting issues on Windows terminals. Instead, use standard terminal UI symbols and typography characters (e.g., box drawing characters, ✓, ✗, ▲, ◆).
 
 ### 2. File Paths
-Avoid using hardcoded absolute directories (like `C:\AgenticOs`) in code, documentation, and templates. Use dynamic path resolution placeholders like `<REPO_ROOT>` or rely on the workspace relative paths managed by the system. The `workspace/` directory is meant for task artifacts.
+Avoid using hardcoded absolute directories in code, documentation, and templates. Use dynamic path resolution placeholders like `<REPO_ROOT>` or rely on the workspace relative paths managed by the system. The `workspace/` directory is meant for task artifacts.
 
 ### 3. Type Hints
 All functions, especially core engine components and tools, must have full Python type hinting.

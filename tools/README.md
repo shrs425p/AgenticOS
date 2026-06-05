@@ -34,7 +34,7 @@ Provides atomic, safe, and high-performance operations for traversing and mutati
 
 ### 2. Terminal (`tools/terminal/`)
 Facilitates native interaction with the host operating system.
-- **Subsystem Execution**: Safe execution of standard CMD and PowerShell scripts.
+- **Subsystem Execution**: Hardened execution of standard CMD, PowerShell, and bash scripts using an AST-like structural parser (`SafetyMixin`) to block shell injections, chaining, obfuscation, and base64 PowerShell commands.
 - **Process Orchestration**: Process listing, priority adjustment, and suspension/termination.
 - **Audit Tooling**: Active port scanners, firewall rules query managers, and scheduled task creators.
 

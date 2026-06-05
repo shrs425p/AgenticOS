@@ -914,11 +914,11 @@
 
         <!-- HERO -->
         <section id="hero" class="hero reveal">
-            <p class="hero-tag">v2.1.2 Hardened &nbsp;·&nbsp; Active &nbsp;·&nbsp; Windows, macOS, and Linux</p>
+            <p class="hero-tag">v2.2.0 Hardened &nbsp;·&nbsp; Active &nbsp;·&nbsp; Windows, macOS, and Linux</p>
             <h1 class="hero-title">AGENTIC<br><span class="italic-serif">OS</span></h1>
             <p class="hero-subtitle">
-                Your personal AI superintelligence. Private, simple, and extremely powerful. 350+ tools. Self-healing.
-                Fully local.
+                Your personal AI superintelligence. Secure, autonomous, and extremely powerful. 350+ tools.
+                AST-hardened security. Self-healing. Fully local.
             </p>
             <div class="hero-actions">
                 <a href="#install" class="btn">Quick Start</a>
@@ -933,16 +933,16 @@
                 <span class="metric-label">Specialized Tools</span>
             </div>
             <div class="metric">
-                <span class="metric-num">96</span>
-                <span class="metric-label">Crucible Tasks</span>
+                <span class="metric-num">494+</span>
+                <span class="metric-label">Tests Passing</span>
             </div>
             <div class="metric">
                 <span class="metric-num">170×</span>
                 <span class="metric-label">Faster Disk I/O</span>
             </div>
             <div class="metric">
-                <span class="metric-num">&lt;150MB</span>
-                <span class="metric-label">Peak RAM</span>
+                <span class="metric-num">&lt;10ms</span>
+                <span class="metric-label">Safety Validation</span>
             </div>
         </div>
 
@@ -963,10 +963,11 @@
                 <div class="feature-item">
                     <div class="feature-left">
                         <span class="feature-num">02</span>
-                        <h3 class="feature-name">Rate-Limit Shield</h3>
+                        <h3 class="feature-name">Deep OS Control</h3>
                     </div>
-                    <p class="feature-desc">Built-in exponential backoff absorbs all 429 errors transparently. Handled
-                        50+ rate-limit hits during the Crucible without a single crash.</p>
+                    <p class="feature-desc">Native system integration through Windows COM APIs and on-the-fly C#
+                        compilation, macOS AppleScript accessibility (AX), and direct registry, firewall, and
+                        scheduled-task auditing — zero external dependencies.</p>
                 </div>
 
                 <div class="feature-item">
@@ -981,10 +982,11 @@
                 <div class="feature-item">
                     <div class="feature-left">
                         <span class="feature-num">04</span>
-                        <h3 class="feature-name">DAG-Based Planning</h3>
+                        <h3 class="feature-name">AST Sandboxing</h3>
                     </div>
-                    <p class="feature-desc">Tasks decompose into dependency graphs. The orchestrator resolves execution
-                        order, retries failed nodes, and adapts plans mid-flight.</p>
+                    <p class="feature-desc">Structural command tokenization with shlex parsing intercepts shell
+                        chaining, quote obfuscation, base64-encoded PowerShell payloads, and multi-line script
+                        injection — all validated in under 10ms.</p>
                 </div>
 
                 <div class="feature-item">
@@ -1000,10 +1002,11 @@
                 <div class="feature-item">
                     <div class="feature-left">
                         <span class="feature-num">06</span>
-                        <h3 class="feature-name">Browser Automation</h3>
+                        <h3 class="feature-name">Web Intelligence</h3>
                     </div>
-                    <p class="feature-desc">Playwright-powered web agent for scraping, form automation, smart downloads,
-                        and JS-heavy sites — fully headless and scriptable.</p>
+                    <p class="feature-desc">Playwright-driven headless browser for scraping JS-rendered pages, form
+                        automation, DNS/WHOIS audits, SSL certificate validation, and recursive multi-phase
+                        search-and-synthesize research loops.</p>
                 </div>
 
             </div>
@@ -1155,8 +1158,9 @@
                     </div>
                     <div class="arch-item">
                         <h3 class="arch-item-title">Security Guardrails</h3>
-                        <p class="arch-item-desc">PathGuard enforces zone-based filesystem access. HITM prompts human
-                            confirmation for sensitive operations. Command validation blocks dangerous shell patterns.
+                        <p class="arch-item-desc">AST-based command tokenization with shlex parsing intercepts shell
+                            chaining, obfuscation, and encoded payloads. PathGuard enforces zone-based filesystem
+                            access. Line-by-line script validation scans every instruction before execution.
                         </p>
                     </div>
                 </div>
@@ -1200,7 +1204,41 @@
 
         <!-- SECURITY -->
         <section id="security" class="reveal">
-            <h2 class="section-title">Zone-Based<br>Security.</h2>
+            <h2 class="section-title">Zero-Trust<br>Security.</h2>
+            <p
+                style="color:var(--muted);font-size:1.1rem;font-weight:300;max-width:700px;margin-bottom:4rem;line-height:1.8;">
+                Every command is structurally parsed before execution. Every file path is boundary-checked. Every
+                script is read line-by-line. No shortcuts. No bypasses.
+            </p>
+            <div class="proof-grid" style="margin-bottom:5rem;">
+                <div class="proof-card" data-i="I">
+                    <p class="proof-stat" style="font-size:clamp(1.5rem,3vw,2.5rem);">AST Parsing</p>
+                    <p class="proof-label">Command Tokenizer</p>
+                    <p class="proof-desc">shlex-based structural tokenization deconstructs nested quotes, variable
+                        expansions, and argument splits — catching obfuscation that regex validators miss.</p>
+                </div>
+                <div class="proof-card" data-i="II">
+                    <p class="proof-stat" style="font-size:clamp(1.5rem,3vw,2.5rem);">Chain Detection</p>
+                    <p class="proof-label">Operator Interception</p>
+                    <p class="proof-desc">Detects and blocks shell chaining operators (&&, ;, ||, |) and obfuscated
+                        commands before they reach the subprocess layer.</p>
+                </div>
+                <div class="proof-card" data-i="III">
+                    <p class="proof-stat" style="font-size:clamp(1.5rem,3vw,2.5rem);">Script Scanning</p>
+                    <p class="proof-label">Line-by-Line Validation</p>
+                    <p class="proof-desc">Reads .sh, .bash, .ps1, .bat, and .cmd files, filters comments, merges
+                        line continuations, and validates every instruction against safety rules.</p>
+                </div>
+                <div class="proof-card" data-i="IV">
+                    <p class="proof-stat" style="font-size:clamp(1.5rem,3vw,2.5rem);">PowerShell Defense</p>
+                    <p class="proof-label">Encoded Command Audit</p>
+                    <p class="proof-desc">Detects -enc, -e, -en parameter prefix matching and decodes base64-encoded
+                        PowerShell payloads to audit the underlying script before execution.</p>
+                </div>
+            </div>
+            <h3
+                style="font-size:clamp(2rem,5vw,3.5rem);margin-bottom:3rem;letter-spacing:-1px;font-weight:400;">
+                PathGuard Zones</h3>
             <div class="zone-list">
                 <div class="zone-item">
                     <div class="zone-dot z-green"></div>
@@ -1309,7 +1347,7 @@
     </main>
 
     <footer>
-        <span>AgenticOS v2.1.2 &nbsp;·&nbsp; Apache-2.0 &nbsp;·&nbsp; Built by <a href="https://github.com/shrs425p"
+        <span>AgenticOS v2.2.0 &nbsp;·&nbsp; Apache-2.0 &nbsp;·&nbsp; Built by <a href="https://github.com/shrs425p"
                 style="opacity:.6">shrs425p</a></span>
         <span>Hardened. Autonomous. Ready.</span>
     </footer>

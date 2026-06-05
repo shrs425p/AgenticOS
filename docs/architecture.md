@@ -59,7 +59,7 @@ The assembled context is sent to the configured provider (Ollama or Nvidia Cloud
 ### 3. Action Dispatching
 When the model generates an `ACTION` block, the `ToolRegistry` intercepts it.
 -   **Validation**: The tool name and arguments are checked against the registry schema.
--   **Security Check**: The `PathGuard` evaluates any filesystem paths against the Zone-Based security policy.
+-   **Security Check**: The `PathGuard` evaluates filesystem paths, and the `SafetyMixin` parses and validates terminal commands (blocking shell chaining, obfuscation, or script violations).
 -   **Dispatch**: If allowed, the tool is executed natively (Python, PowerShell, or Bash).
 
 ### 4. Observation and Self-Healing
@@ -102,14 +102,16 @@ One of the most advanced components of the architecture is the **Fast-Path** opt
 
 ---
 
-## Security and PathGuard
+## Security and Zero-Trust Guardrails
 
-The architecture enforces a "Zero Trust" model for the local system using four security zones that can be dynamically switched at runtime via the `/zone` CLI command:
--   **Green Zone (Workspace isolation)**: Full autonomous access inside `workspace/`; write/delete outside workspace requires a **Human-In-The-Middle (HITM)** confirmation.
--   **Yellow Zone (System-wide write access)**: PathGuard is active, but outside-workspace writes are allowed autonomously without human approval.
--   **Red Zone (Protected Assets)**: PathGuard is completely disabled; the agent has unrestricted filesystem access.
--   **Blue Zone (Read-Only / Audit)**: All write and delete operations are blocked system-wide. The agent has read-only access.
--   **Redaction Engine**: Automatically masks API keys, tokens, and sensitive PII in all logs and memory stores based on regex patterns in `policy.yaml`.
+The architecture enforces a "Zero Trust" model for the local system using three primary security coordinates:
+1.  **PathGuard Security Zones**: Controls filesystem boundary access which can be dynamically switched at runtime via the `/zone` CLI command:
+    -   **Green Zone (Workspace isolation)**: Full autonomous access inside `workspace/`; write/delete outside workspace requires a **Human-In-The-Middle (HITM)** confirmation.
+    -   **Yellow Zone (System-wide write access)**: PathGuard is active, but outside-workspace writes are allowed autonomously without human approval.
+    -   **Red Zone (Protected Assets)**: PathGuard is completely disabled; the agent has unrestricted filesystem access.
+    -   **Blue Zone (Read-Only / Audit)**: All write and delete operations are blocked system-wide.
+2.  **Structural Command Validation**: Intercepts terminal commands at the parser level (`SafetyMixin`) before execution to block shell chaining, quote obfuscations, and base64 PowerShell scripts. Script files are audited line-by-line using custom continuations filters.
+3.  **Secret Redaction Engine**: Automatically masks API keys, tokens, and sensitive PII in all logs and memory stores based on regex patterns in `policy.yaml`.
 
 ---
 
@@ -148,11 +150,11 @@ Before deploying AgenticOS in an enterprise environment, ensure the following:
 
 ## Key Abstractions
 
-- **`SafetyMixin`** ([tools/terminal/safety.py](file:///c:/Users/shrs/AgenticOS/tools/terminal/safety.py)): Implements structural command tokenization, PowerShell flag prefix matching, Base64 payload decoding, and shell chaining/obfuscation interception.
-- **`RunnerMixin`** ([tools/terminal/runner.py](file:///c:/Users/shrs/AgenticOS/tools/terminal/runner.py)): Defines core terminal execution tools (`run_command`, `run_powershell`, `run_script`), intercepts calls via safety rules, and performs line-by-line script checks.
-- **`AgentRuntime`** ([core/runtime.py](file:///c:/Users/shrs/AgenticOS/core/runtime.py)): Coordinates the main thought processing, replanning, tool execution, and error handling loop.
-- **`ToolRegistry`** ([core/tool_registry.py](file:///c:/Users/shrs/AgenticOS/core/tool_registry.py)): Decorator-based registry (`@tool`) enabling dynamic capability lookup, hot-reloading, and schema verification.
-- **`AuditLogger`** ([core/audit_logger.py](file:///c:/Users/shrs/AgenticOS/core/audit_logger.py)): Handles security validation audits and records incidents to persistent storage.
+- **`SafetyMixin`** ([tools/terminal/safety.py](../tools/terminal/safety.py)): Implements structural command tokenization, PowerShell flag prefix matching, Base64 payload decoding, and shell chaining/obfuscation interception.
+- **`RunnerMixin`** ([tools/terminal/runner.py](../tools/terminal/runner.py)): Defines core terminal execution tools (`run_command`, `run_powershell`, `run_script`), intercepts calls via safety rules, and performs line-by-line script checks.
+- **`AgentRuntime`** ([core/runtime.py](../core/runtime.py)): Coordinates the main thought processing, replanning, tool execution, and error handling loop.
+- **`ToolRegistry`** ([core/tool_registry.py](../core/tool_registry.py)): Decorator-based registry (`@tool`) enabling dynamic capability lookup, hot-reloading, and schema verification.
+- **`AuditLogger`** ([core/audit_logger.py](../core/audit_logger.py)): Handles security validation audits and records incidents to persistent storage.
 
 ## Directory Structure Rationale
 

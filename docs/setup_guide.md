@@ -25,11 +25,11 @@ Once cloned and in the project directory, run the setup script. You can execute 
 #### Windows:
 1. Clone the repository:
    ```powershell
-   git clone https://github.com/shrs425p/AgenticOS.git <REPO_ROOT>
+   git clone https://github.com/shrs425p/AgenticOS.git AgenticOS
    ```
 2. Navigate into the cloned directory:
    ```powershell
-   cd <REPO_ROOT>
+   cd AgenticOS
    ```
 
 ### Method A: Via VS Code Task (Recommended)

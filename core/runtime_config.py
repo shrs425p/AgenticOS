@@ -37,6 +37,19 @@ DEFAULT_WORKSPACE = resolve_local_path(
     os.environ.get("AGENTICOS_WORKSPACE", "workspace")
 )
 
+DEFAULT_SCAN_EXCLUDED_DIRS = [
+    ".git",
+    "venv",
+    "node_modules",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    "workspace",
+    "data",
+    "mock_workspace",
+]
+
 # Minimal structure defaults. Actual values come from config/*.yaml plus
 # root config.yaml overrides.
 default_structure = {
@@ -66,6 +79,13 @@ default_structure = {
     "performance": {
         "max_retries": 5,
         "base_retry_delay": 5.0,
+    },
+    "context": {
+        "workspace_ignore_dirs": DEFAULT_SCAN_EXCLUDED_DIRS.copy(),
+    },
+    "hot_reload": {
+        "tracked_dirs": ["core", "tools", "scripts"],
+        "excluded_dirs": DEFAULT_SCAN_EXCLUDED_DIRS.copy(),
     },
     "heuristics": {
         "dream_interval_hours": 6,

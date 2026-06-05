@@ -28,6 +28,8 @@ Our testing strategy follows the **"Isolated Simulation"** model:
 | `test_os_sandbox_auditor.py`| Sandbox Runtimes | Mocks CLI subprocesses and platform system layers. |
 | `test_sys_package_installer.py`| Package Managers | Mock cross-platform installer execution sequences. |
 | `test_code_complexity.py`| Radon AST Complexity| Mock visitor node traversal and grading offline. |
+| `test_terminal_safety_structural.py` | Command Safety | Validates shlex tokenization, chaining, obfuscation, PowerShell abbreviation/base64 checks, and script line scanning. |
+| `test_terminal_safety_integration.py` | E2E Shell Safety | Runs live terminal/subprocess safety validation checks across shells. |
 
 ---
 

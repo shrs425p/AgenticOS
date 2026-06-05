@@ -1,5 +1,14 @@
 # Documentation Maintenance Logs
 
+## 2026-06-05
+- Bumped the overall framework version to `2.2.0` (The "Zero-Trust AST Hardened" Edition) to represent the structural AST command validation and script scanning updates.
+- Synchronized version tags across `README.md`, `docs/index.html`, `docs/version_history.md`, `core/runtime.py`, and `tests/test_runtime_zone_cmd.py`.
+- Updated test count references and badges in `README.md` to show 494 tests passing.
+- Created `docs/command_validation.md` documenting the zero-trust validator, script parser, and PowerShell audits.
+- Created `docs/quick_start.md` containing a fast 2-minute setup, CLI run command, and standard agent workflows.
+- Created `docs/self_improvement.md` detailing the dreaming reflections engine, logs audits, and offline heuristics.
+- Updated existing guides and package-level READMEs to reflect the command validation coordinates and new guides.
+
 ## 2026-06-03
 - Corrected outdated tool count references from `180+` to `350+` across all active documentation files (`README.md`, `docs/setup_guide.md`, `docs/architecture.md`, `docs/index.html`) to align with the actual `352` registered tools in the `ToolRegistry`.
 - Updated disk I/O performance speedup figures from `150x` to `170x` to represent the native Python DFS stack walker benchmarks.
@@ -23,19 +32,19 @@
 
 ## 2026-05-19
 - Created `docs/contributor_guide.md` with instructions for dev setup, plugin registration, coding standards, and running tests.
-- Removed hardcoded C:\AgenticOs paths from core/memory_manager.py, config/prompts.yaml, and tests/test_all_tools_shadow.py.
+- Removed hardcoded absolute repo paths from core/memory_manager.py, config/prompts.yaml, and tests/test_all_tools_shadow.py.
 
 ## 2026-05-18
 - Updated documentation across README.md, architecture.md, privacy_data_policy.md, troubleshooting.md, autonomous_operations.md, and security_guardrails.md to reflect recent architectural changes to memory management (ContextEngine, MemoryManager, MEMORY.md), ToolRegistry self-healing, and dynamic plugin loading.
 - Generalized references to data/memory.sqlite3 and data/logs to support workspace-relative paths.
-- Updated documentation to v2.1.1, removing hardcoded C:\AgenticOs paths.
+- Updated documentation to v2.1.1, removing hardcoded absolute repo paths.
 - Added `docs/CATALOG.md` as the canonical documentation index for all Markdown docs.
 - Updated `README.md` to point to `docs/CATALOG.md` from the top navigation and Documentation Center.
-- Fixed broken local Markdown links in `core/README.md` by replacing `file:///c:/...` paths with repository-relative links.
-- Fixed broken local Markdown links in `docs/ultimate_pc_control.md` by replacing `file:///c:/...` paths with repository-relative links.
+- Fixed broken local Markdown links in `core/README.md` by replacing absolute file URL paths with repository-relative links.
+- Fixed broken local Markdown links in `docs/ultimate_pc_control.md` by replacing absolute file URL paths with repository-relative links.
 - Updated `SECURITY.md` with a "Security Documentation Catalog" section linking to security and safety docs.
 - Updated `docs/visual_index.md` summary to v2.1.1 and linked it to `docs/CATALOG.md`.
-- Updated `task.md` task references from Windows-specific `C:\\AgenticOs` paths to `<REPO_ROOT>` and replaced `tools_list` with `/tools`.
+- Updated `task.md` task references from Windows-specific absolute repo paths to `<REPO_ROOT>` and replaced `tools_list` with `/tools`.
 
 ## 2026-05-17
 - Fixed broken tool references in `docs/api_reference.md` and `docs/setup_guide.md`

@@ -46,7 +46,7 @@ The system can be configured to scan tool outputs for common patterns (API keys,
 
 ## PathGuard and Information Siloing
 
-The **PathGuard** system serves as a privacy barrier. By blocking the agent from accessing directories like `C:\Windows` or `C:\Users\Admin\Documents`, we ensure that the agent cannot "casually" read sensitive files into its context window, even if it is asked to do so by a model.
+The **PathGuard** system serves as a privacy barrier. By blocking the agent from accessing sensitive system and user-profile directories, we ensure that the agent cannot "casually" read sensitive files into its context window, even if it is asked to do so by a model.
 
 ### Forbidden Paths:
 The following paths are blocked by default to prevent accidental data leakage:

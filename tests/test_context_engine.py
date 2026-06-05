@@ -1,3 +1,4 @@
+import os
 from unittest.mock import MagicMock, patch
 from core.context_engine import ContextEngine
 
@@ -61,6 +62,27 @@ def test_scan_workspace(mock_getsize, mock_isfile, mock_isdir, mock_listdir):
     assert "  file2.md  (1024 bytes)" in file_map_lines
     assert len(md_files) == 1
     assert md_files[0][0] == "file2.md"
+
+@patch("os.listdir")
+@patch("os.path.isdir")
+@patch("os.path.isfile")
+@patch("os.path.getsize")
+def test_scan_workspace_uses_configured_ignore_dirs(mock_getsize, mock_isfile, mock_isdir, mock_listdir):
+    agent = MockAgent("/workspace")
+    agent.cfg = {"context": {"workspace_ignore_dirs": ["skipme"]}}
+    ce = ContextEngine(agent)
+    mock_listdir.side_effect = [
+        ["keep.md", "skipme"],
+    ]
+    mock_isdir.side_effect = lambda x: x.endswith("skipme")
+    mock_isfile.side_effect = lambda x: x.endswith("keep.md")
+    mock_getsize.return_value = 10
+
+    file_map_lines, md_files = ce._scan_workspace()
+
+    assert "  keep.md  (10 bytes)" in file_map_lines
+    assert all("skipme" not in line for line in file_map_lines)
+    assert md_files == [("keep.md", os.path.join("/workspace", "keep.md"))]
 
 @patch("core.context_engine.ContextEngine._scan_workspace")
 @patch("builtins.open")

@@ -121,10 +121,34 @@ hot_reload:
     - "core"
     - "tools"
     - "scripts"
+  excluded_dirs:
+    - ".git"
+    - "venv"
+    - "node_modules"
+    - "__pycache__"
+    - ".pytest_cache"
+    - ".mypy_cache"
+    - ".ruff_cache"
+    - "workspace"
+    - "data"
+    - "mock_workspace"
   retry_backoff: true
   fallback_strategies: true
   error_logging: true
   crash_recovery: true
+
+context:
+  workspace_ignore_dirs:
+    - ".git"
+    - "venv"
+    - "node_modules"
+    - "__pycache__"
+    - ".pytest_cache"
+    - ".mypy_cache"
+    - ".ruff_cache"
+    - "workspace"
+    - "data"
+    - "mock_workspace"
 
 windows_paths:
   uninstall_registry: "HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*"

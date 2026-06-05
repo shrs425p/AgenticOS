@@ -47,7 +47,7 @@ _KNOWN_ROOT_KEYS = {
     "agent", "cloud", "autonomy", "ollama", "memory", "cache",
     "logging", "rules", "security", "performance", "heuristics",
     "prompts", "policy", "tools", "terminal", "browser", "media",
-    "parser", "hot_reload", "windows_paths", "timeouts", "endpoints",
+    "parser", "hot_reload", "context", "windows_paths", "timeouts", "endpoints",
     "rate_limits", "custom_keys",
 }
 

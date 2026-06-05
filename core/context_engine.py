@@ -6,6 +6,8 @@ and proactive context injection (Active Recall).
 import os
 from typing import TYPE_CHECKING, Any, Optional, Tuple, List, Dict
 
+from core.runtime_config import DEFAULT_SCAN_EXCLUDED_DIRS
+
 if TYPE_CHECKING:
     from core.runtime import Agent
 
@@ -39,17 +41,11 @@ class ContextEngine:
         """
         file_map_lines = []
         md_files = []
-        ignore_dirs = {
-            ".git",
-            "venv",
-            "node_modules",
-            "__pycache__",
-            ".pytest_cache",
-            ".mypy_cache",
-            ".ruff_cache",
-            "data",
-            "mock_workspace",
-        }
+        ignore_dirs = set(
+            self.cfg.get("context", {}).get(
+                "workspace_ignore_dirs", DEFAULT_SCAN_EXCLUDED_DIRS
+            )
+        )
 
         try:
             for entry in sorted(os.listdir(self.workspace)):

@@ -43,7 +43,12 @@ from core.model_clients import (
     OpenRouterClient,
     TieredClient,
 )  # noqa: F401
-from core.runtime_config import BASE_DIR, DEFAULT_WORKSPACE, load_config
+from core.runtime_config import (
+    BASE_DIR,
+    DEFAULT_SCAN_EXCLUDED_DIRS,
+    DEFAULT_WORKSPACE,
+    load_config,
+)
 from core.runtime_ui import (
     C,
     banner,
@@ -61,6 +66,7 @@ from core.runtime_ui import (
 from core.session_memory_sqlite import SqliteSessionMemory
 from core.task_tracker import TaskTracker
 from core.tool_registry import ToolRegistry
+from core.version import DEFAULT_VERSION
 
 logger = get_logger(__name__)
 
@@ -252,24 +258,22 @@ class Agent:
         if BASE_DIR not in tracked_dirs:
             tracked_dirs.append(BASE_DIR)
 
-        blacklisted_dirs = {
-            "venv",
-            "node_modules",
-            "workspace",
-            "data",
-            "mock_workspace",
-        }
+        blacklisted_dirs = set(
+            self.cfg.get("hot_reload", {}).get(
+                "excluded_dirs", DEFAULT_SCAN_EXCLUDED_DIRS
+            )
+        )
         try:
             for directory in tracked_dirs:
                 if not os.path.isdir(directory):
+                    continue
+                if os.path.basename(os.path.normpath(directory)) in blacklisted_dirs:
                     continue
                 for root, dirs, files in os.walk(directory):
                     dirs[:] = [
                         d
                         for d in dirs
-                        if d != "__pycache__"
-                        and not d.startswith(".")
-                        and d not in blacklisted_dirs
+                        if not d.startswith(".") and d not in blacklisted_dirs
                     ]
                     for name in files:
                         if not (name.endswith(".py") or name == "config.yaml"):
@@ -1945,7 +1949,7 @@ class CLI:
 
         elif base == "/version":
             provider = self.agent.client.provider
-            version_str = "2.1.2"
+            version_str = DEFAULT_VERSION
             try:
                 changelog_path = os.path.join(BASE_DIR, "CHANGELOG.md")
                 if os.path.exists(changelog_path):

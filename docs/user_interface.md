@@ -36,7 +36,7 @@ AgenticOS isn't just trapped in the terminal. It can communicate with you via na
 
 ### Notification Scenarios:
 1.  **Task Completion**: "Audit finished! See workspace/firewall_report.md."
-2.  **Security Alerts**: "ACTION BLOCKED: Agent attempted to modify C:\Windows."
+2.  **Security Alerts**: "ACTION BLOCKED: Agent attempted to modify a protected system path."
 3.  **High-Value Events**: "Price Alert: NVDA has hit your target price of $140."
 
 ---
