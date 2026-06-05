@@ -23,11 +23,14 @@ For maximum stability and performance, we recommend cloning the project into a r
 Once cloned and in the project directory, run the setup script. You can execute this natively via your code editor (e.g., VS Code) or the terminal:
 
 #### Windows:
-1. Clone the repository and navigate into it:
-```powershell
-git clone https://github.com/shrs425p/AgenticOS.git <REPO_ROOT>
-cd <REPO_ROOT>
-```
+1. Clone the repository:
+   ```powershell
+   git clone https://github.com/shrs425p/AgenticOS.git <REPO_ROOT>
+   ```
+2. Navigate into the cloned directory:
+   ```powershell
+   cd <REPO_ROOT>
+   ```
 
 ### Method A: Via VS Code Task (Recommended)
 1. Open the project folder in VS Code.
@@ -42,16 +45,18 @@ powershell -ExecutionPolicy Bypass -File .\setup.ps1
 ```
 
 #### macOS / Linux Setup:
-1. Clone the repository and navigate into it:
-```bash
-git clone https://github.com/shrs425p/AgenticOS.git ~/AgenticOs
-cd ~/AgenticOs
-```
-2. Run the automated setup script:
-
-```bash
-./setup.sh
-```
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/shrs425p/AgenticOS.git ~/AgenticOs
+   ```
+2. Navigate into the cloned directory:
+   ```bash
+   cd ~/AgenticOs
+   ```
+3. Run the automated setup script:
+   ```bash
+   ./setup.sh
+   ```
 
 ### What the Setup Script Automates:
 * **Python Auto-Install Option**: If Python 3.12+ is missing or outdated, the script prompts you and handles downloading and installing it automatically via `winget` or direct installer (Windows), Homebrew (macOS), or `apt` (Linux).

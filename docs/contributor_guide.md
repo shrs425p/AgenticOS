@@ -8,6 +8,9 @@ Welcome to the AgenticOS project! We appreciate your interest in contributing. T
     First, clone the AgenticOS repository to your local machine:
     ```bash
     git clone https://github.com/shrs425p/AgenticOS.git
+    ```
+    Then, navigate into the cloned directory:
+    ```bash
     cd AgenticOS
     ```
 
