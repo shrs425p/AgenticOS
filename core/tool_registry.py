@@ -47,7 +47,7 @@ class ToolRegistry:
             **cfg.get("performance", {}),
             **cfg.get("system_control", {}),
             **cfg.get("security", {}),
-            **cfg["rules"],
+            **cfg.get("rules", {}),
         }
         self.tools_cfg = cfg.get("tools", {})
         self._memory = memory_backend

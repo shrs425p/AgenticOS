@@ -14,57 +14,72 @@ This project implements a robust structural command safety validator within Agen
 ## Phase Details
 
 ### Phase 1: Command Tokenization & Argument Parsing
+
 **Goal**: Implement structural parsing using `shlex` and correctly handle nested quotes and argument splits in a new command validator.
 **Mode**: mvp
 **Depends on**: Nothing (first phase)
 **Requirements**: [PARS-01, PARS-02]
 **Success Criteria** (what must be TRUE):
+
   1. Commands are analyzed as tokenized structural words rather than flat strings.
   2. Validator correctly parses complex, nested quoted arguments.
-**Plans**: 2 plans
 
+**Plans**: 2 plans
 Plans:
+
 - [ ] 01-01: Implement structural command tokenizer.
 - [ ] 01-02: Write initial tokenization unit tests.
 
 ### Phase 2: Shell Chaining & Obfuscation Interception
+
 **Goal**: Detect and block shell chaining operators (`&&`, `;`, `||`, etc.) and obfuscation patterns (variable expansion, escaped quotes).
 **Mode**: mvp
 **Depends on**: Phase 1
 **Requirements**: [SAFE-01, SAFE-02]
 **Success Criteria** (what must be TRUE):
+
   1. Executing chained commands returns a security violation block.
   2. Obfuscated commands (e.g. `n"e"t u"s"er`) are successfully detected and blocked.
+
 **Plans**: 2 plans
 
 Plans:
+
 - [ ] 02-01: Implement chaining and obfuscation filters.
 - [ ] 02-02: Write chaining and obfuscation bypass unit tests.
 
 ### Phase 3: Runner Integration
+
 **Goal**: Integrate the structural command safety checks with `tools/terminal/runner.py`.
 **Mode**: mvp
 **Depends on**: Phase 2
 **Requirements**: [SAFE-03, SAFE-04]
 **Success Criteria** (what must be TRUE):
+
   1. Subprocess calls from terminal tools (such as `run_command` or `run_powershell`) are validated before running.
   2. Blocks return detailed explanation messages to the caller.
+
 **Plans**: 2 plans
 
 Plans:
+
 - [ ] 03-01: Update `RunnerMixin` in `tools/terminal/runner.py` to invoke the structural validator.
 - [ ] 03-02: Verify run command execution with active safety rules enabled.
 
 ### Phase 4: Safety Verification Suite
+
 **Goal**: Conduct a comprehensive verification audit with test suites verifying all safety gates.
 **Mode**: mvp
 **Depends on**: Phase 3
 **Requirements**: [TEST-01]
 **Success Criteria** (what must be TRUE):
+
   1. All 7 requirements are satisfied and verified by automated tests.
+
 **Plans**: 1 plan
 
 Plans:
+
 - [ ] 04-01: Run full pytest suite and verify 100% security test pass rate.
 
 ## Progress

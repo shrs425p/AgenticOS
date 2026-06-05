@@ -694,7 +694,7 @@ class Agent:
                         self.task_tracker.record_action(tool_name, args)
 
                     # Optional confirmation for destructive actions
-                    if (self.cfg["rules"].get("require_confirm_destructive") and not self.confirm):
+                    if (self.cfg.get("rules", {}).get("require_confirm_destructive") and not self.confirm):
                         destructive = set(self.cfg.get("policy", {}).get("destructive_tools", ["delete_file", "delete_dir", "kill_process", "run_command", "run_script"]))
                         if tool_name in destructive:
                             try:
