@@ -9,13 +9,13 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Command Parsing
 
-- [ ] **PARS-01**: Tokenize subprocess commands using robust structural parsing (e.g. `shlex`) instead of simplistic string checks.
-- [ ] **PARS-02**: Correctly parse and validate multi-word arguments and double-nested commands.
+- [x] **PARS-01**: Tokenize subprocess commands using robust structural parsing (e.g. `shlex`) instead of simplistic string checks.
+- [x] **PARS-02**: Correctly parse and validate multi-word arguments and double-nested commands.
 
 ### Safety Enforcement
 
-- [ ] **SAFE-01**: Intercept and block shell chaining/concatenation operators (`&&`, `;`, `||`, `|`, `$()`, `` ` ``).
-- [ ] **SAFE-02**: Identify and block shell command obfuscation (escapes, variables, env parameter lookups, nested string quotes).
+- [x] **SAFE-01**: Intercept and block shell chaining/concatenation operators (`&&`, `;`, `||`, `|`, `$()`, `` ` ``).
+- [x] **SAFE-02**: Identify and block shell command obfuscation (escapes, variables, env parameter lookups, nested string quotes).
 - [x] **SAFE-03**: Integrate the advanced safety checks seamlessly with `run_command`, `run_powershell`, and `run_script` in `tools/terminal/runner.py`.
 - [x] **SAFE-04**: Return informative block messages detailing exactly which safety rules were breached.
 
@@ -43,10 +43,10 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PARS-01 | Phase 1 | Pending |
-| PARS-02 | Phase 1 | Pending |
-| SAFE-01 | Phase 2 | Pending |
-| SAFE-02 | Phase 2 | Pending |
+| PARS-01 | Phase 1 | Complete |
+| PARS-02 | Phase 1 | Complete |
+| SAFE-01 | Phase 2 | Complete |
+| SAFE-02 | Phase 2 | Complete |
 | SAFE-03 | Phase 3 | Complete |
 | SAFE-04 | Phase 3 | Complete |
 | TEST-01 | Phase 4 | Pending |

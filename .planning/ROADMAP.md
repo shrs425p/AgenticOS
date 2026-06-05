@@ -6,8 +6,8 @@ This project implements a robust structural command safety validator within Agen
 
 ## Phases
 
-- [ ] **Phase 1: Command Tokenization & Argument Parsing** - Implement structural shlex parsing to correctly handle nested arguments.
-- [ ] **Phase 2: Shell Chaining & Obfuscation Interception** - Detect and block shell chaining and quote/escape obfuscation bypasses.
+- [x] **Phase 1: Command Tokenization & Argument Parsing** - Implement structural shlex parsing to correctly handle nested arguments. (completed 2026-06-05)
+- [x] **Phase 2: Shell Chaining & Obfuscation Interception** - Detect and block shell chaining and quote/escape obfuscation bypasses. (completed 2026-06-05)
 - [x] **Phase 3: Runner Integration** - Integrate advanced validation with `RunnerMixin` subprocess executables. (completed 2026-06-05)
 - [ ] **Phase 4: Safety Verification Suite** - Verify security policies against a wide matrix of injection payloads.
 
@@ -27,7 +27,7 @@ This project implements a robust structural command safety validator within Agen
 **Plans**: 2 plans
 Plans:
 
-- [ ] 01-01: Implement structural command tokenizer.
+- [x] 01-01: Implement structural command tokenizer.
 - [ ] 01-02: Write initial tokenization unit tests.
 
 ### Phase 2: Shell Chaining & Obfuscation Interception
@@ -44,7 +44,7 @@ Plans:
 **Plans**: 2 plans
 Plans:
 
-- [ ] 02-01: Implement chaining and obfuscation filters.
+- [x] 02-01: Implement chaining and obfuscation filters.
 - [ ] 02-02: Write chaining and obfuscation bypass unit tests.
 
 ### Phase 3: Runner Integration
@@ -91,7 +91,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Tokenization | 0/2 | Not started | - |
-| 2. Interception | 0/2 | Not started | - |
+| 1. Tokenization | 1/1 | Complete    | 2026-06-05 |
+| 2. Interception | 1/1 | Complete    | 2026-06-05 |
 | 3. Integration | 2/2 | Complete    | 2026-06-05 |
 | 4. Verification | 0/1 | Not started | - |
