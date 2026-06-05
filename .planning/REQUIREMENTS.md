@@ -21,7 +21,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Verification
 
-- [ ] **TEST-01**: Build unit tests inside `tests/` specifically checking command validator safety against common bypass payloads.
+- [x] **TEST-01**: Build unit tests inside `tests/` specifically checking command validator safety against common bypass payloads.
 
 ## v2 Requirements
 
@@ -49,7 +49,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | SAFE-02 | Phase 2 | Complete |
 | SAFE-03 | Phase 3 | Complete |
 | SAFE-04 | Phase 3 | Complete |
-| TEST-01 | Phase 4 | Pending |
+| TEST-01 | Phase 4 | Complete |
 
 **Coverage:**
 
