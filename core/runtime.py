@@ -1,20 +1,23 @@
 
 """AgenticOs runtime orchestration."""
 
+from datetime import datetime
 import os
+import platform
 import random
+import re
+import subprocess
 import sys
 import time
 import traceback
-from datetime import datetime
-import subprocess
-import platform
+from typing import Callable, Dict, Optional, Tuple
+
+import requests
 
 try:
     import psutil
 except ImportError:
     psutil = None
-
 
 try:
     import readline
@@ -26,16 +29,22 @@ except ImportError:
     except ImportError:
         readline = None
 
-import requests
-import re
-from typing import Dict, Optional, Callable, Tuple
-
-from core.memory_manager import initialize_memory_manager, log_task_completion
-from core.session_memory_sqlite import SqliteSessionMemory
 from core.audit_logger import AuditLogger, infer_success
-from core.model_clients import GeminiClient, NvidiaClient, OllamaClient, GroqClient, OpenAIClient, OpenRouterClient, GithubClient, DeepseekClient, TieredClient  # noqa: F401
+from core.context_engine import ContextEngine
+from core.logger import get_logger
+from core.memory_manager import initialize_memory_manager, log_task_completion
+from core.model_clients import (
+    DeepseekClient,
+    GeminiClient,
+    GithubClient,
+    GroqClient,
+    NvidiaClient,
+    OllamaClient,
+    OpenAIClient,
+    OpenRouterClient,
+    TieredClient,
+)  # noqa: F401
 from core.runtime_config import BASE_DIR, DEFAULT_WORKSPACE, load_config
-from core.task_tracker import TaskTracker
 from core.runtime_ui import (
     C,
     banner,
@@ -50,9 +59,9 @@ from core.runtime_ui import (
     pulse_line,
     typewriter_print,
 )
+from core.session_memory_sqlite import SqliteSessionMemory
+from core.task_tracker import TaskTracker
 from core.tool_registry import ToolRegistry
-from core.context_engine import ContextEngine
-from core.logger import get_logger
 logger = get_logger(__name__)
 
 
@@ -711,6 +720,9 @@ class Agent:
                     obs = self.tools.call(tool_name, args)
                     ended = _time.time()
                     observations.append(str(obs or "Done."))
+
+                    ok = False
+                    obs_text = ""
 
                     # Audit log tool call (no chat content).
                     try:

@@ -22,6 +22,52 @@ class RunnerMixin:
             return subprocess.list2cmdline([value])
         return shlex.quote(value)
 
+    def _attempt_self_healing(
+        self,
+        command: str,
+        timeout: int,
+        cwd: Optional[str],
+        input_data: Optional[str],
+        env_extra: Optional[dict],
+    ) -> Optional[str]:
+        """Attempt to self-provision a missing command and rerun.
+
+        Args:
+            command: The command line string.
+            timeout: Timeout in seconds.
+            cwd: Working directory.
+            input_data: Stdin input.
+            env_extra: Extra environment variables.
+
+        Returns:
+            The output of the rerun command if self-healing succeeded,
+            otherwise None.
+        """
+        cmd_name = ""
+        try:
+            parts = shlex.split(command)
+            if parts:
+                cmd_name = parts[0]
+        except Exception:
+            cmd_name = command.split()[0] if command.split() else ""
+        cmd_name = os.path.basename(cmd_name).replace('"', '').replace("'", "")
+
+        if cmd_name:
+            try:
+                from core.self_provisioner import self_provision_command
+                if self_provision_command(cmd_name):
+                    return self._run(
+                        command,
+                        timeout=timeout,
+                        cwd=cwd,
+                        input_data=input_data,
+                        env_extra=env_extra,
+                        _is_retry=True,
+                    )
+            except Exception:
+                pass
+        return None
+
     def _run(
         self,
         command: str,
@@ -71,29 +117,15 @@ class RunnerMixin:
 
             # Self-healing on command-not-found exit codes
             if code in (9009, 127) and not _is_retry:
-                cmd_name = ""
-                try:
-                    parts = shlex.split(command)
-                    if parts:
-                        cmd_name = parts[0]
-                except Exception:
-                    cmd_name = command.split()[0] if command.split() else ""
-                cmd_name = os.path.basename(cmd_name).replace('"', '').replace("'", "")
-
-                if cmd_name:
-                    try:
-                        from core.self_provisioner import self_provision_command
-                        if self_provision_command(cmd_name):
-                            return self._run(
-                                command,
-                                timeout=timeout,
-                                cwd=cwd,
-                                input_data=input_data,
-                                env_extra=env_extra,
-                                _is_retry=True,
-                            )
-                    except Exception:
-                        pass
+                healed = self._attempt_self_healing(
+                    command,
+                    timeout=timeout,
+                    cwd=cwd,
+                    input_data=input_data,
+                    env_extra=env_extra,
+                )
+                if healed is not None:
+                    return healed
 
             parts = []
             if out:
@@ -109,41 +141,45 @@ class RunnerMixin:
             return f"Error: Command timed out after {timeout}s"
         except FileNotFoundError as e:
             if not _is_retry:
-                cmd_name = ""
-                try:
-                    parts = shlex.split(command)
-                    if parts:
-                        cmd_name = parts[0]
-                except Exception:
-                    cmd_name = command.split()[0] if command.split() else ""
-                cmd_name = os.path.basename(cmd_name).replace('"', '').replace("'", "")
-
-                if cmd_name:
-                    try:
-                        from core.self_provisioner import self_provision_command
-                        if self_provision_command(cmd_name):
-                            return self._run(
-                                command,
-                                timeout=timeout,
-                                cwd=cwd,
-                                input_data=input_data,
-                                env_extra=env_extra,
-                                _is_retry=True,
-                            )
-                    except Exception:
-                        pass
+                healed = self._attempt_self_healing(
+                    command,
+                    timeout=timeout,
+                    cwd=cwd,
+                    input_data=input_data,
+                    env_extra=env_extra,
+                )
+                if healed is not None:
+                    return healed
             return f"Error: Command not found: {e}"
         except Exception as e:
             return f"Error running command: {type(e).__name__}: {e}"
 
     @tool(name="run_command", desc="Run shell command. Args: command", category="Terminal")
     def run_command(self, command: str, timeout: int = 30) -> str:
-        """run_command function."""
+        """Run a shell command on the host system.
+
+        Args:
+            command: The command line string to execute.
+            timeout: Timeout in seconds for command execution. Defaults to 30.
+
+        Returns:
+            The combined stdout and stderr of the command, or an error message.
+        """
         return self._run(command, timeout=timeout)
 
     @tool(name="run_powershell", desc="Run PowerShell command. Args: command", category="Terminal")
     def run_powershell(self, command: str, timeout: int = 60) -> str:
-        """run_powershell function."""
+        """Run a command inside a PowerShell process.
+
+        On non-Windows systems, this falls back to standard execution.
+
+        Args:
+            command: The command line string to execute.
+            timeout: Timeout in seconds for command execution. Defaults to 60.
+
+        Returns:
+            The combined stdout and stderr of the command, or an error message.
+        """
         if self.system != "Windows":
             return self._run(command, timeout=timeout)
         return self._run(
@@ -172,6 +208,7 @@ class RunnerMixin:
     _CONTINUATION_CHARS = {
         ".sh": "\\",
         ".bash": "\\",
+        ".zsh": "\\",
         ".ps1": "`",
         ".cmd": "^",
         ".bat": "^",
@@ -186,7 +223,16 @@ class RunnerMixin:
 
     @tool(name="run_python", desc="Run Python code string. Args: code", category="Terminal")
     def run_python(self, code: str) -> str:
-        """run_python function."""
+        """Execute a Python code block and capture the output.
+
+        Typographic Unicode characters are automatically sanitized.
+
+        Args:
+            code: The Python source code string to execute.
+
+        Returns:
+            The output of the python process or an error message.
+        """
         return self._run("python -", timeout=60, input_data=self._sanitize_code(code))
 
     def _validate_script_content(self, p: Path) -> str:
@@ -206,7 +252,7 @@ class RunnerMixin:
         suffix = p.suffix.lower()
         continuation_char = self._CONTINUATION_CHARS.get(suffix)
         if continuation_char is None:
-            # Not a shell script we scan (e.g. .py, .zsh) — skip.
+            # Not a shell script we scan (e.g. .py) — skip.
             return ""
 
         try:
@@ -224,7 +270,7 @@ class RunnerMixin:
 
             # Filter full-line comments based on script type.
             is_comment = False
-            if suffix in (".sh", ".bash", ".ps1"):
+            if suffix in (".sh", ".bash", ".zsh", ".ps1"):
                 if stripped.startswith("#"):
                     is_comment = True
             elif suffix in (".bat", ".cmd"):

@@ -179,6 +179,34 @@ class SafetyMixin:
             base = base[:-4]
         return base.lower()
 
+    def _is_powershell_command_flag(self, token: str) -> bool:
+        """Check if a token is a PowerShell command parameter.
+
+        Args:
+            token: The parameter token to check.
+
+        Returns:
+            True if it matches a prefix of 'command' ignoring leading hyphen/slash.
+        """
+        if not (token.startswith("-") or token.startswith("/")):
+            return False
+        flag = token[1:].lower()
+        return len(flag) >= 1 and "command".startswith(flag)
+
+    def _is_powershell_encoded_flag(self, token: str) -> bool:
+        """Check if a token is a PowerShell base64 encoded parameter.
+
+        Args:
+            token: The parameter token to check.
+
+        Returns:
+            True if it matches a prefix of 'encodedcommand' ignoring leading hyphen/slash.
+        """
+        if not (token.startswith("-") or token.startswith("/")):
+            return False
+        flag = token[1:].lower()
+        return len(flag) >= 2 and "encodedcommand".startswith(flag)
+
     def _blocked_command_reason(self, command: str) -> str:
         """Check if a command is blocked by the configured safety rules.
 
@@ -270,7 +298,7 @@ class SafetyMixin:
         for i, token in enumerate(cleaned_tokens):
             # Check powershell wrappers
             if verb in {"powershell", "pwsh"}:
-                if token.lower() in {"-command", "-c", "/command", "/c"} and i + 1 < len(tokens):
+                if self._is_powershell_command_flag(token) and i + 1 < len(tokens):
                     nested_cmd = " ".join(tokens[i + 1:])
                     nested_cmd = self._strip_wrapping_quotes(nested_cmd)
                     
@@ -282,6 +310,18 @@ class SafetyMixin:
                         )
                         
                     nested_reason = self._blocked_command_reason(nested_cmd)
+                    if nested_reason:
+                        return nested_reason
+                elif self._is_powershell_encoded_flag(token) and i + 1 < len(tokens):
+                    encoded_payload = self._strip_wrapping_quotes(tokens[i + 1])
+                    try:
+                        import base64
+                        decoded_bytes = base64.b64decode(encoded_payload.encode('ascii'))
+                        decoded_cmd = decoded_bytes.decode('utf-16-le')
+                    except Exception as e:
+                        return f"Command blocked by safety rules: base64-decode-failure ({e})"
+
+                    nested_reason = self._blocked_command_reason(decoded_cmd)
                     if nested_reason:
                         return nested_reason
             # Check cmd wrappers
