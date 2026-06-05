@@ -16,8 +16,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **SAFE-01**: Intercept and block shell chaining/concatenation operators (`&&`, `;`, `||`, `|`, `$()`, `` ` ``).
 - [ ] **SAFE-02**: Identify and block shell command obfuscation (escapes, variables, env parameter lookups, nested string quotes).
-- [ ] **SAFE-03**: Integrate the advanced safety checks seamlessly with `run_command`, `run_powershell`, and `run_script` in `tools/terminal/runner.py`.
-- [ ] **SAFE-04**: Return informative block messages detailing exactly which safety rules were breached.
+- [x] **SAFE-03**: Integrate the advanced safety checks seamlessly with `run_command`, `run_powershell`, and `run_script` in `tools/terminal/runner.py`.
+- [x] **SAFE-04**: Return informative block messages detailing exactly which safety rules were breached.
 
 ### Verification
 
@@ -47,11 +47,12 @@ Deferred to future release. Tracked but not in current roadmap.
 | PARS-02 | Phase 1 | Pending |
 | SAFE-01 | Phase 2 | Pending |
 | SAFE-02 | Phase 2 | Pending |
-| SAFE-03 | Phase 3 | Pending |
-| SAFE-04 | Phase 3 | Pending |
+| SAFE-03 | Phase 3 | Complete |
+| SAFE-04 | Phase 3 | Complete |
 | TEST-01 | Phase 4 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 7 total
 - Mapped to phases: 7
 - Unmapped: 0 ✓
