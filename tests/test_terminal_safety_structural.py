@@ -124,3 +124,89 @@ def test_nested_execution_recursion():
     # bash nested checks
     assert "Command blocked by safety rules: sc" in safety._blocked_command_reason("bash -c \"sc stop\"")
     assert "Command blocked by safety rules: sc" in safety._blocked_command_reason("sh -c sc")
+
+
+def test_chaining_operators(monkeypatch):
+    """Verify that unquoted chaining operators are blocked, while quoted ones are allowed."""
+    monkeypatch.setattr(os, "name", "posix")
+    rules = {
+        "allow_shell_exec": True,
+        "validate_commands": True,
+        "allow_service_control": False,
+    }
+    safety = DummySafety(rules)
+
+    # Chaining operators (blocked)
+    assert "shell chaining operator detected" in safety._blocked_command_reason("echo hello && sc stop")
+    assert "shell chaining operator detected" in safety._blocked_command_reason("echo hello; sc stop")
+    assert "shell chaining operator detected" in safety._blocked_command_reason("echo hello|sc stop")
+    assert "shell chaining operator detected" in safety._blocked_command_reason("echo $(whoami)")
+    assert "shell chaining operator detected" in safety._blocked_command_reason("echo `whoami`")
+
+    # Quoted chaining operators (allowed/not blocked by chaining check)
+    # Note: they might be blocked by other rules if they contain blocked commands,
+    # but here we check they don't trigger the "shell chaining operator detected" block.
+    assert "shell chaining operator detected" not in safety._blocked_command_reason("echo \"hello && welcome\"")
+    assert "shell chaining operator detected" not in safety._blocked_command_reason("echo 'hello; world'")
+
+
+def test_variable_expansions():
+    """Verify that environment variables are contextually blocked."""
+    rules = {
+        "allow_shell_exec": True,
+        "validate_commands": True,
+        "allow_service_control": False,
+    }
+    safety = DummySafety(rules)
+
+    # Blocked in command verb position
+    assert "environment variable expansion detected in verb position" in safety._blocked_command_reason("%COMSPEC% /c sc")
+    assert "environment variable expansion detected in verb position" in safety._blocked_command_reason("$VAR stop")
+    assert "environment variable expansion detected in verb position" in safety._blocked_command_reason("${VAR} start")
+    assert "environment variable expansion detected in verb position" in safety._blocked_command_reason("$env:VAR start")
+
+    # Blocked in nested wrapper parameter position
+    assert "environment variable expansion detected in wrapper parameters" in safety._blocked_command_reason("powershell -c $a")
+    assert "environment variable expansion detected in wrapper parameters" in safety._blocked_command_reason("cmd /c %VAR%")
+    assert "environment variable expansion detected in wrapper parameters" in safety._blocked_command_reason("bash -c $VAR")
+
+    # Allowed in normal argument position
+    assert safety._blocked_command_reason("echo $PATH") == ""
+    assert safety._blocked_command_reason("echo %USERNAME%") == ""
+
+
+def test_escape_obfuscation_windows(monkeypatch):
+    """Verify escape obfuscation detection on Windows (caret and backtick)."""
+    monkeypatch.setattr(os, "name", "nt")
+    rules = {
+        "allow_shell_exec": True,
+        "validate_commands": True,
+        "allow_service_control": True,
+    }
+    safety = DummySafety(rules)
+
+    # Windows escapes blocked
+    assert "command obfuscation detected" in safety._blocked_command_reason("n^e^t stop")
+    assert "command obfuscation detected" in safety._blocked_command_reason("n`e`t start")
+
+    # Backslash is a path separator on Windows, not an escape, so allowed
+    assert safety._blocked_command_reason("C:\\Windows\\System32\\sc.exe query") == ""
+    assert "command obfuscation detected" not in safety._blocked_command_reason("s\\c query")
+
+
+def test_escape_obfuscation_posix(monkeypatch):
+    """Verify escape obfuscation detection on POSIX/macOS (backslash)."""
+    monkeypatch.setattr(os, "name", "posix")
+    rules = {
+        "allow_shell_exec": True,
+        "validate_commands": True,
+        "allow_service_control": True,
+    }
+    safety = DummySafety(rules)
+
+    # POSIX escapes blocked
+    assert "command obfuscation detected" in safety._blocked_command_reason("s\\c query")
+
+    # Caret and backtick are not escapes on POSIX, so not blocked as escape obfuscation
+    assert "command obfuscation detected" not in safety._blocked_command_reason("n^e^t stop")
+    assert "command obfuscation detected" not in safety._blocked_command_reason("n`e`t start")
