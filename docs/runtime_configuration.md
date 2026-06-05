@@ -86,3 +86,37 @@ You can easily locate and open the configuration folder using the **`/config`** 
 
 *Last Updated: 2026-05-20*
 *Status: Architecture Hardened*
+
+## Environment Variables
+
+The system loads credentials from the `.env` file in the project root:
+
+| Variable | Description | Required / Optional |
+|---|---|---|
+| `NVIDIA_API_KEY` | API key for NVIDIA NIM cloud model endpoints. | Required if provider is set to `nvidia` |
+| `GOOGLE_API_KEY` | API key for Google Gemini model client SDK. | Required if provider is set to `gemini` |
+| `GROQ_API_KEY` | API key for Groq Acceleration endpoints. | Optional |
+| `OPENAI_API_KEY` | API key for OpenAI-compatible clients. | Optional |
+
+## Required vs Optional Settings
+
+- **Required**:
+  - API credentials corresponding to the active model provider.
+  - Active model provider specified in `config/providers.yaml`.
+- **Optional**:
+  - Heuristics such as `iteration_warning_threshold` or `max_observation_chars` which fallback to standard defaults.
+
+## Defaults
+
+Default values configured in the core config manager:
+- **`workspace`**: `./workspace`
+- **`max_observation_chars`**: `12000`
+- **`performance.max_retries`**: `5`
+- **`performance.base_retry_delay`**: `5.0`
+
+## Per-Environment Overrides
+
+Environment-specific overrides can be configured via:
+1. Dotenv profiles (e.g. `.env` file override paths).
+2. Direct system environment variables (prefixed configuration options).
+3. Custom overrides in layer files placed inside the `config/` directory.

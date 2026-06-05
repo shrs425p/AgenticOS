@@ -126,4 +126,21 @@ AgenticOS relies on a comprehensive `pytest` suite to ensure stability.
     *   **Bug Reporting:** If a bug is discovered while writing tests, it is highly encouraged to fix it in the same PR or report it as a separate issue with a suggested fix and a reproduction test case.
     *   **No Artifacts:** Do not commit local test output logs or generated build/test artifacts (e.g., `pytest_output.txt`, `coverage.json`). Avoid creating extraneous log files in the working directory during testing.
 
+## Branch Conventions
+
+Branch names should follow the standard pattern:
+- `feat/feature-name` for new features or capabilities.
+- `fix/bug-name` for bug fixes.
+- `docs/doc-name` for documentation updates.
+
+The default development branch is `main`.
+
+## PR Process
+
+1. Fork the repository and create your branch from `main`.
+2. Ensure all linting checks (`ruff check .`) and tests (`python -m pytest tests/`) pass.
+3. Submit a pull request targeting `main`.
+4. Provide a clear description of the changes, referencing any related issue IDs.
+5. A project maintainer will review the PR before merging.
+
 Thank you for contributing to AgenticOS!

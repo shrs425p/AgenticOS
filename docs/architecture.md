@@ -145,3 +145,18 @@ Before deploying AgenticOS in an enterprise environment, ensure the following:
 
 *Last Updated: 2026-05-13*
 *Status: Verified Project*
+
+## Key Abstractions
+
+- **`SafetyMixin`** ([tools/terminal/safety.py](file:///c:/Users/shrs/AgenticOS/tools/terminal/safety.py)): Implements structural command tokenization, PowerShell flag prefix matching, Base64 payload decoding, and shell chaining/obfuscation interception.
+- **`RunnerMixin`** ([tools/terminal/runner.py](file:///c:/Users/shrs/AgenticOS/tools/terminal/runner.py)): Defines core terminal execution tools (`run_command`, `run_powershell`, `run_script`), intercepts calls via safety rules, and performs line-by-line script checks.
+- **`AgentRuntime`** ([core/runtime.py](file:///c:/Users/shrs/AgenticOS/core/runtime.py)): Coordinates the main thought processing, replanning, tool execution, and error handling loop.
+- **`ToolRegistry`** ([core/tool_registry.py](file:///c:/Users/shrs/AgenticOS/core/tool_registry.py)): Decorator-based registry (`@tool`) enabling dynamic capability lookup, hot-reloading, and schema verification.
+- **`AuditLogger`** ([core/audit_logger.py](file:///c:/Users/shrs/AgenticOS/core/audit_logger.py)): Handles security validation audits and records incidents to persistent storage.
+
+## Directory Structure Rationale
+
+- **`core/`**: Houses the main runtime, memory managers, database controllers, and zero-trust security gatekeepers (PathGuard, audit logger).
+- **`tools/`**: Categorized tool libraries (filesystem, web, OS) and the dynamic `plugins/` directory to simplify self-evolution.
+- **`config/`**: Layered YAML files defining providers, policy bounds, and system configurations to eliminate hardcoding.
+- **`tests/`**: Automated test suite mapping to all core components and filesystem plugins.

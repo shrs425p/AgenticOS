@@ -192,3 +192,12 @@ This will run the automated suite to ensure core components, filesystem tools, a
 *Last Updated: 2026-05-18*
 *Status: Verified on Windows, macOS, and Linux*
 
+## Installation Steps
+Please see the step-by-step instructions detailed in [Step 2: Running the Automated Setup Script](#step-2-running-the-automated-setup-script) above.
+
+## First Run
+Please see [Step 5: Launching AgenticOS](#step-5-launching-agenticos) and [Step 6: Your First Task](#step-6-your-first-task) above for instructions on launching the agent and running your first task.
+
+## Common Setup Issues
+Please see [Troubleshooting the Setup](#troubleshooting-the-setup) above for solutions to common issues.
+

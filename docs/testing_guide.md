@@ -95,3 +95,18 @@ When adding a new tool:
 
 *Last Updated: 2026-05-18*
 *Status: Engineering Standard (Verified Cross-Platform)*
+
+## Test Framework and Setup
+Please see [Testing Philosophy](#testing-philosophy) and [Running the Test Suite](#running-the-test-suite) above.
+
+## Running Tests
+Please see [Running the Test Suite](#running-the-test-suite) above.
+
+## Writing New Tests
+Please see [Contributing New Tests](#contributing-new-tests) above.
+
+## Coverage Requirements
+Please see [Testing Philosophy](#testing-philosophy) (Target coverage is 60%+) and [Coverage Reporting](#coverage-reporting) above.
+
+## CI Integration
+Please see [CI/CD Integration](#cicd-integration) above.
