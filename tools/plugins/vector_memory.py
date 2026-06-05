@@ -97,7 +97,10 @@ class VectorDB:
                 if response.status_code == 200:
                     return response.json()["embedding"]["values"]
                 else:
-                    logging.warning(f"Gemini embedding API returned status {response.status_code}: {response.text}")
+                    logging.warning(
+                        "Gemini embedding API request failed with status %s",
+                        response.status_code,
+                    )
             except Exception as e:
                 logging.warning(f"Gemini embedding retrieval failed: {e}")
 
