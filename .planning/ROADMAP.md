@@ -27,4 +27,4 @@
 
 ## Next
 
-Start the next milestone with `/gsd-new-milestone` to define fresh requirements and continue from Phase 5.
+Define fresh requirements before starting the next milestone and continue from Phase 5.

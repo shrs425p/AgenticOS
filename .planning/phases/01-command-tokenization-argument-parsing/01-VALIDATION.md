@@ -29,7 +29,7 @@ created: 2026-06-05
 
 - **After every task commit:** Run `venv\Scripts\pytest tests/test_terminal_safety_structural.py`
 - **After every plan wave:** Run `venv\Scripts\pytest tests/test_terminal_safety_structural.py`
-- **Before `/gsd-verify-work`:** Full suite must be green
+- **Before work verification:** Full suite must be green
 - **Max feedback latency:** 5 seconds
 
 ---

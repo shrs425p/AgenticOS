@@ -51,7 +51,7 @@ The security hardening milestone is complete. Requirements `PARS-01`, `PARS-02`,
 
 ## Next Milestone Goals
 
-- Define fresh requirements with `/gsd-new-milestone`.
+- Define fresh requirements before starting the next milestone.
 - Decide whether v2 admin-control requirements (`ADMIN-01`, `ADMIN-02`) remain the next priority.
 - Keep command safety regression tests as a release gate for future runner or terminal changes.
 
@@ -74,14 +74,14 @@ The security hardening milestone is complete. Requirements `PARS-01`, `PARS-02`,
 
 This document evolves at phase transitions and milestone boundaries.
 
-**After each phase transition** (via `/gsd-transition`):
+**After each phase transition**:
 1. Requirements invalidated? → Move to Out of Scope with reason
 2. Requirements validated? → Move to Validated with phase reference
 3. New requirements emerged? → Add to Active
 4. Decisions to log? → Add to Key Decisions
 5. "What This Is" still accurate? → Update if drifted
 
-**After each milestone** (via `/gsd-complete-milestone`):
+**After each milestone**:
 1. Full review of all sections
 2. Core Value check — still the right priority?
 3. Audit Out of Scope — reasons still valid?

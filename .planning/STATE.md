@@ -1,5 +1,5 @@
 ---
-gsd_state_version: 1.0
+planning_state_version: 1.0
 milestone: v1.0
 milestone_name: AgenticOS Security Hardening
 status: Awaiting next milestone
@@ -91,4 +91,4 @@ Resume file: .planning/ROADMAP.md
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Define fresh requirements before starting the next milestone.
