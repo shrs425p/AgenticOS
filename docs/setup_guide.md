@@ -181,6 +181,27 @@ This will run the automated suite to ensure core components, filesystem tools, a
 
 ---
 
+## Usage Examples
+
+Here are three common usage examples of AgenticOS:
+
+### 1. System Health Check and Process Audit
+Ask the agent:
+> "Run a system diagnostics scan and list the top 3 processes consuming the most RAM."
+The agent will execute `process_list` and return the formatted diagnostics.
+
+### 2. Autonomous Web Research
+Ask the agent:
+> "Search the web for the latest developments in local LLMs and save a summary to research.md."
+The agent will call `web_search` and compile the results.
+
+### 3. Filesystem Cleanup
+Ask the agent:
+> "Find all temporary files in my workspace directory and clean them up."
+The agent will inspect paths and safely delete matching temp files.
+
+---
+
 ## Next Steps
 -   Read the [Architecture Deep-Dive](architecture.md).
 -   Learn how to write [Custom Plugins](tool_development.md).

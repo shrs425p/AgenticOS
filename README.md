@@ -47,162 +47,66 @@
 
 ---
 
-## System Auditing and Verification Performance
-AgenticOS includes advanced system auditing and directory scanning capabilities:
--   **Disk Hygiene**: Scanned 1M+ files on C:\ in < 30 seconds using optimized native Python traversal.
--   **Security Audit**: Successfully identified 12+ suspicious scheduled tasks and non-standard firewall ports.
--   **API Resilience**: Handled over 50+ "429 Rate Limit" errors flawlessly without a single agent crash.
--   **Resource Efficiency**: Maintained < 150MB RAM usage during complex 60-iteration tasks.
+## ⚡ Core Pillars & Unique Capabilities
+
+| 🔒 Zero-Trust Guardrails | 🚀 High-Speed Native Engine | 🧠 Orchestrated Autonomy |
+| :--- | :--- | :--- |
+| **AST Command Validator**<br>Deconstructs command syntax tree-by-tree to intercept obfuscation, chains (`&&`, `;`), and malicious patterns. | **Native DFS Traversal**<br>Scans over 1,000,000 files in under 30 seconds using optimized native Python directory streams. | **Self-Healing Loop**<br>Autonomously detects missing libraries, auto-installs packages (`pip`), and patches runtime exceptions. |
+| **PathGuard Security Zones**<br>Restricts filesystem modifications to designated workspaces using strict path boundary checkguards. | **Zero Typewriter Lag**<br>Engineered with block-level terminal rendering to focus 100% CPU on task execution. | **Dynamic Tool Registry**<br>Hot-reloads and validates new capabilities, custom scripts, and plugins on-the-fly. |
+| **Zone-Based Sandbox**<br>Adjust safety parameters dynamically at runtime (Green/Yellow/Red/Read-Only) using `/zone`. | **Rate-Limit Shielding**<br>Handles API throttling (HTTP 429) gracefully with custom backoff and retry pacing. | **Cross-Platform Integration**<br>Native system hooks (COM volume controls, AppleScript AX access, bash wrappers). |
 
 ---
 
-## Human-in-the-Loop Integration
-AgenticOS is built with safety-first guardrails. Its best results are achieved through collaboration and explicit operator guidance.
--   **Control**: The operator maintains ultimate control over the system, directing tasks and reviewing planned commands.
--   **Collaboration**: Custom settings allow configuration of automated approval thresholds or interactive prompting formats.
--   **Guidance**: All system-level write actions outside designated workspaces require explicit confirmation. See [Operator Safety Guide](docs/safety_guide.md) for details.
+## 🔒 Advanced Zero-Trust Security
+
+At the heart of AgenticOS is a zero-trust model designed to execute complex operations safely on host systems:
+
+*   **Abstract Syntax Tree (AST) Validation**: Standard command regexes can be bypassed. AgenticOS tokenizes and parses shell commands at a structural level using `shlex`, validating multi-word arguments, quote/tick nested strings, and PowerShell abbreviations.
+*   **Encrypted & Obfuscated Command Defense**: Decodes base64-encoded command wrappers (e.g., PowerShell `-EncodedCommand` flags) and checks the payload before execution.
+*   **PathGuard Sandbox**: Enforces isolation zones. Any write access attempting to target system folders, user profiles, or Git configuration directories is immediately blocked unless explicit approval is granted.
+*   **Structured Auditing**: Keeps a queryable, persistent SQLite audit log recording every thought, command execution, and tool input/output for forensics.
 
 ---
 
-## Core Architecture Enhancements
-AgenticOS is designed for reliable execution in developer environments. Key technical features include:
--   **No-Lag Terminal UI**: Block-level rendering removes the character-by-character "typewriter lag."
--   **Rate-Limit Shield**: Built-in exponential backoff masks all `429 Too Many Requests` errors (implemented in `core/retry.py` as `retry_call()`).
--   **Centralized Logging**: Consistent, structured stream formatting and persistent storage (`workspace/logs/agenticos.log` or `data/logs/agenticos.log`) with a unified logger factory.
--   **Early Schema Validation**: Real-time boot diagnostics verify `config.yaml` layers and halt early if critical sections are missing.
--   **Native Windows COM Audio**: C# code dynamically compiled via PowerShell provides native, dependency-free volume controls.
--   **Fast-Path IO & Checkguards**: Optimized native Python `os.scandir` DFS traversals are over 100x faster than standard Python `rglob` and avoid PowerShell subprocess overhead, wrapped in strict tool checkguards (e.g. `shutil.which` warnings) on Linux.
--   **OS-Level Desktop Accessibility**: AppleScript accessibility control (AXMinimized / AXZoomed) and recursive window queries for scriptable Cocoa & non-scriptable macOS applications.
--   **Zone-Based Security**: Hardware-level path guardrails protect critical system folders.
--   **Environment Portability**: 100% configuration-driven logic with zero hardcoded paths or URLs.
--   **Resilient Testing**: Comprehensive `pytest` suite with 445 passed tests ensuring 100% deterministic tool behavior.
+## 🚀 Native Performance & System Benchmarks
+
+AgenticOS bypasses slow shell spawning and system overheads to deliver high-performance automation:
+*   **Fast-Disk IO**: Replaces generic Python recursive globbing (`rglob`) with an optimized `os.scandir` depth-first search (DFS) traversal, delivering **100x speedups** on standard HDDs/SSDs.
+*   **Robust Network Resiliency**: Built-in exponential backoff retries (`retry_call()`) mask all cloud model rate limits to preserve execution state across long runs.
+*   **Minimal Footprint**: Operates with less than **150MB of RAM** usage, even during complex, high-iteration loops.
 
 ---
 
-## Documentation Center
+## 📖 Interactive Documentation Center
 
-Explore the full AgenticOS manual for deep technical insights:
+Our comprehensive technical library covers everything you need to configure, run, and scale AgenticOS:
 
-*   [**Documentation Catalog**](docs/CATALOG.md): Canonical index of all Markdown docs in this repository.
+### 🏁 Getting Started
+*   [**Setup Guide**](docs/setup_guide.md): Native installer walkthrough for Windows, macOS, and Linux.
+*   [**System Requirements**](docs/system_requirements.md): Hardware, operating system, and runtime configurations.
+*   [**Runtime Configuration**](docs/runtime_configuration.md): Complete guide to YAML configuration layering and `.env` setups.
 
-### Getting Started and Architecture
-*   [**Setup Guide**](docs/setup_guide.md): Step-by-step instructions for new users.
-*   [**System Architecture**](docs/architecture.md): Deep dive into the Orchestrator and Memory loops.
-*   [**Visual Index & Flowcharts**](docs/visual_index.md): Central hub for all architectural diagrams.
-*   [**Case Studies & Results**](docs/case_studies.md): Real-world proof from the 96-task "Crucible" test.
-*   [**Autonomous Test Suite**](docs/testing_guide.md): Guide to our high-coverage testing framework and tasks.
-*   [**Evaluation Harness**](docs/evaluation_harness.md): How to run stress tests and read session logs.
-*   [**System Requirements**](docs/system_requirements.md): Hardware and software prerequisites.
-*   [**Deployment Scenarios**](docs/deployment_scenarios.md): Specific "Recipes" for different use cases.
-*   [**Version History**](docs/version_history.md): Technical evolution from v1.0 to v2.0.0.
-*   [**Runtime Configuration**](docs/runtime_configuration.md): Exhaustive guide to `config.yaml`.
+### 📐 System Architecture
+*   [**Architecture Deep-Dive**](docs/architecture.md): Understand the Thought-Action-Observation orchestrator loop.
+*   [**Visual Index & Flowcharts**](docs/visual_index.md): Conceptual diagrams mapping execution pipelines.
+*   [**Security Guardrails**](docs/security_guardrails.md): Details on PathGuard, Sandboxing, and AST Command Validators.
+*   [**Version History**](docs/version_history.md): Technical evolution of AgenticOS features and performance benchmarks.
 
-### Developer and Tooling
-*   [**Developer Onboarding**](docs/developer_onboarding.md): Guide for contributing to the core engine.
-*   [**Contributor Guide**](docs/contributor_guide.md): Comprehensive guide on setting up, coding standards, and testing.
-*   [**Tool Development Guide**](docs/tool_development.md): Write your own plugins and optimize performance.
-*   [**API & Tool Reference**](docs/api_reference.md): Overview of the 350+ tools in the registry.
-*   [**Autonomous Operations**](docs/autonomous_operations.md): How the "Agent Brain" plans and self-heals.
-*   [**Prompt Engineering Guide**](docs/prompt_engineering_guide.md): Best practices for task optimization.
-
-### Security and Performance
-*   [**Security Guardrails**](docs/security_guardrails.md): PathGuard, HITM, and System Protection.
-*   [**Privacy & Data Policy**](docs/privacy_data_policy.md): Data residency and "Zero-Cloud" configuration.
-*   [**Performance Optimization**](docs/performance_optimization.md): Typewriter fixes and Fast-Disk strategies.
-*   [**Troubleshooting Guide**](docs/troubleshooting.md): Common errors, 429s, and fixes.
-
-### Special Capabilities
-*   [**Web Automation & Browser**](docs/web_automation.md): Playwright, Scrapers, and Smart Downloads.
-*   [**Model Integration**](docs/model_integration.md): Configuring Ollama, Nvidia, and Cloud providers.
-*   [**User Interface (UX)**](docs/user_interface.md): Terminal aesthetics, colors, and notifications.
+### 🛠️ Developer & Extensions
+*   [**Contributor Guide**](docs/contributor_guide.md): Branch conventions, coding standards, type hints, and PR processes.
+*   [**Tool Development**](docs/tool_development.md): Write your own plugins and register them with the dynamic ToolRegistry.
+*   [**API & Tool Reference**](docs/api_reference.md): Functional reference catalog for the 350+ built-in system tools.
+*   [**Autonomous Operations**](docs/autonomous_operations.md): Learn how the "Agent Brain" designs and executes actions.
 
 ---
 
-## Core Security Features
+## 🏁 Quick Start & Setup
+For installation, configuration, project structure, and usage examples, refer to the [Setup Guide](docs/setup_guide.md).
 
--   **Zone-Based Guardrails**: Four security zones (Green, Yellow, Red, Blue/Read-Only) that can be switched dynamically at runtime using the `/zone` command to balance safety and autonomy.
--   **Command Validation**: Advanced regex blocking for dangerous patterns like `rm -rf`, `format`, or `net user`.
--   **Audit Traceability**: Every thought, action, and tool output is mirrored in `evaluation_output.txt` and recorded in a persistent SQLite audit log.
+## 🤝 Contributing
+For guidelines on coding standards, testing, and pull requests, refer to the [Contributor Guide](docs/contributor_guide.md).
 
----
-
-## High-Speed Capabilities
-
--   **Self-Evolution**: The agent can autonomously identify missing capabilities, `pip install` libraries, and generate new tool plugins at runtime.
--   **Typewriter Optimization**: Optimized rendering engine ensures 100% CPU focus on the task, not the terminal.
--   **Native Dispatch**: High-load tasks (Disk Audits, Registry Scans) are delegated to high-speed native Python depth-first search (DFS) traversals or optimized system scripts.
-
----
-
-## Quick Start
-
-### 1. Installation
-Run the environment setup script (this automatically initializes the virtual environment, installs dependencies, downloads Playwright chromium, registers the `agent` command globally, and sets up your credentials template).
-
-You can run this using your code editor (e.g., VS Code) or the terminal:
-
-#### Method A: Via VS Code Task (Recommended)
-1. Open the project folder in VS Code.
-2. Press `Ctrl+Shift+B` (or select **Terminal** -> **Run Build Task** / **Tasks: Run Build Task** from the Command Palette).
-3. The editor will automatically run the correct setup script for your platform, bypassing all Windows execution policy restrictions!
-
-#### Method B: Via Terminal
-
-##### Windows (PowerShell or CMD):
-```powershell
-powershell -ExecutionPolicy Bypass -File .\setup.ps1
-```
-
-##### macOS / Linux:
-```bash
-./setup.sh
-```
-
-### 2. Configuration
-Open the newly created `.env` file in the project root and configure your API keys (e.g., `NVIDIA_API_KEY`, `GOOGLE_API_KEY`).
-
-### 3. Execution
-Restart your terminal and start the agent from any directory:
-```powershell
-agent
-```
-
----
-
-## Project Structure
-- `core/`: The Runtime Engine, Tool Registry, Memory, and Security Guardrails.
-- `tools/`: Modular library of core tools and dynamic `plugins/`.
-- `config/`: Layered YAML configuration system (Endpoints, Policy, Runtime).
-- `tests/`: Automated test suite for core logic and filesystem tools.
-- `docs/`: Comprehensive technical documentation (20+ detailed guides).
-- `workspace/`: Designated environment for task artifacts and reports.
-- `data/`: Configured location for SQLite databases and JSONL audit logs. (Can also be stored in `workspace/`).
-
----
-
-## License
+## 📄 License
 Distributed under the Apache-2.0 License.
 
 *AgenticOS: Hardened. Autonomous. Ready.*
-
-## Usage Examples
-
-Here are three common usage examples of AgenticOS:
-
-### 1. System Health Check and Process Audit
-Ask the agent:
-> "Run a system diagnostics scan and list the top 3 processes consuming the most RAM."
-The agent will execute `process_list` and return the formatted diagnostics.
-
-### 2. Autonomous Web Research
-Ask the agent:
-> "Search the web for the latest developments in local LLMs and save a summary to research.md."
-The agent will call `web_search` and compile the results.
-
-### 3. Filesystem Cleanup
-Ask the agent:
-> "Find all temporary files in my workspace directory and clean them up."
-The agent will inspect paths and safely delete matching temp files.
-
-## Contributing
-See [Contributor Guide](docs/contributor_guide.md) for local development setup, coding standards, and testing guidelines.
