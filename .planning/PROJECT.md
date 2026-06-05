@@ -21,6 +21,9 @@ Ensure 100% reliable detection and blocking of unauthorized shell operations wit
 - ✓ **SEC-02**: Intercept and block command chaining operators (e.g. `;`, `&&`, `||`, `|`, `$()`, `` ` ``). (Validated in Phase 2)
 - ✓ **SEC-03**: Identify and neutralize shell command obfuscation techniques (such as string manipulation, variables, quotes/escapes). (Validated in Phase 2)
 - ✓ **SEC-04**: Write comprehensive test fixtures covering potential shell execution bypass vectors. (Validated in Phase 3)
+- ✓ **SEC-05**: Implement recursive base64 decoding and prefix flag matching for PowerShell execution. (Validated in Phase 4)
+- ✓ **SEC-06**: Extend script scanning to support Zsh continuation syntax and comments. (Validated in Phase 4)
+- ✓ **TEST-01**: Build comprehensive unit and host-OS integration test suites for command safety. (Validated in Phase 4)
 
 ### Active
 
@@ -39,14 +42,18 @@ Ensure 100% reliable detection and blocking of unauthorized shell operations wit
 
 ## Constraints
 
-- **Compatibility**: Must support both Windows (`cmd`/`powershell`) and Unix/macOS (`bash`) shell execution structures.
+- **Compatibility**: Must support both Windows (`cmd`/`powershell`) and Unix/macOS (`bash`/`zsh`) shell execution structures.
 - **Performance**: Command parsing and validation must complete in <10ms to avoid degrading loop responsiveness.
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Use structural command tokenization | Simple substring matching fails to identify chained commands (e.g. `&& net stop`) | — Pending |
+| Use structural command tokenization | Simple substring matching fails to identify chained commands (e.g. `&& net stop`) | Implemented in Phase 1 |
+| PowerShell Flag Prefix Matching | PowerShell accepts unique prefixes (e.g., `-comm` for `-Command` and `-enc` for `-EncodedCommand`). Strict matching would bypass abbreviations. | Implemented in Phase 4 |
+| Recursive Base64 Decoding | Obfuscation via `-EncodedCommand` (UTF-16LE base64) must be recursively validated against all safety rules. | Implemented in Phase 4 |
+| Zsh script support | Subprocess scripts can be run via Zsh. Validating comments and continuations prevents bypasses. | Implemented in Phase 4 |
+| Hybrid Testing framework | Unit tests cover complex obfuscation combinations in <0.1ms; live integration tests confirm runner tools intercept commands safely. | Implemented in Phase 4 |
 
 ## Evolution
 
