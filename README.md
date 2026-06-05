@@ -47,9 +47,9 @@
 
 ---
 
-## ⚡ Core Pillars & Unique Capabilities
+## Core Pillars & Unique Capabilities
 
-| 🔒 Zero-Trust Guardrails | 🚀 High-Speed Native Engine | 🧠 Orchestrated Autonomy |
+| Zero-Trust Guardrails | High-Speed Native Engine | Orchestrated Autonomy |
 | :--- | :--- | :--- |
 | **AST Command Validator**<br>Deconstructs command syntax tree-by-tree to intercept obfuscation, chains (`&&`, `;`), and malicious patterns. | **Native DFS Traversal**<br>Scans over 1,000,000 files in under 30 seconds using optimized native Python directory streams. | **Self-Healing Loop**<br>Autonomously detects missing libraries, auto-installs packages (`pip`), and patches runtime exceptions. |
 | **PathGuard Security Zones**<br>Restricts filesystem modifications to designated workspaces using strict path boundary checkguards. | **Zero Typewriter Lag**<br>Engineered with block-level terminal rendering to focus 100% CPU on task execution. | **Dynamic Tool Registry**<br>Hot-reloads and validates new capabilities, custom scripts, and plugins on-the-fly. |
@@ -57,7 +57,7 @@
 
 ---
 
-## 🔒 Advanced Zero-Trust Security
+## Advanced Zero-Trust Security
 
 At the heart of AgenticOS is a zero-trust model designed to execute complex operations safely on host systems:
 
@@ -68,7 +68,7 @@ At the heart of AgenticOS is a zero-trust model designed to execute complex oper
 
 ---
 
-## 🚀 Native Performance & System Benchmarks
+## Native Performance & System Benchmarks
 
 AgenticOS bypasses slow shell spawning and system overheads to deliver high-performance automation:
 *   **Fast-Disk IO**: Replaces generic Python recursive globbing (`rglob`) with an optimized `os.scandir` depth-first search (DFS) traversal, delivering **100x speedups** on standard HDDs/SSDs.
@@ -77,22 +77,22 @@ AgenticOS bypasses slow shell spawning and system overheads to deliver high-perf
 
 ---
 
-## 📖 Interactive Documentation Center
+## Interactive Documentation Center
 
 Our comprehensive technical library covers everything you need to configure, run, and scale AgenticOS:
 
-### 🏁 Getting Started
+### Getting Started
 *   [**Setup Guide**](docs/setup_guide.md): Native installer walkthrough for Windows, macOS, and Linux.
 *   [**System Requirements**](docs/system_requirements.md): Hardware, operating system, and runtime configurations.
 *   [**Runtime Configuration**](docs/runtime_configuration.md): Complete guide to YAML configuration layering and `.env` setups.
 
-### 📐 System Architecture
+### System Architecture
 *   [**Architecture Deep-Dive**](docs/architecture.md): Understand the Thought-Action-Observation orchestrator loop.
 *   [**Visual Index & Flowcharts**](docs/visual_index.md): Conceptual diagrams mapping execution pipelines.
 *   [**Security Guardrails**](docs/security_guardrails.md): Details on PathGuard, Sandboxing, and AST Command Validators.
 *   [**Version History**](docs/version_history.md): Technical evolution of AgenticOS features and performance benchmarks.
 
-### 🛠️ Developer & Extensions
+### Developer & Extensions
 *   [**Contributor Guide**](docs/contributor_guide.md): Branch conventions, coding standards, type hints, and PR processes.
 *   [**Tool Development**](docs/tool_development.md): Write your own plugins and register them with the dynamic ToolRegistry.
 *   [**API & Tool Reference**](docs/api_reference.md): Functional reference catalog for the 350+ built-in system tools.
@@ -100,13 +100,13 @@ Our comprehensive technical library covers everything you need to configure, run
 
 ---
 
-## 🏁 Quick Start & Setup
+## Quick Start & Setup
 For installation, configuration, project structure, and usage examples, refer to the [Setup Guide](docs/setup_guide.md).
 
-## 🤝 Contributing
+## Contributing
 For guidelines on coding standards, testing, and pull requests, refer to the [Contributor Guide](docs/contributor_guide.md).
 
-## 📄 License
+## License
 Distributed under the Apache-2.0 License.
 
 *AgenticOS: Hardened. Autonomous. Ready.*
