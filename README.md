@@ -47,9 +47,9 @@
 
 ---
 
-## Core Pillars & Unique Capabilities
+## ◆ Core Pillars & Unique Capabilities
 
-| Zero-Trust Guardrails | High-Speed Native Engine | Orchestrated Autonomy |
+| ◆ Zero-Trust Guardrails | ◆ High-Speed Native Engine | ◆ Orchestrated Autonomy |
 | :--- | :--- | :--- |
 | **AST Command Validator**<br>Deconstructs command syntax tree-by-tree to intercept obfuscation, chains (`&&`, `;`), and malicious patterns. | **Native DFS Traversal**<br>Scans over 1,000,000 files in under 30 seconds using optimized native Python directory streams. | **Self-Healing Loop**<br>Autonomously detects missing libraries, auto-installs packages (`pip`), and patches runtime exceptions. |
 | **PathGuard Security Zones**<br>Restricts filesystem modifications to designated workspaces using strict path boundary checkguards. | **Zero Typewriter Lag**<br>Engineered with block-level terminal rendering to focus 100% CPU on task execution. | **Dynamic Tool Registry**<br>Hot-reloads and validates new capabilities, custom scripts, and plugins on-the-fly. |
@@ -57,7 +57,7 @@
 
 ---
 
-## Autonomous Self-Evolution & Dynamic Tool Creation
+## ◆ Autonomous Self-Evolution & Dynamic Tool Creation
 
 Unlike static orchestrators limited to pre-configured integrations, AgenticOS can expand its own capabilities at runtime:
 *   **Dynamic Code Generation**: When faced with a task requiring missing dependencies or tools (e.g., parsing a new file format, computing specific metrics), the agent autonomously writes a Python plugin conforming to the system's plugin decorators.
@@ -67,7 +67,7 @@ Unlike static orchestrators limited to pre-configured integrations, AgenticOS ca
 
 ---
 
-## Deep OS Automation & Low-Level Host Control
+## ◆ Deep OS Automation & Low-Level Host Control
 
 AgenticOS interfaces directly with the host system using native APIs and low-level script automation:
 *   **OS Accessibility Integration**: Controls AppleScript accessibility (AXMinimized, AXZoomed, AXFrame) to query UI element titles and layouts in macOS scriptable/non-scriptable Cocoa applications.
@@ -76,7 +76,7 @@ AgenticOS interfaces directly with the host system using native APIs and low-lev
 
 ---
 
-## Headless Browser Scraping & Dynamic Web Intelligence
+## ◆ Headless Browser Scraping & Dynamic Web Intelligence
 
 AgenticOS drives a dynamic browser engine to parse modern JavaScript-rendered web apps:
 *   **Playwright Automation**: Launches sandboxed Chromium browsers to scrape content, fill interactive forms, capture element screenshots, download files, and bypass basic scraper blocklists.
@@ -85,7 +85,7 @@ AgenticOS drives a dynamic browser engine to parse modern JavaScript-rendered we
 
 ---
 
-## Advanced Zero-Trust Security & AST-Level Sandboxing
+## ◆ Advanced Zero-Trust Security & AST-Level Sandboxing
 
 Security is the primary constraint. The framework enforces strict boundary controls to protect the host:
 *   **Abstract Syntax Tree (AST) Parsing**: Traditional regex validators are bypassed by simple quote or string variations. AgenticOS uses `shlex` to deconstruct command arguments, verifying nested quotes, variable expansions, and escaped strings.
@@ -95,7 +95,7 @@ Security is the primary constraint. The framework enforces strict boundary contr
 
 ---
 
-## Under-the-Hood Resilience & Memory Architecture
+## ◆ Under-the-Hood Resilience & Memory Architecture
 
 *   **SQLite-Backed Context Memory**: Persists short-term plans, model thought patterns, actions, and observations in a structured SQLite database to ensure the agent remembers its progress even across session restarts.
 *   **Rate-Limit Shielding**: Jittered exponential backoff retries (`retry_call()`) mask all cloud model API limit (HTTP 429) spikes, maintaining task stability under high network volumes.
@@ -103,22 +103,22 @@ Security is the primary constraint. The framework enforces strict boundary contr
 
 ---
 
-## Interactive Documentation Center
+## ◆ Interactive Documentation Center
 
 Our comprehensive technical library covers configurations, architecture, and extension guides:
 
-### Getting Started
+### ◆ Getting Started
 *   [**Setup Guide**](docs/setup_guide.md): Native installer walkthrough for Windows, macOS, and Linux.
 *   [**System Requirements**](docs/system_requirements.md): Hardware, operating system, and runtime configurations.
 *   [**Runtime Configuration**](docs/runtime_configuration.md): Complete guide to YAML configuration layering and `.env` setups.
 
-### System Architecture
+### ◆ System Architecture
 *   [**Architecture Deep-Dive**](docs/architecture.md): Understand the Thought-Action-Observation orchestrator loop.
 *   [**Visual Index & Flowcharts**](docs/visual_index.md): Conceptual diagrams mapping execution pipelines.
 *   [**Security Guardrails**](docs/security_guardrails.md): Details on PathGuard, Sandboxing, and AST Command Validators.
 *   [**Version History**](docs/version_history.md): Technical evolution of AgenticOS features and performance benchmarks.
 
-### Developer & Extensions
+### ◆ Developer & Extensions
 *   [**Contributor Guide**](docs/contributor_guide.md): Branch conventions, coding standards, type hints, and PR processes.
 *   [**Tool Development**](docs/tool_development.md): Write your own plugins and register them with the dynamic ToolRegistry.
 *   [**API & Tool Reference**](docs/api_reference.md): Functional reference catalog for the 350+ built-in system tools.
@@ -126,13 +126,13 @@ Our comprehensive technical library covers configurations, architecture, and ext
 
 ---
 
-## Quick Start & Setup
+## ◆ Quick Start & Setup
 For installation, configuration, project structure, and usage examples, refer to the [Setup Guide](docs/setup_guide.md).
 
-## Contributing
+## ◆ Contributing
 For guidelines on coding standards, testing, and pull requests, refer to the [Contributor Guide](docs/contributor_guide.md).
 
-## License
+## ◆ License
 Distributed under the Apache-2.0 License.
 
 *AgenticOS: Hardened. Autonomous. Ready.*
