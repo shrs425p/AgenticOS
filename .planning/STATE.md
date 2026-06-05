@@ -1,11 +1,11 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-milestone_name: milestone
-status: completed
-stopped_at: Phase 4 verification complete
-last_updated: "2026-06-05T14:16:00.000Z"
-last_activity: 2026-06-05 -- Phase 04 execution completed
+milestone_name: AgenticOS Security Hardening
+status: Awaiting next milestone
+stopped_at: Milestone v1.0 completion
+last_updated: "2026-06-05T15:32:00.982Z"
+last_activity: 2026-06-05 — Milestone v1.0 completed and archived
 progress:
   total_phases: 4
   completed_phases: 4
@@ -21,22 +21,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-05)
 
 **Core value:** Ensure 100% reliable detection and blocking of unauthorized shell operations without restricting normal, benign terminal tasks.
-**Current focus:** Project completed
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Phase: 04 (safety-verification-suite) — COMPLETED
-Plan: 1 of 1
-Status: Completed Phase 04
-Last activity: 2026-06-05 -- Phase 04 execution completed
-
-Progress: [██████████] 100%
+Phase: Milestone v1.0 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-06-05 — Milestone v1.0 completed and archived
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 4
+- Total plans completed: 5
 - Average duration: 0 min
 - Total execution time: 0.0 hours
 
@@ -66,7 +64,8 @@ Progress: [██████████] 100%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- None yet.
+- v1.0 is shipped and archived in `.planning/milestones/`.
+- Fresh requirements should be created before starting additional implementation phases.
 
 ### Pending Todos
 
@@ -87,5 +86,9 @@ Items acknowledged and carried forward from previous milestone close:
 ## Session Continuity
 
 Last session: 2026-06-05T13:49:29.024Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-safety-verification-suite/04-CONTEXT.md
+Stopped at: Milestone v1.0 completion
+Resume file: .planning/ROADMAP.md
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone

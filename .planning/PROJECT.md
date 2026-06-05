@@ -39,6 +39,21 @@ Ensure 100% reliable detection and blocking of unauthorized shell operations wit
 - The framework runs Python-based CLI loops (`core/runtime.py`) that call subprocess commands through `tools/terminal/runner.py`.
 - Substring-based command validation in `tools/terminal/safety.py` is vulnerable to injection and concatenation bypasses (e.g. `echo hello && sc stop service`).
 - Windows execution relies on `shell=True` (due to CMD/PowerShell constraints), which increases shell injection risks.
+- v1.0 shipped the structural command safety layer, runner integration, script scanning, audit logging, PowerShell encoded command validation, and 35 focused safety tests.
+
+## Current State
+
+**Shipped version:** v1.0 AgenticOS Security Hardening on 2026-06-05.
+
+The security hardening milestone is complete. Requirements `PARS-01`, `PARS-02`, `SAFE-01` through `SAFE-04`, and `TEST-01` are validated and archived in `.planning/milestones/v1.0-REQUIREMENTS.md`.
+
+**Known technical debt:** Ruff may still report cosmetic unused-import warnings in `core/runtime.py` for provider client imports used through dynamic lookup.
+
+## Next Milestone Goals
+
+- Define fresh requirements with `/gsd-new-milestone`.
+- Decide whether v2 admin-control requirements (`ADMIN-01`, `ADMIN-02`) remain the next priority.
+- Keep command safety regression tests as a release gate for future runner or terminal changes.
 
 ## Constraints
 
@@ -73,4 +88,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-05 after initialization*
+*Last updated: 2026-06-05 after v1.0 milestone completion*
