@@ -109,15 +109,20 @@ def test_load_layered_config_layers(mock_exists, mock_isdir, mock_read_yaml):
     mock_isdir.return_value = True
     # simulate some layers exist, some don't
     def mock_exists_side_effect(path):
-        if "providers.yaml" in path: return True
-        if "policy.yaml" in path: return True
+        if "providers.yaml" in path:
+            return True
+        if "policy.yaml" in path:
+            return True
         return False
     mock_exists.side_effect = mock_exists_side_effect
 
     def mock_read_yaml_side_effect(path):
-        if "providers.yaml" in path: return {"provider_key": "provider_val"}
-        if "policy.yaml" in path: return {"policy_key": "policy_val", "shared_key": "policy_wins"}
-        if "test_root.yaml" in path: return {"root_key": "root_val", "shared_key": "root_wins"}
+        if "providers.yaml" in path:
+            return {"provider_key": "provider_val"}
+        if "policy.yaml" in path:
+            return {"policy_key": "policy_val", "shared_key": "policy_wins"}
+        if "test_root.yaml" in path:
+            return {"root_key": "root_val", "shared_key": "root_wins"}
         return {}
     mock_read_yaml.side_effect = mock_read_yaml_side_effect
 
@@ -261,7 +266,6 @@ def test_load_config_numeric_normalization_warning(mock_exists, mock_load_layere
     from core.runtime_config import load_config
     import pytest
     import sys
-    import warnings
 
     fake_modules = sys.modules.copy()
     fake_modules.pop("pytest", None)
