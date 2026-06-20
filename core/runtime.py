@@ -33,14 +33,6 @@ from core.context_engine import ContextEngine
 from core.logger import get_logger
 from core.memory_manager import initialize_memory_manager, log_task_completion
 from core.model_clients import (
-    DeepseekClient,
-    GeminiClient,
-    GithubClient,
-    GroqClient,
-    NvidiaClient,
-    OllamaClient,
-    OpenAIClient,
-    OpenRouterClient,
     TieredClient,
 )  # noqa: F401
 from core.runtime_config import (
