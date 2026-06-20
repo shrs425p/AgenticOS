@@ -32,6 +32,7 @@ from core.audit_logger import AuditLogger, infer_success
 from core.context_engine import ContextEngine
 from core.logger import get_logger
 from core.memory_manager import initialize_memory_manager, log_task_completion
+import core.model_clients
 from core.model_clients import (
     TieredClient,
 )  # noqa: F401
@@ -104,7 +105,7 @@ class Agent:
 
     def _create_client(self, provider: str):
         client_name = PROVIDER_CLIENT_MAP.get(provider, "OllamaClient")
-        client_cls = getattr(sys.modules[__name__], client_name)
+        client_cls = getattr(core.model_clients, client_name)
         return client_cls(self.cfg)
 
     def _init_client(self) -> None:

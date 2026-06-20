@@ -49,7 +49,7 @@ def mock_config(tmp_path):
     }
     return cfg
 
-@patch("core.runtime.OllamaClient")
+@patch("core.model_clients.OllamaClient")
 @patch("core.runtime.SqliteSessionMemory")
 @patch("core.runtime.AuditLogger")
 @patch("core.runtime.ToolRegistry")
@@ -73,7 +73,7 @@ def test_agent_init(mock_init_mm, mock_ctx, mock_tools, mock_audit, mock_memory,
         path = os.path.join(agent.workspace, name)
         assert os.path.exists(path)
 
-@patch("core.runtime.OllamaClient")
+@patch("core.model_clients.OllamaClient")
 @patch("core.runtime.SqliteSessionMemory")
 @patch("core.runtime.AuditLogger")
 @patch("core.runtime.ToolRegistry")
@@ -86,7 +86,7 @@ def test_agent_reload_disabled(mock_init_mm, mock_ctx, mock_tools, mock_audit, m
     agent = Agent(mock_config)
     agent.check_reload()  # Should return immediately because hot_reload is False
 
-@patch("core.runtime.OllamaClient")
+@patch("core.model_clients.OllamaClient")
 @patch("core.runtime.SqliteSessionMemory")
 @patch("core.runtime.AuditLogger")
 @patch("core.runtime.ToolRegistry")
@@ -137,7 +137,7 @@ def test_get_mtimes_uses_configured_excluded_dirs(tmp_path):
     assert os.path.join("core", "kept.py") in mtimes
     assert os.path.join("generated", "ignored.py") not in mtimes
 
-@patch("core.runtime.OllamaClient")
+@patch("core.model_clients.OllamaClient")
 @patch("core.runtime.SqliteSessionMemory")
 @patch("core.runtime.AuditLogger")
 @patch("core.runtime.ToolRegistry")
@@ -168,7 +168,7 @@ def test_verify_action(mock_init_mm, mock_ctx, mock_tools, mock_audit, mock_memo
     assert not ok
     assert err == "Loop detected"
 
-@patch("core.runtime.OllamaClient")
+@patch("core.model_clients.OllamaClient")
 @patch("core.runtime.SqliteSessionMemory")
 @patch("core.runtime.AuditLogger")
 @patch("core.runtime.ToolRegistry")
@@ -189,7 +189,7 @@ def test_is_direct_response(mock_init_mm, mock_ctx, mock_tools, mock_audit, mock
     # Contains control markers -> not direct response
     assert not agent._is_direct_response("hello", "PLAN: step 1\nACTION: run")
 
-@patch("core.runtime.OllamaClient")
+@patch("core.model_clients.OllamaClient")
 @patch("core.runtime.SqliteSessionMemory")
 @patch("core.runtime.AuditLogger")
 @patch("core.runtime.ToolRegistry")
@@ -221,7 +221,7 @@ def test_agent_run_direct_response(mock_init_mm, mock_ctx, mock_tools, mock_audi
     agent.client.chat.assert_called_once()
     assert agent.task_tracker.current["status"] == "completed"
 
-@patch("core.runtime.OllamaClient")
+@patch("core.model_clients.OllamaClient")
 @patch("core.runtime.SqliteSessionMemory")
 @patch("core.runtime.AuditLogger")
 @patch("core.runtime.ToolRegistry")
@@ -249,7 +249,7 @@ def test_agent_run_repetition_and_empty(mock_init_mm, mock_ctx, mock_tools, mock
     agent.run("test loop")
     assert agent.client.chat.call_count == 3
 
-@patch("core.runtime.OllamaClient")
+@patch("core.model_clients.OllamaClient")
 @patch("core.runtime.SqliteSessionMemory")
 @patch("core.runtime.AuditLogger")
 @patch("core.runtime.ToolRegistry")
@@ -261,8 +261,8 @@ def test_fallback_providers_init(mock_init_mm, mock_ctx, mock_tools, mock_audit,
     mock_ollama.return_value.model = "llama2"
     
     mock_config["agent"]["fallback_providers"] = ["gemini", "groq", "nonexistent"]
-    with patch("core.runtime.GeminiClient") as mock_gemini, \
-         patch("core.runtime.GroqClient") as mock_groq:
+    with patch("core.model_clients.GeminiClient") as mock_gemini, \
+         patch("core.model_clients.GroqClient") as mock_groq:
              mock_gemini.return_value.provider = "gemini"
              mock_groq.return_value.provider = "groq"
              
@@ -271,7 +271,7 @@ def test_fallback_providers_init(mock_init_mm, mock_ctx, mock_tools, mock_audit,
              assert hasattr(agent.client, "primary")
              assert agent.client.primary == mock_ollama.return_value
 
-@patch("core.runtime.OllamaClient")
+@patch("core.model_clients.OllamaClient")
 @patch("core.runtime.SqliteSessionMemory")
 @patch("core.runtime.AuditLogger")
 @patch("core.runtime.ToolRegistry")
@@ -284,15 +284,15 @@ def test_various_providers(mock_init_mm, mock_ctx, mock_tools, mock_audit, mock_
     providers = ["nvidia", "gemini", "groq", "openai", "openrouter", "github", "deepseek"]
     for p in providers:
         mock_config["agent"]["provider"] = p
-        client_name = f"core.runtime.{p.capitalize()}Client" if p != "openai" else "core.runtime.OpenAIClient"
+        client_name = f"core.model_clients.{p.capitalize()}Client" if p != "openai" else "core.model_clients.OpenAIClient"
         if p == "openrouter":
-            client_name = "core.runtime.OpenRouterClient"
+            client_name = "core.model_clients.OpenRouterClient"
         with patch(client_name) as mock_client:
             mock_client.return_value.provider = p
             agent = Agent(mock_config)
             assert agent.client == mock_client.return_value
 
-@patch("core.runtime.OllamaClient")
+@patch("core.model_clients.OllamaClient")
 @patch("core.runtime.SqliteSessionMemory")
 @patch("core.runtime.AuditLogger")
 @patch("core.runtime.ToolRegistry")
@@ -310,7 +310,7 @@ def test_agent_reload_everything_real(mock_init_mm, mock_ctx, mock_tools, mock_a
              agent._reload_everything(["config.yaml", "core/runtime.py"])
              mock_reload.assert_called()
 
-@patch("core.runtime.OllamaClient")
+@patch("core.model_clients.OllamaClient")
 @patch("core.runtime.SqliteSessionMemory")
 @patch("core.runtime.AuditLogger")
 @patch("core.runtime.ToolRegistry")
@@ -338,7 +338,7 @@ def test_preferences_autoload(mock_init_mm, mock_ctx, mock_tools, mock_audit, mo
     assert "Win10" in call_args[1]
 
 
-@patch("core.runtime.OllamaClient")
+@patch("core.model_clients.OllamaClient")
 @patch("core.runtime.SqliteSessionMemory")
 @patch("core.runtime.AuditLogger")
 @patch("core.runtime.ToolRegistry")
