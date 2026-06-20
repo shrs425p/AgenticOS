@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from unittest.mock import patch
 
 from tools.terminal.runner import RunnerMixin
 from tools.terminal.safety import SafetyMixin
@@ -53,21 +54,24 @@ def test_basic_safety_blocks():
     )
 
     # 2. Registry edit blocks
-    assert "Command blocked by safety rules: reg add" in safety._blocked_command_reason(
-        "reg add HKLM\\Software"
-    )
-    assert (
-        "Command blocked by safety rules: reg delete"
-        in safety._blocked_command_reason("reg delete HKLM\\Software")
-    )
-    assert (
-        "Command blocked by safety rules: reg import"
-        in safety._blocked_command_reason("reg import file.reg")
-    )
-    assert (
-        "Command blocked by safety rules: set-itemproperty"
-        in safety._blocked_command_reason("set-itemproperty -Path HKCU:\\")
-    )
+    # Note: On Linux, `reg add HKLM\Software` is parsed as `reg add HKLMSoftware` because `\` is an escape character.
+    # To test registry commands blocking properly, mock `os.name == 'nt'` during the test.
+    with patch("tools.terminal.safety.os.name", "nt"):
+        assert "Command blocked by safety rules: reg add" in safety._blocked_command_reason(
+            "reg add HKLM\\Software"
+        )
+        assert (
+            "Command blocked by safety rules: reg delete"
+            in safety._blocked_command_reason("reg delete HKLM\\Software")
+        )
+        assert (
+            "Command blocked by safety rules: reg import"
+            in safety._blocked_command_reason("reg import file.reg")
+        )
+        assert (
+            "Command blocked by safety rules: set-itemproperty"
+            in safety._blocked_command_reason("set-itemproperty -Path HKCU:\\")
+        )
 
     # 3. System change blocks
     assert (
@@ -97,13 +101,16 @@ def test_executable_paths_and_extensions():
     safety = DummySafety(rules)
 
     # Basename extraction check
-    assert "Command blocked by safety rules: sc" in safety._blocked_command_reason(
-        "C:\\Windows\\System32\\sc.exe query"
-    )
-    assert (
-        "Command blocked by safety rules: reg delete"
-        in safety._blocked_command_reason("C:\\Windows\\reg.exe delete HKLM")
-    )
+    # Patch both the direct `os.name` inside `_blocked_command_reason`
+    # as well as inside the shlex check if we were to rely on platform differences.
+    with patch("tools.terminal.safety.os.name", "nt"):
+        assert "Command blocked by safety rules: sc" in safety._blocked_command_reason(
+            "C:\\Windows\\System32\\sc.exe query"
+        )
+        assert (
+            "Command blocked by safety rules: reg delete"
+            in safety._blocked_command_reason("C:\\Windows\\reg.exe delete HKLM")
+        )
 
 
 def test_benign_commands_allowed():
@@ -711,7 +718,8 @@ def test_command_verb_obfuscation():
     assert "command obfuscation detected" in safety._blocked_command_reason(
         's""c query'
     )
-    assert "command obfuscation detected" in safety._blocked_command_reason("s`c query")
+    with patch("tools.terminal.safety.os.name", "nt"):
+        assert "command obfuscation detected" in safety._blocked_command_reason("s`c query")
 
 
 def test_env_var_expansions_in_wrappers():

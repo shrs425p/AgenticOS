@@ -173,7 +173,13 @@ class SafetyMixin:
         Returns:
             The lowercase base name of the command without .exe extension.
         """
-        base = os.path.basename(token)
+        # Handle both Windows and POSIX path separators to correctly extract basename
+        import ntpath
+        import posixpath
+        base = ntpath.basename(token)
+        if "\\" not in token and "/" in token:
+             base = posixpath.basename(token)
+
         if base.lower().endswith(".exe"):
             base = base[:-4]
         return base.lower()
