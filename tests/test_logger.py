@@ -1,11 +1,10 @@
 import logging
-import os
 import sys
 from unittest import mock
 
 import pytest
 
-from core.logger import get_logger, _CACHED_LOG_LEVEL
+from core.logger import get_logger
 
 @pytest.fixture(autouse=True)
 def reset_cached_log_level():
