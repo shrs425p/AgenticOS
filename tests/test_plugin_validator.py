@@ -7,6 +7,14 @@ import pytest
 
 from tools.plugin_validator import validate_plugins
 
+@pytest.fixture(autouse=True)
+def cleanup_sys_modules():
+    initial_modules = set(sys.modules.keys())
+    yield
+    for key in list(sys.modules.keys()):
+        if key not in initial_modules:
+            del sys.modules[key]
+
 def test_missing_plugin_dir():
     with mock.patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
         with pytest.raises(SystemExit) as excinfo:
