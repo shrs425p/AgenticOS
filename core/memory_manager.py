@@ -563,9 +563,9 @@ Curated knowledge, insights, and learned patterns from agent experiences.
             for daily_file in daily_files:
                 try:
                     with open(daily_file, "r", encoding="utf-8") as f:
-                        content = f.read()
                         # Count sections (lines starting with ## [timestamp])
-                        events = len(re.findall(r'^## \[', content, re.MULTILINE))
+                        # Stream the file to avoid reading entire contents into memory
+                        events = sum(1 for line in f if line.startswith("## ["))
                         stats["total_logged_events"] += events
                 except Exception:
                     pass  # Skip unreadable files
