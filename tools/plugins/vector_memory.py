@@ -49,9 +49,18 @@ def _has_evidence(record: Dict[str, Any]) -> bool:
 class VectorDB:
     """Lightweight Numpy-based Vector Database."""
     
-    def __init__(self, namespace: str):
+    def __init__(self, namespace: str, shared: bool = False):
         self.namespace = namespace
-        self.db_path = os.path.join(VECTOR_DIR, f"{namespace}.json")
+        if shared:
+            shared_dir = os.path.join("workspace", "vectors", "shared")
+            self.db_path = os.path.join(shared_dir, f"{namespace}.json")
+        else:
+            if namespace.startswith("shared/"):
+                self.db_path = os.path.join(VECTOR_DIR, f"{namespace}.json")
+            else:
+                self.db_path = os.path.join(VECTOR_DIR, f"{namespace}.json")
+        
+        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         self.client = None # Lazily instantiated
         self.centroids = None
         self.records: List[Dict[str, Any]] = self._load()
@@ -342,9 +351,88 @@ class VectorDB:
         except Exception as e:
             return f"Error searching vectors: {e}"
 
+    def cluster_records(self, k: int) -> List[Dict[str, Any]]:
+        """Cluster records using K-Means and return representatives for each cluster."""
+        if not self.records:
+            return []
+        if len(self.records) < k:
+            k = len(self.records)
+            
+        vectors = np.array([r["vector"] for r in self.records], dtype=float)
+        N, D = vectors.shape
+        
+        # Run K-Means
+        rng = np.random.default_rng(42)
+        indices = rng.choice(N, size=k, replace=False)
+        centroids = vectors[indices].copy()
+        
+        for _ in range(100):
+            vec_norms = np.linalg.norm(vectors, axis=1, keepdims=True)
+            vec_norms[vec_norms == 0] = 1e-9
+            norm_vectors = vectors / vec_norms
+            
+            cent_norms = np.linalg.norm(centroids, axis=1, keepdims=True)
+            cent_norms[cent_norms == 0] = 1e-9
+            norm_centroids = centroids / cent_norms
+            
+            similarities = np.dot(norm_vectors, norm_centroids.T)
+            assignments = np.argmax(similarities, axis=1)
+            
+            new_centroids = np.zeros_like(centroids)
+            for i in range(k):
+                mask = (assignments == i)
+                if np.any(mask):
+                    new_centroids[i] = np.mean(vectors[mask], axis=0)
+                else:
+                    rand_idx = rng.choice(N)
+                    new_centroids[i] = vectors[rand_idx]
+            
+            if np.allclose(centroids, new_centroids, atol=1e-5):
+                centroids = new_centroids
+                break
+            centroids = new_centroids
+            
+        # For each cluster, find the record closest to its centroid
+        clusters = []
+        for i in range(k):
+            mask = (assignments == i)
+            member_indices = np.where(mask)[0]
+            if len(member_indices) == 0:
+                continue
+            
+            # Find closest to centroid i
+            centroid = centroids[i]
+            centroid_norm = np.linalg.norm(centroid)
+            centroid_norm = centroid_norm if centroid_norm > 0 else 1.0
+            norm_centroid = centroid / centroid_norm
+            
+            best_sim = -1.0
+            best_rec_idx = member_indices[0]
+            
+            for idx in member_indices:
+                rec_vec = vectors[idx]
+                rec_norm = np.linalg.norm(rec_vec)
+                rec_norm = rec_norm if rec_norm > 0 else 1.0
+                norm_rec_vec = rec_vec / rec_norm
+                
+                sim = float(np.dot(norm_rec_vec, norm_centroid))
+                if sim > best_sim:
+                    best_sim = sim
+                    best_rec_idx = idx
+                    
+            rep_record = self.records[best_rec_idx]
+            clusters.append({
+                "cluster_id": i,
+                "size": int(len(member_indices)),
+                "representative_text": rep_record["text"],
+                "representative_metadata": rep_record["metadata"]
+            })
+            
+        return clusters
+
 
 @tool(name="vector_memory_store", category="Memory", desc="Store a semantically embedded memory.")
-def vector_memory_store(namespace: str, text: str, metadata: str = "", timestamp: float = None) -> str:
+def vector_memory_store(namespace: str, text: str, metadata: str = "", timestamp: float = None, shared: bool = False) -> str:
     """Store text as a semantic vector embedding.
     
     Args:
@@ -352,16 +440,17 @@ def vector_memory_store(namespace: str, text: str, metadata: str = "", timestamp
         text: The string to embed and remember.
         metadata: Optional string context or JSON metadata about the memory.
         timestamp: Optional float timestamp of when the memory occurred.
+        shared: If true, save in the shared directory workspace/vectors/shared/.
     """
     if not HAS_NUMPY:
         return "Error: numpy is not installed. Please add numpy to requirements."
         
-    db = VectorDB(namespace)
+    db = VectorDB(namespace, shared=shared)
     return db.store(text, metadata, timestamp=timestamp)
 
 
 @tool(name="vector_memory_search", category="Memory", desc="Semantically search memories.")
-def vector_memory_search(namespace: str, query: str, top_k: int = 3, evidence_required: bool = False) -> str:
+def vector_memory_search(namespace: str, query: str, top_k: int = 3, evidence_required: bool = False, shared: bool = False) -> str:
     """Search for semantically relevant memories in a namespace.
     
     Args:
@@ -369,9 +458,27 @@ def vector_memory_search(namespace: str, query: str, top_k: int = 3, evidence_re
         query: The search query string.
         top_k: Number of results to return.
         evidence_required: If true, exclude records where evidence is empty, null, or missing.
+        shared: If true, search in the shared directory workspace/vectors/shared/.
     """
     if not HAS_NUMPY:
         return "Error: numpy is not installed. Please add numpy to requirements."
         
-    db = VectorDB(namespace)
+    db = VectorDB(namespace, shared=shared)
     return db.search(query, top_k, evidence_required=evidence_required)
+
+
+@tool(name="cluster_memories", category="Memory", desc="Execute K-Means clustering on memories.")
+def cluster_memories(namespace: str, k: int = 3, shared: bool = False) -> str:
+    """Cluster memories in a namespace using K-Means and return representative centroid summaries.
+    
+    Args:
+        namespace: The logical grouping/database name to cluster.
+        k: The number of clusters to form.
+        shared: If true, use the shared workspace path workspace/vectors/shared/.
+    """
+    if not HAS_NUMPY:
+        return "Error: numpy is not installed. Please add numpy to requirements."
+        
+    db = VectorDB(namespace, shared=shared)
+    clusters = db.cluster_records(k)
+    return json.dumps(clusters, indent=2)
