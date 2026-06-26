@@ -41,23 +41,22 @@ Enable agents to achieve 100% task completion rates on the user's OS runtime wit
 - [x] **AUTO-03**: Adaptive task duration estimation and stall warning thresholds. (Phase 3)
 - [x] **AUTO-04**: Long-term task orchestrator with phase splitting and state checkpoints. (Phase 3)
 - [x] **AUTO-05**: Opportunity scanner recommending faster alternatives mid-task. (Phase 3)
+- [x] **EXT-01**: Async tool support using asynchronous streaming iterators. (Phase 4)
+- [x] **EXT-02**: Streaming tool output protocol for large file/text streams. (Phase 4)
+- [x] **EXT-03**: Remote plugin registry for downloading and installing community tools. (Phase 4)
+- [x] **EXT-04**: Tool dependency resolution and compatibility checking. (Phase 4)
+- [x] **EXT-05**: Tool composition and piping protocol. (Phase 4)
+- [x] **TEST-01**: End-to-end multi-step workflow integration tests. (Phase 4)
+- [x] **TEST-02**: Mutation testing to verify test assertion quality. (Phase 4)
+- [x] **TEST-03**: Performance regression benchmarks to track speed. (Phase 4)
+- [x] **TEST-04**: Chaos Monkey harness simulating LLM delays, DB corruption, and network dropouts. (Phase 4)
+- [x] **MEM-01**: Semantic memory search using FAISS or similar vector matching. (Phase 4)
+- [x] **MEM-02**: Time-based memory decay using mathematical half-life calculations. (Phase 4)
+- [x] **MEM-03**: Episodic memory clustering to group similar past actions. (Phase 4)
+- [x] **MEM-04**: Validated memory storage requiring supporting evidence. (Phase 4)
+- [x] **MEM-05**: Distributed memory synchronization across multiple agents. (Phase 4)
 
 ### Active
-
-- [ ] **EXT-01**: Async tool support using asynchronous streaming iterators.
-- [ ] **EXT-02**: Streaming tool output protocol for large file/text streams.
-- [ ] **EXT-03**: Remote plugin registry for downloading and installing community tools.
-- [ ] **EXT-04**: Tool dependency resolution and compatibility checking.
-- [ ] **EXT-05**: Tool composition and piping protocol.
-- [ ] **TEST-01**: End-to-end multi-step workflow integration tests.
-- [ ] **TEST-02**: Mutation testing to verify test assertion quality.
-- [ ] **TEST-03**: Performance regression benchmarks to track speed.
-- [ ] **TEST-04**: Chaos Monkey harness simulating LLM delays, DB corruption, and network dropouts.
-- [ ] **MEM-01**: Semantic memory search using FAISS or similar vector matching.
-- [ ] **MEM-02**: Time-based memory decay using mathematical half-life calculations.
-- [ ] **MEM-03**: Episodic memory clustering to group similar past actions.
-- [ ] **MEM-04**: Validated memory storage requiring supporting evidence.
-- [ ] **MEM-05**: Distributed memory synchronization across multiple agents.
 
 ### Out of Scope
 
@@ -77,23 +76,13 @@ The framework is being updated to support production-grade deployments, requirin
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Initialize v1.0 Milestone | Start a structured roadmap to transition AgenticOS to a production-ready 10/10 platform | — Pending |
+| Initialize v1.0 Milestone | Start a structured roadmap to transition AgenticOS to a production-ready 10/10 platform | Complete |
+| Shipped Milestone v1.0 | Complete all security, performance, autonomy, memory, and resiliency harnesses | Complete |
 
-## Current Milestone: v1.0 Comprehensive 10/10 Rating Analysis
+## Shipped Milestones
 
-**Goal:** Address key gaps to elevate AgenticOS's capabilities to a 10/10 across all 10 critical dimensions.
-
-**Target features:**
-- Security Enhancements (Unicode, code-gen intercept, registry, symlink)
-- Code Quality & Type Safety (Pydantic models, modularization, Tool protocol)
-- Advanced Documentation (deployment, threat model, cost estimator)
-- Performance Optimizations (adaptive context, streaming, indexing, parallelization)
-- OS Control & Tuning (macOS system access, Linux desktop env, embedded optimization)
-- Enhanced Autonomy (smart retry, success criteria, stall detection, long-term orchestrator)
-- Rich Extensibility (async tool, streaming tool, remote plugin registry, tool composer)
-- Testing & Resiliency (E2E, mutation, performance benchmarks, chaos monkey)
-- Smart Memory/Context (semantic memory FAISS, decaying memory, episodic clustering, validated memory)
-- LLM Integration (fallback routing, cost optimizer, model-specific prompts, structured output)
+- [✓ Milestone v1.0: Comprehensive 10/10 Rating Analysis (Shipped 2026-06-26)](file:///.planning/milestones/v1.0-ROADMAP.md)
+  - **Goal:** Address key gaps to elevate AgenticOS's capabilities to a 10/10 across all 10 critical dimensions.
 
 ## Evolution
 
@@ -113,4 +102,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-26 after Phase 3 completion*
+*Last updated: 2026-06-26 after Milestone 1.0 Completion*
