@@ -6,7 +6,7 @@ This roadmap defines the 4-phase execution plan for the AgenticOS v1.0 milestone
 
 ## Phases
 
-- [ ] **Phase 1: Core Security and Code Quality Foundation** - Solidify runtime against exploits and modularize codebase structure.
+- [x] **Phase 1: Core Security and Code Quality Foundation** - Solidify runtime against exploits and modularize codebase structure.
 - [ ] **Phase 2: Performance and LLM Integration Layer** - Enhance processing speed, concurrency, and remote LLM communication resilience.
 - [ ] **Phase 3: Platform OS Control and Autonomy Framework** - Expand native desktop controls, hardware auto-tuning, and robust agent retry loops.
 - [ ] **Phase 4: Memory, Extensibility, and Resiliency Harness** - Implement local FAISS vector indexing, async/streaming plugin pipelines, and chaos test suites.
@@ -25,14 +25,14 @@ This roadmap defines the 4-phase execution plan for the AgenticOS v1.0 milestone
   3. Action parameter execution payloads are validated via Pydantic model schemas.
   4. Large functions in `core/runtime.py` are cleanly separated into orchestrator, dispatcher, memory, and error files.
 
-**Plans**: 0/4 plans executed
+**Plans**: 4/4 plans executed
 
 Plans:
 
-- [ ] 01-01-PLAN.md: AST validator and unicode/character cast escape guard.
-- [ ] 01-02-PLAN.md: Symlink resolution canonicalizer and path traversal block.
-- [ ] 01-03-PLAN.md: Pydantic configuration schemas and runtime sub-module refactoring.
-- [ ] 01-04-PLAN.md: Security threat model and test-suite regression coverage.
+- [x] 01-01-PLAN.md: AST validator and unicode/character cast escape guard.
+- [x] 01-02-PLAN.md: Symlink resolution canonicalizer and path traversal block.
+- [x] 01-03-PLAN.md: Pydantic configuration schemas and runtime sub-module refactoring.
+- [x] 01-04-PLAN.md: Security threat model and test-suite regression coverage.
 
 ---
 
@@ -52,9 +52,9 @@ Plans:
 
 Plans:
 
-- [ ] 02-01: Adaptive context sliding window and compression manager.
-- [ ] 02-02: Streaming JSON parser and parallel execution action graph scheduler.
-- [ ] 02-03: Cost-aware LLM fallback router, model-specific templates, and token estimators.
+- [x] 02-01: Adaptive context sliding window and compression manager.
+- [x] 02-02: Streaming JSON parser and parallel execution action graph scheduler.
+- [x] 02-03: Cost-aware LLM fallback router, model-specific templates, and token estimators.
 
 ---
 
@@ -105,7 +105,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Security & Code Quality | 0/4 | Planned    |  |
-| 2. Performance & LLM | 0/3 | Not started | - |
-| 3. OS Control & Autonomy | 0/3 | Not started | - |
-| 4. Memory & Resiliency | 0/4 | Not started | - |
+| 1. Security & Code Quality | 4/4 | Complete    | 2026-06-26 |
+| 2. Performance & LLM | 3/3 | Complete    | 2026-06-26 |
+| 3. OS Control & Autonomy | 0/3 | Planned | - |
+| 4. Memory & Resiliency | 0/4 | Planned | - |
