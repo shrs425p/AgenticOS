@@ -1,6 +1,7 @@
 """Base classes and decorators for AgenticOs tools."""
 
-from typing import Protocol, Callable, Any, Dict
+import asyncio
+from typing import Protocol, Callable, Any, Dict, AsyncIterator
 from pydantic import BaseModel, Field
 
 class ToolMetadata(BaseModel):
@@ -16,6 +17,18 @@ class Tool(Protocol):
     
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         """Execute the tool function directly."""
+        ...
+
+class AsyncTool(Protocol):
+    metadata: ToolMetadata
+    func: Callable
+    
+    async def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        """Execute the tool function directly as a coroutine."""
+        ...
+
+    async def stream(self, *args: Any, **kwargs: Any) -> AsyncIterator[str]:
+        """Stream chunks of output as an async generator."""
         ...
 
 def tool(
@@ -36,6 +49,7 @@ def tool(
         func._tool_category = category
         func._tool_version = version
         func._tool_author = author
+        func._is_async = asyncio.iscoroutinefunction(func)
         return func
 
     return decorator
