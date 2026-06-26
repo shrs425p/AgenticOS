@@ -3,6 +3,7 @@
 import re
 import json
 import sys
+import asyncio
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, List, Tuple, Any, Callable, Optional
 
@@ -325,12 +326,31 @@ class ParallelScheduler:
     are submitted to a :class:`~concurrent.futures.ThreadPoolExecutor` simultaneously.
     """
 
-    def __init__(self, max_workers: int = 4):
+    def __init__(self, max_workers: Optional[int] = None):
+        if max_workers is None:
+            try:
+                from core.resource_profiler import profile_hardware
+                max_workers = profile_hardware().recommended_max_workers
+            except Exception:
+                max_workers = 4
         self.max_workers = max_workers
 
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
+
+    def _is_async_tool(self, tool: str, executor_fn: Callable) -> bool:
+        """Check if the tool is registered as an async tool."""
+        if hasattr(executor_fn, "__self__") and hasattr(executor_fn.__self__, "registry"):
+            registry = executor_fn.__self__.registry
+            if tool in registry:
+                fn = registry[tool]["fn"]
+                return getattr(fn, "_is_async", False) or asyncio.iscoroutinefunction(fn)
+        if asyncio.iscoroutinefunction(executor_fn):
+            return True
+        if "async" in tool.lower():
+            return True
+        return False
 
     def execute(
         self,
@@ -355,14 +375,70 @@ class ParallelScheduler:
 
         with ThreadPoolExecutor(max_workers=self.max_workers) as pool:
             for wave in waves:
-                futures = {}
+                # Group actions in this wave into sync and async
+                async_actions = []
+                sync_actions = []
                 for idx in wave:
+                    action = actions[idx]
+                    tool = action.get("tool", "")
+                    if self._is_async_tool(tool, executor_fn):
+                        async_actions.append(idx)
+                    else:
+                        sync_actions.append(idx)
+
+                futures = {}
+                # Submit sync actions to thread pool
+                for idx in sync_actions:
                     action = actions[idx]
                     tool = action.get("tool", "")
                     args = action.get("args", {})
                     future = pool.submit(self._safe_call, executor_fn, tool, args)
                     futures[future] = idx
 
+                # Run async actions concurrently in an event loop using asyncio.gather
+                if async_actions:
+                    async def run_async_actions():
+                        coros = []
+                        for idx in async_actions:
+                            action = actions[idx]
+                            tool = action.get("tool", "")
+                            args = action.get("args", {})
+                            
+                            async def wrap_coro(t, a):
+                                try:
+                                    res = executor_fn(t, a)
+                                    if asyncio.iscoroutine(res):
+                                        return await res
+                                    return res
+                                except Exception as exc:
+                                    return f"Error executing '{t}': {type(exc).__name__}: {exc}"
+                                    
+                            coros.append(wrap_coro(tool, args))
+                        return await asyncio.gather(*coros)
+
+                    def run_in_loop():
+                        try:
+                            return asyncio.run(run_async_actions())
+                        except RuntimeError:
+                            # Loop is already running, use a new loop
+                            loop = asyncio.new_event_loop()
+                            try:
+                                return loop.run_until_complete(run_async_actions())
+                            finally:
+                                loop.close()
+
+                    async_future = pool.submit(run_in_loop)
+                    try:
+                        async_results = async_future.result()
+                        for idx, val in zip(async_actions, async_results):
+                            results[idx] = val
+                    except Exception as e:
+                        for idx in async_actions:
+                            action = actions[idx]
+                            tool = action.get("tool", "")
+                            results[idx] = f"Error executing async tools: {e}"
+
+                # Gather sync action results
                 for future in as_completed(futures):
                     idx = futures[future]
                     results[idx] = future.result()
@@ -381,7 +457,15 @@ class ParallelScheduler:
     ) -> str:
         """Wrap executor_fn so exceptions are captured as observation strings."""
         try:
-            return executor_fn(tool, args)
+            res = executor_fn(tool, args)
+            if asyncio.iscoroutine(res):
+                try:
+                    return asyncio.run(res)
+                except RuntimeError:
+                    import concurrent.futures
+                    with concurrent.futures.ThreadPoolExecutor(1) as executor:
+                        return executor.submit(asyncio.run, res).result()
+            return res
         except Exception as exc:  # noqa: BLE001
             return f"Error executing '{tool}': {type(exc).__name__}: {exc}"
 
@@ -441,7 +525,7 @@ class ParallelScheduler:
 def execute_actions_parallel(
     actions: List[Tuple[str, Dict]],
     executor_fn: Callable[[str, Dict], str],
-    max_workers: int = 4,
+    max_workers: Optional[int] = None,
     enabled: bool = True,
 ) -> List[str]:
     """Execute a list of ``(tool_name, args)`` tuples, running independent ones in parallel.

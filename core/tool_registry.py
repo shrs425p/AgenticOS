@@ -24,6 +24,7 @@ import importlib.util
 import os
 import sys
 import logging
+import asyncio
 
 
 
@@ -95,6 +96,13 @@ class ToolRegistry:
         ]:
             self._register_subsystem(obj, category)
         self._register_subsystem(self.sys_mgr, "System")
+
+        # Dynamically register active platform tools
+        try:
+            import tools.platform as platform_tools
+            self._register_subsystem(platform_tools, "Platform")
+        except Exception:
+            pass
 
         # 2. Dynamic registration for URL presets
         if self.tools_cfg.get("url_presets", True):
@@ -479,16 +487,27 @@ class ToolRegistry:
             ]
 
             def _invoke(func):
+                is_async = getattr(func, "_is_async", False) or asyncio.iscoroutinefunction(func)
                 if isinstance(args, dict):
                     kwargs = {}
                     for p in params:
                         if p.name in args:
                             kwargs[p.name] = args[p.name]
-                    out = str(func(**kwargs))
-                    note = ""
-                    if self.cfg.get("autonomy", {}).get("validate_results", True):
-                        note = validate_tool(name, args, out, workspace_root=self._workspace_root)
-                    return f"{out}\n{note}".strip() if note else out
+                    if is_async:
+                        async def async_run():
+                            res = await func(**kwargs)
+                            out = str(res)
+                            note = ""
+                            if self.cfg.get("autonomy", {}).get("validate_results", True):
+                                note = validate_tool(name, args, out, workspace_root=self._workspace_root)
+                            return f"{out}\n{note}".strip() if note else out
+                        return async_run()
+                    else:
+                        out = str(func(**kwargs))
+                        note = ""
+                        if self.cfg.get("autonomy", {}).get("validate_results", True):
+                            note = validate_tool(name, args, out, workspace_root=self._workspace_root)
+                        return f"{out}\n{note}".strip() if note else out
 
                 clean_args = [arg for arg in (args or []) if (isinstance(arg, str) and arg.strip()) or not isinstance(arg, str)]
                 param_count = len(params)
@@ -509,13 +528,25 @@ class ToolRegistry:
                     else:
                         converted.append(stripped)
 
-                out = str(func(*converted)) if converted else str(func())
-                if getattr(self, "sentinel", None):
-                    self.sentinel.log_action(name, args, out)
-                note = ""
-                if self.cfg.get("autonomy", {}).get("validate_results", True):
-                    note = validate_tool(name, converted, out, workspace_root=self._workspace_root)
-                return f"{out}\n{note}".strip() if note else out
+                if is_async:
+                    async def async_run_pos():
+                        res = await func(*converted) if converted else await func()
+                        out = str(res)
+                        if getattr(self, "sentinel", None):
+                            self.sentinel.log_action(name, args, out)
+                        note = ""
+                        if self.cfg.get("autonomy", {}).get("validate_results", True):
+                            note = validate_tool(name, converted, out, workspace_root=self._workspace_root)
+                        return f"{out}\n{note}".strip() if note else out
+                    return async_run_pos()
+                else:
+                    out = str(func(*converted)) if converted else str(func())
+                    if getattr(self, "sentinel", None):
+                        self.sentinel.log_action(name, args, out)
+                    note = ""
+                    if self.cfg.get("autonomy", {}).get("validate_results", True):
+                        note = validate_tool(name, converted, out, workspace_root=self._workspace_root)
+                    return f"{out}\n{note}".strip() if note else out
 
             try:
                 return _invoke(fn)
