@@ -274,6 +274,14 @@ def load_config(path: str = None, force_reload: bool = False) -> ConfigDict:
     except Exception:
         pass  # Validator must never crash the agent
 
+    # Validate configuration using Pydantic models
+    try:
+        from core.config_types import ConfigDict as PydanticConfig
+        PydanticConfig.model_validate(cfg)
+    except Exception as e:
+        import warnings
+        warnings.warn(f"Pydantic configuration validation warning: {e}")
+
     _CONFIG_CACHE[abs_path] = cfg
     import copy
     return copy.deepcopy(cfg)

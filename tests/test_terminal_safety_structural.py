@@ -727,3 +727,96 @@ def test_env_var_expansions_in_wrappers():
         "environment variable expansion detected in wrapper parameters"
         in safety._blocked_command_reason("cmd /c %nested_cmd%")
     )
+
+
+def test_unicode_hex_powershell_escapes():
+    """Verify that Unicode escapes, hex escapes, and PowerShell casts are blocked."""
+    rules = _default_rules()
+    safety = DummySafety(rules)
+
+    # Unicode escapes (blocked)
+    assert "unicode escape" in safety._blocked_command_reason("echo \\u0041").lower()
+    assert "unicode escape" in safety._blocked_command_reason("echo U+0041").lower()
+    assert "unicode escape" in safety._blocked_command_reason("echo U+00410").lower()
+    assert "unicode escape" in safety._blocked_command_reason("echo U+10FFFF").lower()
+    assert "unicode escape" in safety._blocked_command_reason("echo \\U00000041").lower()
+
+    # Hex escapes (blocked)
+    assert "hex character escape" in safety._blocked_command_reason("echo \\x41").lower()
+    assert "hex character escape" in safety._blocked_command_reason("echo \\x0a").lower()
+
+    # PowerShell char casts (blocked)
+    assert "powershell character cast" in safety._blocked_command_reason("[char]0x41").lower()
+    assert "powershell character cast" in safety._blocked_command_reason("[char]65").lower()
+    assert "powershell character cast" in safety._blocked_command_reason("[char] 0x0a").lower()
+    assert "powershell character cast" in safety._blocked_command_reason("echo [char]12").lower()
+
+    # Obfuscated escapes in token (blocked)
+    # They can trigger the pre-tokenization check which is also fine!
+    assert any(m in safety._blocked_command_reason("net\\u0020stop").lower() for m in ("unicode escape", "obfuscated escape sequence"))
+    assert any(m in safety._blocked_command_reason("net\\x20stop").lower() for m in ("hex character", "obfuscated escape sequence"))
+
+
+class MockPathGuard:
+    def __init__(self, allowed=True, msg="Allowed", hitm_allowed=True):
+        self.allowed = allowed
+        self.msg = msg
+        self.hitm_allowed = hitm_allowed
+        self.checked_paths = []
+        self.asked_paths = []
+
+    def check_path(self, path_str: str, operation: str = "read"):
+        self.checked_paths.append((path_str, operation))
+        return self.allowed, self.msg
+
+    def ask_human(self, path: str, operation: str):
+        self.asked_paths.append((path, operation))
+        return self.hitm_allowed
+
+
+def test_code_generation_redirect():
+    """Verify that script writing via redirections outside the workspace are blocked/prompted."""
+    rules = _default_rules()
+    safety = DummySafety(rules)
+    
+    # 1. Test helper extraction directly (including piped redirections)
+    targets = safety._get_redirection_targets("echo print(1) > workspace/script.py")
+    assert [Path(t) for t in targets] == [Path("workspace/script.py")]
+
+    targets_pipe = safety._get_redirection_targets("echo print(1) | tee /some/path/script.py")
+    assert [Path(t) for t in targets_pipe] == [Path("/some/path/script.py")]
+
+    targets_outfile = safety._get_redirection_targets("echo print(1) | Out-File -FilePath /some/path/script.py")
+    assert [Path(t) for t in targets_outfile] == [Path("/some/path/script.py")]
+
+    # Setup mock guard
+    guard = MockPathGuard(allowed=True)
+    safety.guard = guard
+
+    # Safe redirection (inside workspace/allowed)
+    assert safety._blocked_command_reason("echo print(1) > workspace/script.py") == ""
+    assert len(guard.checked_paths) == 1
+    assert Path(guard.checked_paths[-1][0]) == Path("workspace/script.py")
+
+    # Blocked outside workspace by guard (check_path returns False, msg is security policy error)
+    guard_blocked = MockPathGuard(allowed=False, msg="Outside workspace block")
+    safety.guard = guard_blocked
+    reason = safety._blocked_command_reason("echo print(1) > /some/path/script.py")
+    assert "blocked writing script outside workspace" in reason.lower()
+    assert len(guard_blocked.checked_paths) == 1
+
+    # HITM required outside workspace, human accepts
+    guard_hitm_allow = MockPathGuard(allowed=False, msg="HITM_REQUIRED", hitm_allowed=True)
+    safety.guard = guard_hitm_allow
+    assert safety._blocked_command_reason("echo print(1) >> /some/path/script.py") == ""
+    assert len(guard_hitm_allow.checked_paths) == 1
+    assert len(guard_hitm_allow.asked_paths) == 1
+    assert Path(guard_hitm_allow.asked_paths[-1][0]) == Path("/some/path/script.py")
+
+    # HITM required outside workspace, human denies
+    guard_hitm_deny = MockPathGuard(allowed=False, msg="HITM_REQUIRED", hitm_allowed=False)
+    safety.guard = guard_hitm_deny
+    reason_deny = safety._blocked_command_reason("echo print(1) >> /some/path/script.py")
+    assert "writing script via redirection was denied by user" in reason_deny.lower()
+    assert len(guard_hitm_deny.checked_paths) == 1
+    assert len(guard_hitm_deny.asked_paths) == 1

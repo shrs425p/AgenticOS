@@ -1,56 +1,86 @@
-"""TypedDict definitions for configuration sections (static typing helpers).
+"""Pydantic configuration types and schema validation models."""
 
-These types are intentionally lightweight and `total=False` so they can be
-used as hints without enforcing strict runtime checks. They improve IDE
-completion and serve as a single place to document common config keys.
-"""
-from typing import TypedDict, Dict, Any
+from typing import Dict, Any, Optional
+from pydantic import BaseModel, ConfigDict as PydanticConfigDict
 
 
-class NvidiaConfig(TypedDict, total=False):
-    base_url: str
-    model: str
-    timeout: int
-    temperature: float
-    top_p: float
-    max_tokens: int
+class DictLikeModel(BaseModel):
+    model_config = PydanticConfigDict(extra="allow")
+
+    def __getitem__(self, key: str) -> Any:
+        try:
+            return getattr(self, key)
+        except AttributeError:
+            raise KeyError(key)
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        setattr(self, key, value)
+
+    def __contains__(self, key: str) -> bool:
+        return hasattr(self, key) and getattr(self, key) is not None
+
+    def get(self, key: str, default: Any = None) -> Any:
+        return getattr(self, key, default)
+
+    def setdefault(self, key: str, default: Any = None) -> Any:
+        if not hasattr(self, key) or getattr(self, key) is None:
+            setattr(self, key, default)
+        return getattr(self, key)
+
+    def keys(self):
+        return {k: v for k, v in self.__dict__.items() if v is not None}.keys()
+
+    def items(self):
+        return {k: v for k, v in self.__dict__.items() if v is not None}.items()
+
+    def values(self):
+        return {k: v for k, v in self.__dict__.items() if v is not None}.values()
 
 
-class ProviderConfig(TypedDict, total=False):
-    model: str
-    base_url: str
-    timeout: int
-    temperature: float
-    top_p: float
-    max_tokens: int
+class NvidiaConfig(DictLikeModel):
+    base_url: Optional[str] = None
+    model: Optional[str] = None
+    timeout: Optional[int] = None
+    temperature: Optional[float] = None
+    top_p: Optional[float] = None
+    max_tokens: Optional[int] = None
 
 
-class CloudConfig(TypedDict, total=False):
-    nvidia: NvidiaConfig
-    gemini: ProviderConfig
-    groq: ProviderConfig
-    openai: ProviderConfig
-    openrouter: ProviderConfig
-    github: ProviderConfig
-    deepseek: ProviderConfig
+class ProviderConfig(DictLikeModel):
+    model: Optional[str] = None
+    base_url: Optional[str] = None
+    timeout: Optional[int] = None
+    temperature: Optional[float] = None
+    top_p: Optional[float] = None
+    max_tokens: Optional[int] = None
 
 
-class AgentConfig(TypedDict, total=False):
-    provider: str
-    workspace: str
-    stream: bool
-    default_model: str
-    max_iterations: int
+class CloudConfig(DictLikeModel):
+    nvidia: Optional[NvidiaConfig] = None
+    gemini: Optional[ProviderConfig] = None
+    groq: Optional[ProviderConfig] = None
+    openai: Optional[ProviderConfig] = None
+    openrouter: Optional[ProviderConfig] = None
+    github: Optional[ProviderConfig] = None
+    deepseek: Optional[ProviderConfig] = None
 
 
-class ConfigDict(TypedDict, total=False):
-    agent: AgentConfig
-    cloud: CloudConfig
-    tools: Dict[str, Any]
-    performance: Dict[str, Any]
-    logging: Dict[str, Any]
-    memory: Dict[str, Any]
-    policy: Dict[str, Any]
-    autonomy: Dict[str, Any]
-    heuristics: Dict[str, Any]
-    prompts: Dict[str, Any]
+class AgentConfig(DictLikeModel):
+    provider: Optional[str] = None
+    workspace: Optional[str] = None
+    stream: Optional[bool] = None
+    default_model: Optional[str] = None
+    max_iterations: Optional[int] = None
+
+
+class ConfigDict(DictLikeModel):
+    agent: Optional[AgentConfig] = None
+    cloud: Optional[CloudConfig] = None
+    tools: Optional[Dict[str, Any]] = None
+    performance: Optional[Dict[str, Any]] = None
+    logging: Optional[Dict[str, Any]] = None
+    memory: Optional[Dict[str, Any]] = None
+    policy: Optional[Dict[str, Any]] = None
+    autonomy: Optional[Dict[str, Any]] = None
+    heuristics: Optional[Dict[str, Any]] = None
+    prompts: Optional[Dict[str, Any]] = None

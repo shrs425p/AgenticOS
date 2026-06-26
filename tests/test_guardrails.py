@@ -370,3 +370,93 @@ def test_guardrails_sensitive_shields(tmp_path):
     allowed, msg = guard.check_path(str(ws / "data" / "logs" / "agenticos.log"), "write")
     assert not allowed
     assert "tamper-proof" in msg
+
+
+def test_symlink_depth_real(tmp_path):
+    import os
+    ws = tmp_path / "workspace"
+    ws.mkdir()
+    
+    # Create a chain of symlinks: link1 -> link2 -> link3 -> link4 -> link5 -> link6 -> target.txt
+    target = ws / "target.txt"
+    target.write_text("hello")
+    
+    try:
+        # Try to create symlinks
+        os.symlink("target.txt", str(ws / "link6"))
+        os.symlink("link6", str(ws / "link5"))
+        os.symlink("link5", str(ws / "link4"))
+        os.symlink("link4", str(ws / "link3"))
+        os.symlink("link3", str(ws / "link2"))
+        os.symlink("link2", str(ws / "link1"))
+    except OSError:
+        # If symlinks cannot be created (e.g. on Windows without developer mode/admin),
+        # skip the real filesystem test and we will rely on mock test.
+        import pytest
+        pytest.skip("System does not support symlink creation")
+        
+    cfg = {
+        "security": {
+            "enable_zone_guard": True,
+        },
+        "agent": {
+            "workspace": str(ws)
+        }
+    }
+    guard = PathGuard(cfg)
+    
+    # Resolving link2 has depth 5 (link2 -> link3 -> link4 -> link5 -> link6 -> target.txt), allowed
+    allowed, _ = guard.check_path(str(ws / "link2"), "read")
+    assert allowed
+    
+    # Resolving link1 has depth 6, blocked
+    allowed, msg = guard.check_path(str(ws / "link1"), "read")
+    assert not allowed
+    assert "Symlink traversal depth exceeded limit of 5" in msg
+
+
+def test_symlink_depth_mocked(monkeypatch):
+    import pathlib
+    import os
+    
+    links = {
+        "link1": "link2",
+        "link2": "link3",
+        "link3": "link4",
+        "link4": "link5",
+        "link5": "link6",
+        "link6": "target.txt",
+    }
+    
+    def mock_is_symlink(self):
+        return self.name in links
+        
+    def mock_readlink(path_str):
+        name = pathlib.Path(path_str).name
+        if name in links:
+            return links[name]
+        raise OSError("Not a symlink")
+        
+    monkeypatch.setattr(pathlib.Path, "is_symlink", mock_is_symlink)
+    monkeypatch.setattr(os, "readlink", mock_readlink)
+    monkeypatch.setattr(pathlib.Path, "resolve", lambda self, *args, **kwargs: self)
+    
+    cfg = {
+        "security": {
+            "enable_zone_guard": True,
+        },
+        "agent": {
+            "workspace": "workspace"
+        }
+    }
+    guard = PathGuard(cfg)
+    
+    # link2 has depth 5, allowed
+    allowed, msg = guard.check_path("workspace/link2", "read")
+    assert allowed, f"Disallowed reason: {msg}"
+    
+    # link1 has depth 6, blocked
+    allowed, msg = guard.check_path("workspace/link1", "read")
+    assert not allowed
+    assert "Symlink traversal depth exceeded limit of 5" in msg
+

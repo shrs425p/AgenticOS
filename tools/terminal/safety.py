@@ -5,6 +5,70 @@ from __future__ import annotations
 import os
 import re
 import shlex
+import fnmatch
+from pathlib import Path
+
+
+class RegistryGuard:
+    DEFAULT_BLOCKED = [
+        "HKLM\\SOFTWARE\\MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUN\\*",
+        "HKLM\\SOFTWARE\\MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNONCE\\*",
+        "HKCU\\SOFTWARE\\MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUN\\*",
+        "HKCU\\SOFTWARE\\MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNONCE\\*",
+        "HKLM\\SYSTEM\\CURRENTCONTROLSET\\SERVICES\\*",
+        "HKLM\\SOFTWARE\\MICROSOFT\\WINDOWS NT\\CURRENTVERSION\\WINLOGON\\*"
+    ]
+
+    def __init__(self, cfg: dict):
+        policies = cfg.get("registry_policies") or cfg.get("policy", {}).get("registry_policies", {}) or {}
+        self.allowed = [k.upper() for k in policies.get("allowed_keys", [])]
+        self.blocked = [k.upper() for k in policies.get("blocked_keys", [])]
+        self.approval = [k.upper() for k in policies.get("approval_required_keys", [])]
+
+    def normalize_key(self, key_str: str) -> str:
+        key = key_str.upper().replace("/", "\\").replace("REGISTRY::", "")
+        replacements = {
+            "HKEY_LOCAL_MACHINE": "HKLM",
+            "HKEY_CURRENT_USER": "HKCU",
+            "HKEY_CLASSES_ROOT": "HKCR",
+            "HKEY_USERS": "HKU",
+            "HKEY_CURRENT_CONFIG": "HKCC",
+            "HKLM:": "HKLM",
+            "HKCU:": "HKCU",
+            "HKCR:": "HKCR",
+            "HKU:": "HKU",
+            "HKCC:": "HKCC",
+        }
+        for full, abbrev in replacements.items():
+            if key.startswith(full):
+                key = abbrev + key[len(full):]
+        return key.strip("\\")
+
+    def check_key(self, key_str: str) -> tuple[bool, str]:
+        normalized = self.normalize_key(key_str)
+        
+        # 1. Check default blocked keys
+        for pattern in self.DEFAULT_BLOCKED:
+            if fnmatch.fnmatch(normalized, pattern):
+                return False, f"SECURITY POLICY: Modification of system critical key '{key_str}' is strictly blocked."
+
+        # 2. Check config blocked keys
+        for pattern in self.blocked:
+            if fnmatch.fnmatch(normalized, pattern):
+                return False, f"SECURITY POLICY: Key '{key_str}' is explicitly blocked by config."
+
+        # 3. Check allowed keys
+        for pattern in self.allowed:
+            if fnmatch.fnmatch(normalized, pattern):
+                return True, "Allowed"
+
+        # 4. Check approval keys
+        for pattern in self.approval:
+            if fnmatch.fnmatch(normalized, pattern):
+                return False, "HITM_REQUIRED"
+
+        # Default fallback: Require approval for modification
+        return False, "HITM_REQUIRED"
 
 
 class SafetyMixin:
@@ -16,6 +80,16 @@ class SafetyMixin:
         re.compile(r"\$\{[a-zA-Z0-9_-]+\}"),
         re.compile(r"\$env:[a-zA-Z0-9_-]+", re.IGNORECASE),
     ]
+    _UNICODE_ESCAPE_PAT = re.compile(r"(?i)\\u[0-9a-f]{4}|\\U[0-9a-f]{8}|U\+[0-9a-f]{4,6}")
+    _HEX_ESCAPE_PAT = re.compile(r"(?i)\\x[0-9a-f]{2}")
+    _PS_CHAR_CAST_PAT = re.compile(r"(?i)\[char\]\s*(?:0x[0-9a-f]+|\d+)")
+    _PS_REGISTRY_WRITE_CMDLETS = {
+        "set-itemproperty", "new-itemproperty", "remove-itemproperty",
+        "set-item", "new-item", "remove-item",
+        "rename-itemproperty", "copy-itemproperty", "move-itemproperty",
+        "clear-itemproperty", "rename-item", "copy-item", "move-item",
+        "clear-item"
+    }
 
     def _clean_token(self, token: str) -> tuple[str, bool, bool]:
         """Strip outer matching quotes, check internal quotes and escapes.
@@ -206,6 +280,20 @@ class SafetyMixin:
         flag = token[1:].lower()
         return len(flag) >= 2 and "encodedcommand".startswith(flag)
 
+    def _extract_registry_path(self, tokens: list[str]) -> str | None:
+        path_indicators = {"HKLM", "HKCU", "HKCR", "HKU", "HKCC", "HKEY_"}
+        for i, token in enumerate(tokens):
+            t_upper = token.upper()
+            if t_upper in {"-PATH", "-LITERALPATH"} or t_upper.startswith("-PAT"):
+                if i + 1 < len(tokens):
+                    next_t = tokens[i + 1]
+                    next_t_upper = next_t.upper()
+                    if any(ind in next_t_upper for ind in path_indicators) or "REGISTRY::" in next_t_upper:
+                        return next_t
+            if any(ind in t_upper for ind in path_indicators) or "REGISTRY::" in t_upper:
+                return token
+        return None
+
     def _blocked_command_reason(self, command: str) -> str:
         """Check if a command is blocked by the configured safety rules.
 
@@ -223,6 +311,14 @@ class SafetyMixin:
 
         is_windows = os.name == "nt"
         cmd_str = command or ""
+
+        # Pre-tokenization checks for obfuscation escapes
+        if self._UNICODE_ESCAPE_PAT.search(cmd_str):
+            return "Command blocked by safety rules: Unicode escape sequence detected"
+        if self._HEX_ESCAPE_PAT.search(cmd_str):
+            return "Command blocked by safety rules: Hex character escape sequence detected"
+        if self._PS_CHAR_CAST_PAT.search(cmd_str):
+            return "Command blocked by safety rules: PowerShell character cast detected"
 
         # Step 1: Pre-tokenization check for shell chaining operators
         has_chain, chain_op = self._has_chaining_operators(cmd_str, is_windows)
@@ -250,6 +346,11 @@ class SafetyMixin:
                     "Command blocked by safety rules: command obfuscation detected "
                     f"(internal quotes/escapes in token: {t})"
                 )
+            cleaned_t, _, _ = self._clean_token(t)
+            if (self._UNICODE_ESCAPE_PAT.search(cleaned_t) or
+                self._HEX_ESCAPE_PAT.search(cleaned_t) or
+                self._PS_CHAR_CAST_PAT.search(cleaned_t)):
+                return f"Command blocked by safety rules: obfuscated escape sequence detected in token: {t}"
 
         cleaned_tokens = []
         for t in tokens:
@@ -271,13 +372,61 @@ class SafetyMixin:
 
         # Step 5: Check safety rules against exact command verbs and arguments
         # 5.1 Registry edits
-        if not self.rules.get("allow_registry_edit", False):
-            if verb == "reg" and len(cleaned_tokens) > 1:
-                subaction = cleaned_tokens[1].lower()
-                if subaction in {"add", "delete", "import"}:
+        if verb == "reg" and len(cleaned_tokens) > 1:
+            subaction = cleaned_tokens[1].lower()
+            if subaction in {"add", "delete", "import"}:
+                if not self.rules.get("allow_registry_edit", False):
                     return f"Command blocked by safety rules: reg {subaction}"
-            if verb == "set-itemproperty":
-                return "Command blocked by safety rules: set-itemproperty"
+                
+                # Apply fine-grained registry policies
+                guard = RegistryGuard(self.cfg)
+                if subaction == "import":
+                    path_guard = getattr(self, "guard", None)
+                    if path_guard:
+                        if not path_guard.ask_human("all_registry_keys", "registry_import"):
+                            return "Command blocked by safety rules: registry import was denied by user."
+                    else:
+                        return "Command blocked by safety rules: registry import requires user approval."
+                elif len(cleaned_tokens) > 2:
+                    key_path = cleaned_tokens[2]
+                    allowed, msg = guard.check_key(key_path)
+                    if not allowed:
+                        if msg == "HITM_REQUIRED":
+                            path_guard = getattr(self, "guard", None)
+                            if path_guard:
+                                if not path_guard.ask_human(key_path, "registry_edit"):
+                                    return f"Command blocked by safety rules: registry edit was denied by user: {key_path}"
+                            else:
+                                return f"Command blocked by safety rules: registry edit requires user approval: {key_path}"
+                        else:
+                            return msg
+
+        elif verb in self._PS_REGISTRY_WRITE_CMDLETS:
+            reg_path = self._extract_registry_path(cleaned_tokens)
+            if reg_path or verb == "set-itemproperty": # set-itemproperty is explicitly a registry cmdlet
+                if not self.rules.get("allow_registry_edit", False):
+                    return f"Command blocked by safety rules: {verb}"
+                
+                if reg_path:
+                    guard = RegistryGuard(self.cfg)
+                    allowed, msg = guard.check_key(reg_path)
+                    if not allowed:
+                        if msg == "HITM_REQUIRED":
+                            path_guard = getattr(self, "guard", None)
+                            if path_guard:
+                                if not path_guard.ask_human(reg_path, "registry_edit"):
+                                    return f"Command blocked by safety rules: registry edit was denied by user: {reg_path}"
+                            else:
+                                return f"Command blocked by safety rules: registry edit requires user approval: {reg_path}"
+                        else:
+                            return msg
+                else:
+                    path_guard = getattr(self, "guard", None)
+                    if path_guard:
+                        if not path_guard.ask_human("unknown_registry_path", "registry_edit"):
+                            return f"Command blocked by safety rules: registry edit cmdlet {verb} was denied by user."
+                    else:
+                        return f"Command blocked by safety rules: registry edit cmdlet {verb} requires user approval."
 
         # 5.2 Service control
         if not self.rules.get("allow_service_control", False):
@@ -361,4 +510,36 @@ class SafetyMixin:
                     if nested_reason:
                         return nested_reason
 
+        # Step 7: Check redirection script writing targets
+        script_extensions = {".py", ".sh", ".ps1", ".bat", ".cmd", ".vbs", ".js"}
+        redirect_targets = self._get_redirection_targets(cmd_str)
+        for target in redirect_targets:
+            target_path = Path(target)
+            if target_path.suffix.lower() in script_extensions:
+                guard = getattr(self, "guard", None)
+                if guard:
+                    allowed, msg = guard.check_path(str(target_path), operation="write")
+                    if not allowed:
+                        if msg == "HITM_REQUIRED":
+                            if not guard.ask_human(str(target_path), "write_redirect"):
+                                return f"Command blocked by safety rules: writing script via redirection was denied by user: {target_path}"
+                        else:
+                            return f"Command blocked by safety rules: blocked writing script outside workspace: {msg}"
+
         return ""
+
+    def _get_redirection_targets(self, command: str) -> list[str]:
+        targets = []
+        # Match standard redirection operators (e.g. > output.py, >> script.sh)
+        redirect_regex = r"(?:>>|>)\s*([^\s;&|<>'\"]+|'[^']+'|\"[^\"]+\")"
+        for match in re.finditer(redirect_regex, command):
+            path_str = match.group(1).strip("'\"")
+            targets.append(path_str)
+            
+        # Match Unix tee or PowerShell Out-File / Set-Content / Add-Content
+        pipe_regex = r"\|\s*(?:tee|tee-object|out-file|set-content|add-content)\s+(?:-filepath\s+)?([^\s;&|<>'\"]+|'[^']+'|\"[^\"]+\")"
+        for match in re.finditer(pipe_regex, command, re.IGNORECASE):
+            path_str = match.group(1).strip("'\"")
+            targets.append(path_str)
+            
+        return targets

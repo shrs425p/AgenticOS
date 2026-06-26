@@ -11,13 +11,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Callable
 
-from tools import desktop_notifications as notifications
-from tools import filesystem
-from tools import screen_tools as screen
-from tools import ocr_tools as ocr
-from tools import terminal
-from tools import web
-from tools import system_tools
+# Subsystems are imported dynamically in __init__ to avoid circular imports.
 
 from core.runtime_config import DEFAULT_WORKSPACE
 from core.url_presets import load_url_presets
@@ -53,6 +47,17 @@ class ToolRegistry:
         self._memory = memory_backend
 
         workspace = self.cfg.get("agent", {}).get("workspace", DEFAULT_WORKSPACE)
+
+        # Dynamic imports to resolve circular import dependencies
+        import importlib
+        filesystem = importlib.import_module("tools.filesystem")
+        terminal = importlib.import_module("tools.terminal")
+        web = importlib.import_module("tools.web")
+        notifications = importlib.import_module("tools.desktop_notifications")
+        screen = importlib.import_module("tools.screen_tools")
+        ocr = importlib.import_module("tools.ocr_tools")
+        system_tools = importlib.import_module("tools.system_tools")
+
         self.fm = filesystem.FileManager(rules=self.rules, base_dir=workspace)
         self.term = terminal.TerminalExecutor(
             rules=self.rules,
@@ -72,6 +77,7 @@ class ToolRegistry:
         self._load_plugins()  # <--- Load dynamic plugins
         self._workspace_root = Path(workspace).resolve()
         self.guard = PathGuard(cfg, on_confirm=confirm_handler)
+        self.term.guard = self.guard
         self.shadow_mode = False
 
     def _register_all(self):

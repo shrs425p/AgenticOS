@@ -12,25 +12,30 @@ Enable agents to achieve 100% task completion rates on the user's OS runtime wit
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] **SEC-01**: Unicode & encoding escape sequence detection in command execution. (Phase 1)
+- [x] **SEC-02**: Intercept dynamic code generation commands writing shell/Python scripts to disk. (Phase 1)
+- [x] **SEC-03**: Fine-grained registry key policy controls (allowed, blocked, and approval-required paths). (Phase 1)
+- [x] **SEC-04**: Symlink path resolution depth validation to prevent symlink traversal attacks. (Phase 1)
+- [x] **QUAL-01**: Pydantic validation models for actions and system configurations. (Phase 1)
+- [x] **QUAL-02**: Modularize large functions in `core/runtime.py` into distinct domains (orchestrator, dispatcher, memory, error). (Phase 1)
+- [x] **QUAL-03**: Implement Type-safe Tool Registry using a standard `Tool` protocol. (Phase 1)
+- [x] **QUAL-04**: Unified `AgentError` class with error codes and recovery suggestions. (Phase 1)
+- [x] **DOC-02**: Threat model document mapping security mitigations to residual risks. (Phase 1)
+- [x] **TEST-05**: Security regression test suite checking bypass payloads. (Phase 1)
+- [x] **PERF-01**: Adaptive context window engine adjusting history length dynamically. (Phase 2)
+- [x] **PERF-02**: Streaming JSON action parsing for concurrent execution streams. (Phase 2)
+- [x] **PERF-03**: Semantic indexed tool discovery using vector similarity lookup. (Phase 2)
+- [x] **PERF-04**: Parallel tool execution for independent steps in action graphs. (Phase 2)
+- [x] **INTEG-01**: Smart fallback routing based on model errors (timeouts vs JSON parsing issues). (Phase 2)
+- [x] **INTEG-02**: Cost-aware LLM routing prioritizing cheaper local models for basic tasks. (Phase 2)
+- [x] **INTEG-03**: Model-specific prompt templates to optimize responses. (Phase 2)
+- [x] **INTEG-04**: Structured JSON output guarantee with schema-based retry loops. (Phase 2)
+- [x] **INTEG-05**: Pre-flight token and cost estimation warnings. (Phase 2)
+- [x] **DOC-03**: Cost and token estimation guide for predicting execution expenses. (Phase 2)
 
 ### Active
 
-- [ ] **SEC-01**: Unicode & encoding escape sequence detection in command execution.
-- [ ] **SEC-02**: Intercept dynamic code generation commands writing shell/Python scripts to disk.
-- [ ] **SEC-03**: Fine-grained registry key policy controls (allowed, blocked, and approval-required paths).
-- [ ] **SEC-04**: Symlink path resolution depth validation to prevent symlink traversal attacks.
-- [ ] **QUAL-01**: Pydantic validation models for actions and system configurations.
-- [ ] **QUAL-02**: Modularize large functions in `core/runtime.py` into distinct domains (orchestrator, dispatcher, memory, error).
-- [ ] **QUAL-03**: Implement Type-safe Tool Registry using a standard `Tool` protocol.
-- [ ] **QUAL-04**: Unified `AgentError` class with error codes and recovery suggestions.
 - [ ] **DOC-01**: Production deployment playbook (Docker, Windows Service, Kubernetes, Serverless).
-- [ ] **DOC-02**: Threat model document mapping security mitigations to residual risks.
-- [ ] **DOC-03**: Cost and token estimation guide for predicting execution expenses.
-- [ ] **PERF-01**: Adaptive context window engine adjusting history length dynamically.
-- [ ] **PERF-02**: Streaming JSON action parsing for concurrent execution streams.
-- [ ] **PERF-03**: Semantic indexed tool discovery using vector similarity lookup.
-- [ ] **PERF-04**: Parallel tool execution for independent steps in action graphs.
 - [ ] **OS-01**: macOS deep integration via AppleScript and accessibility APIs.
 - [ ] **OS-02**: Linux desktop-agnostic support (Wayland/X11, KDE/GNOME/i3) and custom screenshot helpers.
 - [ ] **OS-03**: Embedded and resource-constrained environment hardware tuning (Pi, ARM, IoT).
@@ -48,17 +53,11 @@ Enable agents to achieve 100% task completion rates on the user's OS runtime wit
 - [ ] **TEST-02**: Mutation testing to verify test assertion quality.
 - [ ] **TEST-03**: Performance regression benchmarks to track speed.
 - [ ] **TEST-04**: Chaos Monkey harness simulating LLM delays, DB corruption, and network dropouts.
-- [ ] **TEST-05**: Security regression test suite checking bypass payloads.
 - [ ] **MEM-01**: Semantic memory search using FAISS or similar vector matching.
 - [ ] **MEM-02**: Time-based memory decay using mathematical half-life calculations.
 - [ ] **MEM-03**: Episodic memory clustering to group similar past actions.
 - [ ] **MEM-04**: Validated memory storage requiring supporting evidence.
 - [ ] **MEM-05**: Distributed memory synchronization across multiple agents.
-- [ ] **INTEG-01**: Smart fallback routing based on model errors (timeouts vs JSON parsing issues).
-- [ ] **INTEG-02**: Cost-aware LLM routing prioritizing cheaper local models for basic tasks.
-- [ ] **INTEG-03**: Model-specific prompt templates to optimize responses.
-- [ ] **INTEG-04**: Structured JSON output guarantee with schema-based retry loops.
-- [ ] **INTEG-05**: Pre-flight token and cost estimation warnings.
 
 ### Out of Scope
 

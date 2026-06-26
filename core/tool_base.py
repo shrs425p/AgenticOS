@@ -1,6 +1,22 @@
 """Base classes and decorators for AgenticOs tools."""
 
+from typing import Protocol, Callable, Any, Dict
+from pydantic import BaseModel, Field
 
+class ToolMetadata(BaseModel):
+    name: str = Field(..., description="The name of the tool")
+    description: str = Field(..., description="A short description of what the tool does")
+    category: str = Field("General", description="Tool category classification")
+    version: str = Field("1.0.0", description="Version string")
+    author: str = Field("AgenticOS", description="Author identifier")
+
+class Tool(Protocol):
+    metadata: ToolMetadata
+    func: Callable
+    
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        """Execute the tool function directly."""
+        ...
 
 def tool(
     name: str = None,

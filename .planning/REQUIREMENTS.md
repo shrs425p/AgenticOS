@@ -9,22 +9,22 @@ Each of these requirements is active for the v1.0 milestone and maps to roadmap 
 
 ### Security
 
-- [ ] **SEC-01**: The system must detect and block Unicode and hex character-encoding escape sequences (e.g. U+XXXX, \xXX, and PowerShell `$([char]0xXX)` casts) in command tokens.
-- [ ] **SEC-02**: The system must intercept dynamic code generation commands that attempt to write execution shell scripts or Python scripts directly to disk outside approved paths.
-- [ ] **SEC-03**: The system must support fine-grained registry policy controls, enabling allowed paths, blocked paths, and paths requiring user-in-the-loop approval.
-- [ ] **SEC-04**: The system must canonicalize paths and validate symlink path resolution depth (up to 5 levels) to prevent symlink/hardlink traversal exploits.
+- [x] **SEC-01**: The system must detect and block Unicode and hex character-encoding escape sequences (e.g. U+XXXX, \xXX, and PowerShell `$([char]0xXX)` casts) in command tokens.
+- [x] **SEC-02**: The system must intercept dynamic code generation commands that attempt to write execution shell scripts or Python scripts directly to disk outside approved paths.
+- [x] **SEC-03**: The system must support fine-grained registry policy controls, enabling allowed paths, blocked paths, and paths requiring user-in-the-loop approval.
+- [x] **SEC-04**: The system must canonicalize paths and validate symlink path resolution depth (up to 5 levels) to prevent symlink/hardlink traversal exploits.
 
 ### Code Quality & Structure
 
-- [ ] **QUAL-01**: The system must utilize Pydantic schemas to validate execution action objects, input parameters, and environment config files.
-- [ ] **QUAL-02**: The main `core/runtime.py` file must be modularized by splitting orchestration, action dispatching, memory management, and error handling into separate sub-modules.
-- [ ] **QUAL-03**: The system must define a standard `Tool` protocol and register all system and custom tools in a type-safe registry.
-- [ ] **QUAL-04**: The system must define a unified `AgentError` class containing descriptive error codes and actionable recovery suggestions.
+- [x] **QUAL-01**: The system must utilize Pydantic schemas to validate execution action objects, input parameters, and environment config files.
+- [x] **QUAL-02**: The main `core/runtime.py` file must be modularized by splitting orchestration, action dispatching, memory management, and error handling into separate sub-modules.
+- [x] **QUAL-03**: The system must define a standard `Tool` protocol and register all system and custom tools in a type-safe registry.
+- [x] **QUAL-04**: The system must define a unified `AgentError` class containing descriptive error codes and actionable recovery suggestions.
 
 ### Documentation
 
 - [ ] **DOC-01**: The system must publish a production deployment playbook detailing Docker, Windows Service, K8s, and Serverless configurations.
-- [ ] **DOC-02**: The system must provide a comprehensive Threat Model mapping potential attack vectors (injection, path traversal, registry edits) to active framework mitigations.
+- [x] **DOC-02**: The system must provide a comprehensive Threat Model mapping potential attack vectors (injection, path traversal, registry edits) to active framework mitigations.
 - [ ] **DOC-03**: The system must document token estimation heuristics and LLM execution cost projection strategies.
 
 ### Performance
@@ -62,7 +62,7 @@ Each of these requirements is active for the v1.0 milestone and maps to roadmap 
 - [ ] **TEST-02**: The system must run mutation testing to verify the quality and assertion coverage of its unit test suite.
 - [ ] **TEST-03**: The system must run performance regression benchmarks to prevent execution speed slowdowns.
 - [ ] **TEST-04**: The system must include a Chaos Monkey test harness to verify error recovery when simulating LLM timeouts, network failures, or SQLite DB corruption.
-- [ ] **TEST-05**: The system must include a security regression suite verifying that known command obfuscation and path traversal bypasses are successfully blocked.
+- [x] **TEST-05**: The system must include a security regression suite verifying that known command obfuscation and path traversal bypasses are successfully blocked.
 
 ### Memory & Context
 
@@ -99,16 +99,16 @@ This table maps v1 requirements to roadmap execution phases. Populated during ro
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SEC-01 | Phase 1 | Pending |
-| SEC-02 | Phase 1 | Pending |
-| SEC-03 | Phase 1 | Pending |
-| SEC-04 | Phase 1 | Pending |
-| QUAL-01 | Phase 1 | Pending |
-| QUAL-02 | Phase 1 | Pending |
-| QUAL-03 | Phase 1 | Pending |
-| QUAL-04 | Phase 1 | Pending |
-| DOC-02 | Phase 1 | Pending |
-| TEST-05 | Phase 1 | Pending |
+| SEC-01 | Phase 1 | Complete |
+| SEC-02 | Phase 1 | Complete |
+| SEC-03 | Phase 1 | Complete |
+| SEC-04 | Phase 1 | Complete |
+| QUAL-01 | Phase 1 | Complete |
+| QUAL-02 | Phase 1 | Complete |
+| QUAL-03 | Phase 1 | Complete |
+| QUAL-04 | Phase 1 | Complete |
+| DOC-02 | Phase 1 | Complete |
+| TEST-05 | Phase 1 | Complete |
 | PERF-01 | Phase 2 | Pending |
 | PERF-02 | Phase 2 | Pending |
 | PERF-03 | Phase 2 | Pending |
@@ -144,6 +144,7 @@ This table maps v1 requirements to roadmap execution phases. Populated during ro
 | TEST-04 | Phase 4 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 43 total
 - Mapped to phases: 43
 - Unmapped: 0 ✓

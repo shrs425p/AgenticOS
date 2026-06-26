@@ -72,3 +72,39 @@ def test_load_config_caching_behavior(mock_exists, mock_isdir, mock_read_yaml):
         load_config("caching_test.yaml", force_reload=True)
         assert call_count == 2
 
+
+def test_pydantic_validation():
+    from core.config_types import ConfigDict
+    from pydantic import ValidationError
+    import pytest
+
+    # Valid config passes
+    valid_data = {
+        "agent": {
+            "provider": "nvidia",
+            "workspace": "my_workspace",
+            "stream": True,
+            "max_iterations": 100
+        },
+        "cloud": {
+            "nvidia": {
+                "base_url": "http://api.nvidia.com",
+                "max_tokens": 2048
+            }
+        }
+    }
+    model = ConfigDict.model_validate(valid_data)
+    assert model.agent.provider == "nvidia"
+    assert model.agent.max_iterations == 100
+    assert model.cloud.nvidia.max_tokens == 2048
+
+    # Invalid config (e.g. max_iterations is a string that can't be converted to int)
+    invalid_data = {
+        "agent": {
+            "max_iterations": "not-a-number"
+        }
+    }
+    with pytest.raises(ValidationError):
+        ConfigDict.model_validate(invalid_data)
+
+

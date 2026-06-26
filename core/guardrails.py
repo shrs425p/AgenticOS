@@ -1,10 +1,32 @@
-
+import os
 from pathlib import Path
 from typing import Dict, List, Tuple, Callable, Optional
 from core.logger import get_logger
 logger = get_logger(__name__)
 
 
+def resolve_with_symlink_depth(path: Path, max_depth: int = 5) -> Path:
+    """Resolve a path while ensuring we traverse no more than max_depth symlinks."""
+    current = Path(path.anchor)
+    parts = list(path.parts)[1:] if path.is_absolute() else list(path.parts)
+    
+    depth = 0
+    for part in parts:
+        current = current / part
+        
+        # Resolve symlink components recursively
+        while current.is_symlink():
+            depth += 1
+            if depth > max_depth:
+                raise ValueError(f"SECURITY POLICY: Symlink traversal depth exceeded limit of {max_depth}")
+            
+            target = Path(os.readlink(str(current)))
+            if not target.is_absolute():
+                current = (current.parent / target).resolve()
+            else:
+                current = target.resolve()
+                
+    return current.resolve()
 
 
 class PathGuard:
@@ -33,13 +55,15 @@ class PathGuard:
             return True, "Guard disabled."
 
         try:
-            # 1. Canonicalize the path. Relative paths are tool-facing paths and
-            # 1. Handle relative paths by resolving them against workspace_root
+            # 1. Canonicalize the path using custom resolution with symlink depth limit
             p = Path(path_str)
             if not p.is_absolute():
-                target = (self.workspace_root / p).resolve()
+                target_base = self.workspace_root / p
             else:
-                target = p.resolve()
+                target_base = p
+            target = resolve_with_symlink_depth(target_base, max_depth=5)
+        except ValueError as ve:
+            return False, str(ve)
         except Exception as e:
             return False, f"Invalid path: {e}"
 
