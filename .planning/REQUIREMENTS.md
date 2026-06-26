@@ -66,11 +66,11 @@ Each of these requirements is active for the v1.0 milestone and maps to roadmap 
 
 ### Memory & Context
 
-- [ ] **MEM-01**: The system must perform semantic memory lookup using FAISS matching on vector embeddings.
-- [ ] **MEM-02**: The system must apply mathematical decay functions to memories to prioritize recent context.
-- [ ] **MEM-03**: The system must group similar past actions into episodic memory clusters.
-- [ ] **MEM-04**: The system must only retrieve memories that have verified evidence fields.
-- [ ] **MEM-05**: The system must synchronize memories across distributed agent instances.
+- [x] **MEM-01**: The system must perform semantic memory lookup using FAISS matching on vector embeddings.
+- [x] **MEM-02**: The system must apply mathematical decay functions to memories to prioritize recent context.
+- [x] **MEM-03**: The system must group similar past actions into episodic memory clusters.
+- [x] **MEM-04**: The system must only retrieve memories that have verified evidence fields.
+- [x] **MEM-05**: The system must synchronize memories across distributed agent instances.
 
 ### LLM Integration
 
@@ -128,11 +128,11 @@ This table maps v1 requirements to roadmap execution phases. Populated during ro
 | AUTO-04 | Phase 3 | Pending |
 | AUTO-05 | Phase 3 | Pending |
 | DOC-01 | Phase 3 | Pending |
-| MEM-01 | Phase 4 | Pending |
-| MEM-02 | Phase 4 | Pending |
-| MEM-03 | Phase 4 | Pending |
-| MEM-04 | Phase 4 | Pending |
-| MEM-05 | Phase 4 | Pending |
+| MEM-01 | Phase 4 | Complete |
+| MEM-02 | Phase 4 | Complete |
+| MEM-03 | Phase 4 | Complete |
+| MEM-04 | Phase 4 | Complete |
+| MEM-05 | Phase 4 | Complete |
 | EXT-01 | Phase 4 | Pending |
 | EXT-02 | Phase 4 | Pending |
 | EXT-03 | Phase 4 | Pending |
@@ -151,4 +151,4 @@ This table maps v1 requirements to roadmap execution phases. Populated during ro
 
 ---
 *Requirements defined: 2026-06-26*
-*Last updated: 2026-06-26 after initial definition*
+*Last updated: 2026-06-26 after Phase 4 Plan 1*
