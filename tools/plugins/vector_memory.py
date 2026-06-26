@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import json
 import logging
+import time
 from typing import Any, Dict, List
 
 from core.tool_registry import tool
@@ -17,6 +18,32 @@ except ImportError:
 
 VECTOR_DIR = os.path.join("workspace", "vectors")
 os.makedirs(VECTOR_DIR, exist_ok=True)
+
+
+def _has_evidence(record: Dict[str, Any]) -> bool:
+    evidence_val = None
+    if "evidence" in record:
+        evidence_val = record["evidence"]
+    else:
+        metadata = record.get("metadata")
+        if isinstance(metadata, str):
+            try:
+                meta_dict = json.loads(metadata)
+                if isinstance(meta_dict, dict) and "evidence" in meta_dict:
+                    evidence_val = meta_dict["evidence"]
+            except Exception:
+                pass
+        elif isinstance(metadata, dict):
+            if "evidence" in metadata:
+                evidence_val = metadata["evidence"]
+                
+    if evidence_val is None:
+        return False
+    if isinstance(evidence_val, str):
+        return len(evidence_val.strip()) > 0
+    if isinstance(evidence_val, (list, dict, set)):
+        return len(evidence_val) > 0
+    return bool(evidence_val)
 
 
 class VectorDB:
@@ -188,21 +215,48 @@ class VectorDB:
             logging.error(f"Fallback local embedding generation failed: {e}")
             return [0.0] * 1536
 
-    def store(self, text: str, metadata: str) -> str:
+    def store(self, text: str, metadata: str, timestamp: float = None) -> str:
         """Embed and store a record."""
         try:
             vec = self.get_embedding(text)
+            
+            # Resolve timestamp: parameter -> metadata -> current time
+            rec_timestamp = timestamp
+            if rec_timestamp is None:
+                if isinstance(metadata, str):
+                    try:
+                        meta_dict = json.loads(metadata)
+                        if isinstance(meta_dict, dict) and "timestamp" in meta_dict:
+                            rec_timestamp = float(meta_dict["timestamp"])
+                        elif isinstance(meta_dict, dict) and "created_at" in meta_dict:
+                            val = meta_dict["created_at"]
+                            if isinstance(val, (int, float)):
+                                rec_timestamp = float(val)
+                    except Exception:
+                        pass
+                elif isinstance(metadata, dict):
+                    if "timestamp" in metadata:
+                        rec_timestamp = float(metadata["timestamp"])
+                    elif "created_at" in metadata:
+                        val = metadata["created_at"]
+                        if isinstance(val, (int, float)):
+                            rec_timestamp = float(val)
+                            
+            if rec_timestamp is None:
+                rec_timestamp = time.time()
+                
             self.records.append({
                 "text": text,
                 "metadata": metadata,
-                "vector": vec
+                "vector": vec,
+                "timestamp": rec_timestamp
             })
             self._save()
             return f"Successfully stored vector for '{text[:30]}...' in namespace '{self.namespace}'"
         except Exception as e:
             return f"Error storing vector: {e}"
 
-    def search(self, query: str, top_k: int = 5) -> str:
+    def search(self, query: str, top_k: int = 5, evidence_required: bool = False) -> str:
         """Search using cosine similarity with IVF partitioning if available."""
         if not self.records:
             return f"No records found in namespace '{self.namespace}'."
@@ -210,9 +264,16 @@ class VectorDB:
         try:
             query_vec = np.array(self.get_embedding(query))
             
-            # IVF routing if centroids are present and database has > 10 records
+            # Apply evidence filtering if requested
             records_to_search = self.records
-            if self.centroids and len(self.records) > 10:
+            if evidence_required:
+                records_to_search = [r for r in records_to_search if _has_evidence(r)]
+                
+            if not records_to_search:
+                return "[]"
+            
+            # IVF routing if centroids are present and remaining records > 10
+            if self.centroids and len(records_to_search) > 10:
                 centroids_arr = np.array(self.centroids, dtype=float)
                 # Compute similarities of query vector to centroids
                 query_norm = np.linalg.norm(query_vec)
@@ -226,9 +287,9 @@ class VectorDB:
                 centroid_sims = np.dot(norm_centroids, norm_query_vec)
                 best_centroid_idx = int(np.argmax(centroid_sims))
                 
-                # Assign all records to their nearest centroid
-                records_to_search = []
-                rec_vectors = np.array([r["vector"] for r in self.records], dtype=float)
+                # Assign remaining records to their nearest centroid
+                partition_records = []
+                rec_vectors = np.array([r["vector"] for r in records_to_search], dtype=float)
                 rec_norms = np.linalg.norm(rec_vectors, axis=1)
                 rec_norms[rec_norms == 0] = 1.0
                 norm_rec_vectors = rec_vectors / rec_norms[:, np.newaxis]
@@ -236,13 +297,14 @@ class VectorDB:
                 rec_to_cent_sims = np.dot(norm_rec_vectors, norm_centroids.T)
                 rec_assignments = np.argmax(rec_to_cent_sims, axis=1)
                 
-                for idx, record in enumerate(self.records):
+                for idx, record in enumerate(records_to_search):
                     if rec_assignments[idx] == best_centroid_idx:
-                        records_to_search.append(record)
+                        partition_records.append(record)
                 
-                if not records_to_search:
-                    records_to_search = self.records
+                if partition_records:
+                    records_to_search = partition_records
             
+            current_time = time.time()
             results = []
             for record in records_to_search:
                 doc_vec = np.array(record["vector"])
@@ -254,10 +316,21 @@ class VectorDB:
                 
                 similarity = float(dot_product / (norm_q * norm_d)) if norm_q and norm_d else 0.0
                 
+                # Apply exponential time decay
+                rec_time = record.get("timestamp")
+                if rec_time is None:
+                    rec_time = current_time
+                
+                dt_days = max(0.0, (current_time - rec_time) / 86400.0)
+                decay_factor = np.exp(-(np.log(2.0) / 30.0) * dt_days)
+                score = similarity * decay_factor
+                
                 results.append({
                     "text": record["text"],
                     "metadata": record["metadata"],
-                    "similarity": round(similarity, 4)
+                    "similarity": round(score, 4),
+                    "cosine_similarity": round(similarity, 4),
+                    "score": round(score, 4)
                 })
                 
             # Sort by similarity descending
@@ -271,32 +344,34 @@ class VectorDB:
 
 
 @tool(name="vector_memory_store", category="Memory", desc="Store a semantically embedded memory.")
-def vector_memory_store(namespace: str, text: str, metadata: str = "") -> str:
+def vector_memory_store(namespace: str, text: str, metadata: str = "", timestamp: float = None) -> str:
     """Store text as a semantic vector embedding.
     
     Args:
         namespace: The logical grouping/database name (e.g. 'code_snippets', 'user_facts').
         text: The string to embed and remember.
         metadata: Optional string context or JSON metadata about the memory.
+        timestamp: Optional float timestamp of when the memory occurred.
     """
     if not HAS_NUMPY:
         return "Error: numpy is not installed. Please add numpy to requirements."
         
     db = VectorDB(namespace)
-    return db.store(text, metadata)
+    return db.store(text, metadata, timestamp=timestamp)
 
 
 @tool(name="vector_memory_search", category="Memory", desc="Semantically search memories.")
-def vector_memory_search(namespace: str, query: str, top_k: int = 3) -> str:
+def vector_memory_search(namespace: str, query: str, top_k: int = 3, evidence_required: bool = False) -> str:
     """Search for semantically relevant memories in a namespace.
     
     Args:
         namespace: The logical grouping to search within.
         query: The search query string.
         top_k: Number of results to return.
+        evidence_required: If true, exclude records where evidence is empty, null, or missing.
     """
     if not HAS_NUMPY:
         return "Error: numpy is not installed. Please add numpy to requirements."
         
     db = VectorDB(namespace)
-    return db.search(query, top_k)
+    return db.search(query, top_k, evidence_required=evidence_required)
