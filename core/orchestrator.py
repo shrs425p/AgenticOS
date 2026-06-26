@@ -94,8 +94,27 @@ class Agent:
         self.confirm_handler = confirm_handler
 
         self._load_agent_settings()
+        
+        # Profile host hardware at startup
+        from core.resource_profiler import profile_hardware
+        self.hardware_profile = profile_hardware()
+        
         self._init_client()
         self._setup_workspace()
+        
+        # Initialize CheckpointManager using self.workspace
+        from core.checkpoint_manager import CheckpointManager
+        self.checkpoint_manager = CheckpointManager(self.workspace)
+        
+        # Initialize retry classifier and stall monitor
+        from core.retry_classifier import RetryClassifier
+        from core.stall_monitor import StallMonitor
+        self.retry_classifier = RetryClassifier()
+        self.stall_monitor = StallMonitor()
+        
+        self.active_checkpoint_id = None
+        self.active_checkpoint_phase = None
+
         self._init_audit_and_task_tracker()
 
         if self.autonomy_cfg.get("autopilot", False):
@@ -153,10 +172,26 @@ class Agent:
         import core.runtime as runtime
         self.memory = runtime.SqliteSessionMemory(sqlite_cfg)
 
+        # Preserve the security zone settings from the old guard if it exists
+        old_guard_state = None
+        if hasattr(self, "tools") and getattr(self.tools, "guard", None) is not None:
+            old_guard = self.tools.guard
+            old_guard_state = {
+                "enabled": old_guard.enabled,
+                "require_hitm": old_guard.require_hitm,
+                "read_only": getattr(old_guard, "read_only", False)
+            }
+
         import core.runtime as runtime
         self.tools = runtime.ToolRegistry(
             self.cfg, memory_backend=self.memory, confirm_handler=self.confirm_handler
         )
+
+        # Restore the security zone settings onto the new guard
+        if old_guard_state and getattr(self.tools, "guard", None) is not None:
+            self.tools.guard.enabled = old_guard_state["enabled"]
+            self.tools.guard.require_hitm = old_guard_state["require_hitm"]
+            self.tools.guard.read_only = old_guard_state["read_only"]
 
     def _init_audit_and_task_tracker(self) -> None:
         logging_cfg = self.cfg.get("logging", {}) or {}
@@ -197,6 +232,7 @@ class Agent:
     def _init_engine(self) -> None:
         import core.runtime as runtime
         self.context_engine = runtime.ContextEngine(self)
+        self.context_engine.set_compact_threshold(self.hardware_profile.compact_history_threshold)
         import core.runtime as runtime
         mm = runtime.initialize_memory_manager(self.workspace, self.client, self.cfg)
         self.context_engine.set_memory_manager(mm)
@@ -251,6 +287,9 @@ class Agent:
         else:
             # Reinitialize memory if memory config changed and workspace path is unchanged
             self._setup_workspace()
+
+        from core.checkpoint_manager import CheckpointManager
+        self.checkpoint_manager = CheckpointManager(self.workspace)
 
         self.task_tracker = TaskTracker(
             self.cfg["agent"].get("workspace", DEFAULT_WORKSPACE),
@@ -385,6 +424,35 @@ class Agent:
             return ""
         return self.context_engine.build_system_prompt()
 
+    def _extract_roadmap_phases(self) -> list:
+        phases = []
+        roadmap_path = os.path.join(self.workspace, ".planning", "ROADMAP.md")
+        if os.path.exists(roadmap_path):
+            try:
+                with open(roadmap_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                # Find lines like "- [ ] **Phase N: Name**" or "- [x] **Phase N: Name**"
+                matches = re.findall(r"-\s*\[([ xX])\]\s*\*\*Phase\s*(\d+):\s*([^*]+)\*\*", content)
+                for status_char, num, name in matches:
+                    status = "complete" if status_char.lower() == "x" else "pending"
+                    phases.append({
+                        "name": f"Phase {num}: {name.strip()}",
+                        "status": status,
+                        "steps": [],
+                        "result": None
+                    })
+            except Exception as e:
+                print_warning(f"Warning: Failed to parse ROADMAP.md for phases: {e}")
+        # Fallback to default phases if none found
+        if not phases:
+            phases = [
+                {"name": "Phase 1: Core Security and Code Quality Foundation", "status": "pending", "steps": []},
+                {"name": "Phase 2: Performance and LLM Integration Layer", "status": "pending", "steps": []},
+                {"name": "Phase 3: Platform OS Control and Autonomy Framework", "status": "pending", "steps": []},
+                {"name": "Phase 4: Memory, Extensibility, and Resiliency Harness", "status": "pending", "steps": []},
+            ]
+        return phases
+
     def verify_action(
         self, tool_name: str, args: Dict, context: str
     ) -> Tuple[bool, str]:
@@ -472,6 +540,10 @@ class Agent:
                     f"Failed to load preferences from memory: {e}. Check if the database connection or table schema is correct."
                 )
 
+        # Initialize SuccessCriteria for the goal
+        from core.success_criteria import SuccessCriteria
+        self.success_criteria = SuccessCriteria(original_user_input)
+
         if self.autonomy_cfg.get("task_tracking", True):
             should_start_new = True
             curr_task = self.task_tracker.current
@@ -487,6 +559,46 @@ class Agent:
                     should_start_new = False
 
             if should_start_new:
+                # Check for an existing checkpoint matching the goal
+                existing_checkpoint = self.checkpoint_manager.load(original_user_input)
+                if existing_checkpoint:
+                    task_id = existing_checkpoint["task_id"]
+                    next_phase = self.checkpoint_manager.next_pending_phase(task_id)
+                    if next_phase:
+                        resume = False
+                        if self.autonomy_cfg.get("autopilot", False):
+                            logger.info(f"Autopilot active: resuming task from checkpoint phase '{next_phase['name']}'")
+                            resume = True
+                        elif self.confirm_handler:
+                            checkpoint_json_path = os.path.join(self.checkpoint_manager.checkpoints_dir, f"{task_id}.json")
+                            resume = self.confirm_handler(checkpoint_json_path, f"resume_phase_{next_phase['name']}")
+                        else:
+                            try:
+                                ans = input(f"Existing checkpoint found for this task. Resume phase '{next_phase['name']}'? [Y/n]: ").strip().lower()
+                                resume = ans not in ("n", "no")
+                            except (KeyboardInterrupt, EOFError):
+                                resume = False
+                                
+                        if resume:
+                            user_input = f"[Resuming Task from Checkpoint: Phase '{next_phase['name']}']\n\n{original_user_input}"
+                            logger.info(f"Resuming task '{task_id}' at phase '{next_phase['name']}'")
+                            self.active_checkpoint_id = task_id
+                            self.active_checkpoint_phase = next_phase["name"]
+                        else:
+                            # User declined to resume. Create a new checkpoint.
+                            phases = self._extract_roadmap_phases()
+                            self.active_checkpoint_id = self.checkpoint_manager.create(original_user_input, phases)
+                            self.active_checkpoint_phase = phases[0]["name"]
+                    else:
+                        # Checkpoint exists but all phases are complete. Create a new one.
+                        phases = self._extract_roadmap_phases()
+                        self.active_checkpoint_id = self.checkpoint_manager.create(original_user_input, phases)
+                        self.active_checkpoint_phase = phases[0]["name"]
+                else:
+                    phases = self._extract_roadmap_phases()
+                    self.active_checkpoint_id = self.checkpoint_manager.create(original_user_input, phases)
+                    self.active_checkpoint_phase = phases[0]["name"]
+
                 self.task_tracker.start(
                     goal=original_user_input,
                     provider=self.client.provider,
@@ -500,6 +612,14 @@ class Agent:
                         )
                     except (IOError, OSError, ValueError) as e:
                         print_warning(f"Warning: Failed to start task in memory: {e}")
+
+        # Update active checkpoint phase to running
+        if getattr(self, "active_checkpoint_id", None) and getattr(self, "active_checkpoint_phase", None):
+            self.checkpoint_manager.update_phase(
+                self.active_checkpoint_id,
+                self.active_checkpoint_phase,
+                "running"
+            )
 
         self.memory.add("user", user_input)
         messages = self.memory.get_messages()
@@ -767,10 +887,48 @@ class Agent:
                     started = _time.time()
                     obs = self.tools.call(tool_name, args)
                     ended = _time.time()
-                    observations.append(str(obs or "Done."))
+                    elapsed = ended - started
+
+                    obs_text = str(obs or "")
+                    ok = infer_success(obs_text)
+
+                    # local transient error retry classifier
+                    if not ok:
+                        # Parse exit code if any
+                        exit_code = None
+                        if "exit code" in obs_text.lower():
+                            match = re.search(r"exit code:?\s*(\d+)", obs_text, re.IGNORECASE)
+                            if match:
+                                exit_code = int(match.group(1))
+                            else:
+                                match = re.search(r"code\s*(\d+)", obs_text, re.IGNORECASE)
+                                if match:
+                                    exit_code = int(match.group(1))
+                        
+                        decision = self.retry_classifier.classify(obs_text, exit_code)
+                        if decision.action == "retry":
+                            retries = 0
+                            max_retries = decision.max_retries
+                            while retries < max_retries and not ok:
+                                print_warning(f"Transient error detected ({decision.reason}). Retrying tool '{tool_name}' (Attempt {retries + 1}/{max_retries})...")
+                                started = _time.time()
+                                obs = self.tools.call(tool_name, args)
+                                ended = _time.time()
+                                elapsed = ended - started
+                                obs_text = str(obs or "")
+                                ok = infer_success(obs_text)
+                                retries += 1
+
+                    # check for stalls
+                    stall_warning = self.stall_monitor.check_stall(tool_name, elapsed)
+                    if stall_warning:
+                        print_warning(f"Stall Warning for '{tool_name}' ({stall_warning.category}): took {elapsed:.1f}s (threshold {stall_warning.threshold}s).")
+                        print_warning(f"Suggestion: {stall_warning.suggestion}")
+                        obs_text += f"\n\n[STALL WARNING: This action took {elapsed:.1f} seconds. {stall_warning.suggestion}]"
+
+                    observations.append(obs_text)
 
                     ok = False
-                    obs_text = ""
 
                     # Audit log tool call (no chat content).
                     try:
@@ -906,6 +1064,18 @@ class Agent:
                 response = f"FINAL ANSWER: {response}"
 
             if has_final_answer(response):
+                # Verify SuccessCriteria before terminating
+                if getattr(self, "success_criteria", None) and not self.success_criteria.is_met(messages):
+                    missing_criteria = [c for c in self.success_criteria.criteria if not any(w.lower() in "\n".join([m.get("content", "") for m in messages if m.get("content")]).lower() for w in re.split(r"\W+", c) if len(w) > 3)]
+                    missing_str = ", ".join([f"'{c}'" for c in missing_criteria])
+                    nudge_msg = f"OBSERVATION: You attempted to finalize the task, but the success criteria has not been fully verified: {missing_str}. Please execute the necessary verification steps or confirm they have been satisfied before providing the FINAL ANSWER."
+                    print_warning(f"Success criteria verification failed. Nudging agent to verify: {missing_str}")
+                    messages.append({"role": "assistant", "content": response})
+                    messages.append({"role": "user", "content": nudge_msg})
+                    self.memory.add("assistant", response)
+                    self.memory.add("user", nudge_msg)
+                    continue
+
                 # ── Artifact Persistence Guardrail ──────────────────────────────────
                 # If the agent mentions saving/writing/creating but hasn't called a tool to do so recently, nudge it.
                 resp_lower = response.lower()
@@ -1193,6 +1363,14 @@ class Agent:
                         print_warning(
                             f"Warning: Failed to complete task in memory: {e}"
                         )
+                # Mark active checkpoint phase as complete
+                if getattr(self, "active_checkpoint_id", None) and getattr(self, "active_checkpoint_phase", None):
+                    self.checkpoint_manager.update_phase(
+                        self.active_checkpoint_id,
+                        self.active_checkpoint_phase,
+                        "complete",
+                        result=(final_ans or response)
+                    )
                 return
 
             else:

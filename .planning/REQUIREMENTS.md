@@ -23,30 +23,30 @@ Each of these requirements is active for the v1.0 milestone and maps to roadmap 
 
 ### Documentation
 
-- [ ] **DOC-01**: The system must publish a production deployment playbook detailing Docker, Windows Service, K8s, and Serverless configurations.
+- [x] **DOC-01**: The system must publish a production deployment playbook detailing Docker, Windows Service, K8s, and Serverless configurations.
 - [x] **DOC-02**: The system must provide a comprehensive Threat Model mapping potential attack vectors (injection, path traversal, registry edits) to active framework mitigations.
-- [ ] **DOC-03**: The system must document token estimation heuristics and LLM execution cost projection strategies.
+- [x] **DOC-03**: The system must document token estimation heuristics and LLM execution cost projection strategies.
 
 ### Performance
 
-- [ ] **PERF-01**: The system must implement an adaptive context window engine that dynamically truncates middle messages (collapsing long files/command outputs) to prevent out-of-context crashes.
-- [ ] **PERF-02**: The system must support streaming and parsing JSON action responses incrementally as they arrive from the LLM, without buffering the entire completion.
-- [ ] **PERF-03**: The system must offer semantically indexed tool discovery using local vector embeddings (e.g., FAISS) instead of scanning the full tool list.
-- [ ] **PERF-04**: The system must resolve dependency graphs of requested actions and execute independent tools concurrently.
+- [x] **PERF-01**: The system must implement an adaptive context window engine that dynamically truncates middle messages (collapsing long files/command outputs) to prevent out-of-context crashes.
+- [x] **PERF-02**: The system must support streaming and parsing JSON action responses incrementally as they arrive from the LLM, without buffering the entire completion.
+- [x] **PERF-03**: The system must offer semantically indexed tool discovery using local vector embeddings (e.g., FAISS) instead of scanning the full tool list.
+- [x] **PERF-04**: The system must resolve dependency graphs of requested actions and execute independent tools concurrently.
 
 ### OS Control
 
-- [ ] **OS-01**: The system must support deep macOS UI control by querying open window lists and clicking menu items via System Events AppleScript and Cocoa accessibility.
-- [ ] **OS-02**: The system must detect Linux desktop environment sessions (GNOME, KDE, i3, Wayland, X11) and support Wayland-native screenshots (via `grim`/`slurp`).
-- [ ] **OS-03**: The system must auto-tune its concurrency limits, context sizes, and disk caching based on local system hardware resource footprints (Desktop vs Pi vs IoT).
+- [x] **OS-01**: The system must support deep macOS UI control by querying open window lists and clicking menu items via System Events AppleScript and Cocoa accessibility.
+- [x] **OS-02**: The system must detect Linux desktop environment sessions (GNOME, KDE, i3, Wayland, X11) and support Wayland-native screenshots (via `grim`/`slurp`).
+- [x] **OS-03**: The system must auto-tune its concurrency limits, context sizes, and disk caching based on local system hardware resource footprints (Desktop vs Pi vs IoT).
 
 ### Autonomy
 
-- [ ] **AUTO-01**: The system must analyze repetition patterns and block retries on permanent logic/permission failures, while allowing retries on transient network or file lock errors.
-- [ ] **AUTO-02**: The system must parse success criteria from task prompts and verify they are fully met before terminating and returning a final answer.
-- [ ] **AUTO-03**: The system must estimate execution durations based on task size and raise adaptive stall warnings when a command runs significantly slower than expected.
-- [ ] **AUTO-04**: The system must support long-term, multi-session tasks by decomposing them into daily/weekly execution phases with persistent state checkpoints.
-- [ ] **AUTO-05**: The system must identify slow commands and proactively suggest faster alternatives mid-task (e.g., archiving files before copy).
+- [x] **AUTO-01**: The system must analyze repetition patterns and block retries on permanent logic/permission failures, while allowing retries on transient network or file lock errors.
+- [x] **AUTO-02**: The system must parse success criteria from task prompts and verify they are fully met before terminating and returning a final answer.
+- [x] **AUTO-03**: The system must estimate execution durations based on task size and raise adaptive stall warnings when a command runs significantly slower than expected.
+- [x] **AUTO-04**: The system must support long-term, multi-session tasks by decomposing them into daily/weekly execution phases with persistent state checkpoints.
+- [x] **AUTO-05**: The system must identify slow commands and proactively suggest faster alternatives mid-task (e.g., archiving files before copy).
 
 ### Extensibility
 
@@ -74,11 +74,11 @@ Each of these requirements is active for the v1.0 milestone and maps to roadmap 
 
 ### LLM Integration
 
-- [ ] **INTEG-01**: The system must route failed calls to fallback models based on failure categories (e.g., fallback to larger context model on context exhaustion).
-- [ ] **INTEG-02**: The system must utilize cost-aware routing to execute simple tasks on free local models (e.g. Llama) and reserve complex tasks for capable remote APIs.
-- [ ] **INTEG-03**: The system must format prompts using model-specific system instruction templates.
-- [ ] **INTEG-04**: The system must guarantee structured outputs by automatically requesting schema-based retries if JSON parsing fails.
-- [ ] **INTEG-05**: The system must calculate pre-flight token counts and warn users when a task's projected cost exceeds configured thresholds.
+- [x] **INTEG-01**: The system must route failed calls to fallback models based on failure categories (e.g., fallback to larger context model on context exhaustion).
+- [x] **INTEG-02**: The system must utilize cost-aware routing to execute simple tasks on free local models (e.g. Llama) and reserve complex tasks for capable remote APIs.
+- [x] **INTEG-03**: The system must format prompts using model-specific system instruction templates.
+- [x] **INTEG-04**: The system must guarantee structured outputs by automatically requesting schema-based retries if JSON parsing fails.
+- [x] **INTEG-05**: The system must calculate pre-flight token counts and warn users when a task's projected cost exceeds configured thresholds.
 
 ## v2 Requirements
 
@@ -109,25 +109,25 @@ This table maps v1 requirements to roadmap execution phases. Populated during ro
 | QUAL-04 | Phase 1 | Complete |
 | DOC-02 | Phase 1 | Complete |
 | TEST-05 | Phase 1 | Complete |
-| PERF-01 | Phase 2 | Pending |
-| PERF-02 | Phase 2 | Pending |
-| PERF-03 | Phase 2 | Pending |
-| PERF-04 | Phase 2 | Pending |
-| INTEG-01 | Phase 2 | Pending |
-| INTEG-02 | Phase 2 | Pending |
-| INTEG-03 | Phase 2 | Pending |
-| INTEG-04 | Phase 2 | Pending |
-| INTEG-05 | Phase 2 | Pending |
-| DOC-03 | Phase 2 | Pending |
-| OS-01 | Phase 3 | Pending |
-| OS-02 | Phase 3 | Pending |
-| OS-03 | Phase 3 | Pending |
-| AUTO-01 | Phase 3 | Pending |
-| AUTO-02 | Phase 3 | Pending |
-| AUTO-03 | Phase 3 | Pending |
-| AUTO-04 | Phase 3 | Pending |
-| AUTO-05 | Phase 3 | Pending |
-| DOC-01 | Phase 3 | Pending |
+| PERF-01 | Phase 2 | Complete |
+| PERF-02 | Phase 2 | Complete |
+| PERF-03 | Phase 2 | Complete |
+| PERF-04 | Phase 2 | Complete |
+| INTEG-01 | Phase 2 | Complete |
+| INTEG-02 | Phase 2 | Complete |
+| INTEG-03 | Phase 2 | Complete |
+| INTEG-04 | Phase 2 | Complete |
+| INTEG-05 | Phase 2 | Complete |
+| DOC-03 | Phase 2 | Complete |
+| OS-01 | Phase 3 | Complete |
+| OS-02 | Phase 3 | Complete |
+| OS-03 | Phase 3 | Complete |
+| AUTO-01 | Phase 3 | Complete |
+| AUTO-02 | Phase 3 | Complete |
+| AUTO-03 | Phase 3 | Complete |
+| AUTO-04 | Phase 3 | Complete |
+| AUTO-05 | Phase 3 | Complete |
+| DOC-01 | Phase 3 | Complete |
 | MEM-01 | Phase 4 | Complete |
 | MEM-02 | Phase 4 | Complete |
 | MEM-03 | Phase 4 | Complete |

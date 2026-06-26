@@ -22,3 +22,5 @@ matplotlib==3.10.9
 pandas==2.2.2
 python-whois==0.9.6
 python-dateutil==2.9.0.post0
+pywin32>=306; sys_platform == 'win32'
+

@@ -32,18 +32,18 @@ Enable agents to achieve 100% task completion rates on the user's OS runtime wit
 - [x] **INTEG-04**: Structured JSON output guarantee with schema-based retry loops. (Phase 2)
 - [x] **INTEG-05**: Pre-flight token and cost estimation warnings. (Phase 2)
 - [x] **DOC-03**: Cost and token estimation guide for predicting execution expenses. (Phase 2)
+- [x] **DOC-01**: Production deployment playbook (Docker, Windows Service, Kubernetes, Serverless). (Phase 3)
+- [x] **OS-01**: macOS deep integration via AppleScript and accessibility APIs. (Phase 3)
+- [x] **OS-02**: Linux desktop-agnostic support (Wayland/X11, KDE/GNOME/i3) and custom screenshot helpers. (Phase 3)
+- [x] **OS-03**: Embedded and resource-constrained environment hardware tuning (Pi, ARM, IoT). (Phase 3)
+- [x] **AUTO-01**: Smart repetition analyzer allowing retries only on transient errors or modified arguments. (Phase 3)
+- [x] **AUTO-02**: Success criteria extraction and automated verification before final completion. (Phase 3)
+- [x] **AUTO-03**: Adaptive task duration estimation and stall warning thresholds. (Phase 3)
+- [x] **AUTO-04**: Long-term task orchestrator with phase splitting and state checkpoints. (Phase 3)
+- [x] **AUTO-05**: Opportunity scanner recommending faster alternatives mid-task. (Phase 3)
 
 ### Active
 
-- [ ] **DOC-01**: Production deployment playbook (Docker, Windows Service, Kubernetes, Serverless).
-- [ ] **OS-01**: macOS deep integration via AppleScript and accessibility APIs.
-- [ ] **OS-02**: Linux desktop-agnostic support (Wayland/X11, KDE/GNOME/i3) and custom screenshot helpers.
-- [ ] **OS-03**: Embedded and resource-constrained environment hardware tuning (Pi, ARM, IoT).
-- [ ] **AUTO-01**: Smart repetition analyzer allowing retries only on transient errors or modified arguments.
-- [ ] **AUTO-02**: Success criteria extraction and automated verification before final completion.
-- [ ] **AUTO-03**: Adaptive task duration estimation and stall warning thresholds.
-- [ ] **AUTO-04**: Long-term task orchestrator with phase splitting and state checkpoints.
-- [ ] **AUTO-05**: Opportunity scanner recommending faster alternatives mid-task.
 - [ ] **EXT-01**: Async tool support using asynchronous streaming iterators.
 - [ ] **EXT-02**: Streaming tool output protocol for large file/text streams.
 - [ ] **EXT-03**: Remote plugin registry for downloading and installing community tools.
@@ -113,4 +113,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-26 after v1.0 milestone initialization*
+*Last updated: 2026-06-26 after Phase 3 completion*

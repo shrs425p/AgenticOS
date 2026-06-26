@@ -23,6 +23,11 @@ class ContextEngine:
         self.cfg = agent.cfg
         self.workspace = agent.workspace
         self.memory_manager: Optional[Any] = None  # Set later via agent.memory_manager
+        self.max_messages: Optional[int] = None
+        
+    def set_compact_threshold(self, n: int) -> None:
+        """Set the history compaction threshold limit (max_messages)."""
+        self.max_messages = n
         
     def set_memory_manager(self, manager: Any) -> None:
         """Set the memory manager instance.
@@ -240,6 +245,9 @@ class ContextEngine:
         When conversation history exceeds max_messages or approaching token limit, 
         the oldest chat messages are summarized.
         """
+        if self.max_messages is not None:
+            max_messages = self.max_messages
+
         # 1. Collapse individual messages exceeding the character limit (PERF-01)
         threshold = int(self.cfg.get("performance", {}).get("max_message_char_threshold", 4000))
         messages = self.collapse_large_messages(messages, threshold=threshold)

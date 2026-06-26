@@ -8,6 +8,12 @@ class PlatformAPI:
     """Platform abstraction layer for OS-specific calls."""
 
     @staticmethod
+    def get_ui_backend() -> Any:
+        """Returns the tools.platform UI tools module/package."""
+        import tools.platform
+        return tools.platform
+
+    @staticmethod
     def is_windows() -> bool:
         return platform.system() == "Windows"
 

@@ -133,7 +133,13 @@ class OllamaClient:
         self.model = cfg["ollama"]["default_model"]
         self.timeout = cfg["ollama"]["timeout"]
         self.temp = cfg["ollama"]["temperature"]
-        self.ctx = cfg["ollama"]["num_ctx"]
+        self.ctx = cfg["ollama"].get("num_ctx")
+        if self.ctx is None:
+            try:
+                from core.resource_profiler import profile_hardware
+                self.ctx = profile_hardware().recommended_context_tokens
+            except Exception:
+                self.ctx = 4096
         self.stream = cfg["agent"]["stream"]
         self.provider = "ollama"
 

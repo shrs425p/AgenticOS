@@ -458,3 +458,49 @@ def test_logs_cmd_view(mock_print, mock_exists):
     assert any("2 │ Second line" in c for c in print_calls)
     assert not any("Third line" in c for c in print_calls)
 
+
+def test_zone_guard_persists_on_reload():
+    """Verify that re-running _setup_workspace preserves the active zone settings instead of resetting them."""
+    from core.orchestrator import Agent
+    cfg = {
+        "agent": {"provider": "ollama", "workspace": "workspace", "max_iterations": 10},
+        "prompts": {},
+        "security": {"enable_zone_guard": True, "require_hitm_outside_workspace": True}
+    }
+    
+    agent = Agent.__new__(Agent)
+    agent.cfg = cfg
+    agent.confirm_handler = None
+    agent.workspace = "workspace"
+    
+    with patch("core.runtime.SqliteSessionMemory"), patch("core.runtime.ToolRegistry") as mock_registry_cls:
+        mock_registry = MagicMock()
+        mock_guard = MagicMock()
+        mock_guard.enabled = True
+        mock_guard.require_hitm = True
+        mock_guard.read_only = False
+        mock_registry.guard = mock_guard
+        mock_registry_cls.return_value = mock_registry
+        
+        agent._setup_workspace()
+        
+        # Change zone state (e.g. switch to red zone: enabled=False)
+        agent.tools.guard.enabled = False
+        agent.tools.guard.require_hitm = False
+        
+        # Run setup workspace again (simulating config/hot reload)
+        new_registry = MagicMock()
+        new_guard = MagicMock()
+        new_guard.enabled = True  # Default from config
+        new_guard.require_hitm = True
+        new_guard.read_only = False
+        new_registry.guard = new_guard
+        mock_registry_cls.return_value = new_registry
+        
+        agent._setup_workspace()
+        
+        # The new guard should have been restored with the changed values (enabled=False, require_hitm=False)
+        assert agent.tools.guard.enabled is False
+        assert agent.tools.guard.require_hitm is False
+
+
