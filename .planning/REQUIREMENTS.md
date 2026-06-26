@@ -50,11 +50,11 @@ Each of these requirements is active for the v1.0 milestone and maps to roadmap 
 
 ### Extensibility
 
-- [ ] **EXT-01**: The system must support asynchronous tool executions implementing async iterators.
-- [ ] **EXT-02**: The system must support streaming tool output chunks incrementally to the caller.
+- [x] **EXT-01**: The system must support asynchronous tool executions implementing async iterators.
+- [x] **EXT-02**: The system must support streaming tool output chunks incrementally to the caller.
 - [ ] **EXT-03**: The system must support downloading and installing community plugins from a remote registry.
 - [ ] **EXT-04**: The system must resolve tool dependency requirements and check version compatibility.
-- [ ] **EXT-05**: The system must support piping the output of one tool directly into another tool's input.
+- [x] **EXT-05**: The system must support piping the output of one tool directly into another tool's input.
 
 ### Testing & Resiliency
 
@@ -133,11 +133,11 @@ This table maps v1 requirements to roadmap execution phases. Populated during ro
 | MEM-03 | Phase 4 | Complete |
 | MEM-04 | Phase 4 | Complete |
 | MEM-05 | Phase 4 | Complete |
-| EXT-01 | Phase 4 | Pending |
-| EXT-02 | Phase 4 | Pending |
+| EXT-01 | Phase 4 | Complete |
+| EXT-02 | Phase 4 | Complete |
 | EXT-03 | Phase 4 | Pending |
 | EXT-04 | Phase 4 | Pending |
-| EXT-05 | Phase 4 | Pending |
+| EXT-05 | Phase 4 | Complete |
 | TEST-01 | Phase 4 | Pending |
 | TEST-02 | Phase 4 | Pending |
 | TEST-03 | Phase 4 | Pending |
@@ -151,4 +151,4 @@ This table maps v1 requirements to roadmap execution phases. Populated during ro
 
 ---
 *Requirements defined: 2026-06-26*
-*Last updated: 2026-06-26 after Phase 4 Plan 1*
+*Last updated: 2026-06-26 after Phase 4 Plan 2*
