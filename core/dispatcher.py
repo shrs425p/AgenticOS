@@ -5,7 +5,7 @@ import json
 import sys
 import asyncio
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Dict, List, Tuple, Any, Callable, Optional
+from typing import Dict, List, Tuple, Any, Callable, Optional, AsyncIterator
 
 # ---------------------------------------------------------------------------
 # Existing: verify_action
@@ -546,3 +546,85 @@ def execute_actions_parallel(
     action_dicts = [{"tool": t, "args": a} for t, a in actions]
     scheduler = ParallelScheduler(max_workers=max_workers)
     return scheduler.execute(action_dicts, executor_fn)
+
+
+def pipe_tools(tool_a: Any, tool_b: Any) -> Any:
+    """Composer to chain two tools together.
+    
+    The outputs of tool_a (either streamed or called) are fed as inputs to tool_b.
+    If tool_a is a streaming tool, we accumulate its stream and pass it to tool_b.
+    If tool_b has a stream method, the piped tool also supports streaming.
+    """
+    class PipedTool:
+        def __init__(self, ta: Any, tb: Any):
+            self.tool_a = ta
+            self.tool_b = tb
+            self._is_tool = True
+            self._is_async = True
+            
+            # Retrieve names
+            a_name = getattr(ta, "_tool_name", getattr(ta, "__name__", "tool_a"))
+            b_name = getattr(tb, "_tool_name", getattr(tb, "__name__", "tool_b"))
+            self._tool_name = f"piped_{a_name}_{b_name}"
+            
+            a_desc = getattr(ta, "_tool_desc", "tool_a")
+            b_desc = getattr(tb, "_tool_desc", "tool_b")
+            self._tool_desc = f"Piped: {a_desc} -> {b_desc}"
+            
+            # Setup metadata if possible
+            try:
+                from core.tool_base import ToolMetadata
+                self.metadata = ToolMetadata(
+                    name=self._tool_name,
+                    description=self._tool_desc,
+                    category="Composite",
+                    version="1.0.0",
+                    author="AgenticOS"
+                )
+            except Exception:
+                self.metadata = None
+
+        async def __call__(self, *args: Any, **kwargs: Any) -> Any:
+            # 1. Execute tool_a and get output
+            if hasattr(self.tool_a, "stream"):
+                chunks = []
+                async for chunk in self.tool_a.stream(*args, **kwargs):
+                    chunks.append(chunk)
+                input_val = "".join(chunks)
+            else:
+                if asyncio.iscoroutinefunction(self.tool_a) or getattr(self.tool_a, "_is_async", False) or (callable(getattr(self.tool_a, "__call__", None)) and (asyncio.iscoroutinefunction(self.tool_a.__call__) or getattr(self.tool_a.__call__, "_is_async", False))):
+                    input_val = await self.tool_a(*args, **kwargs)
+                else:
+                    input_val = self.tool_a(*args, **kwargs)
+
+            # 2. Feed input_val into tool_b
+            if asyncio.iscoroutinefunction(self.tool_b) or getattr(self.tool_b, "_is_async", False) or (callable(getattr(self.tool_b, "__call__", None)) and (asyncio.iscoroutinefunction(self.tool_b.__call__) or getattr(self.tool_b.__call__, "_is_async", False))):
+                return await self.tool_b(input_val)
+            else:
+                return self.tool_b(input_val)
+
+        async def stream(self, *args: Any, **kwargs: Any) -> AsyncIterator[str]:
+            # If tool_b supports streaming, we stream tool_b's output
+            # Otherwise we stream tool_a's output, then pass it to tool_b and yield the final result
+            if hasattr(self.tool_a, "stream"):
+                chunks = []
+                async for chunk in self.tool_a.stream(*args, **kwargs):
+                    chunks.append(chunk)
+                input_val = "".join(chunks)
+            else:
+                if asyncio.iscoroutinefunction(self.tool_a) or getattr(self.tool_a, "_is_async", False) or (callable(getattr(self.tool_a, "__call__", None)) and (asyncio.iscoroutinefunction(self.tool_a.__call__) or getattr(self.tool_a.__call__, "_is_async", False))):
+                    input_val = await self.tool_a(*args, **kwargs)
+                else:
+                    input_val = self.tool_a(*args, **kwargs)
+
+            if hasattr(self.tool_b, "stream"):
+                async for chunk in self.tool_b.stream(input_val):
+                    yield chunk
+            else:
+                if asyncio.iscoroutinefunction(self.tool_b) or getattr(self.tool_b, "_is_async", False) or (callable(getattr(self.tool_b, "__call__", None)) and (asyncio.iscoroutinefunction(self.tool_b.__call__) or getattr(self.tool_b.__call__, "_is_async", False))):
+                    res = await self.tool_b(input_val)
+                else:
+                    res = self.tool_b(input_val)
+                yield str(res)
+
+    return PipedTool(tool_a, tool_b)
