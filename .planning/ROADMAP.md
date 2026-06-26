@@ -98,7 +98,7 @@ Plans:
 
 - [x] 04-01: FAISS vector storage memory module with mathematical time-decay and episodic clustering.
 - [x] 04-02: Async tool execution protocols and piping composers.
-- [ ] 04-03: Remote plugin registry installer and package dependency compatibility resolver.
+- [x] 04-03: Remote plugin registry installer and package dependency compatibility resolver.
 - [ ] 04-04: Multi-step E2E integration test suite, mutation test framework, and chaos monkey harness.
 
 ## Progress
@@ -108,4 +108,4 @@ Plans:
 | 1. Security & Code Quality | 4/4 | Complete    | 2026-06-26 |
 | 2. Performance & LLM | 3/3 | Complete    | 2026-06-26 |
 | 3. OS Control & Autonomy | 3/3 | Complete    | 2026-06-26 |
-| 4. Memory & Resiliency | 2/4 | In Progress | 2026-06-26 |
+| 4. Memory & Resiliency | 3/4 | In Progress | 2026-06-26 |
