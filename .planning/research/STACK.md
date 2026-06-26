@@ -10,7 +10,7 @@
 
 | Technology | Version | Purpose | Why Recommended |
 |------------|---------|---------|-----------------|
-| Python | 3.11+ | Main execution environment and runtime engine. | Standard for agent frameworks; excellent AST processing; native OS API bindings. |
+| Python | 3.11+ | Main execution environment and runtime engine. | Standard for agent frameworks; excellent AST processing; native OS API clidings. |
 | SQLite | 3.x | Persistent store for session history and memory tracking. | Lightweight, serverless, atomic, and embedded in Python standard library. |
 | Pydantic | 2.x | Configuration validation and action schemas. | High-performance data validation; native JSON schema generation; type-safety. |
 
@@ -20,14 +20,14 @@
 |---------|---------|---------|-------------|
 | FAISS | 1.8+ | Fast vector database for semantic memory lookups. | Used to implement dense vector queries on agent execution logs. |
 | sentence-transformers | 3.x | Generating embeddings for vector memory. | Used to embed memories and task queries locally without API calls. |
-| pytest-mutagen | 1.x | Mutation testing for test quality analysis. | Used in test suites to verify that tests successfully detect code changes. |
+| pytest-mutagen | 1.x | Mutation testing for test quality analysis. | Used in test suites to verify that spec successfully detect code changes. |
 | aiohttp | 3.9+ | Asynchronous HTTP requests and streaming. | Used for async tool executions and streaming large responses. |
 
 ### Development Tools
 
 | Tool | Purpose | Notes |
 |------|---------|-------|
-| grim / slurp | Wayland Linux screenshot utility. | Required because standard X11 screenshot tools fail on Wayland desktops. |
+| grim / slurp | Wayland Linux screenshot utility. | Required because standard X11 screenshot ops fail on Wayland desktops. |
 | AppleScript | macOS window and UI control. | Used to click menu bars and list open windows via macOS System Events. |
 
 ## Alternatives Considered
@@ -42,7 +42,7 @@
 
 | Avoid | Why | Use Instead |
 |-------|-----|-------------|
-| X11 screenshot tools | Fail silently on modern Wayland desktop sessions. | `grim` / `slurp` for Wayland support. |
+| X11 screenshot ops | Fail silently on modern Wayland desktop sessions. | `grim` / `slurp` for Wayland support. |
 | Plain dictionary state | Lacks run-time type safety; prone to spelling errors and structural drifts. | Pydantic Models. |
 | Subprocess shell=True | Vulnerable to shell injections; lacks tokenization controls. | `subprocess.run` with list of arguments. |
 

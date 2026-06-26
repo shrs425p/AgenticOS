@@ -11,14 +11,14 @@ status: research_complete
 ## Orientation
 
 This phase implements performance enhancements, concurrency capabilities, and API-resilient routing strategies:
-- **Adaptive Context Window:** `core/context_engine.py` (collapse message details and compact message histories).
-- **Streaming Parser & Concurrency:** `core/dispatcher.py` (`StreamingActionParser` and `ParallelScheduler`).
-- **Semantic Tool Index:** `core/tool_discovery.py` (`SemanticToolIndex` TF-IDF search).
-- **Resilient Routing & Token Budgets:** `core/model_clients.py` (`FallbackRouter` and `TokenBudgetChecker`).
+- **Adaptive Context Window:** `kernel/context.py` (collapse message details and compact message histories).
+- **Streaming Parser & Concurrency:** `kernel/dispatch.py` (`StreamingActionParser` and `ParallelScheduler`).
+- **Semantic Tool Index:** `kernel/discovery.py` (`SemanticToolIndex` TF-IDF search).
+- **Resilient Routing & Token Budgets:** `kernel/models.py` (`FallbackRouter` and `TokenBudgetChecker`).
 
 ---
 
-## Area 1: Context Engine Compaction (`core/context_engine.py`)
+## Area 1: Context Engine Compaction (`kernel/context.py`)
 
 ### Compaction Details
 - `collapse_large_messages(messages)`: scans log history, targeting observations exceeding 4000 chars. Collapses middle text with `[... COLLAPSED X CHARACTERS ...]` while preserving the first and last 2000 characters.
@@ -26,7 +26,7 @@ This phase implements performance enhancements, concurrency capabilities, and AP
 
 ---
 
-## Area 2: Streaming Parser & Scheduler (`core/dispatcher.py`)
+## Area 2: Streaming Parser & Scheduler (`kernel/dispatch.py`)
 
 ### Streaming JSON Parser
 - `StreamingActionParser`:
@@ -42,7 +42,7 @@ This phase implements performance enhancements, concurrency capabilities, and AP
 
 ---
 
-## Area 3: Semantic Tool Index (`core/tool_discovery.py`)
+## Area 3: Semantic Tool Index (`kernel/discovery.py`)
 
 ### Similarity Search
 - `SemanticToolIndex`:
@@ -51,7 +51,7 @@ This phase implements performance enhancements, concurrency capabilities, and AP
 
 ---
 
-## Area 4: Fallback Router & Budgets (`core/model_clients.py`)
+## Area 4: Fallback Router & Budgets (`kernel/models.py`)
 
 ### Model fallback routing
 - `FallbackRouter`:

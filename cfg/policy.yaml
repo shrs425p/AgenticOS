@@ -1,0 +1,131 @@
+# AgenticOs layered cfg: 30-policy.yaml
+# Edit this file for advanced settings in this area.
+
+policy:
+  redaction_patterns:
+    - ["(?i)(NVIDIA_API_KEY\\s*=\\s*)([^\\s]+)", "\\1[REDACTED]"]
+    - ["(?i)(OPENAI_API_KEY\\s*=\\s*)([^\\s]+)", "\\1[REDACTED]"]
+    - ["(?i)(API[_-]?KEY\\s*=\\s*)([^\\s]+)", "\\1[REDACTED]"]
+    - ["(?i)(TOKEN\\s*=\\s*)([^\\s]+)", "\\1[REDACTED]"]
+    - ["(?i)(Authorization:\\s*Bearer\\s+)([A-Za-z0-9._-]+)", "\\1[REDACTED]"]
+    - ["(?i)(Bearer\\s+)([A-Za-z0-9._-]{12,})", "\\1[REDACTED]"]
+    - ["(?i)(nvapi-[A-Za-z0-9_-]{8,})", "[REDACTED]"]
+  registry_policies:
+    allowed_keys:
+      - "HKCU\\Software\\AgenticOS\\*"
+    blocked_keys:
+      - "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\*"
+      - "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\*"
+      - "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce\\*"
+      - "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce\\*"
+      - "HKLM\\System\\CurrentControlSet\\Services\\*"
+    approval_required_keys:
+      - "HKLM\\Software\\*"
+  write_ops:
+    - "write_file"
+    - "append_file"
+    - "delete_file"
+    - "create_dir"
+    - "delete_dir"
+    - "copy_file"
+    - "move_file"
+    - "edit_file"
+    - "edit_line"
+    - "insert_line"
+    - "replace_in_dir"
+    - "writejson"
+    - "writecsv"
+    - "touch"
+    - "runcommand"
+    - "runpowershell"
+    - "runscript"
+    - "runpython"
+    - "pip_install"
+    - "npm_install"
+    - "git"
+    - "kill_process"
+    - "kill_process_by_name"
+    - "startbackground"
+    - "hotkey"
+    - "presskey"
+    - "typetext"
+    - "mouseclick"
+    - "mousemove"
+  read_only_ops:
+    - "read_file"
+    - "list_dir"
+    - "fileinfo"
+    - "grep_file"
+    - "grep_dir"
+    - "readjson"
+    - "readcsv"
+    - "tree"
+    - "count_lines"
+    - "word_count"
+    - "fileexists"
+    - "filehash"
+  path_keys:
+    - "path"
+    - "src"
+    - "dst"
+    - "dest_path"
+    - "filename"
+    - "output_path"
+    - "directory"
+
+rules:
+  allow_file_delete: true
+  allow_file_modify: true
+  allow_shell_exec: true
+  allow_web_download: true
+  allow_agent_self_mod: false
+  destructive_ops:
+    - "delete_file"
+    - "delete_dir"
+    - "kill_process"
+    - "runcommand"
+    - "runscript"
+  allow_websearch: true
+  allow_system_changes: true
+  allow_process_control: true
+  allow_network_access: true
+  allow_registry_edit: true
+  allow_service_control: true
+  require_confirm_destructive: false
+  require_confirm_network: false
+  require_confirm_shell: false
+
+system_control:
+  allow_shutdown: true
+  allow_restart: true
+  allow_service_control: true
+  allow_process_control: true
+  allow_registry_access: true
+  allow_scheduled_tasks: true
+
+security:
+  sandbox_mode: false
+  restrict_paths: false
+  validate_commands: false
+  enable_zone_guard: true
+  blocked_paths: []
+  require_hitm_outside_workspace: false
+  audit_logging: true
+  hard_guardrails: false
+
+performance:
+  max_pref_chars: 80
+  max_pref_items: 20
+  reload_throttle_seconds: 2.0
+  max_observation_chars: 12000
+  protect_internal_data: false
+  internal_data_dir: data
+  allow_internal_data_write: true
+  allow_full_drive_python_scans: true
+  allow_full_drive_grep: true
+  allow_reserved_path_patterns: true
+  reserved_path_patterns: []
+  parallel_execution: true
+  caching_enabled: true
+  optimize_memory: true
+  background_tasks: true

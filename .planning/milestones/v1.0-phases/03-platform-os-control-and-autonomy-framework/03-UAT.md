@@ -22,12 +22,12 @@ result: pass
 
 ### 2. Native Platform UI Control
 expected: |
-  Enumerate open windows and focus a window using platform tools. Verify that coordinates clicks, keystrokes dispatch, and screenshot capture work correctly according to the detected host OS backend (Windows, macOS, or Linux).
+  Enumerate open windows and focus a window using platform ops. Verify that coordinates clicks, keystrokes dispatch, and screenshot capture work correctly according to the detected host OS backend (Windows, macOS, or Linux).
 result: pass
 
 ### 3. Hardware Auto-Tuner & Resource Allocation
 expected: |
-  Initialize the agent and verify the hardware auto-tuner runs. It should inspect the host resources (CPU, RAM) via psutil, recommend a hardware config profile (low/mid/high tier), and dynamically apply context limits, max worker threads, and compact history thresholds.
+  Initialize the agent and verify the hardware auto-tuner runs. It should inspect the host resources (CPU, RAM) via psutil, recommend a hardware cfg profile (low/mid/high tier), and dynamically apply context limits, max worker threads, and compact history thresholds.
 result: pass
 
 ### 4. Checkpoint Resumption & Linear Recoveries

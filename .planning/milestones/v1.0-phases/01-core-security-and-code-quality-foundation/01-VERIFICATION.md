@@ -1,8 +1,8 @@
 ---
-phase: 01-core-security-and-code-quality-foundation
+phase: 01-kernel-security-and-code-quality-foundation
 verified: 2026-06-26T15:26:00Z
 status: passed
-score: 5/5 must-haves verified
+skernel: 5/5 must-haves verified
 behavior_unverified: 0
 ---
 
@@ -18,26 +18,26 @@ behavior_unverified: 0
 
 | # | Truth | Status | Evidence |
 |---|-------|--------|----------|
-| 1 | Obfuscated commands (unicode/hex/PowerShell char casts) blocked | ✓ VERIFIED | Handled by SafetyMixin regex in safety.py; tested via test_terminal_safety_structural.py |
-| 2 | Redirected script writing outside workspace blocked or prompted | ✓ VERIFIED | safety.py redirects extraction checks PathGuard; tested via test_terminal_safety_structural.py |
-| 3 | Symlink traversal depth limited to 5 | ✓ VERIFIED | PathGuard resolve_with_symlink_depth raises on >5; tested via test_guardrails.py |
-| 4 | Pydantic configuration validation active | ✓ VERIFIED | ConfigDict validation in runtime_config.py; tested via test_config.py |
-| 5 | Monolithic runtime.py modularized | ✓ VERIFIED | orchestrator.py and dispatcher.py split; tested via test_runtime.py |
+| 1 | Obfuscated commands (unicode/hex/PowerShell char casts) blocked | ✓ VERIFIED | Handled by SafetyMixin regex in safety.py; tested via terminalsafetystructuralspec.py |
+| 2 | Redirected script writing outside workspace blocked or prompted | ✓ VERIFIED | safety.py redirects extraction checks PathGuard; tested via terminalsafetystructuralspec.py |
+| 3 | Symlink traversal depth limited to 5 | ✓ VERIFIED | PathGuard resolve_with_symlink_depth raises on >5; tested via guardrailsspec.py |
+| 4 | Pydantic configuration validation active | ✓ VERIFIED | ConfigDict validation in runtime_cfg.py; tested via test_cfg.py |
+| 5 | Monolithic runtime.py modularized | ✓ VERIFIED | orchestrator.py and dispatcher.py split; tested via runtimespec.py |
 
-**Score:** 5/5 truths verified
+**Skernel:** 5/5 truths verified
 
 ### Required Artifacts
 
 | Artifact | Expected | Status | Details |
 |----------|----------|--------|---------|
-| `tools/terminal/safety.py` | Obfuscation check and redirection extraction | ✓ EXISTS + SUBSTANTIVE | Implements clean_token, redirection parse, RegistryGuard |
-| `core/guardrails.py` | Symlink depth validation | ✓ EXISTS + SUBSTANTIVE | resolve_with_symlink_depth recursive checker |
-| `core/config_types.py` | Pydantic config schemas | ✓ EXISTS + SUBSTANTIVE | Pydantic models with DictLikeModel wrapper |
-| `core/orchestrator.py` | Modular orchestration loop | ✓ EXISTS + SUBSTANTIVE | Decoupled Agent controller class |
-| `core/dispatcher.py` | Action dispatcher | ✓ EXISTS + SUBSTANTIVE | Action verification scheduler |
-| `core/exceptions.py` | Unified exception class | ✓ EXISTS + SUBSTANTIVE | AgentError and ErrorCode structures |
-| `docs/THREAT_MODEL.md` | Security threat matrix | ✓ EXISTS + SUBSTANTIVE | STRIDE matrix mapping threat ID to mitigations |
-| `tests/test_security_regression.py` | Security regression tests | ✓ EXISTS + SUBSTANTIVE | Asserts registry, unicode, redirection, and exceptions |
+| `ops/terminal/safety.py` | Obfuscation check and redirection extraction | ✓ EXISTS + SUBSTANTIVE | Implements clean_token, redirection parse, RegistryGuard |
+| `kernel/guard.py` | Symlink depth validation | ✓ EXISTS + SUBSTANTIVE | resolve_with_symlink_depth recursive checker |
+| `kernel/schema.py` | Pydantic cfg schemas | ✓ EXISTS + SUBSTANTIVE | Pydantic models with DictLikeModel wrapper |
+| `kernel/agent.py` | Modular orchestration loop | ✓ EXISTS + SUBSTANTIVE | Decoupled Agent controller class |
+| `kernel/dispatch.py` | Action dispatcher | ✓ EXISTS + SUBSTANTIVE | Action verification scheduler |
+| `kernel/errors.py` | Unified exception class | ✓ EXISTS + SUBSTANTIVE | AgentError and ErrorCode structures |
+| `manuals/threat.md` | Security threat matrix | ✓ EXISTS + SUBSTANTIVE | STRIDE matrix mapping threat ID to mitigations |
+| `spec/securityregressionspec.py` | Security regression spec | ✓ EXISTS + SUBSTANTIVE | Asserts registry, unicode, redirection, and exceptions |
 
 **Artifacts:** 8/8 verified
 
@@ -47,8 +47,8 @@ behavior_unverified: 0
 |------|----|----|--------|---------|
 | safety.py | PathGuard | self.guard.check_path / ask_human | ✓ WIRED | Line 389/392: verifies redirection path writes |
 | safety.py | RegistryGuard | guard.check_key | ✓ WIRED | Line 378/415: key matching and human prompts |
-| runtime.py | orchestrator.py | from core.orchestrator import Agent | ✓ WIRED | Line 8: delegates agent execution |
-| runtime.py | dispatcher.py | from core.dispatcher import verify_action | ✓ WIRED | Line 9: delegates action checks |
+| runtime.py | orchestrator.py | from kernel.agent import Agent | ✓ WIRED | Line 8: delegates agent execution |
+| runtime.py | dispatcher.py | from kernel.dispatch import verify_action | ✓ WIRED | Line 9: delegates action checks |
 
 **Wiring:** 4/4 connections verified
 

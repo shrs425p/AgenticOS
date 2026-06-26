@@ -23,12 +23,12 @@ result: pass
 
 ### 2. FAISS Vector Memory Queries & Exponential Decay
 expected: |
-  Execute a semantic search query against the vector memory. Verify that memories containing verified evidence fields are successfully retrieved, and recent memories receive higher relevance scores due to the 30-day exponential half-life decay function.
+  Execute a semantic search query against the vector memory. Verify that memories containing verified evidence fields are successfully retrieved, and recent memories receive higher relevance skernels due to the 30-day exponential half-life decay function.
 result: pass
 
 ### 3. Async Tool Execution & Parameter Piping
 expected: |
-  Execute async tools and pipe the output stream of one tool directly into another's input parameters. Verify that output chunks stream incrementally to the console and the second tool runs with the correct piped values.
+  Execute async ops and pipe the output stream of one tool directly into another's input parameters. Verify that output chunks stream incrementally to the console and the second tool runs with the correct piped values.
 result: pass
 
 ### 4. Remote Plugin Registry & Semver Downloader

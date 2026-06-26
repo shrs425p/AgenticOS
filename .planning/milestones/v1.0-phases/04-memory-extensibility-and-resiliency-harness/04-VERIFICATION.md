@@ -2,7 +2,7 @@
 phase: 04-memory-extensibility-and-resiliency-harness
 verified: 2026-06-26T20:00:00Z
 status: passed
-score: 4/4 must-haves verified
+skernel: 4/4 must-haves verified
 behavior_unverified: 0
 ---
 
@@ -18,23 +18,23 @@ behavior_unverified: 0
 
 | # | Truth | Status | Evidence |
 |---|-------|--------|----------|
-| 1 | FAISS vector memory retrieval with 30-day exponential half-life decay active | ✓ VERIFIED | tools/plugins/vector_memory.py decay and query; tested via test_vector_memory.py |
-| 2 | Async tool execution, streaming chunks, and parameter piping active | ✓ VERIFIED | core/dispatcher.py AsyncTool, ParallelScheduler, and pipe_tools; tested via test_dispatcher_parallel.py |
-| 3 | Remote registry plugin downloader and dependency compatibility checker active | ✓ VERIFIED | core/plugin_registry.py installer and semver matching; tested via test_plugin_registry.py |
-| 4 | Chaos Monkey, E2E tool chains, speed benchmarks, and mutation tests active | ✓ VERIFIED | test_chaos_monkey.py, test_e2e_workflows.py, test_mutation.py |
+| 1 | FAISS vector memory retrieval with 30-day exponential half-life decay active | ✓ VERIFIED | ops/addons/vector_memory.py decay and query; tested via vectormemoryspec.py |
+| 2 | Async tool execution, streaming chunks, and parameter piping active | ✓ VERIFIED | kernel/dispatch.py AsyncTool, ParallelScheduler, and pipe_ops; tested via dispatcherparallelspec.py |
+| 3 | Remote registry plugin downloader and dependency compatibility checker active | ✓ VERIFIED | kernel/plugins.py installer and semver matching; tested via pluginregistryspec.py |
+| 4 | Chaos Monkey, E2E tool chains, speed benchmarks, and mutation spec active | ✓ VERIFIED | chaosmonkeyspec.py, e2eworkflowsspec.py, mutationspec.py |
 
-**Score:** 4/4 truths verified
+**Skernel:** 4/4 truths verified
 
 ### Required Artifacts
 
 | Artifact | Expected | Status | Details |
 |----------|----------|--------|---------|
-| `tools/plugins/vector_memory.py` | FAISS memory with decay | ✓ EXISTS + SUBSTANTIVE | IVF partition, exp decay, evidence filters, clustering |
-| `core/dispatcher.py` | Async scheduler and piping | ✓ EXISTS + SUBSTANTIVE | AsyncTool runner, ParallelScheduler, pipe_tools |
-| `core/plugin_registry.py` | Plugin registry and dependencies | ✓ EXISTS + SUBSTANTIVE | Downloader, package verifier, dynamic tool loader |
-| `tests/test_chaos_monkey.py` | Chaos monkey resiliency tests | ✓ EXISTS + SUBSTANTIVE | Simulates locks, network outages, timeouts |
-| `tests/test_e2e_workflows.py` | Multi-step integration flows | ✓ EXISTS + SUBSTANTIVE | E2E task chains and speed regression benchmarks |
-| `tests/test_mutation.py` | Mutation testing suite | ✓ EXISTS + SUBSTANTIVE | Mutates decay and sorting logic to verify assertions |
+| `ops/addons/vector_memory.py` | FAISS memory with decay | ✓ EXISTS + SUBSTANTIVE | IVF partition, exp decay, evidence filters, clustering |
+| `kernel/dispatch.py` | Async scheduler and piping | ✓ EXISTS + SUBSTANTIVE | AsyncTool runner, ParallelScheduler, pipe_ops |
+| `kernel/plugins.py` | Plugin registry and dependencies | ✓ EXISTS + SUBSTANTIVE | Downloader, package verifier, dynamic tool loader |
+| `spec/chaosmonkeyspec.py` | Chaos monkey resiliency spec | ✓ EXISTS + SUBSTANTIVE | Simulates locks, network outages, timeouts |
+| `spec/e2eworkflowsspec.py` | Multi-step integration flows | ✓ EXISTS + SUBSTANTIVE | E2E task chains and speed regression benchmarks |
+| `spec/mutationspec.py` | Mutation testing suite | ✓ EXISTS + SUBSTANTIVE | Mutates decay and sorting logic to verify assertions |
 
 **Artifacts:** 6/6 verified
 

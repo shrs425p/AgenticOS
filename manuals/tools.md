@@ -1,0 +1,195 @@
+# AgenticOS: Tool and Plugin Development Guide
+
+AgenticOS is designed to be infinitely extensible. Its power comes from its ability to integrate new capabilities through a modular plugin system. This guide explains how to develop, register, and optimize ops for the AgenticOS ecosystem.
+
+---
+
+## The Anatomy of a Tool
+
+In AgenticOS, a tool is a Python function that is:
+1.  **Decorated** with the `@tool` decorator.
+2.  **Type-hinted** for automatic argument parsing.
+3.  **Documented** with a docstring that the LLM uses to understand "When" and "How" to use it.
+
+### Basic Example:
+```python
+from kernel.registry import tool
+
+@tool(
+    name="get_weather",
+    desc="Fetches the current weather for a specific city.",
+    category="Web"
+)
+def get_weather(city: str, units: str = "metric"):
+    """
+    Connects to a weather API and returns the temperature and conditions.
+    Units can be 'metric' or 'imperial'.
+    """
+    # Implementation logic here...
+    return f"The weather in {city} is 22°C and Sunny."
+```
+
+---
+
+## Developing Plugins
+
+Plugins are dynamic ops loaded from the `ops/addons/` directory at runtime. This allows you to add new capabilities without modifying the kernel codebase.
+
+Important: Plugin modules are imported under the `ops.addons.<module_name>` namespace to avoid `sys.modules` collisions. The `ToolRegistry` automatically scans those modules and registers any top-level callables decorated with `@tool`. To make your plugin easily testable and hot-reload friendly, keep tool functions defined at module scope (not inside other functions) and avoid side-effectful work at import time.
+
+### Step 1: Create the Plugin File
+Create a new `.py` file in `<REPO_ROOT>\ops\addons\`.
+
+### Step 2: Write the Tool Logic
+You can import any standard library or installed pip package.
+
+### Step 3: Hot-Reloading
+AgenticOS supports **Hot-Reloading**. If `agent.hot_reload` is set to `true` in `cfg.yaml`, the agent will automatically detect and load your new plugin as soon as you save the file. The registry will re-import the module under `ops.addons.<module_name>` and re-register newly decorated `@tool` functions; the first registration wins for duplicate tool names.
+
+---
+
+## Performance Optimization (Native vs. Python)
+
+One of the most important lessons from our intensive stress spec is the **Performance Philosophy**:
+
+> **"If it's heavy, use Native. If it's complex, use Python."**
+
+### When to use Python:
+-   Data transformation (JSON/CSV processing).
+-   API integrations.
+-   Logical reasoning and decision making.
+-   Small-scale file edits.
+
+### When to use Native (PowerShell/Bash):
+-   Network topology scans.
+-   Process management.
+-   Active Directory/Domain queries.
+
+### Pro-Tip: The "Fast-Path" Pattern
+When writing a tool that needs to search or traverse files across the whole drive, do NOT use `pathlib.Path.rglob` (which is slow and memory-intensive) or native subprocesses (which carry process startup overhead). Instead, use a custom stack-based depth-first search (DFS) using Python's native `os.scandir()`. It provides a cross-platform 170x speedup compared to standard Python walkers.
+
+---
+
+## The Tool Registry Interface
+
+Your ops can interact with the kernel `FileManager`, `Terminal`, and `Web` classes through the `ToolRegistry`.
+
+### Useful Internal Helpers:
+-   `self.cfg`: Access the [Layered Configuration System](runtime.md).
+-   `self._resolve(path)`: Ensures paths are safe and rebased into the workspace.
+-   `self._size_human(bytes)`: Formats file sizes for readability.
+-   `self.term.runcommand(cmd)`: Runs a command through the validated terminal executor.
+
+### Environment Portability
+Never hardcode URLs or absolute paths. Use `self.cfg`:
+```python
+# Fetches an endpoint from cfg/endpoints.yaml
+api_url = self.cfg.get("endpoints", {}).get("github_api")
+```
+
+---
+
+## Tool Design Best Practices
+
+To ensure your ops are "Agent-Friendly," follow these rules:
+
+### 1. Robust Docstrings
+The model *only* sees your docstring. Be explicit about:
+-   **Required arguments**.
+-   **Expected output format**.
+-   **Edge cases** (e.g., "Returns an empty list if no matches found").
+
+### 2. Error Handling
+Never let a tool crash the agent loop. Wrap your logic in a `try-except` block and return a helpful string.
+```python
+try:
+    # Logic
+except Exception as e:
+    return f"Error: Failed to fetch data because {e}"
+```
+
+### 3. Truncation Awareness
+The model has a context limit. If your tool generates a 5MB JSON file, do **not** return the whole thing. Return a summary or the first 100 lines.
+
+### 4. Verification
+If your tool modifies the system (e.g., `create_user`), it should return a confirmation message like `"Successfully created user 'John'. Verified with net user command."`
+
+---
+
+## Category Reference
+
+Standardize your ops using these categories to help the LLM organize its thoughts:
+-   **Files**: File I/O and metadata.
+-   **Terminal**: OS-level commands and scripts.
+-   **Web**: Searching, scraping, and APIs.
+-   **Browser**: Playwright/Automation tasks.
+-   **Media**: Audio and wallpaper controls.
+-   **Evolution**: Meta-ops for code modification.
+
+---
+
+## Example: Creating a "Disk Audit" Plugin
+
+Here is a high-performance example of a performance-optimized plugin using the stack-based `os.scandir` DFS philosophy:
+
+```python
+import os
+import heapq
+from kernel.registry import tool
+
+@tool(
+    name="quick_disk_audit",
+    desc="Uses optimized stack-based scanning to find the largest files on a drive instantly.",
+    category="Files"
+)
+def quick_disk_audit(self, path: str = None):
+    """
+    Fast-path Python implementation for disk analysis. Bypasses slow pathlib rglob.
+    """
+    target = path or self.cfg.get("runtime", {}).get("default_audit_root", os.environ.get("SystemDrive", "C:") + "\\")
+    
+    large_files = []
+    stack = [str(target)]
+    while stack:
+        curr = stack.pop()
+        try:
+            with os.scandir(curr) as it:
+                for entry in it:
+                    try:
+                        # Skip directory junctions/reparse points to avoid loops
+                        if entry.is_symlink():
+                            continue
+                        stat_val = entry.stat(follow_symlinks=False)
+                        if hasattr(stat_val, 'st_file_attributes') and (stat_val.st_file_attributes & 0x400):
+                            continue
+
+                        if entry.is_file():
+                            size = entry.stat().st_size
+                            if len(large_files) < 10:
+                                heapq.heappush(large_files, (size, entry.path))
+                            elif size > large_files[0][0]:
+                                heapq.heapreplace(large_files, (size, entry.path))
+                        elif entry.is_dir():
+                            stack.append(entry.path)
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+            
+    large_files.sort(reverse=True)
+    return "\n".join(f"{size / 1024**2:.2f} MB - {fp}" for size, fp in large_files)
+```
+
+---
+
+## Deployment
+Once your plugin is in `ops/addons/`, run:
+```powershell
+agent
+```
+Type `/ops` in the console to verify that your new capability is recognized by the system.
+
+---
+
+*Last Updated: 2026-05-13*
+*Status: Developer Ready*

@@ -34,7 +34,7 @@ This phase delivers three performance and LLM-communication capability clusters:
 - **Fallback:** Fall back to sequential execution if parallel mode is disabled or there is only a single action.
 
 ### Semantic Tool Index (PERF-03)
-- **Discovery:** Implement `SemanticToolIndex` utilizing TF-IDF vector similarity over tool descriptors to fetch only relevant tools, reducing system prompt token size.
+- **Discovery:** Implement `SemanticToolIndex` utilizing TF-IDF vector similarity over tool descriptors to fetch only relevant ops, reducing system prompt token size.
 
 ### Fallback Router & Estimators (INTEG-01 to INTEG-05, DOC-03)
 - **Fallback Router:** Implement `FallbackRouter` wrapping primary and secondary clients. Categorize exceptions (rate-limit, context limit, auth failure) and handle with custom strategies (throttling, model upgrading, key switching).

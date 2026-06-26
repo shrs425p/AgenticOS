@@ -28,9 +28,9 @@ except ImportError:
 
 
 def _load_cache_root() -> str:
-    """Best-effort load cache root from config.yaml without importing core.*."""
+    """Best-effort load cache root from cfg.yaml without importing kernel.*."""
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    cfg_path = os.path.join(base_dir, "config.yaml")
+    cfg_path = os.path.join(base_dir, "cfg.yaml")
 
     cfg = {}
     try:
@@ -40,9 +40,9 @@ def _load_cache_root() -> str:
             with open(cfg_path, "r", encoding="utf-8") as handle:
                 cfg = yaml.safe_load(handle) or {}
         except (OSError, yaml.YAMLError) as e:
-            from core.logger import get_logger
+            from kernel.log import get_logger
             get_logger("startup").warning(
-                "Failed to parse config.yaml, falling back to cache defaults: %s", e
+                "Failed to parse cfg.yaml, falling back to cache defaults: %s", e
             )
     except ImportError:
         pass
@@ -122,12 +122,12 @@ def run_health_check() -> None:
         passed = False
 
     # 2. Config Keys
-    print("  [Config] Validating config.yaml")
+    print("  [Config] Validating cfg.yaml")
     try:
-        from core.runtime_config import load_config
-        from core.config_validator import warn_config_issues
-        cfg = load_config()
-        result = warn_config_issues(cfg, quiet=True)
+        from kernel.settings import load_cfg
+        from kernel.lint import warn_cfg_issues
+        cfg = load_cfg()
+        result = warn_cfg_issues(cfg, quiet=True)
         if result.has_errors:
             print("    ✗ Critical configuration errors detected")
             passed = False
@@ -195,15 +195,15 @@ def run_health_check() -> None:
 
     # 4. Tools Importability
     print("  [Tools] Verifying tool imports")
-    tools_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools")
+    ops_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ops")
     failed_imports = []
-    total_tools = 0
-    for root, _, files in os.walk(tools_dir):
+    total_ops = 0
+    for root, _, files in os.walk(ops_dir):
         if "__pycache__" in root:
             continue
         for file in files:
             if file.endswith(".py") and not file.startswith("__"):
-                total_tools += 1
+                total_ops += 1
                 rel_path = os.path.relpath(os.path.join(root, file), start=os.path.dirname(os.path.abspath(__file__)))
                 module_name = rel_path.replace(os.sep, ".")[:-3]
                 try:
@@ -212,12 +212,12 @@ def run_health_check() -> None:
                     failed_imports.append((module_name, str(e)))
 
     if failed_imports:
-        print(f"    ✗ Failed to import {len(failed_imports)}/{total_tools} tools:")
+        print(f"    ✗ Failed to import {len(failed_imports)}/{total_ops} ops:")
         for mod, err in failed_imports:
             print(f"      - {mod}: {err}")
         passed = False
     else:
-        print(f"    ✓ All {total_tools} tools successfully imported")
+        print(f"    ✓ All {total_ops} ops successfully imported")
 
     print("\n  ======================")
     if passed:
@@ -233,20 +233,20 @@ def main() -> None:
 
     # Early configuration validation check
     try:
-        from core.runtime_config import load_config
-        from core.config_validator import warn_config_issues
+        from kernel.settings import load_cfg
+        from kernel.lint import warn_cfg_issues
 
-        cfg = load_config()
-        result = warn_config_issues(cfg)
+        cfg = load_cfg()
+        result = warn_cfg_issues(cfg)
         if result.has_errors:
             print("  [ERROR] Critical configuration errors detected! Aborting startup.")
             import sys
 
             sys.exit(1)
     except Exception as e:
-        from core.logger import get_logger
+        from kernel.log import get_logger
 
-        get_logger("startup").warning("Early config validation bypassed/skipped: %s", e)
+        get_logger("startup").warning("Early cfg validation bypassed/skipped: %s", e)
 
     import sys
 
@@ -275,7 +275,7 @@ def main() -> None:
         import yaml
 
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        cfg_path = os.path.join(base_dir, "config.yaml")
+        cfg_path = os.path.join(base_dir, "cfg.yaml")
         try:
             with open(cfg_path, "r", encoding="utf-8") as f:
                 cfg = yaml.safe_load(f) or {}
@@ -286,16 +286,16 @@ def main() -> None:
         if not os.path.isabs(workspace):
             workspace = os.path.join(base_dir, workspace)
 
-        from core.self_improvement import run_dream_cycle
+        from kernel.improve import run_dream_cycle
 
         # Try to get an LLM client for high-quality reflections
         llm = None
         try:
-            from core.runtime_config import load_config as _load_config_internal
-            from core.runtime import PROVIDER_CLIENT_MAP
-            import core.model_clients as model_clients
+            from kernel.settings import load_cfg as _load_cfg_internal
+            from kernel.cli import PROVIDER_CLIENT_MAP
+            import kernel.models as model_clients
 
-            full_cfg = _load_config_internal()
+            full_cfg = _load_cfg_internal()
             provider = full_cfg.get("agent", {}).get("provider", "ollama").lower()
             
             if provider in PROVIDER_CLIENT_MAP:
@@ -311,7 +311,7 @@ def main() -> None:
         logger.info(f"  {result}\n")
         return
 
-    from core.runtime import main as _runtime_main
+    from kernel.cli import main as _runtime_main
 
     dry_run = "--dry-run" in sys.argv
     _runtime_main(dry_run=dry_run)

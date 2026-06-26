@@ -32,7 +32,7 @@ result: pass
 
 ### 4. Semantic Tool Discovery
 expected: |
-  Query the `SemanticToolIndex` with natural language (e.g. "read file") and verify it returns top-k matching tool descriptors using TF-IDF and cosine similarity scores.
+  Query the `SemanticToolIndex` with natural language (e.g. "read file") and verify it returns top-k matching tool descriptors using TF-IDF and cosine similarity skernels.
 result: pass
 
 ### 5. Fallback Routing & Token Budget Checker

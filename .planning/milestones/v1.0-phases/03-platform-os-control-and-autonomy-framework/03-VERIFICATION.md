@@ -2,7 +2,7 @@
 phase: 03-platform-os-control-and-autonomy-framework
 verified: 2026-06-26T20:00:00Z
 status: passed
-score: 4/4 must-haves verified
+skernel: 4/4 must-haves verified
 behavior_unverified: 0
 ---
 
@@ -18,26 +18,26 @@ behavior_unverified: 0
 
 | # | Truth | Status | Evidence |
 |---|-------|--------|----------|
-| 1 | macOS system events AppleScript, Windows pywin32, and Linux backends active | ✓ VERIFIED | Exposed via tools/platform dispatcher; tested via test_platform_ui.py |
-| 2 | Host resource profiling and dynamic available memory throttling active | ✓ VERIFIED | resource_profiler.py tier config adjustments; tested via test_resource_profiler.py |
-| 3 | SQLite & JSON dual-persisted checkpoints and resumption loops active | ✓ VERIFIED | checkpoint_manager.py serialization; tested via test_checkpoint_manager.py |
+| 1 | macOS system events AppleScript, Windows pywin32, and Linux backends active | ✓ VERIFIED | Exposed via ops/platform dispatcher; tested via test_platform_ui.py |
+| 2 | Host resource profiling and dynamic available memory throttling active | ✓ VERIFIED | resource_profiler.py tier cfg adjustments; tested via resourceprofilerspec.py |
+| 3 | SQLite & JSON dual-persisted checkpoints and resumption loops active | ✓ VERIFIED | checkpoint_manager.py serialization; tested via checkpointmanagerspec.py |
 | 4 | Transient error retries, stall alarms, and final goal success criteria active | ✓ VERIFIED | retry_classifier.py, stall_monitor.py, success_criteria.py; tested via respective test suites |
 
-**Score:** 4/4 truths verified
+**Skernel:** 4/4 truths verified
 
 ### Required Artifacts
 
 | Artifact | Expected | Status | Details |
 |----------|----------|--------|---------|
-| `tools/platform/windows_ui.py` | Windows pywin32 UI interaction | ✓ EXISTS + SUBSTANTIVE | EnumWindows, SetForegroundWindow, mouse/SendKeys |
-| `tools/platform/macos_ui.py` | macOS osascript System Events | ✓ EXISTS + SUBSTANTIVE | Window list, Cocoa menu clicks, typing |
-| `tools/platform/linux_desktop.py` | Linux session screenshot | ✓ EXISTS + SUBSTANTIVE | grim/slurp (Wayland) and scrot (X11) |
-| `core/resource_profiler.py` | Resource profiling tiers | ✓ EXISTS + SUBSTANTIVE | psutil analysis and workers/ctx tuning config |
-| `core/checkpoint_manager.py` | Multi-session task checkpoints | ✓ EXISTS + SUBSTANTIVE | JSON and SQLite index checkpoints manager |
-| `core/retry_classifier.py` | Exit code and regex retry classifier | ✓ EXISTS + SUBSTANTIVE | RetryDecision resolver |
-| `core/stall_monitor.py` | Category timeouts and faster alternatives | ✓ EXISTS + SUBSTANTIVE | Stall warnings and optimization suggestions |
-| `core/success_criteria.py` | Success criteria parsing/verification | ✓ EXISTS + SUBSTANTIVE | Goal text regex checker |
-| `docs/deployment.md` | Deployment playbook | ✓ EXISTS + SUBSTANTIVE | Docker, Service, and K8s configuration guides |
+| `ops/platform/windows_ui.py` | Windows pywin32 UI interaction | ✓ EXISTS + SUBSTANTIVE | EnumWindows, SetForegroundWindow, mouse/SendKeys |
+| `ops/platform/macos_ui.py` | macOS osascript System Events | ✓ EXISTS + SUBSTANTIVE | Window list, Cocoa menu clicks, typing |
+| `ops/platform/linux_desktop.py` | Linux session screenshot | ✓ EXISTS + SUBSTANTIVE | grim/slurp (Wayland) and scrot (X11) |
+| `kernel/resources.py` | Resource profiling tiers | ✓ EXISTS + SUBSTANTIVE | psutil analysis and workers/ctx tuning cfg |
+| `kernel/checkpoint.py` | Multi-session task checkpoints | ✓ EXISTS + SUBSTANTIVE | JSON and SQLite index checkpoints manager |
+| `kernel/triage.py` | Exit code and regex retry classifier | ✓ EXISTS + SUBSTANTIVE | RetryDecision resolver |
+| `kernel/stalls.py` | Category timeouts and faster alternatives | ✓ EXISTS + SUBSTANTIVE | Stall warnings and optimization suggestions |
+| `kernel/criteria.py` | Success criteria parsing/verification | ✓ EXISTS + SUBSTANTIVE | Goal text regex checker |
+| `manuals/deployment.md` | Deployment playbook | ✓ EXISTS + SUBSTANTIVE | Docker, Service, and K8s configuration guides |
 
 **Artifacts:** 9/9 verified
 
@@ -63,7 +63,7 @@ None.
 
 ## Human Verification Required
 
-None — all platforms and loop behaviors are covered by automated unit/mock tests.
+None — all platforms and loop behaviors are covered by automated unit/mock spec.
 
 ## Gaps Summary
 

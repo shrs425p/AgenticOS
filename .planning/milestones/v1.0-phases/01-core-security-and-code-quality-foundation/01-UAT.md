@@ -1,11 +1,11 @@
 ---
 status: complete
-phase: 01-core-security-and-code-quality-foundation
+phase: 01-kernel-security-and-code-quality-foundation
 source:
-  - .planning/milestones/v1.0-phases/01-core-security-and-code-quality-foundation/01-01-SUMMARY.md
-  - .planning/milestones/v1.0-phases/01-core-security-and-code-quality-foundation/01-02-SUMMARY.md
-  - .planning/milestones/v1.0-phases/01-core-security-and-code-quality-foundation/01-03-SUMMARY.md
-  - .planning/milestones/v1.0-phases/01-core-security-and-code-quality-foundation/01-04-SUMMARY.md
+  - .planning/milestones/v1.0-phases/01-kernel-security-and-code-quality-foundation/01-01-SUMMARY.md
+  - .planning/milestones/v1.0-phases/01-kernel-security-and-code-quality-foundation/01-02-SUMMARY.md
+  - .planning/milestones/v1.0-phases/01-kernel-security-and-code-quality-foundation/01-03-SUMMARY.md
+  - .planning/milestones/v1.0-phases/01-kernel-security-and-code-quality-foundation/01-04-SUMMARY.md
 started: "2026-06-26T20:26:00Z"
 updated: "2026-06-26T20:26:59Z"
 ---

@@ -43,11 +43,11 @@ By leveraging numpy directly for clustering (K-Means) and space partitioning (IV
 
 | Capability | Primary Tier | Secondary Tier | Rationale |
 |------------|-------------|----------------|-----------|
-| Vector Storage & IVF | `tools/plugins/vector_memory.py` | — | Direct mathematical memory operations using numpy. |
-| Async Tool Protocol | `core/tool_base.py` | — | Base definitions and decorators for all tools. |
-| Async Scheduling | `core/dispatcher.py` | — | Parallel scheduler wave execution orchestrator. |
-| Remote Registries | `core/plugin_registry.py` | — | Installation, verification, and loading of remote files. |
-| Fault Resiliency | `tests/test_chaos_monkey.py` | `core/dispatcher.py` | Intercept and recover from SQLite/file/LLM faults. |
+| Vector Storage & IVF | `ops/addons/vector_memory.py` | — | Direct mathematical memory operations using numpy. |
+| Async Tool Protocol | `kernel/base.py` | — | Base definitions and decorators for all ops. |
+| Async Scheduling | `kernel/dispatch.py` | — | Parallel scheduler wave execution orchestrator. |
+| Remote Registries | `kernel/plugins.py` | — | Installation, verification, and loading of remote files. |
+| Fault Resiliency | `spec/chaosmonkeyspec.py` | `kernel/dispatch.py` | Intercept and recover from SQLite/file/LLM faults. |
 
 ---
 
@@ -64,7 +64,7 @@ By leveraging numpy directly for clustering (K-Means) and space partitioning (IV
 ### Alternatives Considered
 | Instead of | Could Use | Tradeoff |
 |------------|-----------|----------|
-| Hand-rolled K-Means | `scikit-learn` | sklearn introduces 100MB+ in dependencies and requires binary compilation, which is too heavy. |
+| Hand-rolled K-Means | `scikit-learn` | sklearn introduces 100MB+ in dependencies and requires cliary compilation, which is too heavy. |
 | FAISS | `chromadb` / `faiss-cpu` | Chromadb requires a running background process or heavy C-extensions, complicating local sandboxed environments. |
 
 ---
@@ -84,7 +84,7 @@ By leveraging numpy directly for clustering (K-Means) and space partitioning (IV
 
 ```mermaid
 graph TD
-    User([User Request]) --> Dispatcher[core/dispatcher.py]
+    User([User Request]) --> Dispatcher[kernel/dispatch.py]
     Dispatcher --> WaveScheduler[ParallelScheduler]
     WaveScheduler -->|Sync Tasks| ThreadExecutor[ThreadPoolExecutor]
     WaveScheduler -->|Async Tasks| AsyncLoop[asyncio Event Loop]
@@ -99,31 +99,31 @@ graph TD
     IVF --> Decay[Time Decay Scoring]
     Decay --> Filter[Evidence Validation]
     
-    Registry[core/plugin_registry.py] -->|Verify Dependencies| Download[Download to tools/plugins/]
+    Registry[kernel/plugins.py] -->|Verify Dependencies| Download[Download to ops/addons/]
     Download --> RunAsyncTool
 ```
 
 ### Recommended Project Structure
 ```
-core/
-├── tool_base.py        # Protocol definitions for Tool and AsyncTool
+kernel/
+├── toolbase.py        # Protocol definitions for Tool and AsyncTool
 ├── dispatcher.py       # Async-aware ParallelScheduler and tool execution
 └── plugin_registry.py  # Downloader and dependency resolver
-tools/
+ops/
 └── plugins/
     └── vector_memory.py # Refactored VectorDB with IVF and decay logic
-tests/
-├── test_vector_memory.py  # IVF & decay unit tests
-├── test_async_tools.py    # Async execution & piping tests
-├── test_plugin_registry.py # Remote plugin registry tests
-├── test_chaos_monkey.py   # Fault injection tests
-├── test_e2e_workflows.py  # E2E integration tests
-└── test_mutation.py       # Mutation logic runner
+spec/
+├── vectormemoryspec.py  # IVF & decay unit spec
+├── test_async_ops.py    # Async execution & piping spec
+├── pluginregistryspec.py # Remote plugin registry spec
+├── chaosmonkeyspec.py   # Fault injection spec
+├── e2eworkflowsspec.py  # E2E integration spec
+└── mutationspec.py       # Mutation logic runner
 ```
 
 ### Pattern 1: IVF Vector Search and Decay Scoring
 ```python
-# [VERIFIED: numpy docs]
+# [VERIFIED: numpy manuals]
 def train_ivf(vectors: np.ndarray, k: int = 5, max_iters: int = 100):
     # Pure numpy K-Means clustering to find centroids
     centroids = vectors[np.random.choice(vectors.shape[0], k, replace=False)]
@@ -163,16 +163,16 @@ def train_ivf(vectors: np.ndarray, k: int = 5, max_iters: int = 100):
 
 ### IVF Partitioning and Decay Scoring
 ```python
-# [VERIFIED: scipy docs]
+# [VERIFIED: scipy manuals]
 import numpy as np
 import time
 
-def calculate_time_decay(score: float, timestamp: float, half_life_days: float = 30.0) -> float:
+def calculate_time_decay(skernel: float, timestamp: float, half_life_days: float = 30.0) -> float:
     dt_seconds = time.time() - timestamp
     dt_days = max(0.0, dt_seconds / (24 * 3600))
     decay_lambda = np.log(2.0) / half_life_days
     decay_weight = np.exp(-decay_lambda * dt_days)
-    return score * decay_weight
+    return skernel * decay_weight
 ```
 
 ---
@@ -182,7 +182,7 @@ def calculate_time_decay(score: float, timestamp: float, half_life_days: float =
 | Old Approach | Current Approach | When Changed | Impact |
 |--------------|------------------|--------------|--------|
 | Plain linear search | IVF partitioning | v1.0 | O(N) to sub-linear search time. |
-| Direct sync loops | Async dispatcher | v1.0 | Concurrently executes non-blocking and streaming tools. |
+| Direct sync loops | Async dispatcher | v1.0 | Concurrently executes non-blocking and streaming ops. |
 
 ---
 
@@ -205,17 +205,17 @@ There are no open questions.
 |----------|-------|
 | Framework | pytest 9.0.3 |
 | Config file | pytest.ini |
-| Quick run command | `venv\Scripts\pytest tests/test_vector_memory.py` |
+| Quick run command | `venv\Scripts\pytest spec/vectormemoryspec.py` |
 | Full suite command | `venv\Scripts\pytest` |
 
 ### Phase Requirements → Test Map
 | Req ID | Behavior | Test Type | Automated Command | File Exists? |
 |--------|----------|-----------|-------------------|-------------|
-| MEM-01 | IVF Partition Index | unit | `pytest tests/test_vector_memory.py` | ❌ Wave 0 |
-| MEM-02 | Time-decay scoring | unit | `pytest tests/test_vector_memory.py` | ❌ Wave 0 |
-| EXT-01 | Async tool execution | unit | `pytest tests/test_async_tools.py` | ❌ Wave 0 |
-| EXT-03 | Plugin registry client | unit | `pytest tests/test_plugin_registry.py` | ❌ Wave 0 |
-| TEST-04| Chaos Monkey harness | unit | `pytest tests/test_chaos_monkey.py` | ❌ Wave 0 |
+| MEM-01 | IVF Partition Index | unit | `pytest spec/vectormemoryspec.py` | ❌ Wave 0 |
+| MEM-02 | Time-decay scoring | unit | `pytest spec/vectormemoryspec.py` | ❌ Wave 0 |
+| EXT-01 | Async tool execution | unit | `pytest spec/test_async_ops.py` | ❌ Wave 0 |
+| EXT-03 | Plugin registry client | unit | `pytest spec/pluginregistryspec.py` | ❌ Wave 0 |
+| TEST-04| Chaos Monkey harness | unit | `pytest spec/chaosmonkeyspec.py` | ❌ Wave 0 |
 
 ---
 
@@ -242,4 +242,4 @@ There are no open questions.
 ### Primary (HIGH confidence)
 - Numpy Documentation (numpy.org/doc) - K-Means and linear algebra APIs
 - Python Packaging Guide (packaging.pypa.io) - PEP 440 package version verification
-- Python Asyncio Guide (docs.python.org/3/library/asyncio.html) - Event loops and coroutines
+- Python Asyncio Guide (manuals.python.org/3/library/asyncio.html) - Event loops and coroutines

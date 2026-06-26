@@ -1,0 +1,27 @@
+# AgenticOs user cfg
+# Keep this file small. Advanced defaults live in cfg/*.yaml.
+# Values here override the layered files.
+
+agent:
+  provider: nvidia
+  workspace: workspace
+  stream: true
+  max_iterations: 200
+  fallback_providers:
+    - openai
+    - gemini
+cloud:
+  nvidia:
+    model: openai/gpt-oss-120b
+autonomy:
+  autopilot: true
+  startup_provider_prompt: false
+  startup_model_prompt: false
+  power_mode: true
+  active_planning: true
+  enforce_progress: true
+  validate_results: true
+ops:
+  profile: power_os
+  url_presets: false
+log_level: INFO

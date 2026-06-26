@@ -4,25 +4,25 @@
 All unit test suites developed for Phase 2 features were run and verified:
 
 ```powershell
-# Run context compaction tests
-venv\Scripts\python -m pytest tests/test_context_engine.py -v
+# Run context compaction spec
+venv\Scripts\python -m pytest spec/contextenginespec.py -v
 
-# Run streaming action parser and parallel scheduler tests
-venv\Scripts\python -m pytest tests/test_dispatcher_parallel.py -v
+# Run streaming action parser and parallel scheduler spec
+venv\Scripts\python -m pytest spec/dispatcherparallelspec.py -v
 
-# Run semantic tool discovery index tests
-venv\Scripts\python -m pytest tests/test_tool_discovery.py -v
+# Run semantic tool discovery index spec
+venv\Scripts\python -m pytest spec/tooldiscoveryspec.py -v
 
-# Run model fallback router and budget checker tests
-venv\Scripts\python -m pytest tests/test_fallback_router.py -v
+# Run model fallback router and budget checker spec
+venv\Scripts\python -m pytest spec/fallbackrouterspec.py -v
 ```
 
 ### Test Coverage Results
-- **tests/test_context_engine.py:** 13 passed.
-- **tests/test_dispatcher_parallel.py:** 10 passed.
-- **tests/test_tool_discovery.py:** 10 passed.
-- **tests/test_fallback_router.py:** 20 passed.
-- **Total Milestone Tests:** All 546 tests pass.
+- **spec/contextenginespec.py:** 13 passed.
+- **spec/dispatcherparallelspec.py:** 10 passed.
+- **spec/tooldiscoveryspec.py:** 10 passed.
+- **spec/fallbackrouterspec.py:** 20 passed.
+- **Total Milestone Tests:** All 546 spec pass.
 
 ---
 

@@ -16,9 +16,9 @@
 
 ### Pitfall 2: Circular Dependency Reloads
 
-**What goes wrong:** Modularizing `core/runtime.py` causes circular imports if files try to import each other's registry.
-**Why it happens:** Tools import runtime to verify state; runtime imports tools to build the registry.
-**How to avoid:** Define a clean interface/Protocol for tools and register them using dependency injection.
+**What goes wrong:** Modularizing `kernel/cli.py` causes circular imports if files try to import each other's registry.
+**Why it happens:** Tools import runtime to verify state; runtime imports ops to build the registry.
+**How to avoid:** Define a clean interface/Protocol for ops and register them using dependency injection.
 **Warning signs:** `ImportError: cannot import name ...` during tool discovery.
 **Phase to address:** Phase 2 (Code Quality).
 
@@ -41,7 +41,7 @@
 | Trap | Symptoms | Prevention | When It Breaks |
 |------|----------|------------|----------------|
 | N+1 SQLite queries | Slow retrieval on large histories | Load all needed records in a single query | 1000+ interactions |
-| Linear tool scan | 500ms delay before model responses | Index tool descriptions using vector similarity | 100+ tools |
+| Linear tool scan | 500ms delay before model responses | Index tool descriptions using vector similarity | 100+ ops |
 
 ---
 *Pitfalls research for: AgenticOS*

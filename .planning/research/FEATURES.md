@@ -13,7 +13,7 @@ Features users assume exist. Missing these = product feels incomplete.
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
 | Escape Sequence Sanitization | Safe execution of commands with dynamic user arguments. | MEDIUM | Detect U+XXXX, \xXX, and PowerShell escapes. |
-| Configuration Validation | Prevents starting runtime with broken, invalid setups. | LOW | Pydantic model for config loading. |
+| Configuration Validation | Prevents starting runtime with broken, invalid setups. | LOW | Pydantic model for cfg loading. |
 | Multi-OS Native APIs | Basic screenshot, window list, and file IO on Win/Mac/Linux. | HIGH | AppleScript on macOS, Wayland check on Linux. |
 
 ### Differentiators (Competitive Advantage)
@@ -55,13 +55,13 @@ Features that seem good but create problems.
 ### Launch With (v1.0 Milestone)
 
 - [ ] **SEC-01 to SEC-04**: Unicode escape checks, code-gen block, registry policies, symlink limits.
-- [ ] **QUAL-01 to QUAL-04**: Pydantic models, core modularization, Tool protocol, Unified AgentError.
+- [ ] **QUAL-01 to QUAL-04**: Pydantic models, kernel modularization, Tool protocol, Unified AgentError.
 - [ ] **DOC-01 to DOC-03**: Deployment playbook, threat model, cost estimator.
 - [ ] **PERF-01 to PERF-04**: Context engine, streaming parser, indexed tool search, parallel dispatcher.
-- [ ] **OS-01 to OS-03**: macOS accessibility, Wayland screenshots, Pi/ARM configs.
+- [ ] **OS-01 to OS-03**: macOS accessibility, Wayland screenshots, Pi/ARM cfgs.
 - [ ] **AUTO-01 to AUTO-05**: Repetition analyzer, success criteria, adaptive stall, long-term orchestrator, opportunity scanner.
-- [ ] **EXT-01 to EXT-05**: Async tools, streaming output, plugin registry, dependency resolver, tool piping.
-- [ ] **TEST-01 to TEST-05**: E2E tests, mutation tests, perf benchmarks, chaos harness, security regressions.
+- [ ] **EXT-01 to EXT-05**: Async ops, streaming output, plugin registry, dependency resolver, tool piping.
+- [ ] **TEST-01 to TEST-05**: E2E spec, mutation spec, perf benchmarks, chaos harness, security regressions.
 - [ ] **MEM-01 to MEM-05**: FAISS memory, memory decay, episodic clustering, validated evidence, memory sync.
 - [ ] **INTEG-01 to INTEG-05**: Fallback router, cost optimizer, model templates, JSON guarantee, pre-flight warnings.
 

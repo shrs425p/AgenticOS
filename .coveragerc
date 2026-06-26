@@ -1,0 +1,9 @@
+[run]
+omit =
+    ops/addons/test_temp_plugin.py
+    ops/addons/testtempplugin.py
+
+[report]
+omit =
+    ops/addons/test_temp_plugin.py
+    ops/addons/testtempplugin.py

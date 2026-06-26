@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # AgenticOS: Environment Configuration Script for Linux/macOS
 # This script initializes the project structure and prepares the global launcher.
 
@@ -36,7 +36,7 @@ fi
 
 # 2. Create required directories
 echo -e "${WHITE}[INFO] Initializing project structure...${NC}"
-DIRS=("workspace" "data" "data/logs" "bin")
+DIRS=("workspace" "data" "data/logs" "cli")
 for dir in "${DIRS[@]}"; do
     path="$PROJECT_ROOT/$dir"
     if [ ! -d "$path" ]; then
@@ -47,14 +47,14 @@ done
 
 # 2b. Auto-generate workspace README.md if missing
 WORKSPACE_README="$PROJECT_ROOT/workspace/README.md"
-README_TEMPLATE="$PROJECT_ROOT/config/workspace_readme_template.md"
+README_TEMPLATE="$PROJECT_ROOT/cfg/workspace.md"
 if [ ! -f "$WORKSPACE_README" ] && [ -f "$README_TEMPLATE" ]; then
     cp "$README_TEMPLATE" "$WORKSPACE_README"
     echo -e "${GRAY}[INFO] Automatically generated workspace README.md from template.${NC}"
 fi
 
 # 3. Ensure launcher script is executable
-BIN_PATH="$PROJECT_ROOT/bin"
+BIN_PATH="$PROJECT_ROOT/cli"
 LAUNCHER="$BIN_PATH/agent"
 if [ -f "$LAUNCHER" ]; then
     chmod +x "$LAUNCHER"
@@ -165,9 +165,9 @@ if [ -f "$REQ_FILE" ]; then
     "$PIP_PATH" install -r "$REQ_FILE"
 fi
 
-REQ_DEV_FILE="$PROJECT_ROOT/requirements-dev.txt"
+REQ_DEV_FILE="$PROJECT_ROOT/dev.txt"
 if [ -f "$REQ_DEV_FILE" ]; then
-    echo -e "${WHITE}[INFO] Installing development dependencies from requirements-dev.txt...${NC}"
+    echo -e "${WHITE}[INFO] Installing development dependencies from dev.txt...${NC}"
     "$PIP_PATH" install -r "$REQ_DEV_FILE"
 fi
 

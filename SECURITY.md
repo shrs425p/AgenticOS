@@ -64,9 +64,9 @@ We encourage responsible security research. We ask that researchers:
 ## Security Documentation Catalog
 
 For implementation details and operator safety practices, review:
-- [Security Guardrails Manual](docs/security_guardrails.md)
-- [Safety Guide](docs/safety_guide.md)
-- [Privacy & Data Policy](docs/privacy_data_policy.md)
-- [Documentation Catalog](docs/CATALOG.md)
+- [Security Guardrails Manual](manuals/guard.md)
+- [Safety Guide](manuals/safety.md)
+- [Privacy & Data Policy](manuals/privacy.md)
+- [Documentation Catalog](manuals/CATALOG.md)
 
 Thank you for helping us keep the future of autonomous agents safe and secure!

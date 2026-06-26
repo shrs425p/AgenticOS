@@ -17,7 +17,7 @@ Enable agents to achieve 100% task completion rates on the user's OS runtime wit
 - [x] **SEC-03**: Fine-grained registry key policy controls (allowed, blocked, and approval-required paths). (Phase 1)
 - [x] **SEC-04**: Symlink path resolution depth validation to prevent symlink traversal attacks. (Phase 1)
 - [x] **QUAL-01**: Pydantic validation models for actions and system configurations. (Phase 1)
-- [x] **QUAL-02**: Modularize large functions in `core/runtime.py` into distinct domains (orchestrator, dispatcher, memory, error). (Phase 1)
+- [x] **QUAL-02**: Modularize large functions in `kernel/cli.py` into distinct domains (orchestrator, dispatcher, memory, error). (Phase 1)
 - [x] **QUAL-03**: Implement Type-safe Tool Registry using a standard `Tool` protocol. (Phase 1)
 - [x] **QUAL-04**: Unified `AgentError` class with error codes and recovery suggestions. (Phase 1)
 - [x] **DOC-02**: Threat model document mapping security mitigations to residual risks. (Phase 1)
@@ -43,10 +43,10 @@ Enable agents to achieve 100% task completion rates on the user's OS runtime wit
 - [x] **AUTO-05**: Opportunity scanner recommending faster alternatives mid-task. (Phase 3)
 - [x] **EXT-01**: Async tool support using asynchronous streaming iterators. (Phase 4)
 - [x] **EXT-02**: Streaming tool output protocol for large file/text streams. (Phase 4)
-- [x] **EXT-03**: Remote plugin registry for downloading and installing community tools. (Phase 4)
+- [x] **EXT-03**: Remote plugin registry for downloading and installing community ops. (Phase 4)
 - [x] **EXT-04**: Tool dependency resolution and compatibility checking. (Phase 4)
 - [x] **EXT-05**: Tool composition and piping protocol. (Phase 4)
-- [x] **TEST-01**: End-to-end multi-step workflow integration tests. (Phase 4)
+- [x] **TEST-01**: End-to-end multi-step workflow integration spec. (Phase 4)
 - [x] **TEST-02**: Mutation testing to verify test assertion quality. (Phase 4)
 - [x] **TEST-03**: Performance regression benchmarks to track speed. (Phase 4)
 - [x] **TEST-04**: Chaos Monkey harness simulating LLM delays, DB corruption, and network dropouts. (Phase 4)
@@ -70,7 +70,7 @@ The framework is being updated to support production-grade deployments, requirin
 
 - **Compatibility**: Codebase must remain compatible with Windows, macOS, and Linux.
 - **Safety**: Security validations must not block valid administration or development tasks (must never say "no").
-- **Dependencies**: New features (e.g., semantic memory, encryption) must be optionally loadable to maintain a lightweight core.
+- **Dependencies**: New features (e.g., semantic memory, encryption) must be optionally loadable to maintain a lightweight kernel.
 
 ## Key Decisions
 

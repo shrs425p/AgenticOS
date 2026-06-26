@@ -37,11 +37,11 @@
 
 | Option | Description | Selected |
 |--------|-------------|----------|
-| Configurable Policies | Load allow/block/approve rules dynamically from config.json. | ✓ |
+| Configurable Policies | Load allow/block/approve rules dynamically from cfg.json. | ✓ |
 | Static Blocklist | Hardcode reg keys validation rules in python helper. | |
 
 **User's choice:** delegated to agent ("u decide")
-**Notes:** The agent opted for "Configurable Policies" via config schemas, enabling user customization without changing codebase.
+**Notes:** The agent opted for "Configurable Policies" via cfg schemas, enabling user customization without changing codebase.
 
 ---
 
@@ -72,7 +72,7 @@
 ## the agent's Discretion
 
 - Regex expressions to cover all PowerShell character escape representations.
-- Modularized file boundaries under `core/`.
+- Modularized file boundaries under `kernel/`.
 - Styling and ANSI color scheme of safety prompt outputs.
 
 ## Deferred Ideas
@@ -80,5 +80,5 @@
 None — discussion stayed within phase scope.
 
 ---
-*Phase: 01-core-security-and-code-quality-foundation*
+*Phase: 01-kernel-security-and-code-quality-foundation*
 *Discussion log generated: 2026-06-26*

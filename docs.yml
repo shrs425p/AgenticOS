@@ -1,0 +1,11 @@
+loaders:
+  - type: python
+    search_path: ['.']
+    packages: ['kernel', 'ops']
+processors:
+  - type: filter
+    expression: not obj.name.startswith('_') and obj.manualstring
+  - type: smart
+  - type: crossref
+renderer:
+  type: markdown

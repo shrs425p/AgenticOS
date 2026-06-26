@@ -10,7 +10,7 @@ This document outlines the implementation plan and architectural specifications 
 Attackers use Unicode escape sequences (e.g., `\u0041` or `U+0041`), hex escape sequences (e.g., `\x41`), and PowerShell character casts (e.g., `[char]0x41` or `[char]65`) to bypass basic regex filter string matching.
 
 ### Mitigation Strategy
-We must intercept command execution at the entry point in `tools/terminal/safety.py` inside `SafetyMixin._blocked_command_reason`. The check must run **both** on the raw command string (pre-tokenization) and on individual arguments (post-tokenization) to prevent double-decoding or shell token evasion.
+We must intercept command execution at the entry point in `ops/terminal/safety.py` inside `SafetyMixin._blocked_command_reason`. The check must run **both** on the raw command string (pre-tokenization) and on individual arguments (post-tokenization) to prevent double-decoding or shell token evasion.
 
 ### Detailed Regex Formulations
 We will define static regex patterns to detect these obfuscation variants:
@@ -98,7 +98,7 @@ To perform the validation and trigger a prompt, we need the `PathGuard` instance
 We will modify the `TerminalExecutor` initialization to attach the path guard:
 
 ```python
-# core/tool_registry.py
+# kernel/registry.py
 self.term = terminal.TerminalExecutor(
     rules=self.rules,
     custom_keys=cfg.get("custom_keys", {}),
@@ -136,8 +136,8 @@ Registry modifications occur on Windows via:
 1. `reg.exe` (e.g. `reg add`, `reg delete`, `reg import`)
 2. PowerShell Cmdlets (e.g. `Set-ItemProperty`, `New-ItemProperty`, `Remove-ItemProperty`, `Set-Item`, `New-Item`, `Remove-Item`)
 
-### Policy Schema in `.planning/config.json`
-We will introduce a registry policy configuration section to `.planning/config.json`:
+### Policy Schema in `.planning/cfg.json`
+We will introduce a registry policy configuration section to `.planning/cfg.json`:
 
 ```json
   "registry_policies": {
@@ -212,10 +212,10 @@ class RegistryGuard:
             if fnmatch.fnmatch(normalized, pattern):
                 return False, f"SECURITY POLICY: Modification of system critical key '{key_str}' is strictly blocked."
 
-        # 2. Check config blocked keys
+        # 2. Check cfg blocked keys
         for pattern in self.blocked:
             if fnmatch.fnmatch(normalized, pattern):
-                return False, f"SECURITY POLICY: Key '{key_str}' is explicitly blocked by config."
+                return False, f"SECURITY POLICY: Key '{key_str}' is explicitly blocked by cfg."
 
         # 3. Check allowed keys
         for pattern in self.allowed:
@@ -244,7 +244,7 @@ Symlink traversal attacks use chains of symlinks (or directory junctions) to poi
 We enforce a strict depth limit of **5 resolved symlinks** per operation.
 
 ### Custom Resolution Function
-We will implement custom path resolution in `core/guardrails.py` to trace symlinks step-by-step:
+We will implement custom path resolution in `kernel/guard.py` to trace symlinks step-by-step:
 
 ```python
 def resolve_with_symlink_depth(path: Path, max_depth: int = 5) -> Path:
@@ -272,7 +272,7 @@ def resolve_with_symlink_depth(path: Path, max_depth: int = 5) -> Path:
 ```
 
 ### Integration in `PathGuard.check_path`
-Replace the standard `.resolve()` logic in `core/guardrails.py` (lines 35-42) with:
+Replace the standard `.resolve()` logic in `kernel/guard.py` (lines 35-42) with:
 
 ```python
         try:
@@ -295,23 +295,23 @@ Replace the standard `.resolve()` logic in `core/guardrails.py` (lines 35-42) wi
 ## 5. Modular Core Architecture (QUAL-01, QUAL-02, QUAL-03)
 
 ### Current Architecture Gaps
-The `core/runtime.py` file is monolithic (119KB), containing orchestration loop code, CLI interfaces, and tool execution blocks. This introduces tight coupling and makes it difficult to add unit tests or reuse logic.
+The `kernel/cli.py` file is monolithic (119KB), containing orchestration loop code, CLI interfaces, and tool execution blocks. This introduces tight coupling and makes it difficult to add unit spec or reuse logic.
 
 ### Modular Core Directory Layout
-We will split `core/runtime.py` into distinct, focused sub-modules:
+We will split `kernel/cli.py` into distinct, focused sub-modules:
 
 ```
-core/
+kernel/
 ├── __init__.py
 ├── orchestrator.py    # Main agent execution loop and session management
 ├── dispatcher.py      # Action verification and dispatching logic
 ├── errors.py          # Unified AgentError and custom exception types
-├── tool_base.py       # Tool protocol and Pydantic validation schemas
+├── toolbase.py       # Tool protocol and Pydantic validation schemas
 └── tool_registry.py   # Registry manager (updated to resolve circular imports)
 ```
 
 ### Type-Safe `Tool` Protocol & Schemas
-We will define a type-safe tool execution interface inside `core/tool_base.py` using Pydantic:
+We will define a type-safe tool execution interface inside `kernel/base.py` using Pydantic:
 
 ```python
 from typing import Protocol, Callable, Any, Dict
@@ -345,27 +345,27 @@ class RegisteredTool:
 ```
 
 ### Dynamic Tool Registration
-To eliminate circular imports, `core/tool_registry.py` will not import subsystems at the top level. Instead, subsystems will be loaded dynamically or registered via decorator discovery during registry instantiation:
+To eliminate circular imports, `kernel/registry.py` will not import subsystems at the top level. Instead, subsystems will be loaded dynamically or registered via decorator discovery during registry instantiation:
 
 ```python
 class ToolRegistry:
     def _register_all(self):
         # Dynamically import and register default subsystems to avoid circular loops
         subsystems = [
-            ("tools.filesystem", "FileManager", "Files"),
-            ("tools.terminal", "TerminalExecutor", "Terminal"),
-            ("tools.web", "WebTools", "Web"),
-            ("tools.desktop_notifications", "NotificationCenter", "General"),
-            ("tools.screen_tools", "ScreenManager", "General"),
-            ("tools.ocr_tools", "OCRManager", "Media"),
-            ("tools.system_tools", "SystemManager", "System")
+            ("ops.files", "FileManager", "Files"),
+            ("ops.shell", "TerminalExecutor", "Terminal"),
+            ("ops.web", "WebTools", "Web"),
+            ("ops.notify", "NotificationCenter", "General"),
+            ("ops.screen", "ScreenManager", "General"),
+            ("ops.ocr", "OCRManager", "Media"),
+            ("ops.system", "SystemManager", "System")
         ]
         
         for module_path, class_name, category in subsystems:
             try:
                 module = importlib.import_module(module_path)
                 cls = getattr(module, class_name)
-                # Instantiate subsystem passing config & rules
+                # Instantiate subsystem passing cfg & rules
                 instance = cls(rules=self.rules, cfg=self.cfg)
                 self._register_subsystem(instance, category)
             except Exception as e:
@@ -377,7 +377,7 @@ class ToolRegistry:
 ## 6. Unified `AgentError` Class (QUAL-04)
 
 ### Structure & Fields
-We will define `AgentError` inside `core/errors.py` as a subclass of `Exception`:
+We will define `AgentError` inside `kernel/errors.py` as a subclass of `Exception`:
 
 ```python
 from typing import Optional, List
@@ -427,7 +427,7 @@ class AgentError(Exception):
 
 ### Integration
 - Wherever commands or paths fail security checks, raise `AgentError` with code `SECURITY_VIOLATION` or `PATH_TRAVERSAL`.
-- The main orchestration loop in `core/orchestrator.py` will catch `AgentError`, format it cleanly for the LLM context, and display it with appropriate recommendations.
+- The main orchestration loop in `kernel/agent.py` will catch `AgentError`, format it cleanly for the LLM context, and display it with appropriate recommendations.
 
 ---
 
@@ -444,7 +444,7 @@ class AgentError(Exception):
 
 ## 8. Verification Strategy & Security Regression Suite (TEST-05)
 
-We will implement a security validation suite in `tests/test_security_foundation.py` verifying the following:
+We will implement a security validation suite in `spec/test_security_foundation.py` verifying the following:
 1. **Unicode/Hex Block Tests**: Assert that inputs like `powershell -c "$([char]0x41)$([char]0x6d)"` or `echo -e "\x41"` trigger a `SECURITY POLICY` error.
 2. **Redirection Intercept Tests**: Assert that commands running script redirects (`> /tmp/malicious.py`) outside the workspace root are blocked or raise a PathGuard violation.
 3. **Registry Policy Tests**: Verify modifying `HKLM\Software\Microsoft\Windows\CurrentVersion\Run` is rejected with registry tampering errors.

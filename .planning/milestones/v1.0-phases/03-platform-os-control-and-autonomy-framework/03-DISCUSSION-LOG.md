@@ -60,7 +60,7 @@
 - **AUTO-02 Success criteria**: Parse goal for criteria phrases, verify at FINAL ANSWER time
 - **AUTO-05 Faster alternatives**: Per-tool-category stall thresholds + lookup table of faster alternatives
 - **Windows UI control**: `pywin32` for window enumerate/focus/click/type (Windows-first platform)
-- **DOC-01 Deployment playbook**: `docs/deployment.md` with Docker Compose, Windows Service (NSSM), K8s
+- **DOC-01 Deployment playbook**: `manuals/deployment.md` with Docker Compose, Windows Service (NSSM), K8s
 
 ---
 

@@ -12,15 +12,15 @@ status: research_complete
 
 Phase 3 delivers three capability clusters on top of the existing codebase:
 
-1. **Native OS UI control** — Windows (`tools/platform/windows_ui.py`), macOS (`tools/platform/macos_ui.py`), Linux (`tools/platform/linux_desktop.py`)
-2. **Hardware-aware auto-tuning** — `core/resource_profiler.py` + integration points in `core/dispatcher.py`, `core/context_engine.py`, `core/model_clients.py`
-3. **Autonomous task resilience** — `core/checkpoint_manager.py`, `core/retry_classifier.py`, `core/stall_monitor.py`
+1. **Native OS UI control** — Windows (`ops/platform/windows_ui.py`), macOS (`ops/platform/macos_ui.py`), Linux (`ops/platform/linux_desktop.py`)
+2. **Hardware-aware auto-tuning** — `kernel/resources.py` + integration points in `kernel/dispatch.py`, `kernel/context.py`, `kernel/models.py`
+3. **Autonomous task resilience** — `kernel/checkpoint.py`, `kernel/triage.py`, `kernel/stalls.py`
 
-All new tools live in `tools/platform/` and must use the `@tool` decorator from `core/tool_base.py`. All new core modules are plain Python files; no framework changes required.
+All new ops live in `ops/platform/` and must use the `@tool` decorator from `kernel/base.py`. All new kernel modules are plain Python files; no framework changes required.
 
 ---
 
-## Area 1: Windows UI Control (`tools/platform/windows_ui.py`)
+## Area 1: Windows UI Control (`ops/platform/windows_ui.py`)
 
 ### pywin32 Status
 
@@ -95,7 +95,7 @@ def click_at(x: int, y: int) -> None:
 ```python
 import win32com.client
 
-def type_text(text: str) -> None:
+def typetext(text: str) -> None:
     """Type text into the focused window using WScript.Shell SendKeys."""
     shell = win32com.client.Dispatch("WScript.Shell")
     # Escape special SendKeys chars: +, ^, %, ~, {, }, [, ]
@@ -133,21 +133,21 @@ try:
     _HAS_WIN32 = True
 except ImportError:
     _HAS_WIN32 = False
-# If not _HAS_WIN32: pyautogui.click(x, y) for click_at, pyautogui.typewrite(text) for type_text
+# If not _HAS_WIN32: pyautogui.click(x, y) for click_at, pyautogui.typewrite(text) for typetext
 ```
 
 ### File Structure
 
 ```
-tools/platform/__init__.py    # OS dispatcher (cross-cutting)
-tools/platform/windows_ui.py  # New file for this area
+ops/platform/__init__.py    # OS dispatcher (cross-cutting)
+ops/platform/windows_ui.py  # New file for this area
 ```
 
-All functions in `windows_ui.py` wrapped with `@tool(name=..., category="platform")` from `core/tool_base.py`.
+All functions in `windows_ui.py` wrapped with `@tool(name=..., category="platform")` from `kernel/base.py`.
 
 ---
 
-## Area 2: macOS UI Control (`tools/platform/macos_ui.py`)
+## Area 2: macOS UI Control (`ops/platform/macos_ui.py`)
 
 ### Primary Mechanism: osascript subprocess
 
@@ -257,7 +257,7 @@ def list_windows_quartz() -> list[dict]:
 
 ---
 
-## Area 3: Linux Desktop Detection & Screenshots (`tools/platform/linux_desktop.py`)
+## Area 3: Linux Desktop Detection & Screenshots (`ops/platform/linux_desktop.py`)
 
 ### Detection Strategy: Layered env-var + socket probe
 
@@ -338,7 +338,7 @@ def screenshot_x11(output_path: str) -> str:
 
 **Dispatcher:**
 ```python
-def take_screenshot(output_path: str, monitor: str = "") -> str:
+def takescreenshot(output_path: str, monitor: str = "") -> str:
     session = detect_linux_session()
     if session["session_type"] == "wayland":
         return screenshot_wayland(output_path, monitor)
@@ -352,7 +352,7 @@ def take_screenshot(output_path: str, monitor: str = "") -> str:
 
 ### AgentError
 
-`core/exceptions.py` currently only defines `RateLimitExhausted`. Add `AgentError` (QUAL-04) if Phase 1 did not already do so:
+`kernel/errors.py` currently only defines `RateLimitExhausted`. Add `AgentError` (QUAL-04) if Phase 1 did not already do so:
 ```python
 class AgentError(Exception):
     def __init__(self, message: str, code: str = "AGENT_ERR"):
@@ -362,7 +362,7 @@ class AgentError(Exception):
 
 ---
 
-## Area 4: Hardware Auto-Tuner (`core/resource_profiler.py`)
+## Area 4: Hardware Auto-Tuner (`kernel/resources.py`)
 
 ### psutil API Used
 
@@ -435,23 +435,23 @@ def check_memory_pressure(current_workers: int) -> int:
 
 ### Integration Points
 
-**`core/dispatcher.py` — ParallelScheduler.max_workers (line 328)**:
+**`kernel/dispatch.py` — ParallelScheduler.max_workers (line 328)**:
 `ParallelScheduler.__init__` currently has `max_workers: int = 4`. At agent init:
 ```python
-from core.resource_profiler import profile_hardware
+from kernel.resources import profile_hardware
 self.hw_profile = profile_hardware()
 self.scheduler = ParallelScheduler(max_workers=self.hw_profile.recommended_max_workers)
 ```
 
-**`core/context_engine.py` — compact_history threshold**:
-`core/runtime.py` line 552: `max_msgs = int(self.performance.get("max_context_messages", 40))`. Override at init:
+**`kernel/context.py` — compact_history threshold**:
+`kernel/cli.py` line 552: `max_msgs = int(self.performance.get("max_context_messages", 40))`. Override at init:
 ```python
 self.performance["max_context_messages"] = self.hw_profile.compact_history_threshold
 ```
 
 Note: The 80% token trigger (`context_engine.py` line 249: `trigger_tokens = int(max_tokens * 0.8)`) is independent — it fires on token count. `compact_history_threshold` only controls the message-count trigger. Both can fire independently.
 
-**`core/model_clients.py` — Ollama num_ctx**:
+**`kernel/models.py` — Ollama num_ctx**:
 `ContextEngine.get_max_context_tokens` reads `cfg["ollama"]["num_ctx"]` (line 221). Override at init:
 ```python
 self.cfg.setdefault("ollama", {})["num_ctx"] = self.hw_profile.recommended_context_tokens
@@ -459,11 +459,11 @@ self.cfg.setdefault("ollama", {})["num_ctx"] = self.hw_profile.recommended_conte
 
 ---
 
-## Area 5: Checkpoint Manager (`core/checkpoint_manager.py`)
+## Area 5: Checkpoint Manager (`kernel/checkpoint.py`)
 
 ### Existing TaskTracker — Key Facts
 
-File: `core/task_tracker.py` (351 lines). Key methods:
+File: `kernel/tasks.py` (351 lines). Key methods:
 - `__init__(workspace, session_id, cfg)` — stores in `workspace/tasks/active_task_{session_id}.json`
 - `start(goal, provider, model)` — creates task with `datetime.now().strftime("%Y%m%d_%H%M%S")` as task_id
 - `update_from_response(response, iteration)` — parses OBJECTIVE/PLAN/CURRENT_STEP sections
@@ -495,7 +495,7 @@ Do not modify `TaskTracker`. Initialize both independently.
         {
             "name": "Phase 2: Implementation",
             "status": "running",
-            "steps": ["Split auth.py", "Update imports", "Run tests"],
+            "steps": ["Split auth.py", "Update imports", "Run spec"],
             "result": null
         }
     ],
@@ -581,7 +581,7 @@ class CheckpointManager:
 
 ### SQLite Secondary Storage
 
-The existing `SqliteSessionMemory` in `core/session_memory_sqlite.py` manages messages/tasks/artifacts for the current session. Mixing checkpoint data into it creates coupling.
+The existing `SqliteSessionMemory` in `kernel/store.py` manages messages/tasks/artifacts for the current session. Mixing checkpoint data into it creates coupling.
 
 **Recommended**: Separate SQLite at `workspace/.checkpoints/checkpoints.sqlite3`:
 
@@ -607,7 +607,7 @@ The existing `SqliteSessionMemory.start_task(task_id, goal)` and `complete_task(
 
 ### Resume Logic at Task Start
 
-In `Agent.run()` (`core/runtime.py`), after reading `user_input`:
+In `Agent.run()` (`kernel/cli.py`), after reading `user_input`:
 ```python
 checkpoint = self.checkpoint_manager.load(user_input)
 if checkpoint:
@@ -623,7 +623,7 @@ if checkpoint:
 
 ### Existing Loop Guard — Do Not Modify
 
-In `core/runtime.py`, `repeated_action_count` logic at lines **558–746**:
+In `kernel/cli.py`, `repeated_action_count` logic at lines **558–746**:
 - **Line 558**: `repeated_action_count = 0` — initialized per `run()` call
 - **Line 731**: `current_signature = "||".join([f"{t}|{args}" for t, args in actions])` — action fingerprint
 - **Lines 732–736**: Increments if signature matches `last_action_signature`; resets to 0 on new signature
@@ -631,7 +631,7 @@ In `core/runtime.py`, `repeated_action_count` logic at lines **558–746**:
 
 **Relationship**: `repeated_action_count` = loop guard. `RetryClassifier` = error router for tool execution failures. Different failure modes, different layers. Do not modify the existing guard.
 
-### RetryClassifier (`core/retry_classifier.py`)
+### RetryClassifier (`kernel/triage.py`)
 
 ```python
 from dataclasses import dataclass
@@ -685,9 +685,9 @@ class RetryClassifier:
         return RetryDecision(action="escalate", reason="Ambiguous error — escalating after 2 retries", max_retries=2)
 ```
 
-**Scope**: Tool execution errors only. LLM API errors handled by `FallbackRouter` (core/model_clients.py) + `retry_call` (core/retry.py). Do not overlap.
+**Scope**: Tool execution errors only. LLM API errors handled by `FallbackRouter` (kernel/models.py) + `retry_call` (kernel/retry.py). Do not overlap.
 
-### StallMonitor (`core/stall_monitor.py`)
+### StallMonitor (`kernel/stalls.py`)
 
 ```python
 import time
@@ -703,27 +703,27 @@ class StallWarning:
 class StallMonitor:
     THRESHOLDS = {
         "file_ops": 30,           # read_file, write_file, list_dir, copy_file
-        "network": 60,            # fetch_url, http_request, web_search
+        "network": 60,            # fetchurl, http_request, websearch
         "package_install": 300,   # pip, npm, apt
-        "general": 120,           # run_command, execute_code, default
+        "general": 120,           # runcommand, execute_code, default
     }
     TOOL_CATEGORIES = {
         "read_file": "file_ops", "write_file": "file_ops",
         "list_dir": "file_ops",  "copy_file": "file_ops",
-        "fetch_url": "network",  "http_request": "network", "web_search": "network",
-        "run_command": "general", "execute_code": "general",
+        "fetchurl": "network",  "http_request": "network", "websearch": "network",
+        "runcommand": "general", "execute_code": "general",
     }
     FASTER_ALTERNATIVES = {
         "copy_file":        "Archive large directories with `tar czf` first, then copy the archive",
-        "run_command:grep": "Use `rg` (ripgrep) instead of grep — 10-100x faster on large codebases",
-        "run_command:find": "Use `fd` instead of `find` — faster and respects .gitignore",
-        "fetch_url":        "Cache responses locally with save_file if repeatedly fetching",
-        "run_command:pip":  "Add --find-links /tmp/pip-cache or --no-build-isolation to speed up",
-        "run_command:npm":  "Use --prefer-offline if packages are already cached locally",
-        "run_command:du":   "Use `dust` (Rust du) for large directories — significantly faster",
-        "run_command:sort": "Pipe through LC_ALL=C sort for ASCII data — 3x faster",
-        "run_command:awk":  "Use `mlr` (Miller) for structured CSV data — faster and cleaner",
-        "run_command:sed":  "Use `sd` (Rust sed) for large files — simpler syntax and faster",
+        "runcommand:grep": "Use `rg` (ripgrep) instead of grep — 10-100x faster on large codebases",
+        "runcommand:find": "Use `fd` instead of `find` — faster and respects .gitignore",
+        "fetchurl":        "Cache responses locally with save_file if repeatedly fetching",
+        "runcommand:pip":  "Add --find-links /tmp/pip-cache or --no-build-isolation to speed up",
+        "runcommand:npm":  "Use --prefer-offline if packages are already cached locally",
+        "runcommand:du":   "Use `dust` (Rust du) for large directories — significantly faster",
+        "runcommand:sort": "Pipe through LC_ALL=C sort for ASCII data — 3x faster",
+        "runcommand:awk":  "Use `mlr` (Miller) for structured CSV data — faster and cleaner",
+        "runcommand:sed":  "Use `sd` (Rust sed) for large files — simpler syntax and faster",
     }
 
     def __init__(self):
@@ -778,7 +778,7 @@ def parse_success_criteria(goal: str) -> list[str]:
     return criteria
 ```
 
-**Integration**: At FINAL ANSWER handling in `core/runtime.py`, before breaking the loop:
+**Integration**: At FINAL ANSWER handling in `kernel/cli.py`, before breaking the loop:
 ```python
 criteria = parse_success_criteria(original_user_input)
 if criteria:
@@ -798,7 +798,7 @@ if criteria:
 Mock `win32gui`, `win32api`, `win32com`, `win32con`, `win32process`, `win32security` in `sys.modules` **before** importing the module under test:
 
 ```python
-# tests/platform/test_windows_ui.py
+# spec/platform/test_windows_ui.py
 import sys
 from unittest.mock import MagicMock
 
@@ -806,7 +806,7 @@ for mod in ["win32gui", "win32api", "win32com", "win32com.client",
             "win32con", "win32process", "win32security", "ntsecuritycon"]:
     sys.modules[mod] = MagicMock()
 
-from tools.platform.windows_ui import list_windows
+from ops.platform.windows_ui import list_windows
 
 def test_list_windows():
     import win32gui
@@ -830,13 +830,13 @@ from unittest.mock import patch, MagicMock
 def test_list_windows_parses_csv():
     r = MagicMock(returncode=0, stdout="Safari, Terminal, Finder\n")
     with patch("subprocess.run", return_value=r):
-        from tools.platform.macos_ui import list_windows
+        from ops.platform.macos_ui import list_windows
         assert list_windows() == ["Safari", "Terminal", "Finder"]
 
 def test_accessibility_check_false_on_error():
     r = MagicMock(returncode=1, stderr="not trusted")
     with patch("subprocess.run", return_value=r):
-        from tools.platform.macos_ui import check_accessibility_permission
+        from ops.platform.macos_ui import check_accessibility_permission
         assert check_accessibility_permission() is False
 ```
 
@@ -850,15 +850,15 @@ from unittest.mock import patch, MagicMock
 def test_detect_wayland_from_env():
     env = {"XDG_SESSION_TYPE": "wayland", "WAYLAND_DISPLAY": "wayland-0", "XDG_CURRENT_DESKTOP": "GNOME"}
     with patch.dict(os.environ, env, clear=True):
-        from tools.platform.linux_desktop import detect_linux_session
+        from ops.platform.linux_desktop import detect_linux_session
         r = detect_linux_session()
     assert r["session_type"] == "wayland"
     assert r["desktop"] == "gnome"
 
 def test_missing_grim_raises_agent_error():
-    from core.exceptions import AgentError
+    from kernel.errors import AgentError
     with patch("shutil.which", return_value=None):
-        from tools.platform.linux_desktop import screenshot_wayland
+        from ops.platform.linux_desktop import screenshot_wayland
         try:
             screenshot_wayland("/tmp/x.png")
             assert False
@@ -868,7 +868,7 @@ def test_missing_grim_raises_agent_error():
 def test_socket_probe_fallback():
     with patch.dict(os.environ, {}, clear=True):
         with patch("os.path.exists", return_value=True):
-            from tools.platform.linux_desktop import detect_linux_session
+            from ops.platform.linux_desktop import detect_linux_session
             r = detect_linux_session()
     assert r["session_type"] == "wayland"
 ```
@@ -878,7 +878,7 @@ def test_socket_probe_fallback():
 Mock `psutil.virtual_memory` and `psutil.cpu_count`:
 ```python
 from unittest.mock import patch, MagicMock
-from core.resource_profiler import profile_hardware, check_memory_pressure
+from kernel.resources import profile_hardware, check_memory_pressure
 
 def _vm(total_gb, percent=30.0):
     m = MagicMock()
@@ -917,7 +917,7 @@ def test_no_pressure_unchanged():
 `tempfile.TemporaryDirectory` provides isolation — no mocking of disk I/O:
 ```python
 import tempfile
-from core.checkpoint_manager import CheckpointManager, _goal_to_task_id
+from kernel.checkpoint import CheckpointManager, _goal_to_task_id
 
 def test_create_and_load():
     with tempfile.TemporaryDirectory() as tmp:
@@ -951,12 +951,12 @@ def test_load_nonexistent_returns_none():
         assert cm.load("Brand new goal") is None
 ```
 
-### Area 6: Retry Classifier & Stall Monitor (pure unit tests)
+### Area 6: Retry Classifier & Stall Monitor (pure unit spec)
 
 No mocking needed — pure logic, no I/O:
 ```python
-from core.retry_classifier import RetryClassifier, parse_success_criteria
-from core.stall_monitor import StallMonitor
+from kernel.triage import RetryClassifier, parse_success_criteria
+from kernel.stalls import StallMonitor
 from unittest.mock import patch
 
 # RetryClassifier
@@ -981,8 +981,8 @@ def test_enoent_is_permanent():
 
 # Success criteria
 def test_criteria_verify_that():
-    c = parse_success_criteria("Fix it. Verify that the tests pass.")
-    assert any("tests pass" in x for x in c)
+    c = parse_success_criteria("Fix it. Verify that the spec pass.")
+    assert any("spec pass" in x for x in c)
 
 def test_criteria_ensure():
     c = parse_success_criteria("Ensure that login works.")
@@ -1008,8 +1008,8 @@ def test_stall_above_threshold():
 def test_faster_alt_for_fetch():
     sm = StallMonitor()
     with patch("time.monotonic", side_effect=[0.0, 65.0]):
-        sm.start("fetch_url")
-        w = sm.check_stall("fetch_url")
+        sm.start("fetchurl")
+        w = sm.check_stall("fetchurl")
     assert "cache" in w.suggestion.lower()
 
 def test_stop_clears_timer():
@@ -1022,26 +1022,26 @@ def test_stop_clears_timer():
 
 ---
 
-## Cross-Cutting: `tools/platform/__init__.py` OS Dispatcher
+## Cross-Cutting: `ops/platform/__init__.py` OS Dispatcher
 
 ```python
 import platform as _platform
 _sys = _platform.system()
 
 if _sys == "Windows":
-    from tools.platform.windows_ui import list_windows, focus_window, click_at, type_text
+    from ops.platform.windows_ui import list_windows, focus_window, click_at, typetext
 elif _sys == "Darwin":
-    from tools.platform.macos_ui import (
-        list_windows, focus_window, click_at, type_text,
+    from ops.platform.macos_ui import (
+        list_windows, focus_window, click_at, typetext,
         check_accessibility_permission, prompt_accessibility_permission
     )
 elif _sys == "Linux":
-    from tools.platform.linux_desktop import detect_linux_session, take_screenshot, classify_desktop
+    from ops.platform.linux_desktop import detect_linux_session, takescreenshot, classify_desktop
     def list_windows():
-        raise NotImplementedError("Window listing not supported on headless Linux. Use take_screenshot().")
+        raise NotImplementedError("Window listing not supported on headless Linux. Use takescreenshot().")
 ```
 
-Extend `core/platform_api.py` (`PlatformAPI`) — do not replace. Add `get_ui_backend()` static method returning `tools.platform`.
+Extend `kernel/osio.py` (`PlatformAPI`) — do not replace. Add `get_ui_backend()` static method returning `ops.platform`.
 
 ---
 
@@ -1055,8 +1055,8 @@ Extend `core/platform_api.py` (`PlatformAPI`) — do not replace. Add `get_ui_ba
 | `pywin32>=306` | **Must add to requirements.txt** | `sys_platform == 'win32'` |
 | `pyobjc-framework-Quartz` | Optional, do not add to base | macOS only, Quartz window list |
 | `pyobjc-framework-ApplicationServices` | Optional, do not add to base | macOS only, AX element tree |
-| `grim` (system binary) | Linux Wayland — not pip | User installs via distro package manager |
-| `scrot` (system binary) | Linux X11 — not pip | User installs via distro package manager |
+| `grim` (system cliary) | Linux Wayland — not pip | User installs via distro package manager |
+| `scrot` (system cliary) | Linux X11 — not pip | User installs via distro package manager |
 
 ---
 
@@ -1074,7 +1074,7 @@ Extend `core/platform_api.py` (`PlatformAPI`) — do not replace. Add `get_ui_ba
 
 6. **RetryClassifier vs repeated_action_count**: Parallel systems. `repeated_action_count` (lines 558–746 in runtime.py) = loop guard. `RetryClassifier` = error router for tool failures. Do not modify the existing loop guard.
 
-7. **FallbackRouter scope**: `core/model_clients.py` handles LLM API errors. `RetryClassifier` handles tool execution errors only. Do not duplicate LLM retry logic in `RetryClassifier`.
+7. **FallbackRouter scope**: `kernel/models.py` handles LLM API errors. `RetryClassifier` handles tool execution errors only. Do not duplicate LLM retry logic in `RetryClassifier`.
 
 8. **pywin32 import guard**: On non-Windows, `import win32gui` raises `ModuleNotFoundError`. Always wrap with `try/except ImportError` and fall back to `pyautogui`.
 

@@ -47,7 +47,7 @@
 ## Recommended Project Structure
 
 ```
-core/
+kernel/
 ├── action_dispatcher.py   # Core tool executor, sandbox checks, and parallel schedule
 ├── orchestrator.py        # Main execution loop, turn counter, and state sync
 ├── memory_manager.py      # SQLite memory integration with FAISS vector database
@@ -60,9 +60,9 @@ core/
 
 ### Pattern 1: Action Dependency Graph
 
-**What:** Build a DAG of tools scheduled for execution in a single model turn.
+**What:** Build a DAG of ops scheduled for execution in a single model turn.
 **When to use:** When the model requests multiple tool executions that do not depend on each other.
-**Trade-offs:** Faster execution, but requires complex locks if multiple tools modify the same directory.
+**Trade-offs:** Faster execution, but requires complex locks if multiple ops modify the same directory.
 
 ### Pattern 2: Context Decelerator
 

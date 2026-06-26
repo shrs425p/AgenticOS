@@ -1,6 +1,6 @@
 # Milestone Summary: AgenticOS Security Hardening (v1.0)
 
-We have successfully completed all phases of the **AgenticOS Security Hardening** milestone. The terminal execution tools have been migrated from naive substring matching to a zero-trust, AST-like structural command validator.
+We have successfully completed all phases of the **AgenticOS Security Hardening** milestone. The terminal execution ops have been migrated from naive substring matching to a zero-trust, AST-like structural command validator.
 
 ## Accomplished Phases & Requirements
 
@@ -17,9 +17,9 @@ We have successfully completed all phases of the **AgenticOS Security Hardening*
 - **Requirements Satisfied**: `SAFE-03`, `SAFE-04`.
 
 ### 4. Phase 4: Safety Verification Suite
-- **Completed**: Resolved all code review findings (CR-01 PowerShell bypass, WR-01 Zsh script scan support, WR-02 runtime logging scope error). Expanded the unit test suite and created live host-OS integration tests.
+- **Completed**: Resolved all code review findings (CR-01 PowerShell bypass, WR-01 Zsh script scan support, WR-02 runtime logging scope error). Expanded the unit test suite and created live host-OS integration spec.
 - **Requirements Satisfied**: `TEST-01`.
 
 ## Key Performance Metrics
 - **Performance**: Safety validation executes in <1ms on average, well below the 10ms budget constraint.
-- **Test Coverage**: All 35 tests (unit and integration) pass successfully.
+- **Test Coverage**: All 35 spec (unit and integration) pass successfully.

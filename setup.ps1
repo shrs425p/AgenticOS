@@ -18,7 +18,7 @@ if (-not (Test-Path $ProjectRoot)) {
 
 # 2. Create required directories
 Write-Host "[INFO] Initializing project structure..." -ForegroundColor White
-$Dirs = @("workspace", "data", "data\logs", "bin")
+$Dirs = @("workspace", "data", "data\logs", "cli")
 foreach ($Dir in $Dirs) {
     $Path = Join-Path $ProjectRoot $Dir
     if (-not (Test-Path $Path)) {
@@ -29,7 +29,7 @@ foreach ($Dir in $Dirs) {
 
 # 2b. Auto-generate workspace README.md if missing
 $WorkspaceReadme = Join-Path $ProjectRoot "workspace\README.md"
-$ReadmeTemplate = Join-Path $ProjectRoot "config\workspace_readme_template.md"
+$ReadmeTemplate = Join-Path $ProjectRoot "cfg\workspace.md"
 if (-not (Test-Path $WorkspaceReadme) -and (Test-Path $ReadmeTemplate)) {
     Copy-Item -Path $ReadmeTemplate -Destination $WorkspaceReadme -Force
     Write-Host "[INFO] Automatically generated workspace README.md from template." -ForegroundColor Gray
@@ -40,16 +40,18 @@ Write-Host "[INFO] Setting AGENTICOS_HOME to $ProjectRoot..." -ForegroundColor W
 [Environment]::SetEnvironmentVariable("AGENTICOS_HOME", $ProjectRoot, "User")
 
 # 4. Add to PATH (User Level)
-$BinPath = Join-Path $ProjectRoot "bin"
+$BinPath = Join-Path $ProjectRoot "cli"
 $CurrentPath = [Environment]::GetEnvironmentVariable("Path", "User")
-if ($CurrentPath -notlike "*$BinPath*") {
-    Write-Host "[INFO] Adding $BinPath to your PATH..." -ForegroundColor White
-    $NewPath = "$CurrentPath;$BinPath"
-    [Environment]::SetEnvironmentVariable("Path", $NewPath, "User")
-    $env:Path = "$env:Path;$BinPath" # Update active process PATH
-} else {
-    Write-Host "[INFO] $BinPath is already in your PATH." -ForegroundColor Green
+$PathParts = @()
+if ($CurrentPath) {
+    $PathParts = $CurrentPath -split ';' | Where-Object {
+        $_ -and ($_ -ne $BinPath)
+    }
 }
+$NewPath = (@($BinPath) + $PathParts) -join ';'
+[Environment]::SetEnvironmentVariable("Path", $NewPath, "User")
+$env:Path = $NewPath + ";" + [System.Environment]::GetEnvironmentVariable("Path", "Machine")
+Write-Host "[INFO] Promoted $BinPath to the front of your PATH." -ForegroundColor Green
 
 # 5. Verify Python Installation
 Write-Host "[INFO] Verifying Python installation..." -ForegroundColor White
@@ -181,9 +183,9 @@ if (Test-Path $ReqFile) {
     & $PipPath install -r $ReqFile
 }
 
-$ReqDevFile = Join-Path $ProjectRoot "requirements-dev.txt"
+$ReqDevFile = Join-Path $ProjectRoot "dev.txt"
 if (Test-Path $ReqDevFile) {
-    Write-Host "[INFO] Installing development dependencies from requirements-dev.txt..." -ForegroundColor White
+    Write-Host "[INFO] Installing development dependencies from dev.txt..." -ForegroundColor White
     & $PipPath install -r $ReqDevFile
 }
 

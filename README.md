@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/license-Apache_2.0-red?style=flat-square)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows_|_macOS_|_Linux-blue?style=flat-square)](#)
 
-AgenticOS is a secure, high-performance personal AI orchestration framework designed to empower AI agents with direct, secure, and robust execution capabilities on local operating system runtimes (Windows, macOS, Linux). It seamlessly integrates local models (Ollama) and cloud providers (NVIDIA, Google Gemini, Groq, OpenAI) with a modular ecosystem of specialized tools.
+AgenticOS is a secure, high-performance personal AI orchestration framework designed to empower AI agents with direct, secure, and robust execution capabilities on local operating system runtimes (Windows, macOS, Linux). It seamlessly integrates local models (Ollama) and cloud providers (NVIDIA, Google Gemini, Groq, OpenAI) with a modular ecosystem of specialized ops.
 
 ---
 
@@ -64,7 +64,7 @@ To install AgenticOS and set up the local environment:
 ### Command Line Interface
 
 ```bash
-# Run in dry-run mode (runs the orchestrator without executing modifying tools)
+# Run in dry-run mode (runs the orchestrator without executing modifying ops)
 python main.py --dry-run
 
 # Run active health check to diagnose platform dependencies
@@ -78,7 +78,7 @@ python main.py --dream
 
 ## Contributing
 
-See [docs/contributor_guide.md](file:///c:/Users/pawar/AgenticOS/docs/contributor_guide.md) for contribution guidelines, branch conventions, and PR processes.
+See [manuals/contribute.md](file:///c:/Users/pawar/AgenticOS/manuals/contribute.md) for contribution guidelines, branch conventions, and PR processes.
 
 ---
 

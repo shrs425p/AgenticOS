@@ -9,7 +9,7 @@
 
 This research establishes a concrete implementation roadmap to elevate AgenticOS to a production-grade 10/10 platform across all dimensions of security, quality, performance, and control.
 
-The recommended approach introduces a zero-trust AST-validated parser, a structured Pydantic validation core, an adaptive context compaction loop, and async/parallel tool dispatch systems. Key risks around shell execution escapes and circular imports are resolved using dedicated interfaces and pre-flight validation pipelines.
+The recommended approach introduces a zero-trust AST-validated parser, a structured Pydantic validation kernel, an adaptive context compaction loop, and async/parallel tool dispatch systems. Key risks around shell execution escapes and circular imports are resolved using dedicated interfaces and pre-flight validation pipelines.
 
 ## Key Findings
 
@@ -56,7 +56,7 @@ Based on research, suggested phase structure:
 
 ### Phase 1: Core Security and Code Quality Foundation
 **Rationale:** Solidifies the runtime against execution exploits and code quality bugs before optimizing performance.
-**Delivers:** Pydantic configuration schemas, unicode escape guards, modularized runtime files, and security regression tests.
+**Delivers:** Pydantic configuration schemas, unicode escape guards, modularized runtime files, and security regression spec.
 **Addresses:** SEC-01, SEC-02, SEC-03, SEC-04, QUAL-01, QUAL-02, QUAL-03, QUAL-04, TEST-05.
 
 ### Phase 2: Performance and LLM Integration Layer
@@ -66,12 +66,12 @@ Based on research, suggested phase structure:
 
 ### Phase 3: Platform OS Control and Autonomy Framework
 **Rationale:** Scales OS control capabilities and enhances autonomy loops once high execution performance is guaranteed.
-**Delivers:** macOS AppleScript bindings, Linux Wayland helpers, ARM hardware tuner, success criteria learning, and opportunity scanners.
+**Delivers:** macOS AppleScript clidings, Linux Wayland helpers, ARM hardware tuner, success criteria learning, and opportunity scanners.
 **Addresses:** OS-01, OS-02, OS-03, AUTO-01, AUTO-02, AUTO-03, AUTO-04, AUTO-05.
 
 ### Phase 4: Memory, Extensibility, and Resiliency Harness
 **Rationale:** Integrates advanced long-term FAISS index caching, modular tool plugins, and E2E/chaos resilience suites.
-**Delivers:** FAISS semantic memory, time-decay weights, async tool protocols, plugin registry client, E2E tests, and chaos monkey harness.
+**Delivers:** FAISS semantic memory, time-decay weights, async tool protocols, plugin registry client, E2E spec, and chaos monkey harness.
 **Addresses:** MEM-01, MEM-02, MEM-03, MEM-04, MEM-05, EXT-01, EXT-02, EXT-03, EXT-04, EXT-05, TEST-01, TEST-02, TEST-03, TEST-04.
 
 ## Confidence Assessment
