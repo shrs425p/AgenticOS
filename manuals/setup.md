@@ -25,8 +25,9 @@ Before installing AgenticOS, ensure your system meets the following requirements
    AgenticOS provides automated setup scripts that create a virtual environment, install package dependencies, and set up base directories.
    - **On Windows (PowerShell):**
      ```powershell
-     .\setup.ps1
+     powershell -NoProfile -ExecutionPolicy Bypass -File .\setup.ps1
      ```
+     If your current PowerShell session already allows local scripts, `.\setup.ps1` also works.
    - **On macOS/Linux (Bash):**
      ```bash
      chmod +x setup.sh
@@ -49,7 +50,7 @@ Before installing AgenticOS, ensure your system meets the following requirements
    ```bash
    venv\Scripts\python main.py --health
    ```
-   *(On macOS/Linux, run `source venv/cli/activate` followed by `python main.py --health`)*
+   *(On macOS/Linux, run `source venv/bin/activate` followed by `python main.py --health`)*
 
 2. **Launch the Orchestrator**:
    ```bash
@@ -75,5 +76,5 @@ Before installing AgenticOS, ensure your system meets the following requirements
 ---
 
 ## Next Steps
-- Read [manuals/onboard.md](file:///c:/Users/pawar/AgenticOS/manuals/onboard.md) to learn how to develop custom plugins.
-- Read [manuals/testing.md](file:///c:/Users/pawar/AgenticOS/manuals/testing.md) to understand the test suite.
+- Read [manuals/onboard.md](onboard.md) to learn how to develop custom plugins.
+- Read [manuals/testing.md](testing.md) to understand the test suite.
