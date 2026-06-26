@@ -26,13 +26,20 @@ class VectorDB:
         self.namespace = namespace
         self.db_path = os.path.join(VECTOR_DIR, f"{namespace}.json")
         self.client = None # Lazily instantiated
+        self.centroids = None
         self.records: List[Dict[str, Any]] = self._load()
 
     def _load(self) -> List[Dict[str, Any]]:
         if os.path.exists(self.db_path):
             try:
                 with open(self.db_path, "r", encoding="utf-8") as f:
-                    return json.load(f)
+                    data = json.load(f)
+                    if isinstance(data, dict) and "records" in data:
+                        self.centroids = data.get("centroids")
+                        return data["records"]
+                    else:
+                        self.centroids = None
+                        return data
             except Exception as e:
                 logging.error(f"Failed to load vector DB {self.db_path}: {e}")
         return []
@@ -40,9 +47,69 @@ class VectorDB:
     def _save(self) -> None:
         try:
             with open(self.db_path, "w", encoding="utf-8") as f:
-                json.dump(self.records, f, indent=2)
+                data = {
+                    "records": self.records,
+                    "centroids": self.centroids
+                }
+                json.dump(data, f, indent=2)
         except Exception as e:
             logging.error(f"Failed to save vector DB {self.db_path}: {e}")
+
+    def train_ivf(self, k: int = None) -> None:
+        """Train IVF centroids using K-Means on the stored records' vectors."""
+        if not HAS_NUMPY:
+            return
+        if len(self.records) <= 10:
+            self.centroids = None
+            self._save()
+            return
+        
+        # Extract vectors
+        vectors = np.array([r["vector"] for r in self.records], dtype=float) # Shape (N, D)
+        N, D = vectors.shape
+        
+        if k is None:
+            k = int(np.sqrt(N))
+        if k < 2:
+            k = 2
+        if k > N:
+            k = N
+            
+        # Standard K-Means implementation
+        # Initialize centroids randomly from existing vectors to avoid empty clusters
+        rng = np.random.default_rng(42)  # Seed for reproducibility in tests
+        indices = rng.choice(N, size=k, replace=False)
+        centroids = vectors[indices].copy()
+        
+        for _ in range(100):
+            # Compute cosine similarity for assignment
+            vec_norms = np.linalg.norm(vectors, axis=1, keepdims=True)
+            vec_norms[vec_norms == 0] = 1e-9
+            norm_vectors = vectors / vec_norms
+            
+            cent_norms = np.linalg.norm(centroids, axis=1, keepdims=True)
+            cent_norms[cent_norms == 0] = 1e-9
+            norm_centroids = centroids / cent_norms
+            
+            similarities = np.dot(norm_vectors, norm_centroids.T)
+            assignments = np.argmax(similarities, axis=1)
+            
+            new_centroids = np.zeros_like(centroids)
+            for i in range(k):
+                mask = (assignments == i)
+                if np.any(mask):
+                    new_centroids[i] = np.mean(vectors[mask], axis=0)
+                else:
+                    rand_idx = rng.choice(N)
+                    new_centroids[i] = vectors[rand_idx]
+            
+            if np.allclose(centroids, new_centroids, atol=1e-5):
+                centroids = new_centroids
+                break
+            centroids = new_centroids
+            
+        self.centroids = centroids.tolist()
+        self._save()
 
     def get_embedding(self, text: str) -> List[float]:
         """Fetch embedding from configured provider or fall back to local semantic mock."""
@@ -136,15 +203,48 @@ class VectorDB:
             return f"Error storing vector: {e}"
 
     def search(self, query: str, top_k: int = 5) -> str:
-        """Search using cosine similarity."""
+        """Search using cosine similarity with IVF partitioning if available."""
         if not self.records:
             return f"No records found in namespace '{self.namespace}'."
             
         try:
             query_vec = np.array(self.get_embedding(query))
             
+            # IVF routing if centroids are present and database has > 10 records
+            records_to_search = self.records
+            if self.centroids and len(self.records) > 10:
+                centroids_arr = np.array(self.centroids, dtype=float)
+                # Compute similarities of query vector to centroids
+                query_norm = np.linalg.norm(query_vec)
+                query_norm = query_norm if query_norm > 0 else 1.0
+                norm_query_vec = query_vec / query_norm
+                
+                cent_norms = np.linalg.norm(centroids_arr, axis=1)
+                cent_norms[cent_norms == 0] = 1.0
+                norm_centroids = centroids_arr / cent_norms[:, np.newaxis]
+                
+                centroid_sims = np.dot(norm_centroids, norm_query_vec)
+                best_centroid_idx = int(np.argmax(centroid_sims))
+                
+                # Assign all records to their nearest centroid
+                records_to_search = []
+                rec_vectors = np.array([r["vector"] for r in self.records], dtype=float)
+                rec_norms = np.linalg.norm(rec_vectors, axis=1)
+                rec_norms[rec_norms == 0] = 1.0
+                norm_rec_vectors = rec_vectors / rec_norms[:, np.newaxis]
+                
+                rec_to_cent_sims = np.dot(norm_rec_vectors, norm_centroids.T)
+                rec_assignments = np.argmax(rec_to_cent_sims, axis=1)
+                
+                for idx, record in enumerate(self.records):
+                    if rec_assignments[idx] == best_centroid_idx:
+                        records_to_search.append(record)
+                
+                if not records_to_search:
+                    records_to_search = self.records
+            
             results = []
-            for record in self.records:
+            for record in records_to_search:
                 doc_vec = np.array(record["vector"])
                 
                 # Cosine similarity
