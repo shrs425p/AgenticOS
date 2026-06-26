@@ -9,11 +9,8 @@ from __future__ import annotations
 import platform
 
 from tools.terminal.clipboard import ClipboardMixin
-from tools.terminal.dev import DevToolsMixin
-from tools.terminal.env import EnvMixin
 from tools.terminal.keyboard import KeyboardMixin
 from tools.terminal.media import MediaMixin
-from tools.terminal.network import NetworkMixin
 from tools.terminal.openers import OpenersMixin
 from tools.terminal.paths import PathsMixin
 from tools.terminal.processes import ProcessesMixin
@@ -28,14 +25,11 @@ class TerminalExecutor(
     SafetyMixin,
     RunnerMixin,
     ClipboardMixin,
-    EnvMixin,
     PathsMixin,
     ProcessesMixin,
     OpenersMixin,
     SystemMixin,
     SystemAdminMixin,
-    NetworkMixin,
-    DevToolsMixin,
     WindowsWindowsMixin,
     MediaMixin,
     KeyboardMixin,

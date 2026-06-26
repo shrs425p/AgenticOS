@@ -316,7 +316,8 @@ def test_agent_reload_everything_real(mock_init_mm, mock_ctx, mock_tools, mock_a
 @patch("core.runtime.ToolRegistry")
 @patch("core.runtime.ContextEngine")
 @patch("core.runtime.initialize_memory_manager")
-def test_preferences_autoload(mock_init_mm, mock_ctx, mock_tools, mock_audit, mock_memory, mock_ollama, mock_config):
+@patch("platform.system", return_value="Win10")
+def test_preferences_autoload(mock_platform_sys, mock_init_mm, mock_ctx, mock_tools, mock_audit, mock_memory, mock_ollama, mock_config):
     mock_memory.return_value.session_id = "test_session_prefs"
     mock_ollama.return_value.provider = "ollama"
     mock_ollama.return_value.model = "llama2"
@@ -325,8 +326,6 @@ def test_preferences_autoload(mock_init_mm, mock_ctx, mock_tools, mock_audit, mo
     agent.memory.list_preferences = MagicMock(return_value={"pref1": "val1", "pref2": "val2"})
     agent.memory.get_messages = MagicMock(return_value=[])
     
-    # Mock system info
-    agent.tools.term.system_info = MagicMock(return_value="Win10")
     agent.client.chat = MagicMock(return_value="FINAL ANSWER: Done")
     
     agent.run("hi")
@@ -344,7 +343,8 @@ def test_preferences_autoload(mock_init_mm, mock_ctx, mock_tools, mock_audit, mo
 @patch("core.runtime.ToolRegistry")
 @patch("core.runtime.ContextEngine")
 @patch("core.runtime.initialize_memory_manager")
-def test_failed_parse_guardrail(mock_init_mm, mock_ctx, mock_tools, mock_audit, mock_memory, mock_ollama, mock_config):
+@patch("platform.system", return_value="Win10")
+def test_failed_parse_guardrail(mock_platform_sys, mock_init_mm, mock_ctx, mock_tools, mock_audit, mock_memory, mock_ollama, mock_config):
     mock_memory.return_value.session_id = "test_session_failed_parse"
     mock_ollama.return_value.provider = "ollama"
     mock_ollama.return_value.model = "llama2"
@@ -352,8 +352,6 @@ def test_failed_parse_guardrail(mock_init_mm, mock_ctx, mock_tools, mock_audit, 
     agent.memory.turn_count = 0
     agent.memory.list_preferences = MagicMock(return_value={})
     agent.memory.get_messages = MagicMock(return_value=[])
-    
-    agent.tools.term.system_info = MagicMock(return_value="Win10")
     
     # First response attempts malformed ACTION JSON, second response completes with FINAL ANSWER
     agent.client.chat = MagicMock(side_effect=[

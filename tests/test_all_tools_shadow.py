@@ -63,7 +63,6 @@ def run_shadow_tests():
         import tools.desktop_notifications as notif_mod
         notif_patches = [
             patch.object(notif_mod.NotificationCenter, "speak", lambda *a, **k: "Simulated speech synthesis"),
-            patch.object(notif_mod.NotificationCenter, "alert", lambda *a, **k: "Simulated alert dialog"),
             patch.object(notif_mod.NotificationCenter, "show_popup", lambda *a, **k: "Simulated popup window")
         ]
     except Exception:

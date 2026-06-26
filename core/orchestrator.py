@@ -509,9 +509,13 @@ class Agent:
         original_user_input = user_input
         if self.memory.turn_count == 0:
             try:
-                sys_info = self.tools.term.system_info()
+                sys_info = (
+                    f"os={platform.system()} {platform.release()} "
+                    f"arch={platform.machine()} python={platform.python_version()} "
+                    f"cwd={os.getcwd()} pid={os.getpid()}"
+                )
                 user_input = f"[System Context: {sys_info.replace(chr(10), ' ')}]\n\n{user_input}"
-            except RuntimeError as e:
+            except Exception as e:
                 print_warning(f"Warning: Failed to gather system info: {e}")
 
             # Auto-load preferences into context

@@ -97,12 +97,7 @@ class ToolRegistry:
             self._register_subsystem(obj, category)
         self._register_subsystem(self.sys_mgr, "System")
 
-        # Dynamically register active platform tools
-        try:
-            import tools.platform as platform_tools
-            self._register_subsystem(platform_tools, "Platform")
-        except Exception:
-            pass
+
 
         # 2. Dynamic registration for URL presets
         if self.tools_cfg.get("url_presets", True):
@@ -137,43 +132,7 @@ class ToolRegistry:
                 category = getattr(attr, "_tool_category", default_category)
                 self._reg(name, attr, desc, category=category)
 
-    @tool(name="pref_set", category="Core")
-    def _pref_set(self, key: str, value: str) -> str:
-        if self._memory is not None and hasattr(self._memory, "set_preference"):
-            self._memory.set_preference(key, value)
-            return "OK"
-        return (
-            "Error: preferences storage not available (enable memory.backend=sqlite)."
-        )
 
-    @tool(name="pref_list", category="Core")
-    def _pref_list(self) -> str:
-        if self._memory is not None and hasattr(self._memory, "get_preferences"):
-            prefs = self._memory.get_preferences()
-            if not prefs:
-                return "(no preferences)"
-            return "\n".join(f"{k}={v}" for k, v in prefs.items())
-        return (
-            "Error: preferences storage not available (enable memory.backend=sqlite)."
-        )
-
-    @tool(name="register_commitment", desc="Track a future commitment or follow-up. Args: text, due_date (optional)", category="Core")
-    def register_commitment(self, text: str, due_date: Optional[str] = None) -> str:
-        """Register a commitment in the memory manager."""
-        from core.memory_manager import get_memory_manager
-        mm = get_memory_manager()
-        if mm:
-            return mm.register_commitment(text, due_date)
-        return "Error: Memory manager not available."
-
-    @tool(name="complete_commitment", desc="Mark a commitment as finished. Args: commitment_id", category="Core")
-    def complete_commitment(self, commitment_id: str) -> str:
-        """Mark a commitment as completed."""
-        from core.memory_manager import get_memory_manager
-        mm = get_memory_manager()
-        if mm:
-            return mm.complete_commitment(commitment_id)
-        return "Error: Memory manager not available."
 
     def _load_plugins(self):
         """Scan tools/plugins/ (and subdirectories) for any .py files and register functions with @tool."""
@@ -280,42 +239,7 @@ class ToolRegistry:
     def _timestamp(self) -> str:
         return str(int(time.time()))
 
-    @tool(name="note_add", category="Core")
-    def _note_add(self, text: str) -> str:
-        self._notepad.append(f"[{self._now()}] {text}")
-        return f"Note saved. Total notes: {len(self._notepad)}"
 
-    @tool(name="note_list", category="Core")
-    def _note_list(self) -> str:
-        if not self._notepad:
-            return "Notepad is empty."
-        return "\n".join(f"{i + 1}. {note}" for i, note in enumerate(self._notepad))
-
-    @tool(name="note_clear", category="Core")
-    def _note_clear(self) -> str:
-        self._notepad.clear()
-        return "Notepad cleared."
-
-    @tool(name="canvas_set", category="Core")
-    def _canvas_set(self, content: str) -> str:
-        self._canvas = str(content)
-        return "Canvas updated."
-
-    @tool(name="canvas_append", category="Core")
-    def _canvas_append(self, content: str) -> str:
-        self._canvas += f"\n{content}"
-        return "Canvas appended."
-
-    @tool(name="canvas_view", category="Core")
-    def _canvas_view(self) -> str:
-        if not self._canvas:
-            return "Canvas is empty."
-        return self._canvas
-
-    @tool(name="canvas_clear", category="Core")
-    def _canvas_clear(self) -> str:
-        self._canvas = ""
-        return "Canvas cleared."
 
     @tool(name="tools_count", category="Core")
     def tools_count(self) -> str:
@@ -428,11 +352,8 @@ class ToolRegistry:
         # ── Security Guardrails & Shadow Mode ─────────────────────────────────
         policy = self.cfg.get("policy", {})
         write_tools = set(policy.get("write_tools", [
-            "write_file", "append_file", "delete_file", "create_dir", "delete_dir",
-            "copy_file", "move_file", "edit_file", "edit_line", "insert_line",
-            "replace_in_dir", "write_json", "write_csv", "touch", "run_command",
-            "run_powershell", "run_script", "run_python", "pip_install", "npm_install",
-            "git", "kill_process", "kill_process_by_name", "start_background",
+            "replace_in_dir", "write_json", "write_csv", "run_command",
+            "run_powershell", "run_script", "run_python", "start_background",
             "hotkey", "press_key", "type_text", "mouse_click", "mouse_move"
         ]))
 
@@ -446,9 +367,7 @@ class ToolRegistry:
             "path", "src", "dst", "dest_path", "filename", "output_path", "directory"
         ]))
         read_only_tools = set(policy.get("read_only_tools", [
-            "read_file", "list_dir", "file_info", "grep_file", "grep_dir",
-            "read_json", "read_csv", "tree", "count_lines", "word_count",
-            "file_exists", "file_hash"
+            "file_info", "read_json", "read_csv", "file_exists", "file_hash"
         ]))
 
         if isinstance(args, dict):
@@ -562,10 +481,10 @@ class ToolRegistry:
                 if module_name:
                     logging.info(f"Self-healing: Missing module '{module_name}' detected. Attempting to install...")
                     try:
-                        self.term.pip_install(module_name)
-                    except Exception:
                         import subprocess
                         subprocess.run([sys.executable, "-m", "pip", "install", module_name], capture_output=True)
+                    except Exception:
+                        pass
 
                     importlib.invalidate_caches()
                     mod_name = fn.__module__
@@ -580,7 +499,7 @@ class ToolRegistry:
                     return _invoke(new_fn)
                 raise
             except FileNotFoundError as exc:
-                if name in write_tools and name not in {"write_file", "write_json", "write_csv", "append_file"}:
+                if name in write_tools and name not in {"write_json", "write_csv"}:
                     raise
 
                 # Exclude purely read operations from creating parent directories

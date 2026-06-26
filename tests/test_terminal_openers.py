@@ -66,42 +66,6 @@ def test_launch_application(mock_which, mock_popen):
              assert "Started" in res or "Start attempted" in res
              mock_popen.assert_called()
 
-def test_open_web_searches():
-    tool = MockTool(system="Windows")
-    
-    with patch("webbrowser.open") as mock_open:
-        # Spotify
-        assert tool.open_spotify_search("hello") == "Opened."
-        mock_open.assert_called()
-        
-        # WhatsApp Web & chat
-        assert "Error:" in tool.open_whatsapp_chat("")
-        assert tool.open_whatsapp_web() == "Opened."
-        assert tool.open_whatsapp_chat("15551234567", "hi") == "Opened."
-        
-        # Socials
-        assert tool.open_telegram("username") == "Opened."
-        assert "Error:" in tool.open_instagram_profile("")
-        assert tool.open_instagram_profile("user") == "Opened."
-        assert "Error:" in tool.open_x_profile("")
-        assert tool.open_x_profile("user") == "Opened."
-        assert "Error:" in tool.open_facebook_profile("")
-        assert tool.open_facebook_profile("user") == "Opened."
-        assert tool.open_facebook_profile("https://facebook.com/user") == "Opened."
-        assert tool.open_discord() == "Opened."
-        
-        # Search engines
-        assert "Error:" in tool.open_google_search("")
-        assert tool.open_google_search("query") == "Opened."
-        assert "Error:" in tool.open_google_maps("")
-        assert tool.open_google_maps("query") == "Opened."
-        assert "Error:" in tool.open_youtube_search("")
-        assert tool.open_youtube_search("query") == "Opened."
-        assert "Error:" in tool.open_github_search("")
-        assert tool.open_github_search("query") == "Opened."
-        assert "Error:" in tool.open_stackoverflow_search("")
-        assert tool.open_stackoverflow_search("query") == "Opened."
-
 def test_open_file(tmp_path):
     tool = MockTool(system="Windows")
     

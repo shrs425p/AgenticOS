@@ -1,7 +1,6 @@
 """
 AgenticOs — filesystem tools
-Complete file-system operations: create, read, write, edit, delete, copy, move, search, grep, archive,
-JSON/CSV helpers, diff, and stats.
+File-system operations: info, archive, structured data, bulk ops, and CWD.
 """
 
 from __future__ import annotations
@@ -11,26 +10,14 @@ from pathlib import Path
 from tools.filesystem.archive import ArchiveMixin
 from tools.filesystem.bulk import BulkMixin
 from tools.filesystem.cwd import CwdMixin
-from tools.filesystem.diff_stats import DiffStatsMixin
-from tools.filesystem.edit import EditMixin
 from tools.filesystem.info import InfoMixin
-from tools.filesystem.listing import ListingMixin
-from tools.filesystem.mutations import MutationsMixin
-from tools.filesystem.read_write import ReadWriteMixin
-from tools.filesystem.search import SearchMixin
 from tools.filesystem.structured import StructuredMixin
 
 
 class FileManager(
-    ReadWriteMixin,
-    EditMixin,
-    MutationsMixin,
-    ListingMixin,
     InfoMixin,
-    SearchMixin,
     ArchiveMixin,
     StructuredMixin,
-    DiffStatsMixin,
     BulkMixin,
     CwdMixin,
 ):

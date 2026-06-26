@@ -212,12 +212,4 @@ $synth.Speak("{safe_ps}");
                 print(f"[TTS] {text}")
                 return "TTS printed to console (espeak not available)."
 
-    # ── Combined alert ────────────────────────────────────────────────────────
-    @tool(name="alert", desc="Notify and speak. Args: message", category="General")
-    def alert(self, message: str) -> str:
-        """Send a desktop notification AND speak the message."""
-        n_result = self.send_notification("AgenticOs Alert", message)
-        s_result = self.speak(message)
-        return (
-            f"Alert sent: {message}\n  Notification: {n_result}\n  Speech: {s_result}"
-        )
+

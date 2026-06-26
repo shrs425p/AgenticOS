@@ -1,10 +1,9 @@
 from pathlib import Path
 
 from tools.filesystem.info import InfoMixin
-from tools.filesystem.listing import ListingMixin
 from tools.filesystem.cwd import CwdMixin
 
-class MockInfoTools(InfoMixin, ListingMixin, CwdMixin):
+class MockInfoTools(InfoMixin, CwdMixin):
     def __init__(self, workspace: Path):
         self.workspace = workspace
         self._cwd = str(workspace)
@@ -75,18 +74,7 @@ def test_file_info(tmp_path):
     assert "10" in res # "hello info" is 10 bytes
     assert "is_dir: False" in res
 
-def test_list_directory(tmp_path):
-    d = tmp_path / "mydir"
-    d.mkdir()
-    (d / "file1.txt").write_text("1")
-    (d / "file2.txt").write_text("2")
-    
-    tool = MockInfoTools(tmp_path)
-    res = tool.list_dir("mydir")
-    
-    assert "file1.txt" in res
-    assert "file2.txt" in res
-    assert "FILE" in res
+
 
 def test_file_exists(tmp_path):
     tool = MockInfoTools(tmp_path)

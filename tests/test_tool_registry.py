@@ -56,42 +56,7 @@ def test_tool_descriptions(mock_config):
     assert "[DUMMY]:" in desc
     assert "dummy_tool: A dummy tool for testing" in desc
 
-def test_preferences(mock_config):
-    memory = MagicMock()
-    with patch("core.tool_registry.load_url_presets", return_value=[]):
-        registry = ToolRegistry(mock_config, memory_backend=memory)
-        
-    assert registry._pref_set("k", "v") == "OK"
-    memory.set_preference.assert_called_with("k", "v")
-    
-    memory.get_preferences.return_value = {"k": "v"}
-    assert "k=v" in registry._pref_list()
-    
-    # Missing memory
-    registry._memory = None
-    assert "Error:" in registry._pref_set("k", "v")
-    assert "Error:" in registry._pref_list()
 
-def test_commitments(mock_config):
-    with patch("core.tool_registry.load_url_presets", return_value=[]):
-        registry = ToolRegistry(mock_config)
-        
-    with patch("core.memory_manager.get_memory_manager") as mock_gmm:
-        mm = MagicMock()
-        mock_gmm.return_value = mm
-        
-        mm.register_commitment.return_value = "Commitment registered"
-        assert registry.register_commitment("task", "today") == "Commitment registered"
-        mm.register_commitment.assert_called_with("task", "today")
-        
-        mm.complete_commitment.return_value = "Commitment completed"
-        assert registry.complete_commitment("id1") == "Commitment completed"
-        mm.complete_commitment.assert_called_with("id1")
-        
-    # None memory manager
-    with patch("core.memory_manager.get_memory_manager", return_value=None):
-        assert "Error:" in registry.register_commitment("task")
-        assert "Error:" in registry.complete_commitment("id1")
 
 def test_calculate(mock_config):
     with patch("core.tool_registry.load_url_presets", return_value=[]):
@@ -109,27 +74,7 @@ def test_calculate(mock_config):
     assert "Error:" in registry._calculate("import os")
     assert "Error:" in registry._calculate("open('file.txt')")
 
-def test_notepad(mock_config):
-    with patch("core.tool_registry.load_url_presets", return_value=[]):
-        registry = ToolRegistry(mock_config)
-        
-    assert "Notepad is empty" in registry._note_list()
-    assert "saved" in registry._note_add("hello world")
-    assert "hello world" in registry._note_list()
-    assert "cleared" in registry._note_clear()
-    assert "Notepad is empty" in registry._note_list()
 
-def test_canvas(mock_config):
-    with patch("core.tool_registry.load_url_presets", return_value=[]):
-        registry = ToolRegistry(mock_config)
-        
-    assert "Canvas is empty" in registry._canvas_view()
-    assert "updated" in registry._canvas_set("hello")
-    assert registry._canvas_view() == "hello"
-    assert "appended" in registry._canvas_append("world")
-    assert registry._canvas_view() == "hello\nworld"
-    assert "cleared" in registry._canvas_clear()
-    assert "Canvas is empty" in registry._canvas_view()
 
 def test_tools_list_count(mock_config):
     with patch("core.tool_registry.load_url_presets", return_value=[]):
