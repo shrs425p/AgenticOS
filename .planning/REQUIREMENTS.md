@@ -58,10 +58,10 @@ Each of these requirements is active for the v1.0 milestone and maps to roadmap 
 
 ### Testing & Resiliency
 
-- [ ] **TEST-01**: The system must implement multi-step end-to-end integration workflows (e.g. scrape → summarize → save) in its test suite.
-- [ ] **TEST-02**: The system must run mutation testing to verify the quality and assertion coverage of its unit test suite.
-- [ ] **TEST-03**: The system must run performance regression benchmarks to prevent execution speed slowdowns.
-- [ ] **TEST-04**: The system must include a Chaos Monkey test harness to verify error recovery when simulating LLM timeouts, network failures, or SQLite DB corruption.
+- [x] **TEST-01**: The system must implement multi-step end-to-end integration workflows (e.g. scrape → summarize → save) in its test suite.
+- [x] **TEST-02**: The system must run mutation testing to verify the quality and assertion coverage of its unit test suite.
+- [x] **TEST-03**: The system must run performance regression benchmarks to prevent execution speed slowdowns.
+- [x] **TEST-04**: The system must include a Chaos Monkey test harness to verify error recovery when simulating LLM timeouts, network failures, or SQLite DB corruption.
 - [x] **TEST-05**: The system must include a security regression suite verifying that known command obfuscation and path traversal bypasses are successfully blocked.
 
 ### Memory & Context
@@ -138,10 +138,10 @@ This table maps v1 requirements to roadmap execution phases. Populated during ro
 | EXT-03 | Phase 4 | Complete |
 | EXT-04 | Phase 4 | Complete |
 | EXT-05 | Phase 4 | Complete |
-| TEST-01 | Phase 4 | Pending |
-| TEST-02 | Phase 4 | Pending |
-| TEST-03 | Phase 4 | Pending |
-| TEST-04 | Phase 4 | Pending |
+| TEST-01 | Phase 4 | Complete |
+| TEST-02 | Phase 4 | Complete |
+| TEST-03 | Phase 4 | Complete |
+| TEST-04 | Phase 4 | Complete |
 
 **Coverage:**
 
@@ -151,4 +151,4 @@ This table maps v1 requirements to roadmap execution phases. Populated during ro
 
 ---
 *Requirements defined: 2026-06-26*
-*Last updated: 2026-06-26 after Phase 4 Plan 3*
+*Last updated: 2026-06-26 after Phase 4 Plan 4*
