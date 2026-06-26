@@ -934,3 +934,174 @@ class TieredClient:
     def get_failure_stats(self) -> dict:
         """Return per-provider failure counts."""
         return dict(self._failure_count)
+
+
+class FallbackRouter:
+    """Cost-aware fallback router for LLM clients.
+
+    Wraps a primary client and a list of fallback clients. On errors:
+    - ContextWindowExceededError -> route to a client with a larger context window
+    - RateLimitError -> throttle and retry with next client
+    - AuthError -> skip to next client immediately
+
+    Usage:
+        router = FallbackRouter(primary_client, fallback_clients, cfg)
+        response = router.chat(messages, system=system_prompt)
+    """
+
+    def __init__(self, primary, fallbacks: list, cfg: dict):
+        self.primary = primary
+        self.fallbacks = fallbacks  # ordered list of fallback clients
+        self.cfg = cfg
+        self._logger = get_logger(__name__)
+
+    def chat(self, messages: list, system: str = "") -> str:
+        """Chat with automatic fallback on failure."""
+        clients = [self.primary] + self.fallbacks
+        last_error = None
+        for client in clients:
+            try:
+                return client.chat(messages, system=system)
+            except Exception as e:
+                err_str = str(e).lower()
+                # Classify and handle error — rate-limit checked first because
+                # "rate limit 429 exceeded" contains words that also match
+                # _is_context_exceeded ("limit", "exceed").
+                if self._is_rate_limit(err_str):
+                    throttle = self.cfg.get("performance", {}).get("fallback_throttle_seconds", 5)
+                    self._logger.info(
+                        f"[FallbackRouter] Rate limit on {getattr(client, 'provider', '?')}: {e}. Throttling {throttle}s."
+                    )
+                    import time as _time
+                    _time.sleep(throttle)
+                    last_error = e
+                    continue
+                elif self._is_auth_error(err_str):
+                    self._logger.info(
+                        f"[FallbackRouter] Auth error on {getattr(client, 'provider', '?')}: {e}. Skipping."
+                    )
+                    last_error = e
+                    continue
+                elif self._is_context_exceeded(err_str):
+                    self._logger.info(
+                        f"[FallbackRouter] Context exceeded on {getattr(client, 'provider', '?')}: {e}. Trying next client."
+                    )
+                    last_error = e
+                    continue
+                else:
+                    raise  # Re-raise unexpected errors
+        raise RuntimeError(f"All clients exhausted. Last error: {last_error}")
+
+    @staticmethod
+    def _is_context_exceeded(err: str) -> bool:
+        return any(k in err for k in ["context", "token", "length", "maximum", "exceed", "too long"])
+
+    @staticmethod
+    def _is_rate_limit(err: str) -> bool:
+        return any(k in err for k in ["rate", "limit", "429", "quota", "throttle"])
+
+    @staticmethod
+    def _is_auth_error(err: str) -> bool:
+        return any(k in err for k in ["401", "403", "auth", "unauthorized", "forbidden", "key"])
+
+    @property
+    def model(self) -> str:
+        return getattr(self.primary, "model", "unknown")
+
+    @property
+    def provider(self) -> str:
+        return getattr(self.primary, "provider", "unknown")
+
+
+class TokenBudgetChecker:
+    """Pre-flight token budget estimation and cost warning.
+
+    Estimates token usage before sending to LLM and warns if
+    budget thresholds are exceeded.
+    """
+
+    def __init__(self, cfg: dict):
+        self.cfg = cfg
+        self.warn_threshold = cfg.get("performance", {}).get("token_warn_threshold", 0.85)  # 85% of limit
+        self.max_tokens_override = cfg.get("performance", {}).get("max_context_tokens", None)
+
+    def estimate_tokens(self, text: str) -> int:
+        """Estimate token count using 4-chars-per-token heuristic."""
+        return max(1, len(text or "") // 4)
+
+    def estimate_messages_tokens(self, messages: list, system: str = "") -> int:
+        """Estimate total token count for a full API call."""
+        total = self.estimate_tokens(system)
+        for msg in messages:
+            total += self.estimate_tokens(msg.get("content", ""))
+        return total
+
+    def check(self, messages: list, system: str = "", model_max_tokens: int = None) -> dict:
+        """Run a pre-flight check. Returns a result dict.
+
+        Returns:
+            {
+                'estimated_tokens': int,
+                'limit': int,
+                'usage_ratio': float,
+                'warning': str or None,  # warning message if near/over limit
+                'over_limit': bool,
+            }
+        """
+        estimated = self.estimate_messages_tokens(messages, system)
+        limit = model_max_tokens or self.max_tokens_override or 32000
+        ratio = estimated / limit if limit > 0 else 0.0
+
+        warning = None
+        over = ratio >= 1.0
+        if over:
+            warning = f"Token budget EXCEEDED: ~{estimated} estimated tokens vs {limit} limit."
+        elif ratio >= self.warn_threshold:
+            warning = f"Token budget WARNING: ~{estimated} estimated tokens ({ratio:.0%} of {limit} limit)."
+
+        return {
+            "estimated_tokens": estimated,
+            "limit": limit,
+            "usage_ratio": round(ratio, 4),
+            "warning": warning,
+            "over_limit": over,
+        }
+
+
+def build_fallback_router(cfg: dict, primary_client):
+    """Factory: build a FallbackRouter wrapping primary_client + configured fallbacks.
+
+    Reads cfg['performance']['fallback_clients'] (list of provider names).
+    For each provider name, tries to build a client via the existing client map.
+    Returns a FallbackRouter if any fallbacks exist, otherwise returns primary_client unchanged.
+    """
+    fallback_names = cfg.get("performance", {}).get("fallback_clients", [])
+    if not fallback_names:
+        return primary_client
+
+    _provider_map = {
+        "ollama": OllamaClient,
+        "nvidia": NvidiaClient,
+        "gemini": GeminiClient,
+        "groq": GroqClient,
+        "openai": OpenAIClient,
+        "openrouter": OpenRouterClient,
+        "github": GithubClient,
+        "deepseek": DeepseekClient,
+    }
+
+    fallbacks = []
+    for name in fallback_names:
+        client_cls = _provider_map.get(name.lower())
+        if client_cls is None:
+            logger.warning(f"[build_fallback_router] Unknown provider '{name}', skipping.")
+            continue
+        try:
+            fallbacks.append(client_cls(cfg))
+        except Exception as exc:
+            logger.warning(f"[build_fallback_router] Could not build client for '{name}': {exc}")
+
+    if not fallbacks:
+        return primary_client
+
+    return FallbackRouter(primary_client, fallbacks, cfg)

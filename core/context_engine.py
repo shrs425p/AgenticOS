@@ -186,22 +186,76 @@ class ContextEngine:
             return ""
         return self.memory_manager.get_active_commitments()
 
+    def collapse_large_messages(self, messages: List[Dict[str, str]], threshold: int = 4000) -> List[Dict[str, str]]:
+        """Scan messages and collapse those exceeding threshold by truncating the middle."""
+        collapsed_messages = []
+        for msg in messages:
+            role = msg.get("role")
+            content = msg.get("content", "")
+            if role != "system" and len(content) > threshold:
+                keep_size = threshold // 2
+                first_part = content[:keep_size]
+                last_part = content[-keep_size:]
+                collapsed_count = len(content) - (keep_size * 2)
+                new_content = f"{first_part}\n\n[... COLLAPSED {collapsed_count} CHARACTERS ...]\n\n{last_part}"
+                collapsed_messages.append({"role": role, "content": new_content})
+            else:
+                collapsed_messages.append(msg)
+        return collapsed_messages
+
+    def estimate_tokens(self, text: str) -> int:
+        """Estimate token count based on a 4 characters per token heuristic."""
+        return len(text or "") // 4
+
+    def get_max_context_tokens(self) -> int:
+        """Retrieve maximum context window limit for the active model."""
+        client = getattr(self.agent, "client", None)
+        if client:
+            ctx = getattr(client, "ctx", None)
+            if ctx is not None and isinstance(ctx, (str, int, float)) and not isinstance(ctx, bool):
+                try:
+                    return int(ctx)
+                except (ValueError, TypeError):
+                    pass
+        
+        ollama_ctx = self.cfg.get("ollama", {}).get("num_ctx")
+        if ollama_ctx:
+            try:
+                return int(ollama_ctx)
+            except (ValueError, TypeError):
+                pass
+                
+        return int(self.cfg.get("performance", {}).get("max_context_tokens", 32000))
+
+    def calculate_total_tokens(self, messages: List[Dict[str, str]], system_prompt: str = "") -> int:
+        """Calculate total estimated tokens of the conversation context."""
+        total = self.estimate_tokens(system_prompt)
+        for msg in messages:
+            total += self.estimate_tokens(msg.get("content", ""))
+        return total
+
     def compact_history(self, messages: List[Dict[str, str]], max_messages: int = 40) -> List[Dict[str, str]]:
         """Compress old messages into a high-density summary to preserve context.
         
-        When conversation history exceeds max_messages, the oldest chat messages 
-        (excluding system-level directives) are summarized into a single 
-        "compacted context" message. This preserves 100% of semantic meaning
-        while keeping system instructions intact and dramatically reducing token count.
-        
-        Args:
-            messages: The full message list.
-            max_messages: Threshold before compaction triggers.
-            
-        Returns:
-            The (possibly compacted) message list.
+        When conversation history exceeds max_messages or approaching token limit, 
+        the oldest chat messages are summarized.
         """
-        if len(messages) <= max_messages:
+        # 1. Collapse individual messages exceeding the character limit (PERF-01)
+        threshold = int(self.cfg.get("performance", {}).get("max_message_char_threshold", 4000))
+        messages = self.collapse_large_messages(messages, threshold=threshold)
+
+        # 2. Get context token limits
+        max_tokens = self.get_max_context_tokens()
+        trigger_tokens = int(max_tokens * 0.8)
+        
+        # Build system prompt context for token estimation
+        system_prompt = self.build_system_prompt()
+        total_tokens = self.calculate_total_tokens(messages, system_prompt)
+        
+        # Check if we should trigger compaction
+        should_compact = len(messages) > max_messages or total_tokens > trigger_tokens
+        
+        if not should_compact:
             return messages
 
         # Separate system instructions from interactive chat messages
@@ -209,11 +263,24 @@ class ContextEngine:
         chat_msgs = [m for m in messages if m.get("role") != "system"]
 
         # If we don't have enough chat messages to warrant compaction, just return original messages
-        if len(chat_msgs) <= 10:
+        if len(chat_msgs) <= 4:
             return messages
 
-        # Calculate how many recent chat messages to keep intact (at least 10 or half of max_messages)
-        keep_recent = max(10, min(20, (max_messages - len(system_msgs)) // 2))
+        # Determine how many recent chat messages to keep intact
+        if total_tokens > trigger_tokens:
+            budget = int(max_tokens * 0.4)
+            current_tokens = self.estimate_tokens(system_prompt)
+            keep_count = 0
+            for msg in reversed(chat_msgs):
+                msg_tokens = self.estimate_tokens(msg.get("content", ""))
+                if current_tokens + msg_tokens > budget:
+                    break
+                current_tokens += msg_tokens
+                keep_count += 1
+            keep_recent = max(2, keep_count)
+        else:
+            keep_recent = max(10, min(20, (max_messages - len(system_msgs)) // 2))
+
         if len(chat_msgs) <= keep_recent:
             return messages
 
@@ -235,13 +302,13 @@ class ContextEngine:
                     transcript_lines.append(f"{role}: {content}")
                 transcript = "\n".join(transcript_lines)
 
-                system_prompt = compact_cfg.get("system", (
+                system_prompt_comp = compact_cfg.get("system", (
                     "You are a context compaction unit. Summarize history. Be concise."
                 ))
 
                 summary = llm.chat(
                     messages=[{"role": "user", "content": transcript}],
-                    system=system_prompt,
+                    system=system_prompt_comp,
                 )
 
                 if summary and summary.strip():

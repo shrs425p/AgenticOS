@@ -197,3 +197,36 @@ def test_compact_history_preserves_system_messages():
     
     # Recent chat messages should follow
     assert compacted[2]["content"] == "msg 20"
+
+
+def test_collapse_large_messages():
+    ce = ContextEngine(MockAgent())
+    messages = [
+        {"role": "system", "content": "A" * 5000},  # system messages not collapsed
+        {"role": "user", "content": "B" * 5000},
+        {"role": "assistant", "content": "C" * 100}
+    ]
+    collapsed = ce.collapse_large_messages(messages, threshold=1000)
+    
+    assert len(collapsed[0]["content"]) == 5000
+    assert "COLLAPSED" in collapsed[1]["content"]
+    assert len(collapsed[1]["content"]) < 2000
+    assert len(collapsed[2]["content"]) == 100
+
+
+def test_compact_history_token_limit():
+    agent = MockAgent()
+    agent.cfg = {
+        "performance": {
+            "max_context_tokens": 100 # Low limit to trigger token-based compaction
+        }
+    }
+    agent.client.chat.return_value = "summarized context"
+    ce = ContextEngine(agent)
+    
+    # 5 messages, total chars around 600 -> estimated tokens around 150 > trigger 80
+    messages = [{"role": "user", "content": "A" * 120} for _ in range(5)]
+    compacted = ce.compact_history(messages, max_messages=20)
+    
+    # Should trigger compaction due to token limit
+    assert "[COMPACTED CONTEXT]" in compacted[0]["content"]
