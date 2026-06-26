@@ -1,114 +1,70 @@
-# AgenticOS: Testing and Quality Assurance Guide
+<!-- generated-by: gsd-doc-writer -->
+# Testing Guide
 
-AgenticOS uses a robust, high-coverage testing framework built on `pytest`. To maintain the stability and security of the system, all core logic and tool interactions must be validated through automated tests.
-
----
-
-## Testing Philosophy
-
-Our testing strategy follows the **"Isolated Simulation"** model:
-1.  **Safety**: Tests must never modify the real host system. Use temporary directories and mocks.
-2.  **Portability**: Tests must run on any OS (Windows/Linux) without external dependencies.
-3.  **Speed**: Unit tests should execute in milliseconds.
-4.  **Coverage**: Target coverage for `core/` and `tools/` is **60%+**.
+AgenticOS relies on automated unit, integration, performance, mutation, and chaos tests to ensure runtime stability, security boundary isolation, and framework resilience.
 
 ---
 
-## The `tests/` Directory Structure
+## Testing Framework & Setup
 
-| File | Scope | Key Features |
-| :--- | :--- | :--- |
-| `test_fs_*.py` | Filesystem Tools | Uses `tmp_path` to simulate disks. |
-| `test_web_tools.py` | Web & APIs | Mocks `requests` and `urllib`. |
-| `test_guardrails.py`| Security Logic | Validates `PathGuard` and secret redaction. |
-| `test_runtime.py`   | Core Engine | Tests the orchestration loop with a mock LLM. |
-| `test_plugins.py`   | Dynamic Loading | Verifies plugin registration and hot-reload. |
-| `test_diff_summarizer.py`| Plain Diff Summary | Offline mocks line addition/deletion delta checks. |
-| `test_url_safety_check.py`| WHOIS/SSL Security | Mock handshakes and WHOIS sockets offline. |
-| `test_os_sandbox_auditor.py`| Sandbox Runtimes | Mocks CLI subprocesses and platform system layers. |
-| `test_sys_package_installer.py`| Package Managers | Mock cross-platform installer execution sequences. |
-| `test_code_complexity.py`| Radon AST Complexity| Mock visitor node traversal and grading offline. |
-| `test_terminal_safety_structural.py` | Command Safety | Validates shlex tokenization, chaining, obfuscation, PowerShell abbreviation/base64 checks, and script line scanning. |
-| `test_terminal_safety_integration.py` | E2E Shell Safety | Runs live terminal/subprocess safety validation checks across shells. |
+- **Test Runner**: [pytest](https://docs.pytest.org/) version >= 9.0
+- **Plugins**: `anyio` (for async tests), `pytest-cov` (for test coverage tracking)
+- **Setup**: Test dependencies are installed automatically when running development setup commands:
+  ```bash
+  venv\Scripts\pip install -r requirements-dev.txt
+  ```
 
 ---
-
-## Running the Test Suite
-
-### Basic Execution
-```bash
-pytest
-```
-
-### Run a single test file
-```bash
-pytest tests/test_retry.py -q
-```
-
-Note: We added `tests/test_retry.py` to validate the centralized `retry_call()` helper behavior.
-
-### Coverage Reporting
-To generate a detailed line-by-line coverage report:
-```bash
-pytest --cov=core --cov=tools --cov-report=term-missing
-```
-
----
-
-## Mocking Strategies
-
-### 1. Filesystem Mocking (`tmp_path`)
-Always use the built-in `tmp_path` fixture to avoid touching the real disk.
-```python
-def test_write_file(tmp_path):
-    manager = FileManager(base_dir=str(tmp_path))
-    manager.write_file("test.txt", "Hello World")
-    assert (tmp_path / "test.txt").read_text() == "Hello World"
-```
-
-### 2. Network Mocking (`unittest.mock`)
-Never make real HTTP requests during tests.
-```python
-@patch("requests.get")
-def test_fetch_url(mock_get):
-    mock_get.return_value.text = "Mocked Response"
-    res = tool.fetch_url("https://example.com")
-    assert res == "Mocked Response"
-```
-
----
-
-## CI/CD Integration
-
-The test suite is automatically executed on every push to GitHub via `.github/workflows/ci.yml`.
-- **Enforcement**: Pull Requests will be blocked if any test fails or if coverage drops significantly.
-- **Environment**: CI runs on `windows-latest` to ensure compatibility with Windows-specific tools (using mocks).
-
----
-
-## Contributing New Tests
-
-When adding a new tool:
-1. Create a corresponding file in `tests/`.
-2. Mock any OS-specific calls (e.g., `subprocess.run`).
-3. Assert both the **Success Path** and the **Error Path** (e.g., what happens when a file is missing).
-
----
-
-*Last Updated: 2026-05-18*
-*Status: Engineering Standard (Verified Cross-Platform)*
-
-## Test Framework and Setup
-Please see [Testing Philosophy](#testing-philosophy) and [Running the Test Suite](#running-the-test-suite) above.
 
 ## Running Tests
-Please see [Running the Test Suite](#running-the-test-suite) above.
+
+Execute commands from the project root directory:
+
+### Run the entire test suite
+```bash
+venv\Scripts\pytest
+```
+
+### Run a specific test file
+```bash
+venv\Scripts\pytest tests/test_checkpoint_manager.py
+```
+
+### Run tests matching a specific pattern
+```bash
+venv\Scripts\pytest -k "chaos"
+```
+
+### Run tests with coverage reporting
+```bash
+venv\Scripts\pytest --cov=core --cov=tools --cov-report=term-missing
+```
+
+---
 
 ## Writing New Tests
-Please see [Contributing New Tests](#contributing-new-tests) above.
 
-## Coverage Requirements
-Please see [Testing Philosophy](#testing-philosophy) (Target coverage is 60%+) and [Coverage Reporting](#coverage-reporting) above.
+- **Naming Conventions**: All test files must be placed in the `tests/` folder and named with the prefix `test_` (e.g. `tests/test_new_tool.py`). Test functions within files must also start with `test_`.
+- **Mocking**: Use standard Python `unittest.mock` (or `pytest` mock fixtures) to stub network connections, external provider calls, and system resource values (like available disk space or RAM size).
+- **Security Regressions**: If fixing a command injection or path bypass vulnerability, add a regression test to `tests/test_security_regression.py` ensuring the payload is blocked.
+
+---
+
+## Coverage & Quality Requirements
+
+We enforce test coverage standards during pull request reviews:
+- **Core Orchestrator/Dispatcher/Safety**: > 85% coverage.
+- **Platform UI Backends**: Mocked paths for all supported operating systems (Windows, macOS, Linux).
+- **Mutation & Chaos Tests**: Validate that the test suite detects corrupted SQLite database files, API timeouts, or code mutations.
+
+---
 
 ## CI Integration
-Please see [CI/CD Integration](#cicd-integration) above.
+
+Tests run automatically on every push and Pull Request to the main branch via GitHub Actions.
+- **Workflow Location**: `.github/workflows/ci.yml`
+- **Steps Executed**:
+  1. Sets up Python environment matrix.
+  2. Installs requirements.
+  3. Validates formatting (`ruff check`).
+  4. Runs full pytest suite.

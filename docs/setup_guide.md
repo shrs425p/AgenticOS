@@ -1,224 +1,79 @@
-# AgenticOS: Comprehensive Setup Guide
+<!-- generated-by: gsd-doc-writer -->
+# Setup Guide
 
-Welcome to AgenticOS! This guide will walk you through the end-to-end setup process, from installing dependencies to running your first autonomous task.
-
----
-
-## Step 1: System Prerequisites
-
-Before you begin, ensure your machine meets the [System Requirements](system_requirements.md).
-
-1.  **Python 3.12+**: Download from [python.org](https://www.python.org/downloads/).
-2.  **Git**: For cloning the repository.
-3.  **Terminal**: Windows Terminal, PowerShell, or CMD (Windows); Bash, Zsh, or equivalent (macOS/Linux).
-4.  **Environment Sync**: Run the configuration script for your platform—`.\setup.ps1` on Windows or `./setup.sh` on macOS/Linux—once to sync the environment and add `bin/` to your system PATH. This permanently registers the `agent` command so you can launch AgenticOS from any terminal without specifying the full path.
-
+This guide walks you through setting up AgenticOS for the first time.
 
 ---
 
-## Step 2: Running the Automated Setup Script
+## Prerequisites
+Before installing AgenticOS, ensure your system meets the following requirements:
+- **Python**: version >= 3.10
+- **Git**: installed and added to your system PATH
+- **Operating System**: Windows 10/11, macOS, or modern Linux (Ubuntu/Debian recommended)
 
-For maximum stability and performance, we recommend cloning the project into a root-level or simple home directory path without spaces (e.g., `<REPO_ROOT>` on Windows, or `~/AgenticOs` on macOS/Linux). This ensures that path utilities, Fast-Path optimizations, and terminal commands execute with 100% reliability.
+---
 
-Once cloned and in the project directory, run the setup script. You can execute this natively via your code editor (e.g., VS Code) or the terminal:
+## Installation Steps
 
-#### Windows:
-1. Clone the repository:
-   ```powershell
-   git clone https://github.com/shrs425p/AgenticOS.git AgenticOS
-   ```
-2. Navigate into the cloned directory:
-   ```powershell
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/shrs425p/AgenticOS.git
    cd AgenticOS
    ```
 
-### Method A: Via VS Code Task (Recommended)
-1. Open the project folder in VS Code.
-2. Press `Ctrl+Shift+B` (or select **Terminal** -> **Run Build Task** from the Command Palette).
-3. The editor will automatically run the correct setup script for your platform, bypassing all Windows execution policy restrictions!
+2. **Run Installer Script**:
+   AgenticOS provides automated setup scripts that create a virtual environment, install package dependencies, and set up base directories.
+   - **On Windows (PowerShell):**
+     ```powershell
+     .\setup.ps1
+     ```
+   - **On macOS/Linux (Bash):**
+     ```bash
+     chmod +x setup.sh
+     ./setup.sh
+     ```
 
-### Method B: Via Terminal
-
-#### Windows (PowerShell or CMD):
-```powershell
-powershell -ExecutionPolicy Bypass -File .\setup.ps1
-```
-
-#### macOS / Linux Setup:
-1. Clone the repository:
+3. **Configure Environment Variables**:
+   Copy the example environment template and add your API keys:
    ```bash
-   git clone https://github.com/shrs425p/AgenticOS.git ~/AgenticOs
+   cp .env.example .env
    ```
-2. Navigate into the cloned directory:
+   Open the `.env` file in your editor and configure the desired LLM API keys (e.g. `NVIDIA_API_KEY`, `GEMINI_API_KEY`). If using Ollama, no API key is necessary.
+
+---
+
+## First Run
+
+1. **Run Health Check Diagnostics**:
+   Verify that Python, active configurations, API keys, and local tool imports are in a valid state:
    ```bash
-   cd ~/AgenticOs
+   venv\Scripts\python main.py --health
    ```
-3. Run the automated setup script:
+   *(On macOS/Linux, run `source venv/bin/activate` followed by `python main.py --health`)*
+
+2. **Launch the Orchestrator**:
    ```bash
-   ./setup.sh
+   venv\Scripts\python main.py
    ```
 
-### What the Setup Script Automates:
-* **Python Auto-Install Option**: If Python 3.12+ is missing or outdated, the script prompts you and handles downloading and installing it automatically via `winget` or direct installer (Windows), Homebrew (macOS), or `apt` (Linux).
-* **Hot-Reload Environment PATH**: Instantly refreshes PATH variables in the active PowerShell session, allowing the script to proceed seamlessly to `venv` and package setup without requiring a restart mid-run.
-* **Playwright Browsers**: Downloads and registers the Playwright Chromium browser binary automatically.
-* **Environment Credentials**: Creates your `.env` template from [.env.example](../.env.example) and prompts/opens it for keys configuration.
-* **System Diagnostics & Health Check**: Runs automated checks on network connectivity, `.env` file credentials (to flag empty or placeholder keys), and environment executables before completing the setup.
-* **PATH Registration**: Registers the global `agent` command to launch the system from any directory.
-
 ---
 
-## Step 3: Configure Credentials (.env)
+## Common Setup Issues
 
-The setup script automatically copied [.env.example](../.env.example) to `.env` and opened it in your text editor. Add your keys in the following format:
+### 1. Ollama Connection Error (`urllib.error.URLError`)
+- **Symptoms**: Health check reports `✗ Provider Ollama is Unreachable`.
+- **Solution**: Ensure the Ollama desktop application is active and listening. Verify by visiting `http://localhost:11434` in your browser. If Ollama is running on a different port, update the `ollama.base_url` key in `config.yaml`.
 
-```env
-NVIDIA_API_KEY=your_nvidia_nim_key
-GOOGLE_API_KEY=your_google_gemini_key
-GROQ_API_KEY=your_groq_key
-OPENAI_API_KEY=your_openai_key
-```
+### 2. Missing Environment Variables
+- **Symptoms**: Startup fails with a critical configuration error.
+- **Solution**: Check that `.env` is created in the project root and contains valid entries. Keys must not contain quotes unless required by specific variable patterns.
 
-*Note: Your `.env` file is automatically ignored by Git to prevent accidental leakage.*
-
-Important: AgenticOS loads the `.env` file early at startup via `main.py`. The `.env` file in the repository root is the canonical source of API keys for the running agent and is applied to the process environment before provider clients and plugins initialize.
-
----
-
-## Step 4: Runtime Configuration (`config/`)
-
-AgenticOS uses a layered configuration system located in the `config/` directory.
-
-### 1. Choose Your Provider (`providers.yaml`)
-Open `config/providers.yaml` to define your AI models:
-```yaml
-agent:
-  provider: nvidia # Options: ollama, nvidia, gemini, groq
-```
-
-### 2. Set Up Your Environment (`runtime.yaml`)
-Open `config/runtime.yaml` to set your workspace path and system heuristics.
-
-### 3. Verify Security Policy (`policy.yaml`)
-Review `config/policy.yaml` to ensure the **Secret Redaction Engine** and **PathGuard** are configured correctly.
-
----
-
-## Step 5: Launching AgenticOS
-
-Once everything is configured, start the agent from any terminal:
-
-#### Windows:
-```powershell
-agent
-```
-> **Prerequisite:** You must restart your active terminal once after running `.\setup.ps1` so the newly registered `agent` PATH changes take effect.
-
-#### macOS / Linux:
-```bash
-agent
-```
-> **Prerequisite:** Ensure you have added the `bin/` directory to your shell configuration (`.zshrc` / `.bashrc`) as prompted at the end of `./setup.sh`.
-
-### The Startup Sequence:
-1.  **Banner**: You will see the AgenticOS ASCII art banner.
-2.  **Initialization**: The system loads the Tool Registry and checks for plugins.
-3.  **Environment**: `main.py` reads the `.env` file and sets environment variables before provider clients and plugins initialize.
-4.  **Hot-Reload**: The system monitors `config/` for changes.
-
----
-
-## Step 6: Your First Task
-
-Try giving the agent a simple system-level task to verify it has the correct permissions:
-
-> *"Check my system health and tell me the top 3 processes using the most RAM."*
-
-The agent should:
-1.  Draft a plan.
-2.  Call the `process_list` tool.
-3.  Analyze the results.
-4.  Provide a specific answer in the terminal.
-
----
-
-## Step 7: Safety Guide
-
-By default, AgenticOS is in **Secure Mode**.
--   **Security**: It will ask for permission before writing to any folder outside `workspace/`.
--   **Autonomy**: If you want it to be more "hands-off," set `autonomy: autopilot: true` in `config.yaml`.
-
----
-
-## Project Structure
-- `core/`: The Runtime Engine, Tool Registry, Memory, and Security Guardrails.
-- `tools/`: Modular library of core tools and dynamic `plugins/`.
-- `config/`: Layered YAML configuration system.
-- `tests/`: Automated test suite.
-- `bin/`: CLI commands (e.g., `agent.bat`). This folder is added to your PATH.
-- `workspace/`: Designated environment for task artifacts and reports.
-- `data/`: Persistent session memory (SQLite) and audit logs.
-
----
-
-## Troubleshooting the Setup
-
--   **ModuleNotFoundError**: Ensure you are running inside the activated environment or using the global `agent` wrapper which activates it automatically.
--   **API Key Error**: Double-check that your `.env` variables are correctly named and have no extra spaces.
--   **Browser Error**: If Playwright fails, run `playwright install --with-deps chromium`.
-
----
-
-## Step 8: Running the Test Suite (Optional)
-
-To verify your installation is 100% stable:
-
-```powershell
-pytest tests/
-```
-
-This will run the automated suite to ensure core components, filesystem tools, and security guardrails are functioning correctly.
-
----
-
-## Usage Examples
-
-Here are three common usage examples of AgenticOS:
-
-### 1. System Health Check and Process Audit
-Ask the agent:
-> "Run a system diagnostics scan and list the top 3 processes consuming the most RAM."
-The agent will execute `process_list` and return the formatted diagnostics.
-
-### 2. Autonomous Web Research
-Ask the agent:
-> "Search the web for the latest developments in local LLMs and save a summary to research.md."
-The agent will call `web_search` and compile the results.
-
-### 3. Filesystem Cleanup
-Ask the agent:
-> "Find all temporary files in my workspace directory and clean them up."
-The agent will inspect paths and safely delete matching temp files.
+### 3. macOS Accessibility Permissions
+- **Symptoms**: Native OS window/UI tools raise permission errors.
+- **Solution**: When prompted by macOS, grant Accessibility permissions to your terminal or IDE, then restart the execution loop.
 
 ---
 
 ## Next Steps
--   Read the [Architecture Deep-Dive](architecture.md).
--   Learn how to write [Custom Plugins](tool_development.md).
--   Explore the [Testing Guide](testing_guide.md).
--   Explore the [API Reference](api_reference.md) for a list of all 350+ tools.
-
----
-
-*Last Updated: 2026-05-18*
-*Status: Verified on Windows, macOS, and Linux*
-
-## Installation Steps
-Please see the step-by-step instructions detailed in [Step 2: Running the Automated Setup Script](#step-2-running-the-automated-setup-script) above.
-
-## First Run
-Please see [Step 5: Launching AgenticOS](#step-5-launching-agenticos) and [Step 6: Your First Task](#step-6-your-first-task) above for instructions on launching the agent and running your first task.
-
-## Common Setup Issues
-Please see [Troubleshooting the Setup](#troubleshooting-the-setup) above for solutions to common issues.
-
+- Read [docs/developer_onboarding.md](file:///c:/Users/pawar/AgenticOS/docs/developer_onboarding.md) to learn how to develop custom plugins.
+- Read [docs/testing_guide.md](file:///c:/Users/pawar/AgenticOS/docs/testing_guide.md) to understand the test suite.

@@ -1,122 +1,64 @@
-# AgenticOS: Layered Runtime Configuration Guide
+<!-- generated-by: gsd-doc-writer -->
+# Runtime Configuration
 
-AgenticOS uses a high-performance, layered configuration system. Instead of a single monolithic file, configuration is split across specialized YAML files in the `config/` directory. These files are merged at runtime, allowing for clean separation between system logic, security policy, and environment-specific paths.
-
----
-
-## The `config/` Directory Structure
-
-The system loads and merges these files in the following order:
-
-| File | Purpose | Key Responsibilities |
-| :--- | :--- | :--- |
-| **`runtime.yaml`** | Environment Setup | Base paths, magic numbers, iteration limits. |
-| **`policy.yaml`** | Security & Compliance | Secret redaction, destructive tool lists, PathGuard regex. |
-| **`endpoints.yaml`**| External Services | API URLs, search endpoints, service presets. |
-| **`providers.yaml`**| AI Model Config | Ollama, Nvidia, Gemini, and OpenAI settings. |
-| **`prompts.yaml`**  | Intelligence | System prompts, CoV templates, and agent "nudges." |
-| **`storage.yaml`**  | Persistence | SQLite paths, memory summarization thresholds. |
-| **`tools.yaml`**    | Capability Toggles | Enabling/disabling specific tool categories. |
-| **`url_presets.yaml`**| URL Templates | Predefined URLs and shortcuts. |
+AgenticOS loads configuration parameters from environment variables (loaded via `.env`) and a structured `config.yaml` file located in the project root.
 
 ---
 
-## Core Configuration Files
+## Environment Variables
 
-### 1. `runtime.yaml` (The "Nervous System")
-Controls the basic heuristics of the agent execution loop.
-- **`workspace`**: The primary root for agent operations (defaults to `./workspace`).
-- **`iteration_warning_threshold`**: Number of steps before warning the user.
-- **`max_observation_chars`**: Truncates massive tool outputs (default: 12,000) to save context.
+The following environment variables can be configured in your `.env` file:
 
-Additional `performance` settings are included in `runtime.yaml` to tune provider client behaviour and retry/backoff policies:
-
-- **`performance.max_retries`**: Number of retry attempts for transient provider errors (default: 5).
-- **`performance.base_retry_delay`**: Initial backoff delay in seconds (default: 5.0). These values are used by the centralized `retry_call()` helper in `core/retry.py`.
-
-For stronger typing and clearer developer ergonomics, `core/config_types.py` exposes a `ConfigDict` type and `core/runtime_config.py` returns a typed config object for use throughout the codebase.
-
-### 2. `policy.yaml` (The "Shield")
-Defines the security posture of the OS.
-- **`redaction_patterns`**: Regex list for masking keys and tokens in all logs.
-- **`destructive_tools`**: List of tools that *always* require user confirmation (e.g., `delete_dir`).
-- **`path_keys`**: List of argument names that `PathGuard` should treat as file paths.
-
-### 3. `endpoints.yaml` (The "Connector")
-Centralizes all hardcoded URLs to ensure portability.
-- **`search_providers`**: URLs for DuckDuckGo, Bing, and Google.
-- **`system_services`**: Endpoints for IP check (`ipify`), Spotify, and WhatsApp Web.
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `NVIDIA_API_KEY` | Optional | None | API key required when using the NVIDIA NIM cloud provider |
+| `GEMINI_API_KEY` | Optional | None | API key required when using the Google Gemini cloud provider |
+| `GROQ_API_KEY` | Optional | None | API key required when using the Groq cloud provider |
+| `OPENAI_API_KEY` | Optional | None | API key required when using the OpenAI cloud provider |
+| `OPENROUTER_API_KEY` | Optional | None | API key required when using OpenRouter |
+| `DEEPSEEK_API_KEY` | Optional | None | API key required when using DeepSeek |
+| `GITHUB_TOKEN` | Optional | None | API key/token required when using the GitHub API provider |
+| `PYTHONPYCACHEPREFIX` | Optional | `data/cache/pycache` | Directory path where Python compiled bytecodes are stored |
+| `PIP_CACHE_DIR` | Optional | `data/cache/pip` | Directory path where pip packages are cached |
 
 ---
 
-## Zero-Hardcoding Policy
+## Config File Format (`config.yaml`)
 
-Developers must **never** hardcode absolute paths or URLs in the Python source code. All environment-specific values must be fetched via the config system:
+The primary configuration is defined in `config.yaml`. Values in `config.yaml` override layered configuration defaults from `config/` subdirectories.
 
-```python
-# GOOD: Configuration-driven
-url = self.cfg.get("endpoints", {}).get("google_search")
+Here is a typical `config.yaml` example:
 
-# BAD: Hardcoded (Blocked by CI)
-url = "https://www.google.com/search?q="
+```yaml
+agent:
+  provider: nvidia          # Provider type: ollama, nvidia, gemini, groq, openai, openrouter, deepseek, github
+  workspace: workspace      # Base directory for agent commands
+  stream: true              # Enable streaming token output responses
+
+cloud:
+  nvidia:
+    model: openai/gpt-oss-120b # Target model name for cloud provider queries
+
+autonomy:
+  autopilot: true           # Autopilot flag (reduces interactive prompt checkpoints)
+  startup_provider_prompt: false # Prompt for provider selection at start
+  startup_model_prompt: false    # Prompt for model selection at start
+  power_mode: true          # Enable high-performance processing mode
+
+log_level: INFO             # Console logging level (DEBUG, INFO, WARNING, ERROR)
 ```
 
 ---
 
-## Hot-Reloading
-
-AgenticOS supports **Hot-Reloading**. If you modify any YAML file in the `config/` directory while the agent is running, the changes are detected and applied instantly to the next iteration without requiring a restart.
-
----
-
-## Configuration Merging Logic
-
-When a key is requested (e.g., `self.cfg.get("security")`), the `ConfigLoader`:
-1. Checks the merged global dictionary.
-2. If multiple files define the same top-level key (rare), the last loaded file (alphabetical) wins.
-3. For nested dictionaries (like `rules`), the system performs a deep merge.
-
----
-
-## Accessing Config via CLI
-
-You can easily locate and open the configuration folder using the **`/config`** command directly from the AgenticOS terminal. This command dynamically resolves the installed location of AgenticOS and opens the `config/` directory in the host machine's default file explorer (explorer.exe, open, or xdg-open) cross-platform.
-
----
-
-*Last Updated: 2026-05-20*
-*Status: Architecture Hardened*
-
-## Environment Variables
-
-The system loads credentials from the `.env` file in the project root:
-
-| Variable | Description | Required / Optional |
-|---|---|---|
-| `NVIDIA_API_KEY` | API key for NVIDIA NIM cloud model endpoints. | Required if provider is set to `nvidia` |
-| `GOOGLE_API_KEY` | API key for Google Gemini model client SDK. | Required if provider is set to `gemini` |
-| `GROQ_API_KEY` | API key for Groq Acceleration endpoints. | Optional |
-| `OPENAI_API_KEY` | API key for OpenAI-compatible clients. | Optional |
-
 ## Required vs Optional Settings
 
-- **Required**:
-  - API credentials corresponding to the active model provider.
-  - Active model provider specified in `config/providers.yaml`.
-- **Optional**:
-  - Heuristics such as `iteration_warning_threshold` or `max_observation_chars` which fallback to standard defaults.
+- **Provider**: The `agent.provider` setting in `config.yaml` must match one of the supported model providers.
+- **Provider Keys**: If `agent.provider` is set to any value other than `ollama`, the corresponding API key (e.g. `NVIDIA_API_KEY`, `GEMINI_API_KEY`) must be exported in your environment or defined in the `.env` file. The health check (`python main.py --health`) will raise a validation failure if key configurations are missing.
 
-## Defaults
+---
 
-Default values configured in the core config manager:
-- **`workspace`**: `./workspace`
-- **`max_observation_chars`**: `12000`
-- **`performance.max_retries`**: `5`
-- **`performance.base_retry_delay`**: `5.0`
+## Configuration Defaults
 
-## Per-Environment Overrides
-
-Environment-specific overrides can be configured via:
-1. Dotenv profiles (e.g. `.env` file override paths).
-2. Direct system environment variables (prefixed configuration options).
-3. Custom overrides in layer files placed inside the `config/` directory.
+- **Workspace Path**: The default workspace is set to `workspace/` relative to the project root.
+- **Cache Directories**: If no cache directory is specified, a unified folder is created under `data/cache` for python pycache, ruff, pip, and pytest.
+- **Max Workers / Concurrency**: The default worker count is scaled based on the resource profiler metrics (low-resource environments limit workers to 2; high-resource ones scale to the CPU core count).

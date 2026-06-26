@@ -1,113 +1,68 @@
-# AgenticOS: Developer Onboarding and Core Contribution
+<!-- generated-by: gsd-doc-writer -->
+# Developer Onboarding & Development Guide
 
-Welcome to the AgenticOS engineering team! This guide is designed to help you understand the internal architecture, coding standards, and testing procedures required to contribute to the core AgenticOS engine.
-
----
-
-## The Architecture of "Thought"
-
-AgenticOS is built around the **Cortex Engine**. Understanding this loop is the first step to contributing.
-
-1.  **Objective Parser**: Receives the user prompt and breaks it into a high-level goal.
-2.  **Strategic Planner**: Drafts a multi-step plan stored in the `agent.plan` attribute.
-3.  **Action Dispatcher**: Selects the appropriate tool from the `ToolRegistry` and generates the JSON payload.
-4.  **Observer**: Captures tool output, handles errors, and updates the `Memory` system.
-5.  **Evaluator**: Compares the observation against the plan to decide if the task is complete.
+Welcome to the AgenticOS developer onboarding guide. This document contains standard practices for contributing code, developing tools/plugins, running formatting tools, and submitting pull requests.
 
 ---
 
-## Coding Standards and Safety
+## Local Setup
 
-To maintain our "Hardened" status, all core contributions must adhere to these standards:
-
-### 1. Type Safety
-Every function in the `core/` and `tools/` directories must have full Python type hinting.
-```python
-def example_function(path: str, count: int = 10) -> list[str]:
-```
-
-### 2. Path Resolution
-Never use raw string manipulation for file paths. Always use the internal `_resolve()` helper which ensures the path is checked against the **Zone-Guard** guardrails.
-
-### 3. Subprocess Safety
-Avoid `shell=True` when running system commands. Always pass commands as a list of arguments to prevent shell injection.
-```python
-# GOOD
-subprocess.run(["git", "status"], check=True)
-
-# BAD
-subprocess.run("git status", shell=True)
-```
+To set up a local development environment:
+1. Initialize the virtual environment and install standard requirements:
+   - On Windows: `.\setup.ps1`
+   - On macOS/Linux: `./setup.sh`
+2. Install development packages:
+   ```bash
+   venv\Scripts\pip install -r requirements-dev.txt
+   ```
+3. Set environment variable overrides in `.env` to enable dry-run logs or debug level verbosity.
 
 ---
 
-## Testing Standards
+## Build & Lint Commands
 
-AgenticOS enforces a high-coverage testing standard using `pytest`. Every new core feature or tool MUST be accompanied by a corresponding test in the `tests/` directory.
+The project uses Python scripts and standard tools for testing and formatting.
 
-### Running Tests
-```bash
-# Run the full suite with coverage
-pytest tests/ --cov=core --cov=tools --cov-report=term-missing
-
-# Run a specific test file
-pytest tests/test_fs_read_write.py
-```
-
-### Mocking Guidelines
-- **No Live IO**: Use `tmp_path` for filesystem tests.
-- **No Live Network**: Use `unittest.mock` to patch `requests.get` or `subprocess.run`.
-- **Deterministic**: Tests must be 100% deterministic and pass in a clean CI environment.
+| Command / Script | Description |
+|------------------|-------------|
+| `venv\Scripts\python main.py --health` | Runs active configuration, connection, and import health checks |
+| `venv\Scripts\python main.py --dream` | Executes the self-evolution reflection dream cycle |
+| `venv\Scripts\pytest` | Executes the full automated test suite |
+| `ruff check .` | Runs ruff linting rules over all python files |
+| `ruff format .` | Formats all python code blocks in-place |
 
 ---
 
-## Environment Portability Standards
+## Code Style
 
-We follow a **Zero-Hardcoding Policy**. The core engine must be 100% environment-agnostic.
-
-### The Rules
-1. **No Absolute Paths**: Never use machine-specific absolute roots. Use `self.cfg.get("workspace")` or `Path.home()`.
-2. **No Hardcoded URLs**: All API endpoints and service URLs must reside in `config/endpoints.yaml`.
-3. **No Magic Numbers**: Timeouts, retry counts, and heuristic thresholds belong in `config/runtime.yaml`.
-
-### Accessing Config
-Inside a tool or core component, use the `self.cfg` helper:
-```python
-# Fetching an endpoint
-api_url = self.cfg.get("endpoints", {}).get("github_api", "https://api.github.com")
-```
+- **Python Formatter**: We use [Ruff](https://github.com/astral-sh/ruff) for linting and code formatting. The configuration is loaded automatically. Make sure to run `ruff format .` before submitting any changes.
+- **Typing**: The codebase utilizes PEP-484 type hints. Run static checks or ensure type annotations exist for all public functions, classes, and helper parameters.
+- **Safety Guards**: Every new command executor or filesystem modifier tool must integrate with AST validations and `PathGuard` checks.
 
 ---
 
-## Adding New Capabilities
+## Branch Conventions
 
-Most developers should contribute by writing **Plugins**.
-1.  Create a new file in `tools/plugins/`.
-2.  Use the `@tool` decorator.
-3.  Provide a robust, 10-line docstring (the model's only source of truth).
-4.  Restart the agent or enable `hot_reload: true`.
-
----
-
-## Internal API Documentation
-
-| Module | Responsibility |
-| :--- | :--- |
-| `core.cortex` | The main reasoning loop and model interaction logic. |
-| `core.tool_registry` | Tool discovery, validation, and registration. |
-| `core.guardrails` | The PathGuard and CommandValidator implementation. |
-| `core.memory` | The SQLite and JSONL persistence layers. |
+- **Default Branch**: The main branch is `main`.
+- **Naming Convention**:
+  - `feat/feature-name` for new features/tools.
+  - `fix/bug-fix-name` for bug fixes.
+  - `docs/docs-update` for documentation changes.
+  - `chore/clean-up` for maintenance operations.
 
 ---
 
-## Onboarding Checklist
-- [ ] Read the [Architecture Manual](architecture.md).
-- [ ] Set up your local development environment using the [Setup Guide](setup_guide.md).
-- [ ] Run the full `pytest` suite.
-- [ ] Write a "Hello World" plugin in `tools/plugins/`.
-- [ ] Join the internal developer discussion for AgenticOS.
+## Pull Request Process
 
----
-
-*Last Updated: 2026-05-18*
-*Status: Engineering Ready (Verified Cross-Platform)*
+1. **Create Branch**: Check out a new branch following the branch conventions.
+2. **Implement Changes**: Write clean, modular code. If writing tools, decorate them with `@tool` and register them type-safely.
+3. **Write Unit Tests**: Add test assertions in the `tests/` directory matching the naming convention `test_*.py`.
+4. **Run Verification**: Ensure all unit tests pass cleanly:
+   ```bash
+   venv\Scripts\pytest
+   ```
+5. **Format Check**: Run ruff formatting:
+   ```bash
+   venv\Scripts\ruff format .
+   ```
+6. **Submit PR**: Open a Pull Request targeting `main`. Summarize what was built, what was tested, and highlight any new API paths or tool schemas.
