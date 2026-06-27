@@ -51,7 +51,7 @@ jobs:
       - name: Validate Plugins
         env:
           PYTHONPATH: .
-        run: python ops/plugin_validator.py
+        run: python ops/pluglint.py
 
       - name: Run Tests
         env:

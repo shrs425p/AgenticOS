@@ -94,5 +94,5 @@ if __name__ == "__main__":
     if project_root not in sys.path:
         sys.path.insert(0, project_root)
 
-    plugin_dir = os.path.join(os.path.dirname(__file__), "plugins")
+    plugin_dir = os.path.join(os.path.dirname(__file__), "addons")
     validate_plugins(plugin_dir)
