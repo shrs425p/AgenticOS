@@ -1,0 +1,8 @@
+# _config.yml
+exclude:
+  - venv
+  - .cache
+  - .pytest_cache
+  - .ruff_cache
+  - node_modules
+  - workspace
