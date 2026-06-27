@@ -27,7 +27,7 @@ graph TD
 ### 1. Agent Execution Loop (`kernel/cli.py`)
 The central coordinator of AgenticOS. It manages the agent's main thought-action-observation loop:
 - **Iteration Tracking**: Enforces hard loop limits to prevent infinite recursion or cost overruns.
-- **Human-In-The-Loop**: Pauses execution and requests interactive operator permission for destructive commands or Yellow Zone filesystem operations.
+- **Human-In-The-Loop**: Pauses execution and requests interactive operator permission for destructive commands or outside-workspace writes in Green Zone.
 - **Self-Correction & Fallbacks**: Dynamically changes provider endpoints or LLM configurations if repeated errors or empty loops occur.
 
 ### 2. Provider API Clients (`kernel/models.py` & `kernel/retry.py`)
@@ -37,7 +37,7 @@ An abstraction layer for cloud and local LLM backends (Gemini, Groq, Nvidia, Ope
 
 ### 3. Zero-Trust Security (`kernel/guard.py`)
 Enforces safe and compliant filesystem boundaries:
-- **PathGuard**: Restricts file modifications based on zones (Green: unrestricted `workspace/`; Yellow: HITM-required system paths; Red: fully blocked operating system zones; Blue: read-only mode). It also protects sensitive workspace internals like `.git` and `.env` files.
+- **PathGuard**: Restricts file modifications based on zones (Green: workspace isolation; Yellow: autonomous system-wide writes; Red: unrestricted filesystem access; Blue: read-only mode; Black: God Mode / all security off). It also protects sensitive workspace internals like `.git` and `.env` files.
 
 ### 4. Registry & Plugins (`kernel/registry.py` & `kernel/base.py`)
 Loads, parses, and dynamically registers all workspace capabilities:

@@ -19,28 +19,32 @@ AgenticOS operates on a principle of least privilege. Even when running on a loc
 
 ## Zone-Based Security (PathGuard)
 
-The `PathGuard` system divides the host machine into four distinct security zones. These zones can be toggled dynamically at runtime without restarting the session by using the `/zone` CLI command (or `/zone 1`, `/zone 2`, `/zone 3`, `/zone 4`).
+The `PathGuard` system divides the host machine into five distinct security zones. These zones can be toggled dynamically at runtime without restarting the session by using the `/zone` CLI command (or `/zone 1`, `/zone 2`, `/zone 3`, `/zone 4`, `/zone 5`).
 
-### 1. The Green Zone (Workspace Isolation)
--   **Definition**: The `workspace/` directory in the project root.
--   **Configuration**: `guard.enabled = True`, `guard.require_hitm = True`, `guard.read_only = False`.
--   **Behavior**: The agent can read, write, and delete files inside the workspace root without any prompts. Write or delete operations outside the workspace are blocked and require human verification (HITM).
-
-### 2. The Yellow Zone (System-Wide Autonomy)
--   **Definition**: The entire filesystem (excluding explicitly blocked paths in the Red Zone).
--   **Configuration**: `guard.enabled = True`, `guard.require_hitm = False`, `guard.read_only = False`.
--   **Behavior**: The agent can write and delete files outside the workspace autonomously without prompting the user. Explicitly blocked system paths are still hard-blocked.
-
-### 3. The Red Zone (PathGuard Disabled)
+### 1. The Red Zone (PathGuard Disabled)
 -   **Definition**: Bypasses all workspace boundaries and path validation checks.
 -   **Configuration**: `guard.enabled = False`, `guard.require_hitm = False`, `guard.read_only = False`.
--   **Behavior**: PathGuard is disabled entirely. The agent has unrestricted filesystem access and can read or write anywhere, including previously blocked system directories.
+-   **Behavior**: PathGuard is disabled entirely. The agent has unrestricted filesystem access and can read or write anywhere, including previously blocked system directories. (Alias: `/zone 1` or `/zone red`)
+
+### 2. The Green Zone (Workspace Isolation)
+-   **Definition**: The `workspace/` directory in the project root.
+-   **Configuration**: `guard.enabled = True`, `guard.require_hitm = True`, `guard.read_only = False`.
+-   **Behavior**: The agent can read, write, and delete files inside the workspace root without any prompts. Write or delete operations outside the workspace are blocked and require human verification (HITM). (Alias: `/zone 2` or `/zone green`)
+
+### 3. The Yellow Zone (System-Wide Autonomy)
+-   **Definition**: The entire filesystem (excluding explicitly blocked paths in the Red Zone).
+-   **Configuration**: `guard.enabled = True`, `guard.require_hitm = False`, `guard.read_only = False`.
+-   **Behavior**: The agent can write and delete files outside the workspace autonomously without prompting the user. Explicitly blocked system paths are still hard-blocked. (Alias: `/zone 3` or `/zone yellow`)
 
 ### 4. The Blue Zone (Read-Only / Audit Mode)
--   **Definition**: The entire filesystem is read-only (excluding blocked paths in the Red Zone).
+-   **Definition**: The entire filesystem is read-only.
 -   **Configuration**: `guard.enabled = True`, `guard.require_hitm = False`, `guard.read_only = True`.
--   **Behavior**: All write and delete operations are blocked globally (both inside and outside the workspace). The agent can only read files, making it ideal for non-destructive auditing and code reviews.
+-   **Behavior**: All write and delete operations are blocked globally (both inside and outside the workspace). The agent can only read files, making it ideal for non-destructive auditing and code reviews. (Alias: `/zone 4` or `/zone blue`)
 
+### 5. The Black Zone (God Mode)
+-   **Definition**: Completely unshielded mode with all security restrictions turned off.
+-   **Configuration**: `rules.validate_commands = False`, `rules.allow_registry_edit = True`, `rules.allow_service_control = True`, `rules.allow_system_changes = True`.
+-   **Behavior**: God Mode. All security filters, command validation checks, registry write protections, and service control blocks are entirely disabled. (Alias: `/zone 5` or `/zone black`)
 
 ---
 

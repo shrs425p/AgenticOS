@@ -28,6 +28,138 @@ import asyncio
 
 
 
+ZONE_RULE_OVERRIDES = {
+    "black": {
+        "allow_shell_exec": True,
+        "validate_commands": False,
+        "allow_registry_edit": True,
+        "allow_registry_access": True,
+        "allow_service_control": True,
+        "allow_system_changes": True,
+        "allow_file_delete": True,
+        "allow_file_modify": True,
+        "allow_process_control": True,
+        "allow_network_access": True,
+        "allow_websearch": True,
+        "allow_web_download": True,
+        "allow_scheduled_tasks": True,
+        "require_confirm_destructive": False,
+        "require_confirm_network": False,
+        "require_confirm_shell": False,
+        "protect_internal_data": False,
+        "allow_internal_data_write": True,
+        "allow_reserved_path_patterns": True,
+        "restrict_paths": False,
+    },
+    "red": {
+        "allow_shell_exec": True,
+        "validate_commands": True,
+        "allow_registry_edit": False,
+        "allow_registry_access": False,
+        "allow_service_control": False,
+        "allow_system_changes": True,
+        "allow_file_delete": True,
+        "allow_file_modify": True,
+        "allow_process_control": True,
+        "allow_network_access": True,
+        "allow_websearch": True,
+        "allow_web_download": True,
+        "allow_scheduled_tasks": True,
+        "require_confirm_destructive": False,
+        "require_confirm_network": False,
+        "require_confirm_shell": False,
+    },
+    "blue": {
+        "allow_shell_exec": True,
+        "validate_commands": True,
+        "allow_registry_edit": False,
+        "allow_registry_access": False,
+        "allow_service_control": False,
+        "allow_system_changes": False,
+        "allow_file_delete": False,
+        "allow_file_modify": False,
+        "allow_process_control": True,
+        "allow_network_access": True,
+        "allow_websearch": True,
+        "allow_web_download": True,
+        "allow_scheduled_tasks": True,
+        "require_confirm_destructive": False,
+        "require_confirm_network": False,
+        "require_confirm_shell": False,
+    },
+    "green": {
+        "allow_shell_exec": True,
+        "validate_commands": True,
+        "allow_registry_edit": False,
+        "allow_registry_access": False,
+        "allow_service_control": False,
+        "allow_system_changes": True,
+        "allow_file_delete": True,
+        "allow_file_modify": True,
+        "allow_process_control": True,
+        "allow_network_access": True,
+        "allow_websearch": True,
+        "allow_web_download": True,
+        "allow_scheduled_tasks": True,
+        "require_confirm_destructive": False,
+        "require_confirm_network": False,
+        "require_confirm_shell": False,
+    },
+    "yellow": {
+        "allow_shell_exec": True,
+        "validate_commands": True,
+        "allow_registry_edit": False,
+        "allow_registry_access": False,
+        "allow_service_control": False,
+        "allow_system_changes": True,
+        "allow_file_delete": True,
+        "allow_file_modify": True,
+        "allow_process_control": True,
+        "allow_network_access": True,
+        "allow_websearch": True,
+        "allow_web_download": True,
+        "allow_scheduled_tasks": True,
+        "require_confirm_destructive": False,
+        "require_confirm_network": False,
+        "require_confirm_shell": False,
+    },
+}
+
+
+class DynamicRules(dict):
+    def __init__(self, initial_rules: dict, registry):
+        super().__init__(initial_rules)
+        self.registry = registry
+
+    def _get_override(self, key):
+        guard = getattr(self.registry, "guard", None)
+        if guard is not None:
+            zone_name = getattr(guard, "zone_name", None)
+            if zone_name is not None:
+                overrides = ZONE_RULE_OVERRIDES.get(zone_name)
+                if overrides and key in overrides:
+                    return True, overrides[key]
+        return False, None
+
+    def get(self, key, default=None):
+        has_override, val = self._get_override(key)
+        if has_override:
+            return val
+        return super().get(key, default)
+
+    def __getitem__(self, key):
+        has_override, val = self._get_override(key)
+        if has_override:
+            return val
+        return super().__getitem__(key)
+
+    def __contains__(self, key):
+        has_override, _ = self._get_override(key)
+        if has_override:
+            return True
+        return super().__contains__(key)
+
+
 class ToolRegistry:
     def __init__(
         self,
@@ -38,12 +170,13 @@ class ToolRegistry:
         self.cfg = cfg
         # Merge cfg-controlled policy surfaces. Code should expose capability;
         # cfg.yaml decides what is enabled, guarded, or restricted.
-        self.rules = {
+        initial_rules = {
             **cfg.get("performance", {}),
             **cfg.get("system_control", {}),
             **cfg.get("security", {}),
             **cfg.get("rules", {}),
         }
+        self.rules = DynamicRules(initial_rules, self)
         self.ops_cfg = cfg.get("ops", {})
         self.disabled_ops = {
             str(name).lower()

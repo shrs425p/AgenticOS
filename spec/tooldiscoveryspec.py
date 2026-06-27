@@ -1,6 +1,5 @@
 """Tests for SemanticToolIndex in kernel/discovery.py."""
 
-import pytest
 from kernel.discovery import SemanticToolIndex
 
 

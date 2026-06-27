@@ -53,7 +53,7 @@
 | :--- | :--- | :--- |
 | **AST Command Validator**<br>Deconstructs command syntax tree-by-tree to intercept obfuscation, chains (`&&`, `;`), and malicious patterns. | **Native DFS Traversal**<br>Scans over 1,000,000 files in under 30 seconds using optimized native Python directory streams. | **Self-Healing Loop**<br>Autonomously detects missing libraries, auto-installs packages (`pip`), and patches runtime exceptions. |
 | **PathGuard Security Zones**<br>Restricts filesystem modifications to designated workspaces using strict path boundary checkguards. | **Zero Typewriter Lag**<br>Engineered with block-level terminal rendering to focus 100% CPU on task execution. | **Dynamic Tool Registry**<br>Hot-reloads and validates new capabilities, custom scripts, and plugins on-the-fly. |
-| **Zone-Based Sandbox**<br>Adjust safety parameters dynamically at runtime (Green/Yellow/Red/Read-Only) using `/zone`. | **Rate-Limit Shielding**<br>Handles API throttling (HTTP 429) gracefully with custom backoff and retry pacing. | **Cross-Platform Integration**<br>Native system hooks (COM volume controls, AppleScript AX access, bash wrappers). |
+| **Zone-Based Sandbox**<br>Adjust safety parameters dynamically at runtime (Green/Yellow/Red/Blue/Black) using `/zone`. | **Rate-Limit Shielding**<br>Handles API throttling (HTTP 429) gracefully with custom backoff and retry pacing. | **Cross-Platform Integration**<br>Native system hooks (COM volume controls, AppleScript AX access, bash wrappers). |
 
 ---
 

@@ -102,7 +102,6 @@ class MediaMixin:
 
     # ── playback controls ──────────────────────────────────────────────────────
 
-    @tool(name="mediaplaypause", desc="Toggle play/pause for the active media player.", category="Terminal")
     def mediaplaypause(self) -> str:
         """Toggle play/pause for the active media player."""
         if self.system == "Windows":
@@ -112,7 +111,6 @@ class MediaMixin:
         else:
             return self._run_playerctl("play-pause")
 
-    @tool(name="mediaplay", desc="Resume/start media playback.", category="Terminal")
     def mediaplay(self) -> str:
         """Resume / start playback."""
         if self.system == "Windows":
@@ -122,7 +120,6 @@ class MediaMixin:
         else:
             return self._run_playerctl("play")
 
-    @tool(name="mediapause", desc="Pause the active media player.", category="Terminal")
     def mediapause(self) -> str:
         """Pause the active media player."""
         if self.system == "Windows":
@@ -132,7 +129,6 @@ class MediaMixin:
         else:
             return self._run_playerctl("pause")
 
-    @tool(name="mediastop", desc="Stop media playback.", category="Terminal")
     def mediastop(self) -> str:
         """Stop media playback."""
         if self.system == "Windows":
@@ -142,7 +138,6 @@ class MediaMixin:
         else:
             return self._run_playerctl("stop")
 
-    @tool(name="medianext", desc="Skip to the next track.", category="Terminal")
     def medianext(self) -> str:
         """Skip to the next track."""
         if self.system == "Windows":
@@ -152,7 +147,6 @@ class MediaMixin:
         else:
             return self._run_playerctl("next")
 
-    @tool(name="mediaprevious", desc="Go to the previous track.", category="Terminal")
     def mediaprevious(self) -> str:
         """Go back to the previous track."""
         if self.system == "Windows":
@@ -162,7 +156,6 @@ class MediaMixin:
         else:
             return self._run_playerctl("previous")
 
-    @tool(name="mediastatus", desc="Get currently playing track info and playback status.", category="Terminal")
     def mediastatus(self) -> str:
         """Get currently playing track info / playback status."""
         if self.system == "Windows":
@@ -233,7 +226,6 @@ end tell"""
 
     # ── seek / position ───────────────────────────────────────────────────────
 
-    @tool(name="mediaseek", desc="Seek forward/backward by N seconds. Args: seconds (+/-)", category="Terminal")
     def mediaseek(self, seconds: float) -> str:
         """Seek forward (positive) or backward (negative) by N seconds.
 
@@ -263,7 +255,6 @@ end tell"""
 
     # ── volume controls ───────────────────────────────────────────────────────
 
-    @tool(name="volumeset", desc="Set system master volume 0-100. Args: level", category="Terminal")
     def volumeset(self, level: int) -> str:
         """Set system master volume (0–100).
 
@@ -351,7 +342,6 @@ try {{
                 return result.stdout.strip() or f"Volume set to {lvl}%"
             return "Error: Install pactl (PulseAudio) or amixer (ALSA)."
 
-    @tool(name="volumeup", desc="Raise system volume by step% (default 10). Args: step(optional)", category="Terminal")
     def volumeup(self, step: int = 10) -> str:
         """Raise system volume by step% (default +10).
 
@@ -395,7 +385,6 @@ try {{
                 return f"Volume increased by {s}%"
             return "Error: Install pactl or amixer."
 
-    @tool(name="volumedown", desc="Lower system volume by step% (default 10). Args: step(optional)", category="Terminal")
     def volumedown(self, step: int = 10) -> str:
         """Lower system volume by step% (default -10).
 
@@ -436,7 +425,6 @@ try {{
                 return f"Volume decreased by {s}%"
             return "Error: Install pactl or amixer."
 
-    @tool(name="volumemute", desc="Toggle system mute on/off.", category="Terminal")
     def volumemute(self) -> str:
         """Toggle system mute on/off."""
         if self.system == "Windows":
@@ -465,7 +453,6 @@ try {{
                 return "Mute toggled."
             return "Error: Install pactl or amixer."
 
-    @tool(name="volumeget", desc="Get current system master volume level.", category="Terminal")
     def volumeget(self) -> str:
         """Get the current system master volume level."""
         if self.system == "Windows":
@@ -558,3 +545,43 @@ try {
 
                 return result.stdout.strip()
             return "Error: Install pactl or amixer."
+
+    @tool(name="media_control", desc="Control media playback. Args: action (Literal['play', 'pause', 'stop', 'next', 'previous', 'status', 'seek']), seconds (float, optional, only for seek)", category="Terminal")
+    def media_control(self, action: str, seconds: float = 0.0) -> str:
+        """Control system media playback."""
+        act = str(action).strip().lower()
+        if act == "play":
+            return self.mediaplay()
+        elif act == "pause":
+            return self.mediapause()
+        elif act == "stop":
+            return self.mediastop()
+        elif act == "next":
+            return self.medianext()
+        elif act == "previous":
+            return self.mediaprevious()
+        elif act == "status":
+            return self.mediastatus()
+        elif act == "seek":
+            return self.mediaseek(seconds)
+        elif act == "playpause":
+            return self.mediaplaypause()
+        else:
+            return f"Error: Unknown media action: {action}. Valid options: play, pause, stop, next, previous, status, seek"
+
+    @tool(name="volume_control", desc="Control system audio volume. Args: action (Literal['set', 'up', 'down', 'mute', 'get']), value (int, optional, for set/up/down)", category="Terminal")
+    def volume_control(self, action: str, value: int = 10) -> str:
+        """Control system master volume and mute status."""
+        act = str(action).strip().lower()
+        if act == "set":
+            return self.volumeset(value)
+        elif act == "up":
+            return self.volumeup(value)
+        elif act == "down":
+            return self.volumedown(value)
+        elif act == "mute":
+            return self.volumemute()
+        elif act == "get":
+            return self.volumeget()
+        else:
+            return f"Error: Unknown volume action: {action}. Valid options: set, up, down, mute, get"

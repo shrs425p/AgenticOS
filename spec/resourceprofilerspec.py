@@ -1,6 +1,5 @@
 from unittest.mock import patch, MagicMock
-import pytest
-from kernel.resources import profile_hardware, should_throttle, HardwareProfile
+from kernel.resources import profile_hardware, should_throttle
 
 def test_profile_hardware_low():
     # Mock psutil memory to <= 4GB

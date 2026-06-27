@@ -37,12 +37,12 @@ A key-value YAML profile that allows AgenticOS to adapt its language and output 
 
 ---
 
-## Security Policies (PathGuard Enforcement)
-
-AgenticOS operates under a zero-trust model where the agent's filesystem permissions are governed by four security zones, switchable at runtime using the `/zone` command:
+AgenticOS operates under a zero-trust model where the agent's filesystem permissions are governed by five security zones, switchable at runtime using the `/zone` command:
 
 - **Green Zone (`workspace/` isolation)**: The agent has full read and write permissions inside the workspace. Write operations outside the workspace require human validation.
 - **Yellow Zone (System-wide write access)**: PathGuard is active, but outside-workspace modifications are allowed autonomously (no human approval required).
-- **Red Zone (Protected Assets)**: PathGuard is disabled entirely. The agent has unrestricted filesystem access, bypassing all rules.
+- **Red Zone (Protected Assets)**: PathGuard is disabled entirely. The agent has unrestricted filesystem access.
 - **Blue Zone (Read-Only / Audit)**: All write and delete operations are blocked system-wide. The agent can only read files.
+- **Black Zone (God Mode)**: ALL security is disabled. No PathGuard, no registry guards, no service control blocks, and no command validation.
+
 

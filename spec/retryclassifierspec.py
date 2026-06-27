@@ -1,4 +1,4 @@
-from kernel.triage import RetryClassifier, RetryDecision
+from kernel.triage import RetryClassifier
 
 def test_retry_classifier_permanent_exit_codes():
     classifier = RetryClassifier()

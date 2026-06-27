@@ -1,7 +1,7 @@
 import os
 import time
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from kernel.cli import Agent
 
 @pytest.fixture

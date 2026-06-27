@@ -8,7 +8,7 @@ At AgenticOS, we take the security of our users and the systems they inhabit ser
 
 AgenticOS is built on a **Zero-Trust Runtime Model**. Our security architecture is designed to fail safely:
 1.  **Isolation by Design**: Path-based restrictions (PathGuard) isolate the agent's write-access to the `workspace/` directory by default.
-2.  **Human-In-The-Middle (HITM)**: High-risk operations (Yellow Zone) require explicit human approval via the terminal.
+2.  **Human-In-The-Middle (HITM)**: High-risk operations (such as outside-workspace writes in Green Zone) require explicit human approval via the terminal.
 3.  **Command Validation**: All shell commands are sanitized and checked against a strict blacklist (no formatting, user management, or system shutdowns).
 
 ---

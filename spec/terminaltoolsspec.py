@@ -1,5 +1,3 @@
-import ctypes
-from unittest import mock
 
 from ops.shell.open import OpenersMixin
 from ops.shell.admin import SystemAdminMixin

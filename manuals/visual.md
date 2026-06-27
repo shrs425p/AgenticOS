@@ -51,7 +51,7 @@ sequenceDiagram
 
 ## Zone-Based Security (PathGuard)
 
-How AgenticOS categorizes your filesystem and enforces safety across all four security zones.
+How AgenticOS categorizes your filesystem and enforces safety across all five security zones.
 
 ```mermaid
 graph LR
@@ -69,12 +69,17 @@ graph LR
     subgraph "Blue Zone (Read-Only / Audit)"
         RO[Entire Filesystem]
     end
+    subgraph "Black Zone (God Mode)"
+        God[Entire System - No Guards]
+    end
     
     Agent -->|Free Access| W
     Agent -->|HITM Prompt / Allowed| U
     Agent -->|BLOCKED| Win
     Agent -->|Read-Only / Writes Blocked| RO
+    Agent -->|FULL UNRESTRICTED ACCESS| God
 ```
+
 
 ---
 

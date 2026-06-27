@@ -1,7 +1,7 @@
 """Base classes and decorators for AgenticOs ops."""
 
 import asyncio
-from typing import Protocol, Callable, Any, Dict, AsyncIterator
+from typing import Protocol, Callable, Any, AsyncIterator
 from pydantic import BaseModel, Field
 
 class ToolMetadata(BaseModel):

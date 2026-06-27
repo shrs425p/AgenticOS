@@ -1,7 +1,7 @@
 import asyncio
 import pytest
-from typing import AsyncIterator, Any
-from kernel.base import tool, AsyncTool
+from typing import AsyncIterator
+from kernel.base import tool
 from kernel.dispatch import ParallelScheduler, pipe_ops
 from kernel.registry import ToolRegistry
 

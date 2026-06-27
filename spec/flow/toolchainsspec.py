@@ -33,7 +33,6 @@ def test_read_process_write_chain(registry):
     read_res = registry.call("readjson", {"path": "workspace/dummy.json"})
     assert "hello world" in read_res
 
-    processed = read_res.upper()
     write_res = registry.call("writejson", {"path": "workspace/dummy_out.json", "data": '{"text": "HELLO WORLD"}'})
     assert "Wrote JSON" in write_res
 

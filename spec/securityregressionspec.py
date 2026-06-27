@@ -4,7 +4,7 @@ import pathlib
 from unittest.mock import MagicMock
 from ops.shell.safety import SafetyMixin, RegistryGuard
 from kernel.errors import AgentError, ErrorCode
-from kernel.guard import resolve_with_symlink_depth, PathGuard
+from kernel.guard import resolve_with_symlink_depth
 
 class DummySafetyWithConfig(SafetyMixin):
     def __init__(self, rules: dict, cfg: dict = None):

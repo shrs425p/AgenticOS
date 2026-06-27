@@ -5,7 +5,7 @@ This document details the security posture of AgenticOS, identifying key threat 
 ## Trust Boundaries
 1. **Agent Runtime vs. Host Operating System**: The barrier protecting the host file system and OS registry from arbitrary execution.
 2. **Command Validation Boundary**: Interception of shell strings before being parsed or processed by subprocess runners.
-3. **Zone Guard Boundary**: Checking file paths (Green/Yellow/Red zones) dynamically to block access to system credentials and configurations.
+3. **Zone Guard Boundary**: Checking file paths (Green/Yellow/Red/Blue/Black zones) dynamically to block access to system credentials and configurations.
 
 ---
 

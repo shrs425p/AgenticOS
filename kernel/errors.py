@@ -41,7 +41,7 @@ class AgentError(Exception):
     def __str__(self) -> str:
         res = f"AgentError [{self.code}]: {self.message}"
         if self.suggestions:
-            res += f"\nSuggestions: " + "; ".join(self.suggestions)
+            res += "\nSuggestions: " + "; ".join(self.suggestions)
         return res
 
 

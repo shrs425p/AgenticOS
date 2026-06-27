@@ -25,30 +25,15 @@ def _run_git(args: list[str]) -> str:
     except Exception as e:
         return f"Error executing git command: {e}"
 
-@tool(
-    name="gitstatus",
-    desc="Get git status of the current repository.",
-    category="Git"
-)
 def gitstatus() -> str:
     """Gets the status of the git repository (staged, unstaged, untracked files)."""
     return _run_git(["status", "-s"])
 
-@tool(
-    name="gitdiff",
-    desc="Get current unstaged changes (or staged if staged=True). Args: staged (bool, optional)",
-    category="Git"
-)
 def gitdiff(staged: bool = False) -> str:
     """Shows changes in the working directory or staged index."""
     args = ["diff", "--cached"] if staged else ["diff"]
     return _run_git(args)
 
-@tool(
-    name="gitadd",
-    desc="Stage file changes. Args: files (list of file paths or patterns).",
-    category="Git"
-)
 def gitadd(files: list[str]) -> str:
     """Adds file contents to the staging index (git add)."""
     if not files:
@@ -57,11 +42,6 @@ def gitadd(files: list[str]) -> str:
         files = [files]
     return _run_git(["add"] + files)
 
-@tool(
-    name="gitcommit",
-    desc="Commit staged changes. Args: message (commit message).",
-    category="Git"
-)
 def gitcommit(message: str) -> str:
     """Commits staged changes to the repository history (git commit)."""
     msg = (message or "").strip()
@@ -69,11 +49,6 @@ def gitcommit(message: str) -> str:
         return "Error: commit message cannot be empty."
     return _run_git(["commit", "-m", msg])
 
-@tool(
-    name="gitlog",
-    desc="Show recent commit logs. Args: limit (max commits to show, default 10).",
-    category="Git"
-)
 def gitlog(limit: int = 10) -> str:
     """Displays commit history (git log)."""
     try:
@@ -81,3 +56,28 @@ def gitlog(limit: int = 10) -> str:
     except Exception:
         lim = 10
     return _run_git(["log", "-n", str(lim), "--oneline"])
+
+@tool(
+    name="git_control",
+    desc="Manage git repository. Args: action (Literal['status', 'diff', 'add', 'commit', 'log']), staged (bool, optional, for diff), files (list of strings, optional, for add), message (str, optional, for commit), limit (int, optional, for log)",
+    category="Git"
+)
+def git_control(action: str, staged: bool = False, files: list[str] | None = None, message: str = "", limit: int = 10) -> str:
+    """Manage the Git repository using consolidated actions."""
+    act = str(action).strip().lower()
+    if act == "status":
+        return gitstatus()
+    elif act == "diff":
+        return gitdiff(staged=staged)
+    elif act == "add":
+        if not files:
+            return "Error: 'files' argument is required for 'add'."
+        return gitadd(files)
+    elif act == "commit":
+        if not message:
+            return "Error: 'message' argument is required for 'commit'."
+        return gitcommit(message)
+    elif act == "log":
+        return gitlog(limit=limit)
+    else:
+        return f"Error: Unknown git action: {action}. Valid options: status, diff, add, commit, log"

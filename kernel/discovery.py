@@ -7,7 +7,7 @@ only the top-k most relevant ones by cosine similarity.
 
 import re
 import math
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple
 
 
 class SemanticToolIndex:

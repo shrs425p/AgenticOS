@@ -1,4 +1,4 @@
-from kernel.stalls import StallMonitor, StallWarning
+from kernel.stalls import StallMonitor
 
 def test_stall_monitor_categories():
     monitor = StallMonitor()

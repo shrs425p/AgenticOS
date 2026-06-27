@@ -18,7 +18,7 @@ The following environment variables can be configured in your `.env` file:
 | `OPENROUTER_API_KEY` | Optional | None | API key required when using OpenRouter |
 | `DEEPSEEK_API_KEY` | Optional | None | API key required when using DeepSeek |
 | `GITHUB_TOKEN` | Optional | None | API key/token required when using the GitHub API provider |
-| `PYTHONPYCACHEPREFIX` | Optional | `data/cache/pycache` | Directory path where Python compiled bytecodes are stored |
+| `PYTHONPYCACHEPREFIX` | Optional | `.cache/pycache` | Directory path where Python compiled bytecodes are stored |
 | `PIP_CACHE_DIR` | Optional | `data/cache/pip` | Directory path where pip packages are cached |
 
 ---
@@ -60,5 +60,5 @@ log_level: INFO             # Console logging level (DEBUG, INFO, WARNING, ERROR
 ## Configuration Defaults
 
 - **Workspace Path**: The default workspace is set to `workspace/` relative to the project root.
-- **Cache Directories**: If no cache directory is specified, a unified folder is created under `data/cache` for python pycache, ruff, pip, and pytest.
+- **Cache Directories**: A unified folder is created under `.cache/` in the project root for python pycache, ruff, and pytest.
 - **Max Workers / Concurrency**: The default worker count is scaled based on the resource profiler metrics (low-resource environments limit workers to 2; high-resource ones scale to the CPU kernel count).

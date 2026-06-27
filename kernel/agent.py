@@ -1,7 +1,3 @@
-def _get_base_dir() -> str:
-    import kernel.cli as runtime
-    return getattr(runtime, "BASE_DIR", None)
-
 """AgenticOs runtime orchestration."""
 
 from datetime import datetime
@@ -9,13 +5,11 @@ import os
 import platform
 import random
 import re
-import subprocess
 import sys
 import time
 import traceback
 from typing import Callable, Dict, Optional, Tuple
 
-import requests
 
 try:
     import psutil
@@ -32,19 +26,11 @@ except ImportError:
     except ImportError:
         readline = None
 
-from kernel.audit import AuditLogger, infer_success
-from kernel.context import ContextEngine
+from kernel.audit import AuditLogger, infer_success  # noqa: F401
+from kernel.context import ContextEngine  # noqa: F401
 from kernel.log import get_logger
-from kernel.memory import initialize_memory_manager, log_task_completion
+from kernel.memory import initialize_memory_manager, log_task_completion  # noqa: F401
 from kernel.models import (
-    DeepseekClient,
-    GeminiClient,
-    GithubClient,
-    GroqClient,
-    NvidiaClient,
-    OllamaClient,
-    OpenAIClient,
-    OpenRouterClient,
     TieredClient,
 )  # noqa: F401
 from kernel.settings import (
@@ -56,7 +42,6 @@ from kernel.settings import (
 
 from kernel.ui import (
     C,
-    banner,
     has_final_answer,
     parse_actions,
     print_action,
@@ -68,12 +53,17 @@ from kernel.ui import (
     pulse_line,
     typewriter_print,
 )
-from kernel.store import SqliteSessionMemory
+from kernel.store import SqliteSessionMemory  # noqa: F401
 from kernel.tasks import TaskTracker
-from kernel.registry import ToolRegistry
-from kernel.version import DEFAULT_VERSION
+from kernel.registry import ToolRegistry  # noqa: F401
+from kernel.version import DEFAULT_VERSION  # noqa: F401
 
 logger = get_logger(__name__)
+
+
+def _get_base_dir() -> str:
+    import kernel.cli as runtime
+    return getattr(runtime, "BASE_DIR", None)
 
 
 PROVIDER_CLIENT_MAP = {
@@ -360,6 +350,7 @@ class Agent:
             changed_files = [changed_files]
 
         try:
+            import importlib
             cfg_changed = "cfg.yaml" in changed_files
             py_changed = any(f.endswith(".py") for f in changed_files)
 
@@ -370,7 +361,6 @@ class Agent:
                 self._reload_cfg()
 
             if py_changed:
-                import importlib
 
                 # If any tool-related file changed, force a reload of the registry and major mixins
                 for f in changed_files:
@@ -380,6 +370,8 @@ class Agent:
                             "kernel.registry",
                             "ops.web.spotify",
                             "ops.web.browser",
+                            "ops.web",
+                            "ops.shell",
                         ]:
                             if mod in sys.modules:
                                 try:
@@ -397,7 +389,43 @@ class Agent:
                             logger.info(
                                 f"{C.YELLOW}↻  File changed: {f}. Reloading module...{C.RESET}"
                             )
-                            importlib.reload(sys.modules[mod_name])
+                            # importlib.reload() requires every ancestor package to
+                            # already be present in sys.modules. Walk the parent chain
+                            # and import any that are missing before attempting reload.
+                            parts = mod_name.split(".")
+                            parents_ok = True
+                            for i in range(1, len(parts)):
+                                parent = ".".join(parts[:i])
+                                if parent not in sys.modules:
+                                    try:
+                                        importlib.import_module(parent)
+                                    except Exception:
+                                        parents_ok = False
+                                        break
+                            if not parents_ok:
+                                print_warning(
+                                    f"Warning: Skipping reload of {mod_name} "
+                                    "— parent package could not be initialized."
+                                )
+                                continue
+                            try:
+                                importlib.reload(sys.modules[mod_name])
+                            except ImportError as e:
+                                if "not in sys.modules" in str(e):
+                                    # Parent still missing despite our import attempt
+                                    # (e.g. namespace package edge case) — skip gracefully.
+                                    print_warning(
+                                        f"Warning: Skipping reload of {mod_name} "
+                                        "— parent package not yet initialized."
+                                    )
+                                else:
+                                    print_warning(
+                                        f"Warning: Failed to reload module {mod_name}: {e}"
+                                    )
+                            except AttributeError as e:
+                                print_warning(
+                                    f"Warning: Failed to reload module {mod_name}: {e}"
+                                )
 
             # Re-initialize tool registry
             import kernel.registry

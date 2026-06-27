@@ -895,6 +895,12 @@ class TieredClient:
         """last_list_error function."""
         self._active.last_list_error = value
 
+    @property
+    def api_key(self):
+        """api_key function."""
+        return getattr(self._active, "api_key", None)
+
+
     def list_models(self) -> list:
         """list_models function."""
         return self._active.list_models()

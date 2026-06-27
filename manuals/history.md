@@ -78,7 +78,7 @@ The v2.0.0 release focuses on transforming AgenticOS into a resilient system cap
 
 ### Key Innovations:
 1.  **Fast-Path PowerShell Tooling**: Replaced inefficient Python-based recursive crawlers with native PowerShell pipelines. This reduced drive-audit times from 30+ minutes to <3 minutes.
-2.  **Zone-Based PathGuard**: Implemented a non-bypassable security layer that restricts the agent to specific filesystem zones (Green, Yellow, Red).
+2.  **Zone-Based PathGuard**: Implemented a non-bypassable security layer that restricts the agent to specific filesystem zones (Green, Yellow, Red, Blue, Black).
 3.  **Exponential Backoff Shield**: Integrated a resilient API client that autonomously handles `429 Too Many Requests` errors using an exponential retry logic.
 4.  **No-Lag UI**: Optimized the terminal rendering engine to use block-level output, eliminating the CPU thrashing caused by the character-by-character "typewriter" effect.
 5.  **Persistent SQLite Memory**: Migrated session memory to a structured SQLite database for faster querying and long-term task persistence.

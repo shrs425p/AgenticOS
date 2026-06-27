@@ -89,8 +89,8 @@ rules:
   allow_system_changes: true
   allow_process_control: true
   allow_network_access: true
-  allow_registry_edit: true
-  allow_service_control: true
+  allow_registry_edit: false
+  allow_service_control: false
   require_confirm_destructive: false
   require_confirm_network: false
   require_confirm_shell: false
@@ -98,15 +98,15 @@ rules:
 system_control:
   allow_shutdown: true
   allow_restart: true
-  allow_service_control: true
+  allow_service_control: false
   allow_process_control: true
-  allow_registry_access: true
+  allow_registry_access: false
   allow_scheduled_tasks: true
 
 security:
   sandbox_mode: false
   restrict_paths: false
-  validate_commands: false
+  validate_commands: true
   enable_zone_guard: true
   blocked_paths: []
   require_hitm_outside_workspace: false

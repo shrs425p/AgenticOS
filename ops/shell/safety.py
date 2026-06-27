@@ -46,25 +46,26 @@ class RegistryGuard:
 
     def check_key(self, key_str: str) -> tuple[bool, str]:
         normalized = self.normalize_key(key_str)
+        normalized_with_slash = normalized + "\\"
         
         # 1. Check default blocked keys
         for pattern in self.DEFAULT_BLOCKED:
-            if fnmatch.fnmatch(normalized, pattern):
+            if fnmatch.fnmatch(normalized, pattern) or fnmatch.fnmatch(normalized_with_slash, pattern):
                 return False, f"SECURITY POLICY: Modification of system critical key '{key_str}' is strictly blocked."
 
         # 2. Check cfg blocked keys
         for pattern in self.blocked:
-            if fnmatch.fnmatch(normalized, pattern):
+            if fnmatch.fnmatch(normalized, pattern) or fnmatch.fnmatch(normalized_with_slash, pattern):
                 return False, f"SECURITY POLICY: Key '{key_str}' is explicitly blocked by cfg."
 
         # 3. Check allowed keys
         for pattern in self.allowed:
-            if fnmatch.fnmatch(normalized, pattern):
+            if fnmatch.fnmatch(normalized, pattern) or fnmatch.fnmatch(normalized_with_slash, pattern):
                 return True, "Allowed"
 
         # 4. Check approval keys
         for pattern in self.approval:
-            if fnmatch.fnmatch(normalized, pattern):
+            if fnmatch.fnmatch(normalized, pattern) or fnmatch.fnmatch(normalized_with_slash, pattern):
                 return False, "HITM_REQUIRED"
 
         # Default fallback: Require approval for modification
@@ -372,6 +373,13 @@ class SafetyMixin:
 
         # Step 5: Check safety rules against exact command verbs and arguments
         # 5.1 Registry edits
+        if not self.rules.get("allow_registry_edit", False):
+            cmd_lower = cmd_str.lower()
+            if "microsoft.win32.registry" in cmd_lower:
+                return "Command blocked by safety rules: .NET registry API access is prohibited."
+            if "stdregprov" in cmd_lower:
+                return "Command blocked by safety rules: WMI registry provider access is prohibited."
+
         if verb == "reg" and len(cleaned_tokens) > 1:
             subaction = cleaned_tokens[1].lower()
             if subaction in {"add", "delete", "import"}:
@@ -437,6 +445,11 @@ class SafetyMixin:
                 if subaction in {"start", "stop"}:
                     return f"Command blocked by safety rules: net {subaction}"
             if verb in {"systemctl", "service"}:
+                return f"Command blocked by safety rules: {verb}"
+            if verb in {
+                "stop-service", "start-service", "restart-service",
+                "set-service", "suspend-service", "resume-service", "new-service"
+            }:
                 return f"Command blocked by safety rules: {verb}"
 
         # 5.3 System changes

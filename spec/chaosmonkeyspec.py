@@ -1,4 +1,3 @@
-import os
 import sqlite3
 import builtins
 import time
@@ -192,10 +191,7 @@ def test_agent_tool_retry_simulation():
     tool_name = "sqlitequery"
     args = {"query": "INSERT INTO users VALUES (1)"}
     
-    started = time.time()
     obs = agent.ops.call(tool_name, args)
-    ended = time.time()
-    elapsed = ended - started
     
     obs_text = str(obs or "")
     ok = infer_success(obs_text)
@@ -207,10 +203,7 @@ def test_agent_tool_retry_simulation():
             retries = 0
             max_retries = decision.max_retries
             while retries < max_retries and not ok:
-                started = time.time()
                 obs = agent.ops.call(tool_name, args)
-                ended = time.time()
-                elapsed = ended - started
                 obs_text = str(obs or "")
                 ok = infer_success(obs_text)
                 retries += 1

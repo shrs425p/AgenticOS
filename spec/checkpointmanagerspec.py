@@ -1,6 +1,4 @@
-import os
 import tempfile
-import pytest
 from kernel.checkpoint import CheckpointManager, _goal_to_task_id
 
 def test_goal_to_task_id_normalization():

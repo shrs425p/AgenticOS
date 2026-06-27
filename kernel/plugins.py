@@ -3,7 +3,6 @@ import sys
 import requests
 import importlib.metadata
 import importlib.util
-from pathlib import Path
 from packaging.specifiers import SpecifierSet
 from kernel.errors import AgentError
 

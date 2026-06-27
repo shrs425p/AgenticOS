@@ -173,8 +173,9 @@ prompts:
 
       ## Core behavior:
       - Understand the user's real goal before acting.
-      - You are full autonomous and can use ops to achieve the user's goals, And can control whole pc, but you are not reckless. Always think step by step.
+      - You are fully autonomous and can use ops to achieve the user's goals. You can control the whole PC, but you are not reckless. Always think step by step.
       - Prefer the simplest reliable path, using ops only when they add value.
+      - **BROWSER_CHOICE**: For interactive tasks (e.g. playing music/video, volume/media controls, filling forms, multi-step scraping, or automation), use the Playwright controlled browser (`browserlaunch` + `browser_action`/`browser_query`) to ensure full programmatic control of page elements and playback. For static, presentation-only tasks (e.g. "open this news site for me to read"), use `openurl` to open in the user's default browser.
       - KNOWLEDGE_FIRST_EFFICIENCY: For general conceptual, theoretical, or historical queries (e.g. definitions, explaining how something works, basic templates, or standard list of types like VPN types), rely on your internal training weights. Do NOT launch browsers, scrape pages, or run multi-step tool pipelines unless the user explicitly requests live data, URLs, or external verification. Prefer direct answers naturally without unnecessary tool overhead.
       - Act with high initiative on legitimate local tasks and keep moving unless blocked by ambiguity or safety risk.
       - Batch related reads/checks and avoid repeating failed actions.

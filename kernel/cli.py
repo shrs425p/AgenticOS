@@ -3,13 +3,12 @@
 from datetime import datetime
 import os
 import platform
-import random
 import re
 import subprocess
 import sys
 import time
 import traceback
-from typing import Callable, Dict, Optional, Tuple
+from typing import Optional
 
 import requests
 
@@ -28,44 +27,34 @@ except ImportError:
     except ImportError:
         readline = None
 
-from kernel.audit import AuditLogger, infer_success
-from kernel.context import ContextEngine
+from kernel.audit import AuditLogger, infer_success  # noqa: F401
+from kernel.context import ContextEngine  # noqa: F401
 from kernel.log import get_logger
-from kernel.memory import initialize_memory_manager, log_task_completion
-from kernel.models import (
-    DeepseekClient,
-    GeminiClient,
-    GithubClient,
-    GroqClient,
-    NvidiaClient,
-    OllamaClient,
-    OpenAIClient,
-    OpenRouterClient,
-    TieredClient,
-)  # noqa: F401
+from kernel.memory import initialize_memory_manager, log_task_completion  # noqa: F401
+from kernel.models import DeepseekClient, GeminiClient, GithubClient, GroqClient, NvidiaClient, OllamaClient, OpenAIClient, OpenRouterClient, TieredClient  # noqa: F401
 from kernel.settings import (
     BASE_DIR,
-    DEFAULT_SCAN_EXCLUDED_DIRS,
+    DEFAULT_SCAN_EXCLUDED_DIRS,  # noqa: F401
     DEFAULT_WORKSPACE,
     load_cfg,
 )
 from kernel.ui import (
     C,
     banner,
-    has_final_answer,
-    parse_actions,
-    print_action,
+    has_final_answer,  # noqa: F401
+    parse_actions,  # noqa: F401
+    print_action,  # noqa: F401
     print_error,
     print_info,
-    print_observation,
+    print_observation,  # noqa: F401
     print_success,
     print_warning,
-    pulse_line,
-    typewriter_print,
+    pulse_line,  # noqa: F401
+    typewriter_print,  # noqa: F401
 )
-from kernel.store import SqliteSessionMemory
-from kernel.tasks import TaskTracker
-from kernel.registry import ToolRegistry
+from kernel.store import SqliteSessionMemory  # noqa: F401
+from kernel.tasks import TaskTracker  # noqa: F401
+from kernel.registry import ToolRegistry  # noqa: F401
 from kernel.version import DEFAULT_VERSION
 
 logger = get_logger(__name__)
@@ -83,7 +72,7 @@ PROVIDER_CLIENT_MAP = {
 }
 
 
-from kernel.agent import Agent
+from kernel.agent import Agent  # noqa: E402
 
 class CommandCompleter:
     """Readline custom completer for AgenticOS CLI."""
@@ -963,19 +952,16 @@ class CLI:
                 return
 
             # Zone configurations: (name, enabled, require_hitm, read_only)
-            #   green  → guard ON + HITM required       (strictest sandbox)
-            #   yellow → guard ON, no HITM              (autonomous outside workspace)
-            #   red    → guard OFF                      (fully unrestricted)
-            #   blue   → guard ON, all writes blocked   (read-only / audit mode)
             ZONE_STATES = [
                 ("green", True, True, False),
                 ("yellow", True, False, False),
                 ("red", False, False, False),
                 ("blue", True, False, True),
+                ("black", False, False, False),
             ]
 
-            # Numeric aliases: 1=green, 2=yellow, 3=red, 4=blue
-            ALIASES = {"1": "green", "2": "yellow", "3": "red", "4": "blue"}
+            # Numeric aliases: 1=red, 2=green, 3=yellow, 4=blue
+            ALIASES = {"1": "red", "2": "green", "3": "yellow", "4": "blue", "5": "black"}
 
             arg = (parts[1].strip().lower() if len(parts) > 1 else "") or ""
             arg = ALIASES.get(arg, arg)
@@ -983,34 +969,9 @@ class CLI:
             if arg and arg not in (z[0] for z in ZONE_STATES):
                 print_error(
                     f"Unknown zone: '{arg}'. "
-                    "Valid options: green, yellow, red, blue (or 1, 2, 3, 4)."
+                    "Valid options: green, yellow, red, blue, black (or 1, 2, 3, 4, 5)."
                 )
                 return
-
-            if arg:
-                target = next(z for z in ZONE_STATES if z[0] == arg)
-            else:
-                # Sequential toggle: match current guard state to find index
-                current_enabled = guard.enabled
-                current_hitm = guard.require_hitm
-                current_readonly = getattr(guard, "read_only", False)
-                current_idx = 0
-                for i, (_, en, hm, ro) in enumerate(ZONE_STATES):
-                    if (
-                        en == current_enabled
-                        and hm == current_hitm
-                        and ro == current_readonly
-                    ):
-                        current_idx = i
-                        break
-                target = ZONE_STATES[(current_idx + 1) % len(ZONE_STATES)]
-
-            zone_name, zone_enabled, zone_hitm, zone_readonly = target
-
-            # Apply to live PathGuard instance immediately
-            guard.enabled = zone_enabled
-            guard.require_hitm = zone_hitm
-            guard.read_only = zone_readonly
 
             # Colour per zone
             ZONE_COLORS = {
@@ -1018,7 +979,75 @@ class CLI:
                 "yellow": C.AMBER,
                 "red": C.ROSE,
                 "blue": C.BLUE,
+                "black": C.WHITE,
             }
+            zone_desc = {
+                "green": "Workspace-only autonomy. Writes outside workspace require human approval.",
+                "yellow": "PathGuard active. Outside-workspace modifications allowed autonomously.",
+                "red": "PathGuard disabled. Agent has unrestricted filesystem access.",
+                "blue": "Audit / read-only mode. All write and delete operations blocked system-wide.",
+                "black": "GOD MODE. ALL security disabled. No rules, no restrictions, full system control.",
+            }
+
+            if not arg:
+                # No argument → show current zone status only, no switching
+                # Validate zone_name is a known string (guards against MagicMock in tests)
+                _raw = getattr(guard, "zone_name", None)
+                cur_name = _raw if isinstance(_raw, str) and _raw in ZONE_COLORS else None
+                if cur_name is None:
+                    if not guard.enabled:
+                        cur_name = "red"
+                    elif getattr(guard, "read_only", False):
+                        cur_name = "blue"
+                    elif guard.require_hitm:
+                        cur_name = "green"
+                    else:
+                        cur_name = "yellow"
+
+                cur_enabled = guard.enabled
+                cur_hitm = guard.require_hitm
+                cur_readonly = getattr(guard, "read_only", False)
+                zone_color = ZONE_COLORS.get(cur_name, C.SLATE)
+
+                guard_label = (
+                    f"{C.EMERALD}ENABLED{C.RESET}"
+                    if cur_enabled
+                    else f"{C.ROSE}DISABLED{C.RESET}"
+                )
+                hitm_label = (
+                    f"{C.AMBER}ON — write outside workspace requires approval{C.RESET}"
+                    if cur_hitm
+                    else f"{C.EMERALD}OFF — fully autonomous{C.RESET}"
+                )
+                ro_label = (
+                    f"{C.BLUE}ON — all writes and deletes blocked globally{C.RESET}"
+                    if cur_readonly
+                    else f"{C.SLATE}OFF{C.RESET}"
+                )
+
+                logger.info(
+                    f"\n{zone_color}{C.BOLD}◆ Current Zone: {cur_name.upper()} ZONE{C.RESET}"
+                )
+                logger.info(f"  PathGuard  : {guard_label}")
+                logger.info(f"  HITM       : {hitm_label}")
+                logger.info(f"  Read-Only  : {ro_label}")
+                logger.info(f"  {C.DIM}{zone_desc[cur_name]}{C.RESET}")
+                logger.info(
+                    f"  {C.DIM}Use /zone <green|yellow|red|blue|black> or /zone <1|2|3|4|5> to switch.{C.RESET}"
+                )
+                return
+
+            # Switch to the requested zone
+            target = next(z for z in ZONE_STATES if z[0] == arg)
+            zone_name, zone_enabled, zone_hitm, zone_readonly = target
+
+            # Apply to live PathGuard instance immediately
+            guard.enabled = zone_enabled
+            guard.require_hitm = zone_hitm
+            guard.read_only = zone_readonly
+            # Persist zone name so the LLM context engine can report the current zone
+            guard.zone_name = zone_name
+
             zone_color = ZONE_COLORS.get(zone_name, C.SLATE)
 
             # Status labels
@@ -1041,17 +1070,22 @@ class CLI:
             logger.info(
                 f"\n{zone_color}{C.BOLD}◆ Zone switched → {zone_name.upper()} ZONE{C.RESET}"
             )
-            logger.info(f"  PathGuard  : {guard_label}")
-            logger.info(f"  HITM       : {hitm_label}")
-            logger.info(f"  Read-Only  : {ro_label}")
-
-            zone_desc = {
-                "green": "Workspace-only autonomy. Writes outside workspace require human approval.",
-                "yellow": "PathGuard active. Outside-workspace modifications allowed autonomously.",
-                "red": "PathGuard disabled. Agent has unrestricted filesystem access.",
-                "blue": "Audit / read-only mode. All write and delete operations blocked system-wide.",
-            }
+            if zone_name == "black":
+                logger.info(f"  PathGuard  : {C.ROSE}DISABLED{C.RESET}")
+                logger.info(f"  HITM       : {C.ROSE}DISABLED{C.RESET}")
+                logger.info(f"  Read-Only  : {C.ROSE}DISABLED{C.RESET}")
+                logger.info(f"  CmdValid   : {C.ROSE}DISABLED{C.RESET}")
+                logger.info(f"  Registry   : {C.EMERALD}FULL ACCESS{C.RESET}")
+                logger.info(f"  Services   : {C.EMERALD}FULL ACCESS{C.RESET}")
+                logger.info(f"  Shielded   : {C.ROSE}UNPROTECTED{C.RESET}")
+                logger.info(f"  {C.ROSE}{C.BOLD}⚠ GOD MODE — ALL security disabled. No restrictions.{C.RESET}")
+            else:
+                logger.info(f"  PathGuard  : {guard_label}")
+                logger.info(f"  HITM       : {hitm_label}")
+                logger.info(f"  Read-Only  : {ro_label}")
             logger.info(f"  {C.DIM}{zone_desc[zone_name]}{C.RESET}")
+
+
 
         elif base == "/sysinfo":
             logger.info(
@@ -1302,7 +1336,7 @@ class CLI:
                         readline.set_completer_delims(delims.replace("/", ""))
                 completer = CommandCompleter(self.COMMANDS.keys(), self)
                 readline.set_completer(completer.complete)
-                readline.parse_and_clid("tab: complete")
+                readline.parse_and_bind("tab: complete")
             except (RuntimeError, ImportError) as e:
                 print_warning(f"Warning: Failed to configure autocompletion: {e}")
 

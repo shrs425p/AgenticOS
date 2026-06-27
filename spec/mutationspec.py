@@ -1,7 +1,6 @@
 import os
 import subprocess
 import sys
-import pytest
 
 VECTOR_MEMORY_PATH = os.path.abspath("ops/addons/vector.py")
 

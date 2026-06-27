@@ -17,7 +17,7 @@ autonomy:
   autopilot: true
   startup_provider_prompt: false
   startup_model_prompt: false
-  power_mode: true
+  power_mode: false
   active_planning: true
   enforce_progress: true
   validate_results: true
@@ -25,3 +25,6 @@ ops:
   profile: power_os
   url_presets: false
 log_level: INFO
+
+# hello
+# hello

@@ -254,7 +254,6 @@ class BrowserMixin:
         except Exception as e:
             return f"Navigation error: {type(e).__name__}: {e}"
 
-    @tool(name="browsergoback", desc="Navigate back in the tab history.", category="Web")
     @_ensure_browser
     async def browsergoback(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -267,7 +266,6 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
-    @tool(name="browsergoforward", desc="Navigate forward in the tab history.", category="Web")
     @_ensure_browser
     async def browsergoforward(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -280,7 +278,6 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
-    @tool(name="browserreload", desc="Reload the active browser tab.", category="Web")
     @_ensure_browser
     async def browserreload(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -293,7 +290,6 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
-    @tool(name="browsernewtab", desc="Open a new blank or target tab. Args: url", category="Web")
     @_ensure_browser
     async def browsernewtab(self, mgr: BrowserManager, url: str = "") -> str:
         err = self._require_page(mgr)
@@ -310,7 +306,6 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
-    @tool(name="browsergeturl", desc="Get the current URL of the active browser tab.", category="Web")
     @_ensure_browser
     async def browsergeturl(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -318,7 +313,6 @@ class BrowserMixin:
             return err
         return mgr.page.url
 
-    @tool(name="browsergettitle", desc="Get the active tab page title.", category="Web")
     @_ensure_browser
     async def browsergettitle(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -326,7 +320,6 @@ class BrowserMixin:
             return err
         return await mgr.page.title()
 
-    @tool(name="browsergettext", desc="Get all visible text content of the active page.", category="Web")
     @_ensure_browser
     async def browsergettext(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -342,7 +335,6 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
-    @tool(name="browsergethtml", desc="Get the full HTML source of the active page.", category="Web")
     @_ensure_browser
     async def browsergethtml(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -355,7 +347,6 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
-    @tool(name="browsergetelementtext", desc="Get text content of an element matching a CSS selector.", category="Web")
     @_ensure_browser
     async def browsergetelementtext(self, mgr: BrowserManager, selector: str) -> str:
         err = self._require_page(mgr)
@@ -369,7 +360,6 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
-    @tool(name="browsergetelements", desc="Query elements on the active page via CSS selector.", category="Web")
     @_ensure_browser
     async def browsergetelements(self, mgr: BrowserManager, selector: str) -> str:
         err = self._require_page(mgr)
@@ -388,7 +378,6 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
-    @tool(name="browsergetlinks", desc="List all links found on the active page.", category="Web")
     @_ensure_browser
     async def browsergetlinks(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -402,7 +391,6 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
-    @tool(name="browsergetinputs", desc="List all input fields, buttons, and forms on the page.", category="Web")
     @_ensure_browser
     async def browsergetinputs(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -421,7 +409,6 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
-    @tool(name="browserclick", desc="Click an element matching the CSS selector.", category="Web")
     @_ensure_browser
     async def browserclick(self, mgr: BrowserManager, selector: str) -> str:
         err = self._require_page(mgr)
@@ -434,7 +421,6 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
-    @tool(name="browserfill", desc="Fill an input field matching the CSS selector with a value.", category="Web")
     @_ensure_browser
     async def browserfill(self, mgr: BrowserManager, selector: str, value: str) -> str:
         err = self._require_page(mgr)
@@ -447,7 +433,6 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
-    @tool(name="browsertype", desc="Type text into an element matching a CSS selector, with custom key delay. Args: selector, text, delay_ms", category="Web")
     @_ensure_browser
     async def browsertype(
         self, mgr: BrowserManager, selector: str, text: str, delay_ms: str = "50"
@@ -463,7 +448,6 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
-    @tool(name="browserpresskey", desc="Press a keyboard key in the active page (e.g. 'Enter', 'Tab').", category="Web")
     @_ensure_browser
     async def browserpresskey(self, mgr: BrowserManager, key: str) -> str:
         err = self._require_page(mgr)
@@ -475,7 +459,6 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
-    @tool(name="browserscroll", desc="Scroll the active page by a direction and amount. Args: direction, amount", category="Web")
     @_ensure_browser
     async def browserscroll(
         self, mgr: BrowserManager, direction: str = "down", amount: str = "500"
@@ -499,7 +482,6 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {type(e).__name__}: {e}"
 
-    @tool(name="browserwaitfor", desc="Wait for an element matching a CSS selector to appear. Args: selector, timeout_ms", category="Web")
     @_ensure_browser
     async def browserwaitfor(
         self, mgr: BrowserManager, selector: str, timeout_ms: str = "10000"
@@ -514,7 +496,6 @@ class BrowserMixin:
         except (RuntimeError, TimeoutError, AttributeError):
             return f"Timeout: {selector}"
 
-    @tool(name="browserexecutejs", desc="Execute raw JavaScript code in the page context. Args: code", category="Web")
     @_ensure_browser
     async def browserexecutejs(self, mgr: BrowserManager, code: str) -> str:
         err = self._require_page(mgr)
@@ -542,7 +523,6 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {e}"
 
-    @tool(name="browserselect", desc="Select an option in a dropdown element matching the CSS selector. Args: selector, value", category="Web")
     @_ensure_browser
     async def browserselect(
         self, mgr: BrowserManager, selector: str, value: str
@@ -559,7 +539,6 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {e}"
 
-    @tool(name="browsergetcookies", desc="Get all cookies for the active browser context.", category="Web")
     @_ensure_browser
     async def browsergetcookies(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -571,7 +550,6 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {e}"
 
-    @tool(name="browsersetcookie", desc="Set a cookie in the active browser context. Args: name, value, domain, path", category="Web")
     @_ensure_browser
     async def browsersetcookie(
         self,
@@ -593,7 +571,6 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {e}"
 
-    @tool(name="browserclearcookies", desc="Clear all cookies for the active browser context.", category="Web")
     @_ensure_browser
     async def browserclearcookies(self, mgr: BrowserManager) -> str:
         err = self._require_page(mgr)
@@ -605,7 +582,6 @@ class BrowserMixin:
         except Exception as e:
             return f"Error: {e}"
 
-    @tool(name="browsercheck", desc="Check or uncheck a checkbox matching the CSS selector. Args: selector, checked", category="Web")
     @_ensure_browser
     async def browsercheck(
         self, mgr: BrowserManager, selector: str, checked: str = "true"
@@ -623,3 +599,83 @@ class BrowserMixin:
                 return f"Unchecked: {selector}"
         except Exception as e:
             return f"Error: {e}"
+
+    @tool(name="browser_query", desc="Perform read-only query on active browser page. Args: action (Literal['getcookies', 'getelements', 'getelementtext', 'gethtml', 'getinputs', 'getlinks', 'gettext', 'gettitle', 'geturl']), selector (str, optional, for getelements/getelementtext), name (str, optional)", category="Web")
+    @_ensure_browser
+    async def browser_query(self, mgr: BrowserManager, action: str, selector: str = "", name: str = "") -> str:
+        """Perform a query on the browser state or page contents."""
+        act = str(action).strip().lower()
+        if act == "geturl":
+            return await self.browsergeturl.__wrapped__(self, mgr)
+        elif act == "gettitle":
+            return await self.browsergettitle.__wrapped__(self, mgr)
+        elif act == "gettext":
+            return await self.browsergettext.__wrapped__(self, mgr)
+        elif act == "gethtml":
+            return await self.browsergethtml.__wrapped__(self, mgr)
+        elif act == "getelementtext":
+            return await self.browsergetelementtext.__wrapped__(self, mgr, selector)
+        elif act == "getelements":
+            return await self.browsergetelements.__wrapped__(self, mgr, selector)
+        elif act == "getlinks":
+            return await self.browsergetlinks.__wrapped__(self, mgr)
+        elif act == "getinputs":
+            return await self.browsergetinputs.__wrapped__(self, mgr)
+        elif act == "getcookies":
+            return await self.browsergetcookies.__wrapped__(self, mgr)
+        else:
+            return f"Error: Unknown browser query action: {action}. Valid options: geturl, gettitle, gettext, gethtml, getelementtext, getelements, getlinks, getinputs, getcookies"
+
+    @tool(name="browser_action", desc="Perform action on browser/page. Args: action (Literal['click', 'fill', 'type', 'select', 'scroll', 'presskey', 'waitfor', 'reload', 'goback', 'goforward', 'newtab', 'clearcookies', 'setcookie', 'executejs', 'check']), selector (str, optional), text (str, optional), value (str, optional), key (str, optional), script (str, optional), url (str, optional), direction (str, optional), amount (str, optional), delay_ms (int, optional), checked (str, optional)", category="Web")
+    @_ensure_browser
+    async def browser_action(
+        self,
+        mgr: BrowserManager,
+        action: str,
+        selector: str = "",
+        text: str = "",
+        value: str = "",
+        key: str = "",
+        script: str = "",
+        url: str = "",
+        direction: str = "down",
+        amount: str = "500",
+        delay_ms: int = 0,
+        checked: str = "true"
+    ) -> str:
+        """Perform action/mutation on the browser or page."""
+        act = str(action).strip().lower()
+        if act == "click":
+            return await self.browserclick.__wrapped__(self, mgr, selector)
+        elif act == "fill":
+            return await self.browserfill.__wrapped__(self, mgr, selector, value)
+        elif act == "type":
+            return await self.browsertype.__wrapped__(self, mgr, selector, text, delay_ms)
+        elif act == "select":
+            return await self.browserselect.__wrapped__(self, mgr, selector, value)
+        elif act == "scroll":
+            return await self.browserscroll.__wrapped__(self, mgr, direction, amount)
+        elif act == "presskey":
+            return await self.browserpresskey.__wrapped__(self, mgr, key)
+        elif act == "waitfor":
+            return await self.browserwaitfor.__wrapped__(self, mgr, selector, str(delay_ms) if delay_ms > 0 else "5000")
+        elif act == "reload":
+            return await self.browserreload.__wrapped__(self, mgr)
+        elif act == "goback":
+            return await self.browsergoback.__wrapped__(self, mgr)
+        elif act == "goforward":
+            return await self.browsergoforward.__wrapped__(self, mgr)
+        elif act == "newtab":
+            return await self.browsernewtab.__wrapped__(self, mgr, url)
+        elif act == "clearcookies":
+            return await self.browserclearcookies.__wrapped__(self, mgr)
+        elif act == "setcookie":
+            # For setcookie: selector=name, value=value, url=domain, text=path
+            path = text if text else "/"
+            return await self.browsersetcookie.__wrapped__(self, mgr, name=selector, value=value, domain=url, path=path)
+        elif act == "executejs":
+            return await self.browserexecutejs.__wrapped__(self, mgr, script)
+        elif act == "check":
+            return await self.browsercheck.__wrapped__(self, mgr, selector, checked)
+        else:
+            return f"Error: Unknown browser action: {action}. Valid options: click, fill, type, select, scroll, presskey, waitfor, reload, goback, goforward, newtab, clearcookies, setcookie, executejs, check"

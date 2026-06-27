@@ -133,6 +133,35 @@ class ContextEngine:
             if divider not in shadow_block:
                 shadow_block += divider
 
+        # 5b. Active Security Zone (derived from live PathGuard state)
+        zone_block = ""
+        guard = getattr(self.agent.ops, "guard", None)
+        if guard is not None:
+            # Use persisted zone_name if available, else derive from guard state
+            zone_name = getattr(guard, "zone_name", None)
+            if zone_name is None:
+                if not guard.enabled:
+                    zone_name = "red"
+                elif getattr(guard, "read_only", False):
+                    zone_name = "blue"
+                elif guard.require_hitm:
+                    zone_name = "green"
+                else:
+                    zone_name = "yellow"
+            zone_desc = {
+                "green": "GREEN ZONE — PathGuard ON, HITM required for writes outside workspace. File writes confined to workspace/.",
+                "yellow": "YELLOW ZONE — PathGuard ON, autonomous writes allowed anywhere on filesystem.",
+                "red": "RED ZONE — PathGuard DISABLED. Agent has UNRESTRICTED filesystem access. No path restrictions.",
+                "blue": "BLUE ZONE — Read-only / audit mode. ALL write and delete operations are blocked system-wide.",
+                "black": "BLACK ZONE — GOD MODE. ALL security disabled. No command validation, no path restrictions, no shielded files. Full unrestricted system control.",
+            }
+            zone_block = (
+                f"\n\n### SECURITY_ZONE\n"
+                f"Current zone: {zone_name.upper()} ZONE\n"
+                f"{zone_desc.get(zone_name, zone_name)}\n"
+                + divider
+            )
+
         # 6. Proactive Context (Active Recall & Commitments)
         proactive_block = recall_context + commitments_context
 
@@ -164,7 +193,7 @@ class ContextEngine:
                 from kernel.log import get_logger
                 get_logger("context_engine").warning("Failed to auto-inject file %s: %s", f_name, e)
 
-        return system + workspace_block + task_block + canvas_block + shadow_block + proactive_block + file_map_block + file_memory_block
+        return system + workspace_block + task_block + canvas_block + shadow_block + zone_block + proactive_block + file_map_block + file_memory_block
 
     def get_active_recall(self, user_input: str) -> str:
         """Perform pre-flight retrieval from memory manager.

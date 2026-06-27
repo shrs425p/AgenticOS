@@ -2,7 +2,6 @@
 
 import re
 import json
-import sys
 import asyncio
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, List, Tuple, Any, Callable, Optional, AsyncIterator

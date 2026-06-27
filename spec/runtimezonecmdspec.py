@@ -36,42 +36,52 @@ def _make_cli(enabled: bool = True, require_hitm: bool = True, read_only: bool =
 
 # ── Tests ──────────────────────────────────────────────────────────────────────
 
-def test_zone_toggle_green_to_yellow():
-    """Starting at green (enabled+hitm) → toggle → yellow (enabled, no hitm)."""
+def test_zone_switch_green_to_yellow():
+    """'/zone yellow' from green → switches to yellow (enabled, no hitm)."""
     cli, guard = _make_cli(enabled=True, require_hitm=True)
-    cli.handle_command("/zone")
+    cli.handle_command("/zone yellow")
 
     assert guard.enabled is True
     assert guard.require_hitm is False
 
 
-def test_zone_toggle_yellow_to_red():
-    """Starting at yellow (enabled, no hitm) → toggle → red (disabled)."""
+def test_zone_switch_yellow_to_red():
+    """'/zone red' from yellow → red (disabled)."""
     cli, guard = _make_cli(enabled=True, require_hitm=False)
-    cli.handle_command("/zone")
+    cli.handle_command("/zone red")
 
     assert guard.enabled is False
     assert guard.require_hitm is False
 
 
-def test_zone_toggle_red_to_blue():
-    """Starting at red (disabled) → toggle → blue (read-only)."""
+def test_zone_switch_red_to_blue():
+    """'/zone blue' from red → blue (read-only)."""
     cli, guard = _make_cli(enabled=False, require_hitm=False, read_only=False)
-    cli.handle_command("/zone")
+    cli.handle_command("/zone blue")
 
     assert guard.enabled is True
     assert guard.require_hitm is False
     assert guard.read_only is True
 
 
-def test_zone_toggle_blue_to_green():
-    """Starting at blue (read_only) → toggle wraps back to green."""
+def test_zone_switch_blue_to_green():
+    """'/zone green' from blue wraps back to green."""
     cli, guard = _make_cli(enabled=True, require_hitm=False, read_only=True)
-    cli.handle_command("/zone")
+    cli.handle_command("/zone green")
 
     assert guard.enabled is True
     assert guard.require_hitm is True
     assert guard.read_only is False
+
+
+def test_zone_no_arg_does_not_change_guard():
+    """'/zone' with no argument shows status and does NOT modify the guard."""
+    cli, guard = _make_cli(enabled=True, require_hitm=True)
+    cli.handle_command("/zone")
+
+    # Guard must be completely untouched
+    assert guard.enabled is True
+    assert guard.require_hitm is True
 
 
 def test_zone_direct_switch_to_green():
@@ -101,31 +111,62 @@ def test_zone_direct_switch_to_red():
     assert guard.require_hitm is False
 
 
-def test_zone_numeric_alias_1_green():
-    """'/zone 1' is an alias for green."""
-    cli, guard = _make_cli(enabled=False, require_hitm=False)
+def test_zone_numeric_alias_1_red():
+    """'/zone 1' is an alias for red."""
+    cli, guard = _make_cli(enabled=True, require_hitm=True)
     cli.handle_command("/zone 1")
+
+    assert guard.enabled is False
+    assert guard.require_hitm is False
+
+
+def test_zone_numeric_alias_2_green():
+    """'/zone 2' is an alias for green."""
+    cli, guard = _make_cli(enabled=False, require_hitm=False)
+    cli.handle_command("/zone 2")
 
     assert guard.enabled is True
     assert guard.require_hitm is True
 
 
-def test_zone_numeric_alias_2_yellow():
-    """'/zone 2' is an alias for yellow."""
+def test_zone_numeric_alias_3_yellow():
+    """'/zone 3' is an alias for yellow."""
     cli, guard = _make_cli(enabled=True, require_hitm=True)
-    cli.handle_command("/zone 2")
+    cli.handle_command("/zone 3")
 
     assert guard.enabled is True
     assert guard.require_hitm is False
 
 
-def test_zone_numeric_alias_3_red():
-    """'/zone 3' is an alias for red."""
+def test_zone_direct_switch_to_black():
+    """'/zone black' disables PathGuard and all security (god mode)."""
     cli, guard = _make_cli(enabled=True, require_hitm=True)
-    cli.handle_command("/zone 3")
+    cli.handle_command("/zone black")
 
     assert guard.enabled is False
     assert guard.require_hitm is False
+    assert guard.zone_name == "black"
+
+
+def test_zone_numeric_alias_5_black():
+    """'/zone 5' is an alias for black."""
+    cli, guard = _make_cli(enabled=True, require_hitm=True)
+    cli.handle_command("/zone 5")
+
+    assert guard.enabled is False
+    assert guard.require_hitm is False
+    assert guard.zone_name == "black"
+
+
+def test_zone_switch_black_to_green():
+    """'/zone green' from black restores full security."""
+    cli, guard = _make_cli(enabled=False, require_hitm=False)
+    guard.zone_name = "black"
+    cli.handle_command("/zone green")
+
+    assert guard.enabled is True
+    assert guard.require_hitm is True
+    assert guard.zone_name == "green"
 
 
 def test_zone_invalid_argument_does_not_change_guard():
@@ -171,6 +212,7 @@ def test_zone_numeric_alias_4_blue():
 
     assert guard.enabled is True
     assert guard.read_only is True
+    assert guard.require_hitm is False
 
 
 def test_zone_switch_from_blue_to_green_directly():
