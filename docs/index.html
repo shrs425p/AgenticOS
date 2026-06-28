@@ -616,6 +616,12 @@
             box-shadow: 0 0 12px #3b82f688;
         }
 
+        .z-black {
+            background: #0d0d0d;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
+        }
+
 
         .zone-name {
             font-size: clamp(1.8rem, 3vw, 3rem);
@@ -1241,10 +1247,18 @@
                 PathGuard Zones</h3>
             <div class="zone-list">
                 <div class="zone-item">
+                    <div class="zone-dot z-red"></div>
+                    <h3 class="zone-name">Red Zone</h3>
+                    <div class="zone-right">
+                        <span class="zone-path">/zone 1 &nbsp;·&nbsp; PathGuard Disabled</span>
+                        <p class="zone-desc">PathGuard is disabled entirely. The agent has unrestricted filesystem access and can read or write anywhere on the system, including system directories.</p>
+                    </div>
+                </div>
+                <div class="zone-item">
                     <div class="zone-dot z-green"></div>
                     <h3 class="zone-name">Green Zone</h3>
                     <div class="zone-right">
-                        <span class="zone-path">workspace/</span>
+                        <span class="zone-path">/zone 2 &nbsp;·&nbsp; workspace/</span>
                         <p class="zone-desc">Workspace isolation. The agent operates freely inside the workspace root. Write or delete operations outside the workspace require human confirmation (HITM).</p>
                     </div>
                 </div>
@@ -1252,24 +1266,24 @@
                     <div class="zone-dot z-yellow"></div>
                     <h3 class="zone-name">Yellow Zone</h3>
                     <div class="zone-right">
-                        <span class="zone-path">System-wide autonomy</span>
-                        <p class="zone-desc">PathGuard is active but outside-workspace modifications are allowed autonomously. Explicitly blocked paths (Red Zone) are still forbidden.</p>
-                    </div>
-                </div>
-                <div class="zone-item">
-                    <div class="zone-dot z-red"></div>
-                    <h3 class="zone-name">Red Zone</h3>
-                    <div class="zone-right">
-                        <span class="zone-path">PathGuard Disabled</span>
-                        <p class="zone-desc">The kernel guardrail engine is disabled entirely. The agent has unrestricted filesystem access and can read or write anywhere on the system.</p>
+                        <span class="zone-path">/zone 3 &nbsp;·&nbsp; System-Wide Autonomy</span>
+                        <p class="zone-desc">The agent can write and delete files outside the workspace autonomously. Explicitly blocked system paths are still hard-blocked.</p>
                     </div>
                 </div>
                 <div class="zone-item">
                     <div class="zone-dot z-blue"></div>
                     <h3 class="zone-name">Blue Zone</h3>
                     <div class="zone-right">
-                        <span class="zone-path">Read-Only / Audit</span>
-                        <p class="zone-desc">All write and delete operations are blocked system-wide. The agent has read-only access, making it ideal for non-destructive code review and security audits.</p>
+                        <span class="zone-path">/zone 4 &nbsp;·&nbsp; Read-Only / Audit</span>
+                        <p class="zone-desc">All write and delete operations are blocked globally. The agent has read-only access, making it ideal for non-destructive auditing and code reviews.</p>
+                    </div>
+                </div>
+                <div class="zone-item">
+                    <div class="zone-dot z-black"></div>
+                    <h3 class="zone-name">Black Zone</h3>
+                    <div class="zone-right">
+                        <span class="zone-path">/zone 5 &nbsp;·&nbsp; God Mode</span>
+                        <p class="zone-desc">All security filters, command validation checks, registry write protections, and service control blocks are entirely disabled.</p>
                     </div>
                 </div>
             </div>
