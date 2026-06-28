@@ -22,9 +22,9 @@ def resolve_with_symlink_depth(path: Path, max_depth: int = 5) -> Path:
             
             target = Path(os.readlink(str(current)))
             if not target.is_absolute():
-                current = (current.parent / target).resolve()
+                current = Path(os.path.normpath(str(current.parent / target)))
             else:
-                current = target.resolve()
+                current = Path(os.path.normpath(str(target)))
                 
     return current.resolve()
 

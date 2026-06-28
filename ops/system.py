@@ -47,7 +47,7 @@ class SystemManager:
         shell = (
             ["powershell", "-NoProfile", "-Command", command]
             if self.system == "Windows"
-            else ["/cli/sh", "-c", command]
+            else ["/bin/sh", "-c", command]
         )
         return self._run(shell, timeout=timeout)
 

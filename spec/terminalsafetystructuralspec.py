@@ -12,13 +12,16 @@ from ops.shell.safety import SafetyMixin
 class DummySafety(SafetyMixin):
     """A dummy class implementing SafetyMixin for testing purposes."""
 
-    def __init__(self, rules: dict):
+    def __init__(self, rules: dict, system: str = None):
         """Initialize the dummy safety instance with the given rules.
 
         Args:
             rules: The safety rules dictionary.
+            system: The system platform name.
         """
         self.rules = rules
+        if system is not None:
+            self.system = system
 
 
 def test_basic_safety_blocks():
@@ -30,7 +33,7 @@ def test_basic_safety_blocks():
         "allow_service_control": False,
         "allow_system_changes": False,
     }
-    safety = DummySafety(rules)
+    safety = DummySafety(rules, system="Windows")
 
     # 1. Service control blocks
     assert "Command blocked by safety rules: sc" in safety._blocked_command_reason(
@@ -94,7 +97,7 @@ def test_executable_paths_and_extensions():
         "allow_service_control": False,
         "allow_registry_edit": False,
     }
-    safety = DummySafety(rules)
+    safety = DummySafety(rules, system="Windows")
 
     # Basename extraction check
     assert "Command blocked by safety rules: sc" in safety._blocked_command_reason(
@@ -368,7 +371,7 @@ def _default_rules() -> dict:
 def test_script_blocks_dangerous_sh(tmp_path):
     """Shell script containing a blocked command should be intercepted."""
     script = tmp_path / "danger.sh"
-    script.write_text("#!/cli/bash\necho hello\nsc stop spooler\n", encoding="utf-8")
+    script.write_text("#!/bin/bash\necho hello\nsc stop spooler\n", encoding="utf-8")
     runner = DummyRunner(_default_rules())
 
     result = runner.runscript(str(script))
@@ -401,7 +404,7 @@ def test_script_blocks_dangerous_ps1(tmp_path):
 def test_script_allows_safe_sh(tmp_path):
     """Shell script with only safe commands should execute normally."""
     script = tmp_path / "safe.sh"
-    script.write_text("#!/cli/bash\necho hello\nls -la\n", encoding="utf-8")
+    script.write_text("#!/bin/bash\necho hello\nls -la\n", encoding="utf-8")
     runner = DummyRunner(_default_rules())
 
     result = runner.runscript(str(script))
@@ -411,7 +414,7 @@ def test_script_allows_safe_sh(tmp_path):
 def test_script_skips_comments_sh(tmp_path):
     """Comments containing blocked commands should not trigger blocking."""
     script = tmp_path / "comments.sh"
-    script.write_text("#!/cli/bash\n# sc stop spooler\necho safe\n", encoding="utf-8")
+    script.write_text("#!/bin/bash\n# sc stop spooler\necho safe\n", encoding="utf-8")
     runner = DummyRunner(_default_rules())
 
     result = runner.runscript(str(script))
@@ -434,7 +437,7 @@ def test_script_skips_comments_bat(tmp_path):
 def test_script_skips_blank_lines(tmp_path):
     """Blank lines should be silently ignored."""
     script = tmp_path / "blanks.sh"
-    script.write_text("#!/cli/bash\n\n\n\necho hello\n\n", encoding="utf-8")
+    script.write_text("#!/bin/bash\n\n\n\necho hello\n\n", encoding="utf-8")
     runner = DummyRunner(_default_rules())
 
     result = runner.runscript(str(script))
@@ -673,14 +676,14 @@ def test_zsh_script_validation(tmp_path):
     # 1. Blocked command in .zsh script
     script_danger = tmp_path / "danger.zsh"
     script_danger.write_text(
-        "#!/cli/zsh\n# comment here\nsc stop spooler\n", encoding="utf-8"
+        "#!/bin/zsh\n# comment here\nsc stop spooler\n", encoding="utf-8"
     )
     assert "blocked by safety rules" in runner.runscript(str(script_danger)).lower()
 
     # 2. Safe .zsh script with comment and continuation
     script_safe = tmp_path / "safe.zsh"
     script_safe.write_text(
-        '#!/cli/zsh\n# sc stop spooler\necho \\\n  "hello"\n', encoding="utf-8"
+        '#!/bin/zsh\n# sc stop spooler\necho \\\n  "hello"\n', encoding="utf-8"
     )
     assert "OK:" in runner.runscript(str(script_safe))
 
@@ -702,7 +705,7 @@ def test_extra_chaining_operators():
 def test_command_verb_obfuscation():
     """Verify command verb obfuscation checks (ticks, slashes, carets, nested quotes)."""
     rules = _default_rules()
-    safety = DummySafety(rules)
+    safety = DummySafety(rules, system="Windows")
 
     # Obfuscation tricks
     assert "command obfuscation detected" in safety._blocked_command_reason(

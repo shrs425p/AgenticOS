@@ -7,10 +7,12 @@ from kernel.errors import AgentError, ErrorCode
 from kernel.guard import resolve_with_symlink_depth
 
 class DummySafetyWithConfig(SafetyMixin):
-    def __init__(self, rules: dict, cfg: dict = None):
+    def __init__(self, rules: dict, cfg: dict = None, system: str = None):
         self.rules = rules
         self.cfg = cfg or {}
         self.guard = None
+        if system is not None:
+            self.system = system
 
 def test_registry_guard_rules():
     # Test normalisation
@@ -58,7 +60,7 @@ def test_registry_guard_command_intercept():
         "validate_commands": True,
         "allow_registry_edit": True,
     }
-    safety = DummySafetyWithConfig(rules, cfg)
+    safety = DummySafetyWithConfig(rules, cfg, system="Windows")
     
     # Mock human guard
     mock_guard = MagicMock()

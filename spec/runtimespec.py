@@ -305,7 +305,7 @@ def test_agent_reload_everything_real(mock_init_mm, mock_ctx, mock_ops, mock_aud
     agent = Agent(mock_cfg)
     
     # Reload cfg
-    with patch("kernel.cli.load_cfg", return_value=mock_cfg), \
+    with patch("kernel.agent.load_cfg", return_value=mock_cfg), \
          patch("importlib.reload") as mock_reload:
              agent._reload_everything(["cfg.yaml", "kernel/cli.py"])
              mock_reload.assert_called()

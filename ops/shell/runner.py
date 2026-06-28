@@ -18,7 +18,7 @@ class RunnerMixin:
     def _shell_args(self, command: str) -> dict:
         if self.system == "Windows":
             return {"shell": True}
-        return {"shell": True, "executable": "/cli/bash"}
+        return {"shell": True, "executable": "/bin/bash"}
 
     def _quote_arg(self, value: str) -> str:
         if self.system == "Windows":

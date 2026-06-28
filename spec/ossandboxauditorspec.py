@@ -11,9 +11,9 @@ from ops.addons.sandbox import (
 def test_detect_runtime_path():
     """Verify runtime executable detection pathways."""
     with patch("shutil.which") as mock_which:
-        mock_which.return_value = "/usr/cli/python"
+        mock_which.return_value = "/usr/bin/python"
         path = _detect_runtime_path("python")
-        assert path == "/usr/cli/python"
+        assert path == "/usr/bin/python"
 
         mock_which.return_value = None
         path = _detect_runtime_path("non_existent_cliary")
@@ -56,7 +56,7 @@ def test_get_active_windows_unix_darwin(mock_run, mock_system):
 def test_get_active_windows_unix_linux(mock_run, mock_which, mock_system):
     """Verify Linux active application window query via xdotool."""
     mock_system.return_value = "Linux"
-    mock_which.return_value = "/usr/cli/xdotool"
+    mock_which.return_value = "/usr/bin/xdotool"
 
     mock_search = MagicMock()
     mock_search.returncode = 0

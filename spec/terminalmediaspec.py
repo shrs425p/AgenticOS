@@ -47,7 +47,7 @@ def test_run_nircmd(mock_run):
         assert "not found" in res
         
     # Found
-    with patch.object(tool, "_nircmd_path", return_value="/cli/nircmd.exe"):
+    with patch.object(tool, "_nircmd_path", return_value="/bin/nircmd.exe"):
         mock_run.return_value = MagicMock(stdout="OK")
         res = tool._run_nircmd("volume", "2")
         assert res == "OK"
@@ -63,7 +63,7 @@ def test_run_playerctl(mock_run, mock_which):
     assert "not installed" in res
     
     # playerctl installed
-    mock_which.return_value = "/usr/cli/playerctl"
+    mock_which.return_value = "/usr/bin/playerctl"
     mock_run.return_value = MagicMock(stdout="playing")
     res = tool._run_playerctl("status")
     assert res == "playing"
@@ -138,7 +138,7 @@ def test_mediaseek(mock_which):
         
     # Linux seek
     tool_linux = MockTool(system="Linux")
-    mock_which.return_value = "/usr/cli/playerctl"
+    mock_which.return_value = "/usr/bin/playerctl"
     with patch.object(tool_linux, "_run_playerctl", return_value="OK") as mock_play:
         assert tool_linux.mediaseek(-5) == "OK"
         mock_play.assert_called_with("position", "5.0")
@@ -152,7 +152,7 @@ def test_volumeset(mock_run, mock_which):
     
     # Windows volume set (nircmd path found)
     tool_win = MockTool(system="Windows")
-    with patch.object(tool_win, "_nircmd_path", return_value="/cli/nircmd.exe"):
+    with patch.object(tool_win, "_nircmd_path", return_value="/bin/nircmd.exe"):
         with patch.object(tool_win, "_run_nircmd", return_value="OK") as mock_nir:
             assert tool_win.volumeset(50) == "OK"
             mock_nir.assert_called_with("setsysvolume", "32767")
@@ -187,7 +187,7 @@ def test_volumeset(mock_run, mock_which):
 def test_volumeup_down_mute(mock_run, mock_which):
     # Windows Up/Down with nircmd
     tool_win = MockTool(system="Windows")
-    with patch.object(tool_win, "_nircmd_path", return_value="/cli/nircmd.exe"):
+    with patch.object(tool_win, "_nircmd_path", return_value="/bin/nircmd.exe"):
         with patch.object(tool_win, "_run_nircmd", return_value="OK"):
             assert tool_win.volumeup(10) == "OK"
             assert tool_win.volumedown(10) == "OK"

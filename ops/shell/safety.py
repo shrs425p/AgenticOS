@@ -123,7 +123,7 @@ class SafetyMixin:
         cleaned_no_quotes = cleaned.replace("'", "").replace('"', "")
 
         # Check for escape characters platform-specifically
-        is_windows = os.name == "nt"
+        is_windows = getattr(self, "system", "Windows" if os.name == "nt" else "Linux") == "Windows"
         has_escapes = False
         if is_windows:
             has_escapes = "^" in cleaned_no_quotes or "`" in cleaned_no_quotes
@@ -310,7 +310,7 @@ class SafetyMixin:
         if not self.rules.get("validate_commands", False):
             return ""
 
-        is_windows = os.name == "nt"
+        is_windows = getattr(self, "system", "Windows" if os.name == "nt" else "Linux") == "Windows"
         cmd_str = command or ""
 
         # Pre-tokenization checks for obfuscation escapes

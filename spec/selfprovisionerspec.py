@@ -21,7 +21,7 @@ def test_refresh_path():
 
 def test_self_provision_command_existing():
     # If the command exists, it should return True immediately without doing anything
-    with patch("shutil.which", return_value="/usr/cli/existing_cmd"):
+    with patch("shutil.which", return_value="/usr/bin/existing_cmd"):
         assert self_provision_command("existing_cmd") is True
 
 @patch("ops.addons.package.installsystempackage")
@@ -35,7 +35,7 @@ def test_self_provision_command_missing_success(mock_makedirs, mock_open, mock_e
 
     def which_side_effect(cmd):
         if state["is_installed"]:
-            return "/usr/cli/missing_cmd"
+            return "/usr/bin/missing_cmd"
         return None
 
     def install_side_effect(cmd):

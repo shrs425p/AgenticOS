@@ -24,10 +24,10 @@ def test_get_available_managers_windows(mock_which, mock_system):
 def test_get_available_managers_darwin(mock_which, mock_system):
     """Verify Homebrew detection on macOS."""
     mock_system.return_value = "Darwin"
-    mock_which.side_effect = lambda cmd: "/usr/local/cli/brew" if "brew" in cmd else None
+    mock_which.side_effect = lambda cmd: "/usr/local/bin/brew" if "brew" in cmd else None
 
     managers = _get_available_managers()
-    assert managers["brew"] == "/usr/local/cli/brew"
+    assert managers["brew"] == "/usr/local/bin/brew"
 
 
 @patch("platform.system")
@@ -35,10 +35,10 @@ def test_get_available_managers_darwin(mock_which, mock_system):
 def test_get_available_managers_linux(mock_which, mock_system):
     """Verify apt-get detection on Linux."""
     mock_system.return_value = "Linux"
-    mock_which.side_effect = lambda cmd: "/usr/cli/apt-get" if "apt-get" in cmd else None
+    mock_which.side_effect = lambda cmd: "/usr/bin/apt-get" if "apt-get" in cmd else None
 
     managers = _get_available_managers()
-    assert managers["apt-get"] == "/usr/cli/apt-get"
+    assert managers["apt-get"] == "/usr/bin/apt-get"
 
 
 @patch("platform.system")
@@ -91,7 +91,7 @@ def test_installsystempackage_linux_apt(mock_managers, mock_system, mock_run):
     """Verify autonomous installation trigger on Linux via apt-get."""
     mock_system.return_value = "Linux"
     mock_managers.return_value = {
-        "apt-get": "/usr/cli/apt-get"
+        "apt-get": "/usr/bin/apt-get"
     }
 
     mock_response = MagicMock()
