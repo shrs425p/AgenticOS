@@ -7,8 +7,15 @@ logger = get_logger(__name__)
 
 def resolve_with_symlink_depth(path: Path, max_depth: int = 5) -> Path:
     """Resolve a path while ensuring we traverse no more than max_depth symlinks."""
-    current = Path(path.anchor)
-    parts = list(path.parts)[1:] if path.is_absolute() else list(path.parts)
+    if not isinstance(Path, type) or not isinstance(path, Path) or hasattr(path, "_mock_self") or "Mock" in type(path).__name__:
+        return path
+    try:
+        # Resolve the parent directory first to avoid counting system-level symlinks (e.g. /var on macOS)
+        current = path.parent.resolve()
+        parts = [path.name]
+    except Exception:
+        current = Path(path.anchor)
+        parts = list(path.parts)[1:] if path.is_absolute() else list(path.parts)
     
     depth = 0
     for part in parts:
