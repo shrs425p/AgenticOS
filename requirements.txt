@@ -1,6 +1,6 @@
 # Core Web & AI
 requests==2.34.2
-openai==2.41.0
+openai==2.44.0
 
 # Configuration & Environment
 pyyaml==6.0.3
