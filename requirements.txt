@@ -4,9 +4,9 @@ openai==2.41.0
 
 # Configuration & Environment
 pyyaml==6.0.3
-python-dotenv==1.2.2
+python-dotenv==1.2.3
 
 # System & Utilities
 pyreadline3; sys_platform == 'win32'
 psutil==5.9.8
-Pillow==12.2.0
+Pillow==12.3.0
