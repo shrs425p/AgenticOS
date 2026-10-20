@@ -4,7 +4,7 @@ openai==2.41.0
 
 # Configuration & Environment
 pyyaml==6.0.3
-python-dotenv==1.2.2
+python-dotenv==1.2.4
 
 # System & Utilities
 pyreadline3; sys_platform == 'win32'
